@@ -1,0 +1,7 @@
+server:
+    name: 'hub01a'
+    port: 25565
+    type: 'LOBBY'
+mongodb:
+    uri: 'mongodb://localhost:27017'
+    database: 'dungeons'
