@@ -9,7 +9,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.user.Rank;
 import org.bukkit.entity.Player;
 
-@CommandParameters(permission = Rank.ADMIN)
+@CommandParameters(permission = Rank.STAFF)
 public class ItemCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {

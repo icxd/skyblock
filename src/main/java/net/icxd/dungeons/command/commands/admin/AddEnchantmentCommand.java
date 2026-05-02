@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-@CommandParameters(description = "Add an enchantment to an item.", usage = "/<command> <enchantment> <level>", permission = Rank.ADMIN)
+@CommandParameters(description = "Add an enchantment to an item.", usage = "/<command> <enchantment> <level>", permission = Rank.STAFF)
 public class AddEnchantmentCommand extends SCommand {
 
     @Override

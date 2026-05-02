@@ -15,7 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-@CommandParameters(permission = Rank.ADMIN)
+@CommandParameters(permission = Rank.STAFF)
 public class DataCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {

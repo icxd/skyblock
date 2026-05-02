@@ -29,7 +29,7 @@ public class ACUser {
         User user = User.getUser(player.getUniqueId());
         Rank rank = Rank.valueOf(user.getDocument().getString("rank"));
         String msg = Utils.color("&8[&dAC&8] &d" + rank.getPrefix() + player.getName() + " &7failed &d" + check.getName() + " &7check (" + result.getMessage() + ") &8(" + violations.get(this).get(check) + ")");
-        Utils.getAllUsersOfRankOrHigher(Rank.MOD).forEach(u -> u.getPlayer().sendMessage(msg));
+        Utils.getAllUsersOfRankOrHigher(Rank.STAFF).forEach(u -> u.getPlayer().sendMessage(msg));
     }
 
     public static ACUser getUser(Player player) {

@@ -5,7 +5,7 @@ import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.user.Rank;
 
-@CommandParameters(permission = Rank.ADMIN, usage = "/<command>", description = "Opens the GUI.", aliases = "gui")
+@CommandParameters(permission = Rank.STAFF, usage = "/<command>", description = "Opens the GUI.", aliases = "gui")
 public class GUICommand extends SCommand {
 
     @Override

@@ -8,7 +8,7 @@ import net.icxd.dungeons.dungeons.chests.RewardChest;
 import net.icxd.dungeons.dungeons.chests.impl.BedrockChest;
 import net.icxd.dungeons.user.Rank;
 
-@CommandParameters(aliases = "spawnrewardchest", description = "Spawn a reward chest", usage = "/<command> <chest type>", permission = Rank.ADMIN)
+@CommandParameters(aliases = "spawnrewardchest", description = "Spawn a reward chest", usage = "/<command> <chest type>", permission = Rank.STAFF)
 public class SpwanRewardChestCommand extends SCommand {
 
     @Override

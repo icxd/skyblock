@@ -1,154 +1,460 @@
 package net.icxd.dungeons.command.commands.admin;
 
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
+
 import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
-import net.icxd.dungeons.dungeons.generator.Grid;
-import net.icxd.dungeons.dungeons.generator.Pathfinder;
-import net.icxd.dungeons.dungeons.generator.rooms.Connection;
-import net.icxd.dungeons.dungeons.generator.rooms.Room;
-import net.icxd.dungeons.dungeons.generator.rooms.RoomSize;
-import net.icxd.dungeons.dungeons.generator.utils.Coordinate;
+import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.dungeons.generation.DoorEdge;
+import net.icxd.dungeons.dungeons.generation.Generator;
+import net.icxd.dungeons.dungeons.generation.Generator.GenerationReport;
+import net.icxd.dungeons.dungeons.generation.Map;
+import net.icxd.dungeons.dungeons.generation.RoomPlacement;
+import net.icxd.dungeons.dungeons.generation.room.Room;
+import net.icxd.dungeons.dungeons.generation.room.RoomSize;
+import net.icxd.dungeons.dungeons.generation.room.RoomType;
+import net.icxd.dungeons.dungeons.generation.utils.Position;
 import net.icxd.dungeons.user.Rank;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.block.Sign;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-@CommandParameters(aliases = "dungeon", permission = Rank.ADMIN)
+@CommandParameters(aliases = "dungeon", permission = Rank.STAFF)
 public class DungeonCommand extends SCommand {
+
+  /** Blocks per logical grid cell (floor space); larger than 3 makes layouts easier to read. */
+  private static final int WORLD_CELL = 5;
+  private static final int MAP_WOOL_Y = 100;
+  private static final int ROOM_SIGN_Y = 101;
+  /** Wool data: lime — rooms on the tree path from {@link RoomType#BLOOD} up to start. */
+  private static final byte SPINE_WOOL_DATA = 5;
+
   @Override
   public void run(CommandSource source, String[] args) {
-    Grid grid = new Grid(10, 10);
-    grid.generate();
-//    grid.print();
+    GenerationReport gen = new Generator().generateWithReport(DungeonFloor.FLOOR_7);
+    Map map = gen.map();
 
-    Pathfinder pathfinder = new Pathfinder();
-    var nodes = pathfinder.chooseFarApartNodes(grid, 14);
-    Coordinate start = nodes[0], goal = nodes[1];
-    var path = pathfinder.findPath(grid, start, goal);
-    if (path.isEmpty())
-      throw new RuntimeException("Failed to generate path from start node to goal node");
+    printDungeonDebugReport(map, DungeonFloor.FLOOR_7, gen, instance.getLogger());
+    source.send(ChatColor.GREEN + "Dungeon debug written to the server log (console / latest.log).");
 
-    int[][] offsets = {{1, 0}, {1, 1}, {0, 1}, {-1, 1},
-        {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
-    List<Coordinate> roomLocations = new ArrayList<>();
-    for (Coordinate c : path) {
-      for (int[] offset : offsets) {
-        var neighbor = new Coordinate(c.x() + offset[0], c.y() + offset[1]);
-        if (!grid.isValidCoordinate(neighbor)) continue;
-        if (roomLocations.contains(neighbor)) continue;
+    renderMap(map, source);
+    source.send(
+        ChatColor.GRAY
+            + "Map preview: "
+            + WORLD_CELL
+            + "x"
+            + WORLD_CELL
+            + " blocks/cell. "
+            + ChatColor.GREEN
+            + "Lime wool"
+            + ChatColor.GRAY
+            + " = spine (start->blood). "
+            + ChatColor.GOLD
+            + "Gold block"
+            + ChatColor.GRAY
+            + " = door (one tick per seam). "
+            + ChatColor.DARK_PURPLE
+            + "Obsidian"
+            + ChatColor.GRAY
+            + " = wall (different room, not a tree door)."
+    );
+  }
 
-        roomLocations.add(neighbor);
+  /**
+   * Copy-paste friendly layout for debugging generation (instance ids, sizes, placements, doors).
+   */
+  private static void printDungeonDebugReport(
+      Map map,
+      DungeonFloor floor,
+      GenerationReport gen,
+      Logger log
+  ) {
+    int w = map.getWidth();
+    int h = map.getHeight();
+
+    log.info("========== /dungeon console ==========");
+    log.info("Generator revision: " + gen.revision());
+    log.info("Used 1x1-only fallback tree: " + gen.usedFallback1x1Tree());
+    log.info(
+        "Poly tiling attempts used: "
+            + gen.attemptsUsed()
+            + " (cap "
+            + Generator.MAX_POLY_TILE_ATTEMPTS
+            + " before forced fallback)"
+    );
+    log.info("Floor: " + floor.name() + "  grid: " + w + " x " + h);
+    log.info("Door edges (phase 2): " + map.getDoorEdges().size());
+
+    List<RoomPlacement> placements = map.getRoomPlacements();
+    boolean allOneByOne = !placements.isEmpty()
+        && placements.stream().allMatch(p -> p.size() == RoomSize.ONE_BY_ONE);
+    log.info(
+        "Footprint summary: "
+            + (allOneByOne
+            ? "all placements are 1x1."
+            : "at least one multi-cell footprint.")
+            + (gen.usedFallback1x1Tree()
+            ? " (expected when fallback tree ran)"
+            : ""));
+
+    long multiCell = placements.stream().filter(p -> p.size() != RoomSize.ONE_BY_ONE).count();
+    log.info("Placements: " + placements.size() + "  (multi-cell footprints: " + multiCell + ")");
+
+    log.info("--- Instance id grid (x ->, each row is z increasing) ---");
+    StringBuilder header = new StringBuilder("     ");
+    for (int x = 0; x < w; x++) {
+      header.append(String.format("%3d ", x));
+    }
+    log.info(header.toString());
+    for (int z = 0; z < h; z++) {
+      StringBuilder row = new StringBuilder(String.format("%3d| ", z));
+      for (int x = 0; x < w; x++) {
+        int id = map.getRoomInstanceId(new Position(x, z));
+        row.append(String.format("%3d ", id));
       }
+      log.info(row.toString());
     }
 
-    int roomIndex = 0;
-    final Map<Coordinate, Integer> roomIndices = new HashMap<>();
-    for (int i = 0; i < grid.getWidth() * grid.getHeight(); i++) {
-      final int x = i / grid.getWidth(), y = i - (x * grid.getWidth());
-      final Coordinate c = new Coordinate(x, y);
-      if (!roomLocations.contains(c)) continue;
-
-      final RoomSize size = RoomSize.getRandomRoomSize();
-      final Coordinate offset = size.getOffsetToCorner();
-
-      for (int x2 = 0; x2 < offset.x(); x2++) {
-        for (int y2 = 0; y2 < offset.y(); y2++) {
-          final Coordinate point = new Coordinate(x + x2, y + y2);
-          if (!grid.isValidCoordinate(point)) continue;
-          if (roomIndices.containsKey(point)) continue;
-
-          roomIndices.put(point, roomIndex);
-        }
-      }
-
-      roomIndex++;
+    java.util.Map<Integer, RoomSize> sizeById = new HashMap<>();
+    for (RoomPlacement rp : placements) {
+      sizeById.put(rp.id(), rp.size());
     }
 
-    final List<Connection> connections = new ArrayList<>();
-    roomIndices.forEach((coordinate, index) -> {
+    log.info("--- Footprint size key: 1=1x1 2=1x2 3=1x3 4=1x4 T=2x2 ---");
+    for (int z = 0; z < h; z++) {
+      StringBuilder row = new StringBuilder("    | ");
+      for (int x = 0; x < w; x++) {
+        int id = map.getRoomInstanceId(new Position(x, z));
+        RoomSize sz = sizeById.get(id);
+        row.append(sz == null ? " ? " : " " + sizeLetter(sz) + " ");
+      }
+      log.info(row.toString());
+    }
 
-    });
+    log.info("--- Placements (sorted by id) ---");
+    placements.stream()
+        .sorted(Comparator.comparingInt(RoomPlacement::id))
+        .forEach(rp -> {
+          Position c0 = rp.cells().get(0);
+          Room live = map.getRoom(c0);
+          log.info(
+              String.format(
+                  " id=%d parent=%d size=%-12s rot=%d template=%s type=%s cells=%s",
+                  rp.id(),
+                  rp.parentId(),
+                  rp.size().name(),
+                  rp.rotationIndex(),
+                  live.getId(),
+                  live.getType().name(),
+                  formatCells(rp.cells())
+              )
+          );
+        });
 
+    log.info("========== end /dungeon console ==========");
+  }
+
+  private static char sizeLetter(RoomSize s) {
+    return switch (s) {
+      case ONE_BY_ONE -> '1';
+      case TWO_BY_ONE -> '2';
+      case THREE_BY_ONE -> '3';
+      case FOUR_BY_ONE -> '4';
+      case TWO_BY_TWO -> 'T';
+    };
+  }
+
+  private static String formatCells(List<Position> cells) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < cells.size(); i++) {
+      if (i > 0) {
+        sb.append(";");
+      }
+      Position p = cells.get(i);
+      sb.append('(').append(p.x()).append(',').append(p.y()).append(')');
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Preview layout: wool hue per instance; lime wool for the spine (blood → start); gold marks
+   * phase-2 tree doors; obsidian marks other cross-instance seams (no door).
+   */
+  private void renderMap(Map map, CommandSource source) {
     World world = source.getPlayer().getWorld();
-    for (int i = 0; i < grid.getWidth() * grid.getHeight(); i++) {
-      final int x = i / grid.getWidth(), y = i - (x * grid.getWidth());
-      final Coordinate coordinate = new Coordinate(x, y);
-      final Room room = grid.getRoom(coordinate);
-      Location location = new Location(world, x * 3, 100, y * 3);
+    int w = map.getWidth();
+    int h = map.getHeight();
+    Set<String> doorKeys = doorEdgeKeys(map.getDoorEdges());
+    Set<Integer> spineInstances = spineInstanceIds(map);
 
-      for (int x1 = 0; x1 < 3; x1++) {
-        for (int y1 = 0; y1 < 3; y1++) {
-          Location l = location.clone().add(x1, 0, y1);
-          world.getBlockAt(l).setType(Material.WOOL);
-          world.getBlockAt(l).setData(
-              coordinate.equals(start) ? (byte) 4 :
-                  coordinate.equals(goal) ? (byte) 4 :
-                      path.contains(coordinate) ? (byte) 2 :
-                          roomLocations.contains(coordinate) ? (byte) 10 :
-                              switch (room.type()) {
-                                case NONE -> (byte) 15;
-                                case RED -> (byte) 14;
-                                case GREEN -> (byte) 5;
-                                case BLUE -> (byte) 11;
-                              });
+    clearPreviewPlane(world, w, h, MAP_WOOL_Y);
+    clearPreviewPlane(world, w, h, ROOM_SIGN_Y);
 
-          Location l1 = location.clone().add(x1, 1, y1);
-          if (roomIndices.containsKey(coordinate)) {
-            final int index = roomIndices.get(coordinate);
-            final byte color = (byte) (index % 15);
-            world.getBlockAt(l1).setType(Material.STAINED_GLASS);
-            world.getBlockAt(l1).setData(color);
-          } else world.getBlockAt(l1).setType(Material.AIR);
+    for (int gx = 0; gx < w; gx++) {
+      for (int gz = 0; gz < h; gz++) {
+        Position gp = new Position(gx, gz);
+        Room room = map.getRoom(gp);
+        if (room == null || room == Room.EMPTY) {
+          continue;
+        }
+
+        int instanceId = map.getRoomInstanceId(gp);
+        boolean spineCell = spineInstances.contains(instanceId);
+
+        for (int i = 0; i < WORLD_CELL; i++) {
+          for (int j = 0; j < WORLD_CELL; j++) {
+            int wx = gx * WORLD_CELL + i;
+            int wz = gz * WORLD_CELL + j;
+            Block block = world.getBlockAt(wx, MAP_WOOL_Y, wz);
+            paintPreviewSubBlock(
+                block,
+                map,
+                w,
+                h,
+                gx,
+                gz,
+                i,
+                j,
+                instanceId,
+                gp,
+                doorKeys,
+                spineCell
+            );
+          }
         }
       }
-
-      for (var connection : connections) {
-        boolean down = connection.down();
-        Location loc = location.clone().add(1, 2, 1);
-
-        loc = loc.add(down ? 0 : 1, 0, down ? 1 : 0);
-        world.getBlockAt(loc).setType(Material.WOOL);
-        world.getBlockAt(loc).setData((byte) 7);
-      }
-
-      Location loc = location.clone().add(1, 2, 1);
-      if (roomIndices.containsKey(coordinate)) {
-        world.getBlockAt(loc).setType(Material.SIGN_POST);
-        Sign sign = (Sign) world.getBlockAt(loc).getState();
-        sign.setLine(1, "" + roomIndices.get(coordinate));
-        sign.update(true, false);
-      } else world.getBlockAt(loc).setType(Material.AIR);
     }
 
-//    for (int x = 0; x < grid.getWidth(); x++) {
-//      StringBuilder builder = new StringBuilder();
-//
-//      for (int y = 0; y < grid.getHeight(); y++) {
-//        Coordinate current = new Coordinate(x, y);
-//        if (current.equals(start))
-//          builder.append(ChatColor.YELLOW).append("s ").append(ChatColor.RESET);
-//        else if (current.equals(goal))
-//          builder.append(ChatColor.YELLOW).append("g ").append(ChatColor.RESET);
-//        else if (roomIndices.containsKey(current))
-//          builder.append(roomIndices.get(current)).append(" ");
-//        else if (roomLocations.contains(current))
-//          builder.append(ChatColor.DARK_PURPLE).append("# ").append(ChatColor.RESET);
-//        else if (path.contains(current))
-//          builder.append(ChatColor.LIGHT_PURPLE).append("# ").append(ChatColor.RESET);
-//        else {
-//          Room room = grid.getRoom(current);
-//          builder.append(room.type().color()).append("x ").append(ChatColor.RESET);
-//        }
-//      }
-//
-//      source.send(builder.toString());
-//    }
+    placeRoomInstanceIdSigns(map, source, spineInstances);
+  }
+
+  private static void clearPreviewPlane(World world, int gridW, int gridH, int y) {
+    int span = gridW * WORLD_CELL;
+    int depth = gridH * WORLD_CELL;
+    for (int wx = 0; wx < span; wx++) {
+      for (int wz = 0; wz < depth; wz++) {
+        world.getBlockAt(wx, y, wz).setType(Material.AIR);
+      }
+    }
+  }
+
+  /** Undirected key for an edge between two adjacent grid cells. */
+  private static String doorEdgeKey(Position a, Position b) {
+    int ax = a.x();
+    int ay = a.y();
+    int bx = b.x();
+    int by = b.y();
+    if (ax > bx || (ax == bx && ay > by)) {
+      return doorEdgeKey(b, a);
+    }
+    return ax + "," + ay + ";" + bx + "," + by;
+  }
+
+  private static Set<String> doorEdgeKeys(List<DoorEdge> edges) {
+    HashSet<String> keys = new HashSet<>();
+    for (DoorEdge e : edges) {
+      keys.add(doorEdgeKey(e.parentCell(), e.childCell()));
+    }
+    return keys;
+  }
+
+  private static boolean isDoorEdgeBetween(Position a, Position b, Set<String> doorKeys) {
+    return doorKeys.contains(doorEdgeKey(a, b));
+  }
+
+  /**
+   * Instance ids on the unique tree path from the blood room up to the start (both endpoints
+   * inclusive).
+   */
+  private static Set<Integer> spineInstanceIds(Map map) {
+    HashMap<Integer, RoomPlacement> byId = new HashMap<>();
+    for (RoomPlacement rp : map.getRoomPlacements()) {
+      byId.put(rp.id(), rp);
+    }
+    int bloodId = -1;
+    for (RoomPlacement rp : map.getRoomPlacements()) {
+      if (rp.template().getType() == RoomType.BLOOD) {
+        bloodId = rp.id();
+        break;
+      }
+    }
+    if (bloodId < 0) {
+      return Set.of();
+    }
+    HashSet<Integer> spine = new HashSet<>();
+    int cur = bloodId;
+    while (cur >= 0) {
+      spine.add(cur);
+      RoomPlacement rp = byId.get(cur);
+      if (rp == null) {
+        break;
+      }
+      cur = rp.parentId();
+    }
+    return spine;
+  }
+
+  /**
+   * Single-block door marker on the canonical side of each seam (east edge of left cell, south
+   * edge of upper cell). Opposite side stays wool so we do not draw a long gold strip or obsidian
+   * next to the tick.
+   */
+  private static void paintPreviewSubBlock(
+      Block block,
+      Map map,
+      int w,
+      int h,
+      int gx,
+      int gz,
+      int i,
+      int j,
+      int instanceId,
+      Position herePos,
+      Set<String> doorKeys,
+      boolean spineCell
+  ) {
+    byte interiorWool = spineCell ? SPINE_WOOL_DATA : instanceToWoolData(instanceId);
+    int mid = WORLD_CELL / 2;
+
+    if (i == WORLD_CELL - 1 && gx + 1 < w && j == mid) {
+      Position n = new Position(gx + 1, gz);
+      int nid = map.getRoomInstanceId(n);
+      if (nid >= 0
+          && nid != instanceId
+          && isDoorEdgeBetween(herePos, n, doorKeys)) {
+        block.setType(Material.GOLD_BLOCK);
+        return;
+      }
+    }
+    if (j == WORLD_CELL - 1 && gz + 1 < h && i == mid) {
+      Position n = new Position(gx, gz + 1);
+      int nid = map.getRoomInstanceId(n);
+      if (nid >= 0
+          && nid != instanceId
+          && isDoorEdgeBetween(herePos, n, doorKeys)) {
+        block.setType(Material.GOLD_BLOCK);
+        return;
+      }
+    }
+
+    if (i == WORLD_CELL - 1 && gx + 1 < w) {
+      Position n = new Position(gx + 1, gz);
+      int nid = map.getRoomInstanceId(n);
+      if (nid >= 0 && nid != instanceId && !isDoorEdgeBetween(herePos, n, doorKeys)) {
+        block.setType(Material.OBSIDIAN);
+        return;
+      }
+    }
+    if (j == WORLD_CELL - 1 && gz + 1 < h) {
+      Position n = new Position(gx, gz + 1);
+      int nid = map.getRoomInstanceId(n);
+      if (nid >= 0 && nid != instanceId && !isDoorEdgeBetween(herePos, n, doorKeys)) {
+        block.setType(Material.OBSIDIAN);
+        return;
+      }
+    }
+    if (i == 0 && gx > 0) {
+      Position n = new Position(gx - 1, gz);
+      int nid = map.getRoomInstanceId(n);
+      if (nid >= 0 && nid != instanceId && !isDoorEdgeBetween(herePos, n, doorKeys)) {
+        block.setType(Material.OBSIDIAN);
+        return;
+      }
+    }
+    if (j == 0 && gz > 0) {
+      Position n = new Position(gx, gz - 1);
+      int nid = map.getRoomInstanceId(n);
+      if (nid >= 0 && nid != instanceId && !isDoorEdgeBetween(herePos, n, doorKeys)) {
+        block.setType(Material.OBSIDIAN);
+        return;
+      }
+    }
+
+    block.setType(Material.WOOL);
+    block.setData(interiorWool);
+  }
+
+  /** Spread hues so sequential ids are less likely to look identical side-by-side. */
+  private static byte instanceToWoolData(int instanceId) {
+    return (byte) Math.floorMod(instanceId * 7 + 3, 16);
+  }
+
+  /**
+   * One standing sign per room instance: id, template id, short type hint, spine marker.
+   */
+  private void placeRoomInstanceIdSigns(Map map, CommandSource source, Set<Integer> spineInstances) {
+    World world = source.getPlayer().getWorld();
+    HashMap<Integer, List<Position>> cellsByInstance = new HashMap<>();
+    for (int x = 0; x < map.getWidth(); x++) {
+      for (int z = 0; z < map.getHeight(); z++) {
+        Position p = new Position(x, z);
+        Room cellRoom = map.getRoom(p);
+        if (cellRoom == null || cellRoom == Room.EMPTY) {
+          continue;
+        }
+        int instanceId = map.getRoomInstanceId(p);
+        if (instanceId < 0) {
+          continue;
+        }
+        cellsByInstance.computeIfAbsent(instanceId, k -> new ArrayList<>()).add(p);
+      }
+    }
+
+    for (var entry : cellsByInstance.entrySet()) {
+      int roomInstanceId = entry.getKey();
+      List<Position> cells = entry.getValue();
+      double wx = 0;
+      double wz = 0;
+      int mid = WORLD_CELL / 2;
+      for (Position c : cells) {
+        wx += c.x() * WORLD_CELL + mid;
+        wz += c.y() * WORLD_CELL + mid;
+      }
+      int n = cells.size();
+      int signX = (int) Math.round(wx / n);
+      int signZ = (int) Math.round(wz / n);
+      Block signBlock = world.getBlockAt(signX, ROOM_SIGN_Y, signZ);
+      signBlock.setType(Material.SIGN_POST);
+      Sign sign = (Sign) signBlock.getState();
+
+      Room template = map.getRoom(cells.get(0));
+      sign.setLine(0, "#" + roomInstanceId);
+      sign.setLine(1, truncate(template.getId(), 15));
+      sign.setLine(2, truncate(roomTypeShort(template.getType()), 15));
+      sign.setLine(3, spineInstances.contains(roomInstanceId) ? "~ spine ~" : "");
+
+      sign.update();
+    }
+  }
+
+  private static String roomTypeShort(RoomType type) {
+    return switch (type) {
+      case EMPTY -> "";
+      case REGULAR -> "regular";
+      case START -> "START";
+      case FAIRY -> "fairy";
+      case PUZZLE -> "puzzle";
+      case MINIBOSS -> "miniboss";
+      case TRAP -> "trap";
+      case BLOOD -> "BLOOD";
+    };
+  }
+
+  private static String truncate(String s, int max) {
+    if (s.length() <= max) {
+      return s;
+    }
+    return s.substring(0, max);
   }
 }

@@ -21,7 +21,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.lang.annotation.Documented;
 
-@CommandParameters(aliases = "upgrade", description = "Upgrade an item", permission = Rank.ADMIN)
+@CommandParameters(aliases = "upgrade", description = "Upgrade an item", permission = Rank.STAFF)
 public class UpgradeCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {

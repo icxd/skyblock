@@ -8,10 +8,7 @@ public enum Rank {
     MVP_PLUS("&b[MVP&6+&b] ", "&b", 2, 'G'),
     MVP_PLUS_PLUS("&6[MVP&f++&6] ", "&6", 3, 'F'),
     YOUTUBE("&c[&fYOUTUBE&c] ", "&c", 4, 'E'),
-    HELPER("&9[HELPER] ", "&9", 5, 'D'),
-    MOD("&2[MOD] ", "&2", 6, 'C'),
-    ADMIN("&c[ADMIN] ", "&c", 7, 'B'),
-    OWNER("&c[OWNER] ", "&c", 8, 'A');
+    STAFF("&c[&6ዞ&c] ", "&c", 5, 'A');
 
     private String prefix;
     private String color;

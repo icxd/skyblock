@@ -13,7 +13,7 @@ import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-@CommandParameters(description = "Recombobulates an item.", usage = "/<command>", permission = Rank.ADMIN)
+@CommandParameters(description = "Recombobulates an item.", usage = "/<command>", permission = Rank.STAFF)
 public class RecombobulateCommand extends SCommand {
 
     @Override

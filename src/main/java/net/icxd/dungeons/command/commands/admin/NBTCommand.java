@@ -8,7 +8,7 @@ import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-@CommandParameters(permission = Rank.ADMIN)
+@CommandParameters(permission = Rank.STAFF)
 public class NBTCommand extends SCommand {
 
     @Override
