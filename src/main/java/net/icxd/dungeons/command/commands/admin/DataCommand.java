@@ -7,8 +7,8 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.user.Rank;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -25,7 +25,7 @@ public class DataCommand extends SCommand {
         String value = args[args.length - 1];
 
         ItemStack item = player.getInventory().getItemInHand();
-        net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+        ItemNBT nmsItem = ItemNBT.of(item);
         NBTTagCompound tag = nmsItem.getTag();
         if (tag == null) {
             tag = new NBTTagCompound();
@@ -66,7 +66,7 @@ public class DataCommand extends SCommand {
         }
 
         nmsItem.setTag(tag);
-        item = CraftItemStack.asBukkitCopy(nmsItem);
+        item = nmsItem.toItemStack();
 
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         player.getInventory().setItemInHand(ItemBuilder.build(sbItem, tag));

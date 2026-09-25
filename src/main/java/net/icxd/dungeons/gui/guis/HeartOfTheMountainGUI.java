@@ -32,7 +32,7 @@ public class HeartOfTheMountainGUI extends GUI {
     this.user = user;
     this.hotm = hotm;
 
-    this.fill(new ItemBuilder(new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15)).setDisplayName(" ").build());
+    this.fill(new ItemBuilder(new ItemStack(Material.BLACK_STAINED_GLASS_PANE)).setDisplayName(" ").build());
     this.set(GUIClickableItem.close(45));
     this.set(new GUIItem() {
       @Override
@@ -42,7 +42,7 @@ public class HeartOfTheMountainGUI extends GUI {
 
       @Override
       public ItemStack stack() {
-        return new ItemBuilder(new ItemStack(Material.SKULL_ITEM, 1, (short)3))
+        return new ItemBuilder(new ItemStack(Material.PLAYER_HEAD))
             .setDisplayName("&5Heart of the Mountain")
             .setLore(
                 "&7Token of the Mountain: &5"+user.getHOTMTokens(),

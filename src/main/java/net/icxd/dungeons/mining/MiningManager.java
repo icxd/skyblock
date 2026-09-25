@@ -1,10 +1,8 @@
 package net.icxd.dungeons.mining;
 
-import net.minecraft.server.v1_8_R3.BlockPosition;
-import net.minecraft.server.v1_8_R3.Packet;
-import net.minecraft.server.v1_8_R3.PacketPlayOutBlockBreakAnimation;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -40,9 +38,17 @@ public class MiningManager {
   }
 
   public static void sendBlockDamage(Player player, Location location) {
-    BlockPosition position = new BlockPosition(location.getX(), location.getY(), location.getZ());
-    Packet<?> packet = new PacketPlayOutBlockBreakAnimation(0, position, getBlockBreakProgress(location));
-    ((CraftPlayer)player).getHandle().playerConnection.sendPacket(packet);
+    player.sendBlockDamage(location, stageToProgress(getBlockBreakProgress(location)), 0);
+  }
+
+  /** Shows crack {@code stage} (0-9, anything else clears it) on a block to everyone online. */
+  public static void sendBlockDamage(Block block, int stage) {
+    for (Player p : Bukkit.getOnlinePlayers()) p.sendBlockDamage(block.getLocation(), stageToProgress(stage), 0);
+  }
+
+  /** The 1.8 packet's crack stage as Paper's 0-1 progress (Paper shows stage (int) (9 * progress), 0 clears). */
+  private static float stageToProgress(int stage) {
+    return stage < 0 || stage > 9 ? 0 : Math.min(1f, (stage + 0.5f) / 9f);
   }
 
   public static long getNextPhase(Player player) {

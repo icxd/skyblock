@@ -5,16 +5,13 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.utils.Tuple;
-import net.minecraft.server.v1_8_R3.BlockPosition;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
-import net.minecraft.server.v1_8_R3.Packet;
-import net.minecraft.server.v1_8_R3.PacketPlayOutBlockBreakAnimation;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,10 +19,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerAnimationType;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashSet;
+import java.util.Set;
 
 public class BlockListener implements Listener {
 
@@ -40,15 +36,14 @@ public class BlockListener implements Listener {
     if (event.getAnimationType() != PlayerAnimationType.ARM_SWING) return;
     if (player.getGameMode() != GameMode.SURVIVAL) return;
 
-    Block block = player.getTargetBlock((HashSet<Byte>) null, 5);
+    Block block = player.getTargetBlock((Set<Material>) null, 5);
     if (block == null) return;
-    MaterialData data = block.getState().getData();
-    MinableBlock minableBlock = BlockRegistry.getMinableBlock(new ItemStack(data.getItemType(),1,data.getData()));
+    MinableBlock minableBlock = BlockRegistry.getMinableBlock(block.getType());
     if (minableBlock == null) return;
 
     ItemStack itemInHand = player.getInventory().getItemInHand();
     if (itemInHand == null) return;
-    net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemInHand);
+    ItemNBT nmsItem = ItemNBT.of(itemInHand);
     if (nmsItem == null) return;
     NBTTagCompound tag = nmsItem.getTag();
     if (tag == null) return;
@@ -103,9 +98,7 @@ public class BlockListener implements Listener {
       new BukkitRunnable() {
         @Override
         public void run() {
-          Packet<?> packet = new PacketPlayOutBlockBreakAnimation(0, new BlockPosition(block.getX(), block.getY(), block.getZ()), -1);
-          for (Player p : Bukkit.getOnlinePlayers())
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+          MiningManager.sendBlockDamage(block, -1);
           minableBlock.place(block.getLocation());
         }
       }.runTaskLater(Dungeons.getInstance(), minableBlock.regenTime());

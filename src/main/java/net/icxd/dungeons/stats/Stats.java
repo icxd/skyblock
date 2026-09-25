@@ -11,9 +11,9 @@ import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.reforge.Reforge;
 import net.icxd.dungeons.reforge.ReforgeStat;
 import net.icxd.dungeons.reforge.ReforgeStats;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -170,7 +170,7 @@ public class Stats {
     }
 
     public void addFromItemStack(ItemStack itemStack) {
-        net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
+        ItemNBT nmsItem = ItemNBT.of(itemStack);
         if (nmsItem.getTag() != null) {
             SkyBlockItem item = ItemRegistry.get(nmsItem.getTag().getString("id"));
             if (item != null) {

@@ -17,8 +17,7 @@ import java.awt.*;
 import java.util.*;
 
 public class FineAmethystGemstone implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYxODA4Mzg2Mjc2NCwKICAicHJvZmlsZUlkIiA6ICJmMGIzYmRkMjEwNDg0Y2VlYjZhNTQyYmZiOGEyNTdiMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbm9uaW1ZVFQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2ExZWU1ZmZjZTA0ZWI3ZGE1OTJkNDI0MTRmZjM1ZTFiZjM4MTk0ZDZiODJlMzEwZGJjNjI2MWI0N2ZiOWM5MSIKICAgIH0KICB9Cn0"; }
     @Override public String name() { return "Fine Amethyst Gemstone"; }
     @Override public Rarity rarity() { return Rarity.RARE; }

@@ -17,8 +17,7 @@ import java.awt.*;
 import java.util.*;
 
 public class FlawedAmberGemstone implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYxODA4NTE0NTE4MywKICAicHJvZmlsZUlkIiA6ICIwYTUzMDU0MTM4YWI0YjIyOTVhMGNlZmJiMGU4MmFkYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJQX0hpc2lybyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xNzNiY2ZjMzllYjg1ZGYxODQ4NTM1OTg1MjE0MDYwYTFiZDFiM2JiNDdkZWZlNDIwMTQ3NmVkYzMxNjcxNzQ0IgogICAgfQogIH0KfQ"; }
     @Override public String name() { return "Flawed Amber Gemstone"; }
     @Override public Rarity rarity() { return Rarity.UNCOMMON; }

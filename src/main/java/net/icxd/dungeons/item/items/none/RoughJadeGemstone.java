@@ -17,8 +17,7 @@ import java.awt.*;
 import java.util.*;
 
 public class RoughJadeGemstone implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYxODA4NTYzODM3OCwKICAicHJvZmlsZUlkIiA6ICIyYzEwNjRmY2Q5MTc0MjgyODRlM2JmN2ZhYTdlM2UxYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJOYWVtZSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zYjRjMmFmZDU0NGQwYTYxMzllNmFlOGVmOGYwYmZjMDlhOWZkODM3ZDBjYWQ0ZjVjZDBmZTdmNjA3YjdkMWEwIgogICAgfQogIH0KfQ"; }
     @Override public String name() { return "Rough Jade Gemstone"; }
     @Override public double npcSellPrice() { return 3; }

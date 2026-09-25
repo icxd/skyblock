@@ -38,8 +38,7 @@ public class ItemBuilder {
   }
 
   public ItemBuilder setSkullTexture(String skin) {
-    assert stack.getType() == Material.SKULL_ITEM;
-    assert stack.getDurability() == 3;
+    assert stack.getType() == Material.PLAYER_HEAD;
     this.skin = skin;
     return this;
   }

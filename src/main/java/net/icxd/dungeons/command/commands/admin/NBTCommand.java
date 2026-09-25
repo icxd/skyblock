@@ -4,7 +4,7 @@ import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.user.Rank;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -21,7 +21,7 @@ public class NBTCommand extends SCommand {
             return;
         }
 
-        net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+        ItemNBT nmsItem = ItemNBT.of(item);
         for (String key : nmsItem.getTag().c()) {
             if (key.equals("display") || key.equals("SkullOwner")) continue;
             player.sendMessage("§f" + key + ": §a" + nmsItem.getTag().get(key));

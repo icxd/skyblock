@@ -264,8 +264,13 @@ them from its data folder at runtime.
 ## 7. Pasting captured rooms (`paste/`)
 
 `/dungeon paste [floor] [seed]` generates a dungeon out of the captured rooms only and pastes it
-with WorldEdit 6 at Hypixel's coordinates (cell centres at -185 + 32i), then teleports you into
-the entrance. Put the scanner's `rooms/` and `doors/` folders in `plugins/<plugin>/dungeon-rooms/`.
+with WorldEdit 7 at Hypixel's coordinates (cell centres at -185 + 32i), then teleports you into
+the entrance. From the console it pastes into the main world. Put the scanner's `rooms/` and
+`doors/` folders (copies or symlinks) in `plugins/dungeons/dungeon-rooms/`; it reads the modern
+`.schem` files, so block states and armor stands come through as captured.
+
+Use a world with `/gamerule random_tick_speed 0`. Hypixel's dungeons don't random-tick; with it
+on, the ice in rooms like Ice Path melts and floods them (the command warns about this).
 
 - **`RoomLibrary`** reads the captures. Each room id becomes one template; its captures are
   variants (Lower and Higher Blaze are both `blaze`). Types map NORMAL → REGULAR,
@@ -277,8 +282,11 @@ the entrance. Put the scanner's `rooms/` and `doors/` folders in `plugins/<plugi
   the template frame turned `frameTurns` times (0, except 3 for L rooms), so a room with
   rotation `r` is pasted turned `r - frameTurns` times. If a room has several captures, it uses the
   one whose open doorways best match the doors it needs.
-- **`WorldEditPaster`** carries it out, in this order:
-  1. clear the gaps, empty cells and the space above and below each room;
+- **`WorldEditPaster`** carries it out over several ticks (4-layer slices, about 25 ms per tick
+  including WorldEdit's lighting pass, no undo history), so the server keeps running. Schematics
+  are read off the main thread first. In this order:
+  1. clear the gaps, empty cells and the space above and below each room (only blocks that
+     aren't air already);
   2. paste the rooms (only their own blocks: an L room's schematic box also holds the missing
      cell);
   3. paste the doors: 5 wide, 3 deep (the gap plus both rooms' outer wall), y 67–73. That also
@@ -287,10 +295,14 @@ the entrance. Put the scanner's `rooms/` and `doors/` folders in `plugins/<plugi
      beside them;
   5. clear solid blocks up to 2 deep behind new doorways.
 
-An offline simulation of the whole paste (applying the plan to the captured `.schem` files) over
-several F7 seeds found every block of the map covered and every doorway walkable. Not checked
-in game yet: lighting after WorldEdit's fast mode, and how WorldEdit turns block states and
-signs. Armor stands aren't in the 1.8 schematics, so they're missing for now.
+Pasted leaves are made persistent and armor stands get no gravity: on Hypixel neither changes
+(no random ticks; the stands are only sent to clients), on a normal server leaves would decay
+and the stands would fall.
+
+Checked on a real Paper 26.2 server with WorldEdit 7.4.5: an F7 dungeon pastes in 5–9 s at
+~20 TPS. 25,000 random positions matched a simulation of the plan (block types and turned
+`facing`/`axis`/`rotation` states), also after pasting a different dungeon over it, and all
+56 armor stands were where they belong. A test player was teleported into the entrance.
 
 ## Sources
 - IllegalMap (`utils/rooms.json`, `components/DungeonMap.js`): https://github.com/UnclaimedBloom6/IllegalMap

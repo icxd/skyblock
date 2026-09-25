@@ -1,17 +1,29 @@
 package net.icxd.dungeons.utils;
 
-import net.minecraft.server.v1_8_R3.EnumParticle;
-import net.minecraft.server.v1_8_R3.Packet;
-import net.minecraft.server.v1_8_R3.PacketPlayOutWorldParticles;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 public class Particle {
-    private final Packet<?> packet;
-    public Particle(EnumParticle type, Location location, float xOffset, float yOffset, float zOffset, float speed, int count) {
-        float x = (float) location.getX();
-        float y = (float) location.getY();
-        float z = (float) location.getZ();
-        this.packet = new PacketPlayOutWorldParticles(type, true, x, y, z, xOffset, yOffset, zOffset, speed, count, null);
+    private final org.bukkit.Particle type;
+    private final Location location;
+    private final float xOffset;
+    private final float yOffset;
+    private final float zOffset;
+    private final float speed;
+    private final int count;
+
+    public Particle(org.bukkit.Particle type, Location location, float xOffset, float yOffset, float zOffset, float speed, int count) {
+        this.type = type;
+        this.location = location;
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;
+        this.zOffset = zOffset;
+        this.speed = speed;
+        this.count = count;
     }
-    public Packet<?> getPacket() { return packet; }
+
+    /** Shows the particle to one player, even from far away (like the 1.8 packet's long-distance flag). */
+    public void send(Player player) {
+        player.spawnParticle(type, location, count, xOffset, yOffset, zOffset, speed, null, true);
+    }
 }

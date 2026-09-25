@@ -16,15 +16,16 @@ import net.icxd.dungeons.user.Rank;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Utils;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -81,9 +82,9 @@ public class PlayerListener implements Listener {
         ItemStack item = event.getItem().getItemStack();
         if (item == null) return;
         if (item.getType() == Material.AIR) return;
-        net.minecraft.server.v1_8_R3.ItemStack craftItem = CraftItemStack.asNMSCopy(item);
+        ItemNBT craftItem = ItemNBT.of(item);
         if (!craftItem.hasTag()) return;
-        net.minecraft.server.v1_8_R3.NBTTagCompound tag = craftItem.getTag();
+        NBTTagCompound tag = craftItem.getTag();
         String id = tag.getString("id");
         SkyBlockItem sbItem = ItemRegistry.get(id);
         if (sbItem.isOwnable())
@@ -101,9 +102,9 @@ public class PlayerListener implements Listener {
         ItemStack item = player.getInventory().getItem(event.getNewSlot());
         if (item == null) return;
         if (item.getType() == Material.AIR) return;
-        net.minecraft.server.v1_8_R3.ItemStack craftItem = CraftItemStack.asNMSCopy(item);
+        ItemNBT craftItem = ItemNBT.of(item);
         if (!craftItem.hasTag()) return;
-        net.minecraft.server.v1_8_R3.NBTTagCompound tag = craftItem.getTag();
+        NBTTagCompound tag = craftItem.getTag();
         String id = tag.getString("id");
         SkyBlockItem sbItem = ItemRegistry.get(id);
         if (sbItem.isOwnable())
@@ -116,14 +117,16 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onAbilityUse(PlayerInteractEvent event) {
+        // Fired once per hand since 1.9; the ability is on the main hand item.
+        if (event.getHand() != EquipmentSlot.HAND) return;
         Player player = event.getPlayer();
         User user = User.getUser(player.getUniqueId());
         ItemStack item = player.getItemInHand();
         if (item == null) return;
         if (item.getType() == Material.AIR) return;
-        net.minecraft.server.v1_8_R3.ItemStack craftItem = CraftItemStack.asNMSCopy(item);
+        ItemNBT craftItem = ItemNBT.of(item);
         if (!craftItem.hasTag()) return;
-        net.minecraft.server.v1_8_R3.NBTTagCompound tag = craftItem.getTag();
+        NBTTagCompound tag = craftItem.getTag();
         tag.setString("owner", user.getUuid().toString());
         String id = tag.getString("id");
         SkyBlockItem sbItem = ItemRegistry.get(id);
@@ -146,7 +149,7 @@ public class PlayerListener implements Listener {
                     int cost = ability.getManaCost();
                     int resMana = mana - cost;
                     if (resMana < 0) {
-                        player.playSound(player.getLocation(), Sound.ENDERMAN_TELEPORT, 1f, -4f);
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
 
                         long c = System.currentTimeMillis();
                         StatsRunnable.MANA_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
@@ -197,7 +200,7 @@ public class PlayerListener implements Listener {
                     int cost = ability.getManaCost();
                     int resMana = mana - cost;
                     if (resMana < 0) {
-                        player.playSound(player.getLocation(), Sound.ENDERMAN_TELEPORT, 1f, -4f);
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
 
                         long c = System.currentTimeMillis();
                         StatsRunnable.MANA_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
@@ -245,9 +248,9 @@ public class PlayerListener implements Listener {
             ItemStack item = player.getItemInHand();
             if (item == null) return;
             if (item.getType() == Material.AIR) return;
-            net.minecraft.server.v1_8_R3.ItemStack craftItem = CraftItemStack.asNMSCopy(item);
+            ItemNBT craftItem = ItemNBT.of(item);
             if (!craftItem.hasTag()) return;
-            net.minecraft.server.v1_8_R3.NBTTagCompound tag = craftItem.getTag();
+            NBTTagCompound tag = craftItem.getTag();
             tag.setString("owner", user.getUuid().toString());
             String id = tag.getString("id");
             SkyBlockItem sbItem = ItemRegistry.get(id);
@@ -264,9 +267,9 @@ public class PlayerListener implements Listener {
 
             if (player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() != Material.AIR) {
                 ItemStack helmet = player.getInventory().getHelmet();
-                net.minecraft.server.v1_8_R3.ItemStack craft1 = CraftItemStack.asNMSCopy(helmet);
+                ItemNBT craft1 = ItemNBT.of(helmet);
                 if (craft1.hasTag()) {
-                    net.minecraft.server.v1_8_R3.NBTTagCompound tag1 = craft1.getTag();
+                    NBTTagCompound tag1 = craft1.getTag();
                     String id1 = tag1.getString("id");
                     SkyBlockItem item1 = ItemRegistry.get(id1);
                     double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
@@ -281,9 +284,9 @@ public class PlayerListener implements Listener {
             }
             if (player.getInventory().getChestplate() != null && player.getInventory().getChestplate().getType() != Material.AIR) {
                 ItemStack chestplate = player.getInventory().getChestplate();
-                net.minecraft.server.v1_8_R3.ItemStack craft1 = CraftItemStack.asNMSCopy(chestplate);
+                ItemNBT craft1 = ItemNBT.of(chestplate);
                 if (craft1.hasTag()) {
-                    net.minecraft.server.v1_8_R3.NBTTagCompound tag1 = craft1.getTag();
+                    NBTTagCompound tag1 = craft1.getTag();
                     String id1 = tag1.getString("id");
                     SkyBlockItem item1 = ItemRegistry.get(id1);
                     double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
@@ -298,9 +301,9 @@ public class PlayerListener implements Listener {
             }
             if (player.getInventory().getLeggings() != null && player.getInventory().getLeggings().getType() != Material.AIR) {
                 ItemStack leggings = player.getInventory().getLeggings();
-                net.minecraft.server.v1_8_R3.ItemStack craft1 = CraftItemStack.asNMSCopy(leggings);
+                ItemNBT craft1 = ItemNBT.of(leggings);
                 if (craft1.hasTag()) {
-                    net.minecraft.server.v1_8_R3.NBTTagCompound tag1 = craft1.getTag();
+                    NBTTagCompound tag1 = craft1.getTag();
                     String id1 = tag1.getString("id");
                     SkyBlockItem item1 = ItemRegistry.get(id1);
                     double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
@@ -315,9 +318,9 @@ public class PlayerListener implements Listener {
             }
             if (player.getInventory().getBoots() != null && player.getInventory().getBoots().getType() != Material.AIR) {
                 ItemStack boots = player.getInventory().getBoots();
-                net.minecraft.server.v1_8_R3.ItemStack craft1 = CraftItemStack.asNMSCopy(boots);
+                ItemNBT craft1 = ItemNBT.of(boots);
                 if (craft1.hasTag()) {
-                    net.minecraft.server.v1_8_R3.NBTTagCompound tag1 = craft1.getTag();
+                    NBTTagCompound tag1 = craft1.getTag();
                     String id1 = tag1.getString("id");
                     SkyBlockItem item1 = ItemRegistry.get(id1);
                     double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();

@@ -1,5 +1,6 @@
 package net.icxd.dungeons.anticheat.check;
 
+import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.anticheat.ACUser;
 import net.icxd.dungeons.anticheat.check.combat.CombatCheck;
@@ -13,7 +14,7 @@ public class CheckHandler implements Runnable {
 
     public CheckHandler() {
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), this, 0, 1);
-        new Reflections().getSubTypesOf(CombatCheck.class).forEach(check -> {
+        Utils.instantiableSubTypesOf(CombatCheck.class).forEach(check -> {
             try {
                 checks.add(check.newInstance());
             } catch (InstantiationException | IllegalAccessException e) { e.printStackTrace(); }

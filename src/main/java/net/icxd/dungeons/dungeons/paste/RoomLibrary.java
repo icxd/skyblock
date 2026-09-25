@@ -3,6 +3,7 @@ package net.icxd.dungeons.dungeons.paste;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,8 +38,8 @@ import net.icxd.dungeons.dungeons.generation.utils.Position;
  * The rooms and doors captured by the dungeon scanner, read from a folder laid out the way the
  * scanner saves them:
  * <pre>
- *   rooms/&lt;id&gt;/&lt;id&gt;_&lt;hash&gt;.json + .schematic   one file pair per captured variant
- *   doors/&lt;type&gt;/&lt;type&gt;_&lt;hash&gt;.schematic      normal, wither, entrance, blood
+ *   rooms/&lt;id&gt;/&lt;id&gt;_&lt;hash&gt;.json + .schem   one file pair per captured variant
+ *   doors/&lt;type&gt;/&lt;type&gt;_&lt;hash&gt;.schem      normal, wither, entrance, blood
  * </pre>
  * Every room id becomes one generator template; its captures are variants of it (e.g. the same
  * room captured with different doorways open, or Lower and Higher Blaze for the blaze puzzle).
@@ -72,7 +73,7 @@ public final class RoomLibrary {
     List<String> problems = new ArrayList<>();
 
     List<Path> jsons;
-    try (Stream<Path> files = Files.walk(roomDir)) {
+    try (Stream<Path> files = Files.walk(roomDir, FileVisitOption.FOLLOW_LINKS)) {
       jsons = files.filter(p -> p.toString().endsWith(".json")).sorted().collect(Collectors.toList());
     }
     Map<String, List<RoomCapture>> byTemplate = new TreeMap<>();
@@ -100,7 +101,7 @@ public final class RoomLibrary {
       Path dir = doorDir.resolve(type.name().toLowerCase());
       if (!Files.isDirectory(dir)) continue;
       try (Stream<Path> files = Files.list(dir)) {
-        List<Path> list = files.filter(p -> p.toString().endsWith(".schematic")).sorted().collect(Collectors.toList());
+        List<Path> list = files.filter(p -> p.toString().endsWith(".schem")).sorted().collect(Collectors.toList());
         if (!list.isEmpty()) doors.put(type, List.copyOf(list));
       }
     }
@@ -115,7 +116,7 @@ public final class RoomLibrary {
       o = new JsonParser().parse(reader).getAsJsonObject();
     }
     String name = json.getFileName().toString();
-    Path schematic = json.resolveSibling(name.substring(0, name.length() - ".json".length()) + ".schematic");
+    Path schematic = json.resolveSibling(name.substring(0, name.length() - ".json".length()) + ".schem");
     if (!Files.exists(schematic)) throw new IOException("missing " + schematic.getFileName());
 
     String id = o.get("id").getAsString();

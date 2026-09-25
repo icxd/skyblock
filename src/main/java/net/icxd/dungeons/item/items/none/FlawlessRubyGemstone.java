@@ -17,8 +17,7 @@ import java.awt.*;
 import java.util.*;
 
 public class FlawlessRubyGemstone implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYxODA4MzU3MzU0NywKICAicHJvZmlsZUlkIiA6ICJmZDQ3Y2I4YjgzNjQ0YmY3YWIyYmUxODZkYjI1ZmMwZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJDVUNGTDEyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzkyNmEyNDhmYmJjMDZjZjA2ZTJjOTIwZWNhMWNhYzhhMmM5NjE2NGQzMjYwNDk0YmVkMTQyZDU1MzAyNmNjNiIKICAgIH0KICB9Cn0"; }
     @Override public String name() { return "Flawless Ruby Gemstone"; }
     @Override public Rarity rarity() { return Rarity.EPIC; }

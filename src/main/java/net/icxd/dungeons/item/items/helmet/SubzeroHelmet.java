@@ -21,10 +21,9 @@ import org.bukkit.Material;
 
 public class SubzeroHelmet implements SkyBlockItem {
     @Override public String name() { return "Subzero Helmet"; }
-    @Override public Material material() { return Material.SKULL_ITEM; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }
     @Override public String skin() { return "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTBiM2M5MWI3MjdkODdkOGM4YWE5NjAyOGYyMjc1Yjg0MDVkZWJjNzUxNmEwMjNkMGY3NzQ4YmFiMjFmOWM0MyJ9fX0="; }
-    @Override public int durability() { return 3; }
     @Override public double npcSellPrice() { return 10000; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.HELMET; }
     @Override public Stats stats() { return new Stats(0, 0, 325, 250, 150, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }

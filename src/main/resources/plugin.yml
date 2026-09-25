@@ -3,4 +3,9 @@ version: '${project.version}'
 main: net.icxd.dungeons.Dungeons
 description: remake of hypixel skyblock dungeons
 author: icxd
-softdepend: [WorldEdit]
+api-version: '26.2'
+softdepend: [WorldEdit, packetevents]
+# Downloaded from Maven Central by Paper when the plugin loads.
+libraries:
+  - org.mongodb:mongo-java-driver:3.12.11
+  - org.reflections:reflections:0.10.2

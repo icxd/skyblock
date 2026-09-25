@@ -11,7 +11,7 @@ import net.icxd.dungeons.item.prestige.*;
 import net.icxd.dungeons.item.requirement.*;
 import net.icxd.dungeons.item.requirement.skill.*;
 import net.icxd.dungeons.stats.Stats;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Material;
 
 import java.awt.*;

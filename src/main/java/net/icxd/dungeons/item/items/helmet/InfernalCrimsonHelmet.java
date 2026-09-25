@@ -18,8 +18,7 @@ import java.awt.*;
 import java.util.*;
 
 public class InfernalCrimsonHelmet implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTY0NTUwNDM1MTEzMSwKICAicHJvZmlsZUlkIiA6ICI4ODBiZWMwYTE0MmM0YzRlYTJlZjliMTFiMTBkNWNiNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJmZ2FiIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzUwN2Q2YmY3NjExMTkwZWQ5YzU4MGQ4Yzg3YzI5NjA1OTIxNjIzMGM5NTAxZWVjNjM1OWUwZDYwZWM4NDc1OGUiCiAgICB9CiAgfQp9"; }
     @Override public String name() { return "Infernal Crimson Helmet"; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.HELMET; }

@@ -18,7 +18,7 @@ import net.icxd.dungeons.item.requirement.dungeontier.DungeonType;
 import net.icxd.dungeons.item.requirement.skill.*;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Utils;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

@@ -43,7 +43,7 @@ public class InstantTransmission extends Ability {
                     loc.setZ(loc.getZ() + 0.5);
 
                     player.teleport(loc);
-                    player.playSound(loc, Sound.ENDERMAN_TELEPORT, 1.0F, 1.0F);
+                    player.playSound(loc, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0F, 1.0F);
                     player.setFallDistance(0);
 
                 }
@@ -59,9 +59,9 @@ public class InstantTransmission extends Ability {
             loc.setY(loc.getY() - 1);
             loc.setZ(loc.getZ() + 0.5);
             player.teleport(loc);
-            player.playSound(loc, Sound.ENDERMAN_TELEPORT, 1.0F, 1.0F);
+            player.playSound(loc, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0F, 1.0F);
 
-            player.playSound(player.getLocation(), Sound.ENDERMAN_TELEPORT, 3f, 1f);
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 3f, 1f);
         }
 
         if (true)

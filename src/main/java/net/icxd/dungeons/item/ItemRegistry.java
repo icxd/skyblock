@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item;
 
+import net.icxd.dungeons.utils.Utils;
 import lombok.Getter;
 import org.reflections.Reflections;
 
@@ -9,7 +10,7 @@ public class ItemRegistry {
     @Getter private static final HashMap<String, SkyBlockItem> registry = new HashMap<>();
     public ItemRegistry() {
         try {
-            for (Class<?> item : new Reflections().getSubTypesOf(SkyBlockItem.class)) {
+            for (Class<?> item : Utils.instantiableSubTypesOf(SkyBlockItem.class)) {
                 SkyBlockItem skyBlockItem = (SkyBlockItem) item.newInstance();
                 registry.put(skyBlockItem.id().toUpperCase(), skyBlockItem);
             }

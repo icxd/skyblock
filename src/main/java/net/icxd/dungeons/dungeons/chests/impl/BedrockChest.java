@@ -49,10 +49,10 @@ public class BedrockChest extends RewardChest {
         setHead(b_m_h, "http://textures.minecraft.net/texture/3bcbbf94d603743a1e7147026e1c1240bd98fe87cc4ef04dcab51a31c30914fd");
         b_m_h.setHeadPose(new EulerAngle(-0.25, 0, 0));
 
-        setHead(m_tr, new ItemStack(Material.STEP, 1, (short) 7));
-        setHead(m_tl, new ItemStack(Material.STEP, 1, (short) 7));
-        setHead(m_br, new ItemStack(Material.STEP, 1, (short) 7));
-        setHead(m_bl, new ItemStack(Material.STEP, 1, (short) 7));
+        setHead(m_tr, new ItemStack(Material.QUARTZ_SLAB));
+        setHead(m_tl, new ItemStack(Material.QUARTZ_SLAB));
+        setHead(m_br, new ItemStack(Material.QUARTZ_SLAB));
+        setHead(m_bl, new ItemStack(Material.QUARTZ_SLAB));
 
         setHead(c_bbr, "http://textures.minecraft.net/texture/aae235f295dc9dda432ce20f6693f79b1ad72014545c2e209bd32474021430d9");
         setHead(c_bbl, "http://textures.minecraft.net/texture/2668aa517ff9ad951fee4a99a0af1cd6117963ae9098977118da21cf21f51277");

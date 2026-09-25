@@ -6,17 +6,22 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.block.sign.Side;
+import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
 
+import net.kyori.adventure.text.Component;
 import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
@@ -41,7 +46,8 @@ import net.icxd.dungeons.user.Rank;
  *
  * <p>{@code /dungeon paste [floor] [seed]}: generates a layout from the captured rooms in
  * {@code plugins/<plugin>/dungeon-rooms} (the scanner's {@code rooms/} and {@code doors/}
- * folders) and pastes it with WorldEdit where Hypixel has it, from -200,-200.
+ * folders) and pastes it with WorldEdit where Hypixel has it, from -200,-200, in your world (the
+ * main world from the console).
  */
 @CommandParameters(aliases = "dungeon", permission = Rank.STAFF)
 public class DungeonCommand extends SCommand {
@@ -74,13 +80,11 @@ public class DungeonCommand extends SCommand {
   }
 
   private void paste(CommandSource source, String[] args) {
+    // From the console it goes into the main world.
     Player player = source.getPlayer();
-    if (player == null) {
-      source.send(ChatColor.RED + "Only players can paste a dungeon.");
-      return;
-    }
+    World world = player != null ? player.getWorld() : Bukkit.getWorlds().get(0);
     if (Bukkit.getPluginManager().getPlugin("WorldEdit") == null) {
-      source.send(ChatColor.RED + "Pasting needs WorldEdit 6.");
+      source.send(ChatColor.RED + "Pasting needs WorldEdit 7.");
       return;
     }
     DungeonFloor floor = floor(source, args);
@@ -98,6 +102,10 @@ public class DungeonCommand extends SCommand {
       return;
     }
     library.problems().forEach(p -> log.warning("Room library: " + p));
+    if (library.templates().isEmpty()) {
+      source.send(ChatColor.RED + "No rooms in " + folder + ". Copy the scanner's rooms/ and doors/ folders there.");
+      return;
+    }
 
     DungeonLayout layout;
     try {
@@ -111,23 +119,30 @@ public class DungeonCommand extends SCommand {
 
     PastePlan plan = PastePlan.create(layout, library, PastePlan.HYPIXEL_BASE, PastePlan.HYPIXEL_BASE, seed);
     plan.problems().forEach(p -> log.warning("Paste: " + p));
-    long start = System.currentTimeMillis();
-    int changed;
-    try {
-      changed = new WorldEditPaster(player.getWorld()).paste(plan);
-    } catch (Exception e) {
-      source.send(ChatColor.RED + "Paste failed: " + e.getMessage());
-      e.printStackTrace();
-      return;
-    }
-    long took = System.currentTimeMillis() - start;
-
-    PastePlan.Block entrance = plan.entrance();
-    player.teleport(standingSpot(player.getWorld(), entrance.x(), entrance.y(), entrance.z()));
-    source.send(ChatColor.GREEN + floor.getName() + " seed " + seed + ": pasted " + plan.rooms().size() + " rooms and "
-        + plan.doors().size() + " doors (" + changed + " blocks, " + took + " ms) from " + library.summary() + ".");
     int issues = problems.size() + plan.problems().size() + library.problems().size();
-    if (issues > 0) source.send(ChatColor.RED + "" + issues + " problems, see console.");
+    source.send(ChatColor.GRAY + "Pasting " + floor.getName() + " seed " + seed + " (" + plan.rooms().size() + " rooms)...");
+    Integer randomTicks = world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED);
+    if (randomTicks != null && randomTicks > 0) {
+      // Hypixel's dungeons don't random-tick; here the ice in rooms like Ice Path melts and floods them.
+      source.send(ChatColor.YELLOW + "This world random-ticks blocks, so ice in the rooms will melt. "
+          + "Hypixel's dungeons don't: use a world with /gamerule random_tick_speed 0.");
+    }
+    new WorldEditPaster(world).paste(instance, plan, result -> {
+      if (result.error() != null) {
+        log.log(Level.SEVERE, "Paste failed", result.error());
+        source.send(ChatColor.RED + "Paste failed: " + result.error().getMessage());
+        return;
+      }
+      String summary = floor.getName() + " seed " + seed + ": pasted " + plan.rooms().size() + " rooms and " + plan.doors().size()
+          + " doors in " + result.millis() + " ms, from " + library.summary() + ".";
+      log.info(summary);
+      if (player != null && player.isOnline()) {
+        PastePlan.Block entrance = plan.entrance();
+        player.teleport(standingSpot(world, entrance.x(), entrance.y(), entrance.z()));
+      }
+      source.send(ChatColor.GREEN + summary);
+      if (issues > 0) source.send(ChatColor.RED + "" + issues + " problems, see console.");
+    });
   }
 
   private static DungeonFloor floor(CommandSource source, String[] args) {
@@ -216,12 +231,13 @@ public class DungeonCommand extends SCommand {
 
       Position label = room.cells().get(0);
       Block signBlock = world.getBlockAt(label.x() * size + CELL / 2, PREVIEW_Y + 1, label.y() * size + CELL / 2);
-      signBlock.setType(Material.SIGN_POST);
+      signBlock.setType(Material.OAK_SIGN);
       Sign sign = (Sign) signBlock.getState();
-      sign.setLine(0, "#" + room.id() + " " + room.type());
-      sign.setLine(1, truncate(room.template().getId()));
-      sign.setLine(2, room.shape() + " r" + room.rotation());
-      sign.setLine(3, "doors: " + room.doors().size());
+      SignSide front = sign.getSide(Side.FRONT);
+      front.line(0, Component.text("#" + room.id() + " " + room.type()));
+      front.line(1, Component.text(truncate(room.template().getId())));
+      front.line(2, Component.text(room.shape() + " r" + room.rotation()));
+      front.line(3, Component.text("doors: " + room.doors().size()));
       sign.update();
     }
 
@@ -233,7 +249,7 @@ public class DungeonCommand extends SCommand {
       Block block = world.getBlockAt(x, PREVIEW_Y, z);
       switch (door.type()) {
         case NORMAL -> block.setType(Material.GOLD_BLOCK);
-        case ENTRANCE -> block.setType(Material.MONSTER_EGGS);
+        case ENTRANCE -> block.setType(Material.INFESTED_STONE);
         case WITHER -> block.setType(Material.COAL_BLOCK);
         case FAIRY -> wool(block, (byte) 6);
         case BLOOD -> block.setType(Material.REDSTONE_BLOCK);
@@ -241,9 +257,16 @@ public class DungeonCommand extends SCommand {
     }
   }
 
+  /** Wool in the 1.8 colour order (0 white, 5 lime, 6 pink, ...). */
+  private static final Material[] WOOL = {
+      Material.WHITE_WOOL, Material.ORANGE_WOOL, Material.MAGENTA_WOOL, Material.LIGHT_BLUE_WOOL,
+      Material.YELLOW_WOOL, Material.LIME_WOOL, Material.PINK_WOOL, Material.GRAY_WOOL,
+      Material.LIGHT_GRAY_WOOL, Material.CYAN_WOOL, Material.PURPLE_WOOL, Material.BLUE_WOOL,
+      Material.BROWN_WOOL, Material.GREEN_WOOL, Material.RED_WOOL, Material.BLACK_WOOL,
+  };
+
   private static void wool(Block block, byte color) {
-    block.setType(Material.WOOL);
-    block.setData(color);
+    block.setType(WOOL[color & 15]);
   }
 
   private static String truncate(String s) {

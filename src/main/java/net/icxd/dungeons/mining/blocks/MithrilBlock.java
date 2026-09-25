@@ -13,8 +13,7 @@ public class MithrilBlock {
     private static final int MIN_BREAKING_POWER = 4;
 
     public static class GrayMithrilBlock implements MinableBlock {
-        @Override public Material material() { return Material.WOOL; }
-        @Override public int data() { return 7; }
+        @Override public Material material() { return Material.GRAY_WOOL; }
         @Override public int minBreakingPower() { return MIN_BREAKING_POWER; }
         @Override public int blockStrength() { return 500; }
         @Override public int instaBreakStrength() { return 30000; }

@@ -5,9 +5,8 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.ability.AbilityActivation;
 import net.icxd.dungeons.item.ability.AbilityType;
-import net.minecraft.server.v1_8_R3.EnumParticle;
-import net.minecraft.server.v1_8_R3.PacketPlayOutWorldParticles;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -21,7 +20,7 @@ public class CoolThing extends Ability {
     @Override
     public void activate(Player player, SkyBlockItem item) {
         final Location startLocation = player.getLocation();
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20, 5));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 5));
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 5));
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 20, 5));
         new BukkitRunnable() {
@@ -38,9 +37,8 @@ public class CoolThing extends Ability {
                 for (double i = 0; i < distance; i += 0.5) {
                     currentLocation.add(x, y, z);
                     player.teleport(currentLocation);
-                    PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.FLAME, true, (float) currentLocation.getX(), (float) currentLocation.getY(), (float) currentLocation.getZ(), 0, 0, 0, 0, 1);
                     for (Player player : player.getWorld().getPlayers()) {
-                        ((org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
+                        player.spawnParticle(Particle.FLAME, currentLocation, 1, 0, 0, 0, 0, null, true);
                     }
                 }
 

@@ -5,10 +5,6 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.ability.AbilityActivation;
 import net.icxd.dungeons.item.ability.AbilityType;
-import net.icxd.dungeons.utils.Particle;
-import net.minecraft.server.v1_8_R3.EnumParticle;
-import net.minecraft.server.v1_8_R3.Packet;
-import net.minecraft.server.v1_8_R3.PacketPlayOutWorldParticles;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
@@ -79,11 +75,10 @@ public class Testing extends Ability {
             double y3 = y1 + (y * i / distance);
             double z3 = z1 + (z * i / distance);
             Color color = new Color(255, 0, 0);
-            PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.REDSTONE, true, (float) x3, (float) y3, (float) z3, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, 1, 0, null);
-
-//            Packet<?> packet = new Particle(EnumParticle.REDSTONE, new Location(location1.getWorld(), x3, y3, z3), 0, 0, 0, 0, 10).getPacket();
+            org.bukkit.Particle.DustOptions dust = new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(color.getRed(), color.getGreen(), color.getBlue()), 1);
+            Location point = new Location(location1.getWorld(), x3, y3, z3);
             for (Player player : location1.getWorld().getPlayers()) {
-                ((org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
+                player.spawnParticle(org.bukkit.Particle.DUST, point, 1, 0, 0, 0, 0, dust, true);
             }
         }
     }

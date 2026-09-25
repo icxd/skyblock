@@ -2,13 +2,14 @@ package net.icxd.dungeons.crimsonisle.miniboss;
 
 import net.icxd.dungeons.entity.CustomEntity;
 import net.icxd.dungeons.entity.EntityBuilder;
-import net.minecraft.server.v1_8_R3.*;
+import net.icxd.dungeons.entity.goals.FloatGoal;
+import net.icxd.dungeons.entity.goals.LeapAtTargetGoal;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftBlaze;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftSkeleton;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.WitherSkull;
@@ -28,7 +29,7 @@ public class Bladesoul implements CustomEntity {
     @Override public double getMaxHealth() { return 50000000; }
     @Override public double getDamage() { return 4000; }
     @Override public boolean isBoss() { return true; }
-    @Override public ItemStack getItemInHand() { return new ItemStack(Material.GOLD_AXE); }
+    @Override public ItemStack getItemInHand() { return new ItemStack(Material.GOLDEN_AXE); }
     @Override public CustomEntity getPassenger() {
         return new CustomEntity() {
             @Override public EntityType getEntityType() { return EntityType.BLAZE; }
@@ -39,17 +40,17 @@ public class Bladesoul implements CustomEntity {
             @Override public int getLevel() { return 200; }
             @Override public double getMaxHealth() { return 999999999; }
             @Override public void onSpawn(LivingEntity entity) {
-                ((CraftBlaze) entity).getHandle().goalSelector.a(0, new PathfinderGoalFloat(((CraftBlaze) entity).getHandle()));
+                Bukkit.getMobGoals().addGoal((Mob) entity, 0, new FloatGoal((Mob) entity));
             }
         };
     }
     @Override public void onSpawn(LivingEntity entity) {
         spawnLocations.put(entity, entity.getLocation());
         // remove ai
-        ((CraftSkeleton) entity).getHandle().goalSelector = new PathfinderGoalSelector(((CraftSkeleton) entity).getHandle().world.methodProfiler);
-        ((CraftSkeleton) entity).getHandle().targetSelector = new PathfinderGoalSelector(((CraftSkeleton) entity).getHandle().world.methodProfiler);
+        Mob mob = (Mob) entity;
+        Bukkit.getMobGoals().removeAllGoals(mob);
 
-        ((CraftSkeleton) entity).getHandle().goalSelector.a(0, new PathfinderGoalLeapAtTarget(((CraftSkeleton) entity).getHandle(), 5F));
+        Bukkit.getMobGoals().addGoal(mob, 0, new LeapAtTargetGoal(mob, 5F));
 
         ArmorStand armorStand = (ArmorStand) entity.getWorld().spawnEntity(entity.getLocation().clone().add(0, 4, 0), EntityType.ARMOR_STAND);
         armorStand.setVisible(false);

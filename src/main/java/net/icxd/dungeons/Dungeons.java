@@ -24,7 +24,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.reflections.Reflections;
 
-import java.lang.reflect.Field;
 
 public class Dungeons extends JavaPlugin {
     @Getter private static Dungeons instance;
@@ -55,21 +54,15 @@ public class Dungeons extends JavaPlugin {
         // new GUIRegistry();
         new EntityRegistry();
 
-        try {
-            Field f = Bukkit.getServer().getClass().getDeclaredField("commandMap");
-            f.setAccessible(true);
-            this.commandMap = (CommandMap) f.get(Bukkit.getServer());
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
+        this.commandMap = Bukkit.getCommandMap();
 
         cl = new CommandLoader();
 
         try {
-            for (Class<?> listener : new Reflections().getSubTypesOf(Listener.class)) {
+            for (Class<?> listener : Utils.instantiableSubTypesOf(Listener.class)) {
                 getServer().getPluginManager().registerEvents((Listener) listener.newInstance(), this);
             }
-            for (Class<?> command : new Reflections().getSubTypesOf(SCommand.class)) {
+            for (Class<?> command : Utils.instantiableSubTypesOf(SCommand.class)) {
                 cl.register((SCommand) command.newInstance());
             }
         } catch (InstantiationException | IllegalAccessException e) {

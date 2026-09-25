@@ -18,8 +18,7 @@ import java.awt.*;
 import java.util.*;
 
 public class PerfectlyCutFuelTank implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYyNTQ5MjcxMjIxMiwKICAicHJvZmlsZUlkIiA6ICI5ZDIyZGRhOTVmZGI0MjFmOGZhNjAzNTI1YThkZmE4ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTYWZlRHJpZnQ0OCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mN2U1NDFkZmI0YmExZjdkYzI4YjU0OGUzNDdhYmJkYzk4N2ViZTBlNjFjNDlmYTg3MTExZWYxYjJkY2IyMjE4IiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0"; }
     @Override public String name() { return "Perfectly-Cut Fuel Tank"; }
     @Override public Rarity rarity() { return Rarity.RARE; }

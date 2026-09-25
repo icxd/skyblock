@@ -17,8 +17,7 @@ import java.awt.*;
 import java.util.*;
 
 public class PerfectSapphireGemstone implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYyNDk3OTE5NzMwNSwKICAicHJvZmlsZUlkIiA6ICJjNTBhZmE4YWJlYjk0ZTQ1OTRiZjFiNDI1YTk4MGYwMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJUd29FQmFlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzhlOTNlYmFjYjYwYjcxNzkzMzU1ZmRlMGQ0YmJhNDNhOWM1ZWMwOWMzZjM4ODk3YzQ4YzFmODU3NTIzYTBhMjkiCiAgICB9CiAgfQp9"; }
     @Override public String name() { return "Perfect Sapphire Gemstone"; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }

@@ -19,7 +19,7 @@ import java.awt.*;
 import java.util.*;
 
 public class AspectoftheVoid implements SkyBlockItem {
-    @Override public Material material() { return Material.DIAMOND_SPADE; }
+    @Override public Material material() { return Material.DIAMOND_SHOVEL; }
     @Override public String name() { return "Aspect of the Void"; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.SWORD; }
     @Override public Rarity rarity() { return Rarity.EPIC; }

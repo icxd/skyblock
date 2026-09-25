@@ -45,7 +45,7 @@ public abstract class RewardChest {
     }
 
     public ArmorStand setHead(ArmorStand armorStand, String url) {
-        armorStand.setHelmet(Utils.setSkullItem(new ItemStack(Material.SKULL_ITEM, 1, (short) 3), url));
+        armorStand.setHelmet(Utils.setSkullItem(new ItemStack(Material.PLAYER_HEAD), url));
         return armorStand;
     }
 

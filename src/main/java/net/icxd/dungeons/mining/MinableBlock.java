@@ -5,15 +5,12 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.utils.Tuple;
-import net.minecraft.server.v1_8_R3.BlockPosition;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
-import net.minecraft.server.v1_8_R3.Packet;
-import net.minecraft.server.v1_8_R3.PacketPlayOutBlockBreakAnimation;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -25,7 +22,6 @@ public interface MinableBlock {
     int minBreakingPower();
     int blockStrength();
 
-    default int data() { return 0; }
     default int regenTime() { return 20*5; }
     default int instaBreakStrength() { return -1; } // -1 = no insta break
     default Material blockWhenBroken() { return Material.BEDROCK; }
@@ -35,13 +31,12 @@ public interface MinableBlock {
 
     default void place(Location location) {
         location.getBlock().setType(material());
-        location.getBlock().setData((byte) data());
     }
 
     default void breakBlock(Block block, Player player) {
         ItemStack itemInHand = player.getInventory().getItemInHand();
         if (itemInHand == null) return;
-        net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemInHand);
+        ItemNBT nmsItem = ItemNBT.of(itemInHand);
         if (nmsItem == null) return;
         NBTTagCompound tag = nmsItem.getTag();
         if (tag == null) return;
@@ -70,9 +65,7 @@ public interface MinableBlock {
             int ticks = 0;
             @Override
             public void run() {
-                Packet<?> packet = new PacketPlayOutBlockBreakAnimation(0, new BlockPosition(block.getX(), block.getY(), block.getZ()), (int) (ticks / (float) timeToBreakInTicks * 10));
-                for (Player p : Bukkit.getOnlinePlayers())
-                    ((org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+                MiningManager.sendBlockDamage(block, (int) (ticks / (float) timeToBreakInTicks * 10));
                 ticks++;
                 if (ticks >= timeToBreakInTicks) {
                     block.setType(blockWhenBroken());
@@ -98,9 +91,7 @@ public interface MinableBlock {
                 Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), new BukkitRunnable() {
                     @Override
                     public void run() {
-                        Packet<?> packet = new PacketPlayOutBlockBreakAnimation(0, new BlockPosition(block.getX(), block.getY(), block.getZ()), -1);
-                        for (Player p : Bukkit.getOnlinePlayers())
-                            ((org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+                        MiningManager.sendBlockDamage(block, -1);
                         place(block.getLocation());
                     }
                 }, regenTime());

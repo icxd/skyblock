@@ -19,13 +19,13 @@ import net.icxd.dungeons.reforge.ReforgeStat;
 import net.icxd.dungeons.rune.Rune;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Utils;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
-import net.minecraft.server.v1_8_R3.NBTTagList;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -54,8 +54,8 @@ public class ItemBuilder {
 
     public static ItemStack build(SkyBlockItem item, NBTTagCompound tag) {
         ItemStack stack = new ItemStack(item.material());
-        stack.setDurability((short) item.durability());
-        net.minecraft.server.v1_8_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
+        if (item.durability() != 0 && stack.getType().getMaxDurability() > 0) stack.setDurability((short) item.durability());
+        ItemNBT nmsStack = ItemNBT.of(stack);
         if (tag == null) {
             tag = new NBTTagCompound();
             tag.setString("id", item.id());
@@ -125,13 +125,13 @@ public class ItemBuilder {
             tag.set("gemstone_slots", gemstoneSlots);
         }
         nmsStack.setTag(tag);
-        stack = CraftItemStack.asBukkitCopy(nmsStack);
+        stack = nmsStack.toItemStack();
 
         if (item.color() != null) {
             LeatherArmorMeta meta = (LeatherArmorMeta) stack.getItemMeta();
             meta.setColor(Color.fromRGB(item.color().getRed(), item.color().getGreen(), item.color().getBlue()));
             stack.setItemMeta(meta);
-        } else if (item.material() == Material.SKULL_ITEM) {
+        } else if (item.material() == Material.PLAYER_HEAD) {
             Utils.skull(stack, item.skin());
         }
 
@@ -387,9 +387,9 @@ public class ItemBuilder {
                         (tag.getBoolean("recombobulated") ? " " + rarity.getBoldedColor() + ChatColor.MAGIC + "A" + rarity.getBoldedColor() : "")
         );
 
-        meta.spigot().setUnbreakable(true);
+        meta.setUnbreakable(true);
         meta.setLore(lore);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_PLACED_ON);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_PLACED_ON);
 
         stack.setItemMeta(meta);
         return stack;

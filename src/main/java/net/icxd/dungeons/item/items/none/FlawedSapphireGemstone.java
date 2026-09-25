@@ -17,8 +17,7 @@ import java.awt.*;
 import java.util.*;
 
 public class FlawedSapphireGemstone implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYxODA4NjIwMzYzNiwKICAicHJvZmlsZUlkIiA6ICI4OGU0YWNiYTQwOTc0YWZkYmE0ZDM1YjdlYzdmNmJmYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJKb2FvMDkxNSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84YTBhZjk5ZThkODcwMzE5NGE4NDdhNTUyNjhjZjVlZjRhYzRlYjNiMjRjMGVkODY1NTEzMzlkMTBiNjQ2NTI5IgogICAgfQogIH0KfQ"; }
     @Override public String name() { return "Flawed Sapphire Gemstone"; }
     @Override public Rarity rarity() { return Rarity.UNCOMMON; }

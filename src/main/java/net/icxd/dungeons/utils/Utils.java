@@ -1,23 +1,25 @@
 package net.icxd.dungeons.utils;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.user.Rank;
 import net.icxd.dungeons.user.User;
-import net.minecraft.server.v1_8_R3.ChatComponentText;
-import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -90,8 +92,7 @@ public class Utils {
   }
 
   public static void sendActionText(Player player, String message) {
-    PacketPlayOutChat packet = new PacketPlayOutChat(new ChatComponentText(color(message)), (byte) 2);
-    ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
+    player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(color(message)));
   }
 
   public static String formatTime(long time) {
@@ -147,16 +148,10 @@ public class Utils {
   public static void skull(ItemStack head, String skin) {
     if (skin.isEmpty()) return;
     SkullMeta headMeta = (SkullMeta) head.getItemMeta();
-    GameProfile profile = new GameProfile(UUID.randomUUID(), null);
-    byte[] encodedData = skin.getBytes();
-    profile.getProperties().put("textures", new Property("textures", new String(encodedData)));
-    Field profileField;
-    try {
-      profileField = headMeta.getClass().getDeclaredField("profile");
-      profileField.setAccessible(true);
-      profileField.set(headMeta, profile);
-    } catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException ignored){
-    }
+    // skin is the base64 "textures" property value.
+    com.destroystokyo.paper.profile.PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+    profile.setProperty(new ProfileProperty("textures", skin));
+    headMeta.setPlayerProfile(profile);
     head.setItemMeta(headMeta);
   }
 
@@ -190,7 +185,7 @@ public class Utils {
   }
 
   public static ArrayList<Class<?>> getAllClassesOfSubType(Class<?> subType) {
-    return new ArrayList<>(new Reflections().getSubTypesOf(subType));
+    return new ArrayList<>(reflections().getSubTypesOf(subType));
   }
 
   public static ArrayList<Player> getAllUsersOfRankOrHigher(Rank rank) {
@@ -225,21 +220,43 @@ public class Utils {
     if (url.isEmpty())
       return null;
     SkullMeta headMeta = (SkullMeta) stack.getItemMeta();
-    GameProfile profile = new GameProfile(UUID.randomUUID(), null);
-    byte[] encodedData = Base64.getEncoder().encode((String.format("{textures:{SKIN:{url:\"%s\"}}}", url)).getBytes());
-    profile.getProperties().put("textures", new Property("textures", new String(encodedData)));
-    Field profileField;
+    PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
     try {
-      profileField = headMeta.getClass().getDeclaredField("profile");
-      profileField.setAccessible(true);
-      profileField.set(headMeta, profile);
-    } catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e1) {
-      e1.printStackTrace();
+      profile.getTextures().setSkin(URI.create(url).toURL());
+    } catch (MalformedURLException | IllegalArgumentException e) {
+      e.printStackTrace();
     }
+    headMeta.setOwnerProfile(profile);
 
     stack.setItemMeta(headMeta);
 
     return stack;
+  }
+
+  /**
+   * Scans this plugin's classes. Paper loads Reflections from plugin.yml's libraries in a separate
+   * class loader, so a plain {@code new Reflections()} can't see the plugin jar.
+   */
+  public static Reflections reflections() {
+    ClassLoader loader = Utils.class.getClassLoader();
+    return new Reflections(new ConfigurationBuilder()
+        .forPackage("net.icxd.dungeons", loader)
+        .addClassLoaders(loader)
+        .filterInputsBy(new FilterBuilder().includePackage("net.icxd.dungeons")));
+  }
+
+  /**
+   * This plugin's classes that extend or implement {@code type} and can be made with {@code new}:
+   * no interfaces, abstract classes, or anonymous and inner classes (like an entity's passenger).
+   */
+  public static <T> List<Class<? extends T>> instantiableSubTypesOf(Class<T> type) {
+    List<Class<? extends T>> out = new ArrayList<>();
+    for (Class<? extends T> c : reflections().getSubTypesOf(type)) {
+      if (c.isInterface() || Modifier.isAbstract(c.getModifiers()) || c.isAnonymousClass() || c.isLocalClass()) continue;
+      if (c.isMemberClass() && !Modifier.isStatic(c.getModifiers())) continue;
+      out.add(c);
+    }
+    return out;
   }
 
   public static String title(String s) {

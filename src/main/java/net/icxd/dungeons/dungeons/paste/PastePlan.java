@@ -140,6 +140,12 @@ public final class PastePlan {
     return problems;
   }
 
+  /** The whole map, from the lowest to the highest block any room has. */
+  public Box area() {
+    return new Box(new Block(baseX, minY, baseZ),
+        new Block(baseX + PITCH * layout.getWidth() - 2, maxY, baseZ + PITCH * layout.getHeight() - 2));
+  }
+
   /** Centre of the entrance room at y=69 (the floor of the doorways is at 68). */
   public Block entrance() {
     for (PlacedRoom r : layout.getRooms()) {

@@ -13,9 +13,9 @@ import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
 import net.icxd.dungeons.user.Rank;
 import net.icxd.dungeons.user.User;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bson.Document;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -27,7 +27,7 @@ public class UpgradeCommand extends SCommand {
     public void run(CommandSource source, String[] args) {
         Player player = source.getPlayer();
         ItemStack item = player.getInventory().getItemInHand();
-        net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+        ItemNBT nmsItem = ItemNBT.of(item);
         NBTTagCompound tag = nmsItem.getTag();
         SkyBlockItem skyBlockItem = ItemRegistry.get(tag.getString("id"));
         if (skyBlockItem.upgradeCosts() == null) {

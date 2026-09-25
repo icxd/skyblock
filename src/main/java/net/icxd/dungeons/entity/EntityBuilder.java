@@ -1,9 +1,7 @@
 package net.icxd.dungeons.entity;
 
 import net.icxd.dungeons.Dungeons;
-import net.minecraft.server.v1_8_R3.Entity;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftMagmaCube;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -49,16 +47,9 @@ public class EntityBuilder {
         entity.setRemoveWhenFarAway(false);
         entity.setCanPickupItems(false);
 
-        if (entity instanceof CraftMagmaCube magmaCube) {
-            Entity nmsEntity = magmaCube.getHandle();
-            nmsEntity.getDataWatcher().watch(16, (byte) 3);
-        }
+        if (entity instanceof org.bukkit.entity.MagmaCube magmaCube) magmaCube.setSize(3);
 
-        if (entity instanceof Entity nmsEntity) {
-            nmsEntity.setInvisible(customEntity.isInvisible());
-            customEntity.onSpawn(entity);
-            return (LivingEntity) nmsEntity.getBukkitEntity();
-        }
+        entity.setInvisible(customEntity.isInvisible());
 
         customEntity.onSpawn(entity);
         entities.add(entity);

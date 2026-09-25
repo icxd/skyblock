@@ -1,5 +1,6 @@
 package net.icxd.dungeons.entity;
 
+import net.icxd.dungeons.utils.Utils;
 import lombok.Getter;
 import org.bukkit.entity.LivingEntity;
 import org.reflections.Reflections;
@@ -11,7 +12,7 @@ public class EntityRegistry {
     private static final HashMap<String, CustomEntity> registry = new HashMap<>();
     public EntityRegistry() {
         try {
-            for (Class<?> entity : new Reflections().getSubTypesOf(CustomEntity.class)) {
+            for (Class<?> entity : Utils.instantiableSubTypesOf(CustomEntity.class)) {
                 CustomEntity customEntity = (CustomEntity) entity.newInstance();
                 registry.put(customEntity.getId(), customEntity);
             }

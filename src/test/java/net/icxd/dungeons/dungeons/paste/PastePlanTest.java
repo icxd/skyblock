@@ -61,7 +61,7 @@ class PastePlanTest {
     writeRoom("higher_blaze", blaze, "cccc");
     for (String type : new String[]{"normal", "wither", "entrance", "blood"}) {
       Path dir = Files.createDirectories(root.resolve("doors").resolve(type));
-      Files.createFile(dir.resolve(type + "_0000.schematic"));
+      Files.createFile(dir.resolve(type + "_0000.schem"));
     }
     library = RoomLibrary.load(root);
   }
@@ -102,7 +102,7 @@ class PastePlanTest {
     json.append("]}");
     Path dir = Files.createDirectories(root.resolve("rooms").resolve(id));
     Files.writeString(dir.resolve(id + "_" + hash + ".json"), json);
-    Files.createFile(dir.resolve(id + "_" + hash + ".schematic"));
+    Files.createFile(dir.resolve(id + "_" + hash + ".schem"));
   }
 
   private static String pair(Position p) {
@@ -165,11 +165,11 @@ class PastePlanTest {
       Files.writeString(dir.resolve("hall_" + hash + ".json"), "{\"id\":\"hall\",\"type\":\"NORMAL\",\"shape\":\"1x1\","
           + "\"originY\":66,\"size\":[31,40,31],\"cells\":[[0,0]],\"doors\":[{\"cell\":[0,0],\"side\":\"EAST\",\"type\":\"NORMAL\"},"
           + "{\"cell\":[0,0],\"side\":\"WEST\",\"type\":\"NORMAL\"}]}");
-      Files.createFile(dir.resolve("hall_" + hash + ".schematic"));
+      Files.createFile(dir.resolve("hall_" + hash + ".schem"));
     }
     Files.writeString(dir.resolve("hall_cccc.json"), "{\"id\":\"hall\",\"type\":\"NORMAL\",\"shape\":\"1x1\","
         + "\"originY\":66,\"size\":[31,40,31],\"cells\":[[0,0]],\"doors\":[{\"cell\":[0,0],\"side\":\"EAST\",\"type\":\"NORMAL\"}]}");
-    Files.createFile(dir.resolve("hall_cccc.schematic"));
+    Files.createFile(dir.resolve("hall_cccc.schem"));
     RoomLibrary lib = RoomLibrary.load(other);
     assertEquals(2, lib.captures("hall").size());
     assertEquals(1, lib.problems().stream().filter(p -> p.contains("hall_cccc")).count(), lib.problems().toString());

@@ -18,8 +18,7 @@ import java.awt.*;
 import java.util.*;
 
 public class BurningCrimsonHelmet implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTY0NTUwNDM4MTkxMiwKICAicHJvZmlsZUlkIiA6ICJmZDQ3Y2I4YjgzNjQ0YmY3YWIyYmUxODZkYjI1ZmMwZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJDVUNGTDEyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2ViMDM0YTVkOTdjMjRmZTBlYzkwMmJkMDJmZWM1MmEwOWQ5MTczNjZiZTA2MGM1MWY5YTFhMjc2YjI4NGE5ZDciCiAgICB9CiAgfQp9"; }
     @Override public String name() { return "Burning Crimson Helmet"; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.HELMET; }

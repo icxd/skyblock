@@ -17,8 +17,7 @@ import java.awt.*;
 import java.util.*;
 
 public class PerfectTopazGemstone implements SkyBlockItem {
-    @Override public Material material() { return Material.SKULL_ITEM; }
-    @Override public int durability() { return 3; }
+    @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTYyNDk3OTE3ODQ1MywKICAicHJvZmlsZUlkIiA6ICJiYzRlZGZiNWYzNmM0OGE3YWM5ZjFhMzlkYzIzZjRmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICI4YWNhNjgwYjIyNDYxMzQwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNkYTZlY2RjYmMzZmUzNTVjYTA2MTExOTJhM2ZiZDM1ZGQ1NjM1ZDVmY2RmM2ZiYzc5ZWQyYmMxZjRhMDE3ZmUiCiAgICB9CiAgfQp9"; }
     @Override public String name() { return "Perfect Topaz Gemstone"; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }

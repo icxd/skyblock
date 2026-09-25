@@ -4,11 +4,9 @@ import lombok.Getter;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.SpecificItemType;
-import net.minecraft.server.v1_8_R3.EnumParticle;
-import net.minecraft.server.v1_8_R3.PacketPlayOutWorldParticles;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -31,8 +29,8 @@ public enum Rune {
                 double newX = x + 1 * Math.cos(angle);
                 double newZ = z + 1 * Math.sin(angle);
 
-                PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.FLAME, true, (float) newX, (float) location.getY() + (ticks % 20) / 20.0f / 2, (float) newZ, 0, 0, 0, 0, 1);
-                ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
+                Location point = new Location(location.getWorld(), newX, location.getY() + (ticks % 20) / 20.0f / 2, newZ);
+                player.spawnParticle(Particle.FLAME, point, 1, 0, 0, 0, 0, null, true);
             }
         }
     }),

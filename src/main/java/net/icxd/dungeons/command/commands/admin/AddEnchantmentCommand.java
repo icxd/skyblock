@@ -9,9 +9,9 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
 import net.icxd.dungeons.item.enchanting.EnchantmentType;
 import net.icxd.dungeons.user.Rank;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
-import net.minecraft.server.v1_8_R3.NBTTagList;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagList;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -34,14 +34,14 @@ public class AddEnchantmentCommand extends SCommand {
         Enchantment enchantment1 = new Enchantment(EnchantmentType.getByNamespace(enchantment), level);
 
         ItemStack item = player.getInventory().getItemInHand();
-        net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+        ItemNBT nmsItem = ItemNBT.of(item);
         NBTTagCompound tag = nmsItem.getTag();
         if (tag == null) {
             tag = new NBTTagCompound();
         }
 
         nmsItem.setTag(tag);
-        item = CraftItemStack.asBukkitCopy(nmsItem);
+        item = nmsItem.toItemStack();
 
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         NBTTagList enchantments = tag.getList("enchantments", 10);
@@ -60,7 +60,7 @@ public class AddEnchantmentCommand extends SCommand {
 
         tag.set("enchantments", enchantments);
         nmsItem.setTag(tag);
-        item = CraftItemStack.asBukkitCopy(nmsItem);
+        item = nmsItem.toItemStack();
         player.getInventory().setItemInHand(item);
         player.getInventory().setItemInHand(ItemBuilder.build(sbItem, tag));
 

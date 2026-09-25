@@ -3,7 +3,7 @@ package net.icxd.dungeons.rune;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -22,7 +22,7 @@ public class RuneRunnable implements Runnable {
             lastLocation.put(player, player.getLocation());
             if (player.getInventory().getItemInHand() != null && player.getInventory().getItemInHand().getType() != Material.AIR) {
                 ItemStack item = player.getInventory().getItemInHand();
-                net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+                ItemNBT nmsItem = ItemNBT.of(item);
                 if (nmsItem.hasTag()) {
                     if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
                         Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
@@ -31,7 +31,7 @@ public class RuneRunnable implements Runnable {
                 }
             } else if (player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() != Material.AIR) {
                 ItemStack item = player.getInventory().getHelmet();
-                net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+                ItemNBT nmsItem = ItemNBT.of(item);
                 if (nmsItem.hasTag()) {
                     if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
                         Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
@@ -40,7 +40,7 @@ public class RuneRunnable implements Runnable {
                 }
             } else if (player.getInventory().getChestplate() != null && player.getInventory().getChestplate().getType() != Material.AIR) {
                 ItemStack item = player.getInventory().getChestplate();
-                net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+                ItemNBT nmsItem = ItemNBT.of(item);
                 if (nmsItem.hasTag()) {
                     if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
                         Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
@@ -49,7 +49,7 @@ public class RuneRunnable implements Runnable {
                 }
             } else if (player.getInventory().getLeggings() != null && player.getInventory().getLeggings().getType() != Material.AIR) {
                 ItemStack item = player.getInventory().getLeggings();
-                net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+                ItemNBT nmsItem = ItemNBT.of(item);
                 if (nmsItem.hasTag()) {
                     if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
                         Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
@@ -58,7 +58,7 @@ public class RuneRunnable implements Runnable {
                 }
             } else if (player.getInventory().getBoots() != null && player.getInventory().getBoots().getType() != Material.AIR) {
                 ItemStack item = player.getInventory().getBoots();
-                net.minecraft.server.v1_8_R3.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+                ItemNBT nmsItem = ItemNBT.of(item);
                 if (nmsItem.hasTag()) {
                     if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
                         Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
