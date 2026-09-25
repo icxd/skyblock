@@ -2,6 +2,7 @@ package net.icxd.dungeons.dungeons.generation;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Random;
@@ -19,8 +20,9 @@ import net.icxd.dungeons.dungeons.generation.utils.Position;
  * cell. With that invariant the connector can always build a tree unless templates' door rules
  * forbid it.
  *
- * <p>On floors with a {@linkplain DungeonConfig#specialColumn() special column} the puzzles, trap
- * and miniboss room all go in the last column of the map.
+ * <p>On floors with a {@linkplain DungeonConfig#specialColumn() special column} the last column of
+ * the map is filled with puzzles, trap and miniboss (a random pick of them if there are more than
+ * the column has cells); whatever doesn't fit goes anywhere else.
  */
 final class SpecialPlacer {
   record Special(RoomType type, Position cell) {
@@ -74,16 +76,22 @@ final class SpecialPlacer {
     }
 
     // Puzzles & co. hang off the ends of branches, which is mostly the edge of the map.
+    List<RoomType> deadEnds = new ArrayList<>();
     int puzzles = config.minPuzzles() + random.nextInt(config.maxPuzzles() - config.minPuzzles() + 1);
-    for (int i = 0; i < puzzles; i++) if (!placeDeadEnd(RoomType.PUZZLE)) return false;
-    for (int i = 0; i < config.traps(); i++) if (!placeDeadEnd(RoomType.TRAP)) return false;
-    for (int i = 0; i < config.minibosses(); i++) if (!placeDeadEnd(RoomType.MINIBOSS)) return false;
+    for (int i = 0; i < puzzles; i++) deadEnds.add(RoomType.PUZZLE);
+    for (int i = 0; i < config.traps(); i++) deadEnds.add(RoomType.TRAP);
+    for (int i = 0; i < config.minibosses(); i++) deadEnds.add(RoomType.MINIBOSS);
+    Collections.shuffle(deadEnds, random);
+    int inColumn = config.specialColumn() ? Math.min(height, deadEnds.size()) : 0;
+    for (int i = 0; i < deadEnds.size(); i++) {
+      if (!placeDeadEnd(deadEnds.get(i), i < inColumn)) return false;
+    }
     return true;
   }
 
-  private boolean placeDeadEnd(RoomType type) {
+  private boolean placeDeadEnd(RoomType type, boolean column) {
     for (int tries = 0; tries < 20; tries++) {
-      Position cell = config.specialColumn()
+      Position cell = column
           ? pick(c -> inSpecialColumn(c) ? 1 : 0)
           : pick(c -> onEdge(c) ? config.deadEndEdgeWeight() : 1);
       if (cell != null && add(type, cell, 2)) return true;

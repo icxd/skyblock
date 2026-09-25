@@ -8,6 +8,7 @@ how sure it is:
 - **confirmed**: stated by Hypixel, or hard-coded / recorded in the data of several map mods that
   have to get it right to work.
 - **inferred**: follows from confirmed facts.
+- **played**: from your own play experience.
 - **tuning**: not documented anywhere; picked so the maps look right.
 
 The code lives in `src/main/java/net/icxd/dungeons/dungeons/generation`. `/dungeon [floor] [seed]`
@@ -17,17 +18,17 @@ prints a map like the ones below to the console and builds a block preview.
 F7, seed 2024. E = entrance door, W = wither door, B = blood door, # = normal door.
 r* = room on the critical path. S entrance, F fairy, BL blood, P puzzle, T trap, M miniboss.
 +-------+-------+-------+-------+-------+-------+
-|  M9   #  r24  #  r20          |  S0   E r*10  |
-+-------+-------+---#---+---#---+-------+       +
-|  P5   |  r23  #  r22  |  r21  #  P3   |       |
-+---#---+---#---+-------+-------+-------+---W---+
-|  r17          |  r19  #  P4   | r*13  W  F2   |
-+-------+---#---+---#---+-------+       +-------+
-|  BL1  B r*18  W r*16          W       #  r14  |
-+-------+-------+---#---+       +---#---+---#---+
-|  r11  #  T8   |  P6   |       |  r15  |  P7   |
-+       +-------+-------+-------+---#---+-------+
-|               #  r12                          |
+|  P3   |  r20  # r*18          E  S0   |  P6   |
++---#---+---#---+-------+---W---+-------+---#---+
+|  r22  #  r21  | r*16  | r*17  |  P7   #  r9   |
++       +-------+       +       +-------+---#---+
+|       | r*19  |       |       W r*14  W  F2   |
++-------+       +       +-------+---#---+---W---+
+|  BL1  B       W       | r*15  |  P5   | r*11  |
++-------+-------+       +       +-------+       +
+|  r10          #       W       W               |
++       +-------+---#---+-------+-------+---#---+
+|       #  M8   |  T4   |  r13          #  r12  |
 +-------+-------+-------+-------+-------+-------+
 ```
 
@@ -54,7 +55,7 @@ r* = room on the critical path. S entrance, F fairy, BL blood, P puzzle, T trap,
 | The fairy room is always on the entrance → blood path. | confirmed | 0.8 patch notes ("On the main path, you will always find…"), wiki |
 | **Every 1x1 regular room has a fixed door layout**: 22 straight (I), 20 corner (L), 12 T, 8 cross (X). **None of them is a dead end.** | confirmed | IllegalMap `rooms.json` `doors` field (N,E,S,W in the room's own frame), which matches BetterMap's independently collected I/L/T/X data for all but 2 rooms |
 | "Rare" rooms are 1x1 brown dead ends that show up "on very rare occasions", only when the generator "still ha[s] 1x1 spaces", usually at the map edge. | confirmed | forum guides |
-| Multi-cell rooms have no recorded door layout. | inferred: they can have doors on any wall and can be dead ends | mod data (no field for them) |
+| Multi-cell rooms have no recorded door layout; they can have a door on any wall and can be dead ends. | inferred + played | mod data (no field for them) |
 
 This is the answer to "some rooms can only have doors on certain walls". Every 1x1 prefab is
 built with a fixed set of doorways. The generator can only rotate it, so the door layout around a
@@ -75,9 +76,9 @@ room.
 |---|---|---|
 | Every floor: 1 entrance, 1 fairy, 1 blood, 1 yellow (miniboss) room, and at least 2 puzzles. F7 has up to 5 puzzles. Trap room from F3 up. | confirmed | wiki *Dungeons*, forum guides |
 | Puzzles never repeat in a dungeon. Available puzzles: Tic Tac Toe, Three Weirdos, Creeper Beams, Water Board and Teleport Maze on all floors; Higher or Lower, Boulder and Ice Path from F3; Quiz from F4; Ice Fill on F7. Bomb Defuse was removed in 0.20.5. | confirmed | wiki *Dungeon Puzzle Rooms* |
-| **On F4–F6 the last column (x = 5) holds all the puzzles, the trap and the miniboss room.** | confirmed as a working mod heuristic | Odin `SpecialColumn.kt` / `MapScan.kt` |
-| Exact puzzle count per floor. | tuning (not documented) | `DungeonFloor` |
-| Where the entrance and blood room go. | tuning (not documented) | defaults: both on the map border, far apart |
+| **On F4–F6 the last column (x = 5) is filled with puzzles, trap and miniboss.** Specials that don't fit go elsewhere; Odin handles a trap or miniboss outside the column. | confirmed as a working mod heuristic | Odin `SpecialColumn.kt` / `MapScan.kt` |
+| Puzzles: usually 2 on the small maps, 4–5 on the big ones. | played | `DungeonFloor` |
+| The entrance and blood room are both on the map border, far apart. | played | |
 
 The special column is the most surprising find. It suggests that on F4–F6 Hypixel generates a
 5-wide dungeon and then adds a column of special rooms. A fan recreation made the same point
@@ -93,12 +94,12 @@ then re-rolled with the same `Random`, so a seed always gives the same dungeon. 
 needs 1.1–1.7 attempts, which takes 3–7 ms.
 
 ### Stage 1a: special rooms (`SpecialPlacer`)
-1. **Entrance** on a random border cell. **Blood** on a border cell at least 60% of the map's
-   Manhattan diameter away (tuning).
+1. **Entrance** on a random border cell. **Blood** on a border cell far away from it: at least
+   60% of the map's Manhattan diameter (the 60% is tuning).
 2. **Fairy** on a cell roughly between them (`d(E,F) + d(F,B) ≤ d(E,B) + 2`), at least 2 cells
    from each. That guarantees at least one regular room before it and one after it.
 3. **Puzzles, trap, miniboss**: random cells, twice as likely on the border (tuning). On F4–F6
-   they go only in the last column.
+   a random pick of them fills the last column first, and the rest go anywhere.
 
 Every placement must keep two invariants, otherwise it's re-picked:
 - all non-dead-end cells stay 4-connected;
@@ -215,22 +216,23 @@ Shapes in their rotation-0 frame (x → east, y → south):
 | `shapeWeights` | 1x1 4, 1x2 3, 1x3 2, 1x4 1.5, 2x2 2, L 1.5 | how often each regular shape is picked |
 | `newestBias` | 0.5 | 1 = long winding branches, 0 = bushy |
 | `pathNoise` | 1.5 | 0 = shortest critical path |
-| `entranceOnEdge`, `bloodOnEdge`, `bloodDistance` | true, true, 0.6 | where entrance and blood go |
+| `entranceOnEdge`, `bloodOnEdge` | true, true | both on the border (played) |
+| `bloodDistance` | 0.6 | how far apart entrance and blood must be |
 | `deadEndEdgeWeight` | 2.0 | how much special rooms prefer the border |
-| puzzles per floor | E–F1 2, F2–F3 2–3, F4 3, F5–F6 3–4, F7 3–5 | `DungeonFloor` |
+| puzzles per floor | E–F1 2, F2–F3 2–3, F4–F7 4–5 | `DungeonFloor`; 5x5 is interpolated |
 
 Averages over 1000 seeds:
 
 | Floor | Rooms | Critical path (rooms) | Wither doors | Rare rooms / dungeon |
 |---|---|---|---|---|
 | Entrance | 12.1 | 5.9 | 2.9 | 0.08 |
-| F7 | 23.3 | 7.5 | 4.5 | 0.08 |
+| F7 | 23.6 | 7.4 | 4.4 | 0.08 |
 
 ## 5. Open questions
-- Where exactly the entrance and blood room may go, and whether Hypixel prefers corners.
-- The puzzle count per floor.
+- Puzzle count on the 5x5 floors (F2–F3), currently 2–3.
 - Whether the fairy door counts as a wither door for key purposes.
-- Whether any multi-cell room has restricted walls. The model supports it; the data doesn't say.
+- Multi-cell rooms are believed to have no restricted walls. The generator still supports them
+  (`doorSlots` on a multi-cell template), so a prefab that needs it can use it.
 
 ## Sources
 - IllegalMap (`utils/rooms.json`, `components/DungeonMap.js`): https://github.com/UnclaimedBloom6/IllegalMap

@@ -50,15 +50,16 @@ class DungeonGeneratorTest {
     assertTrue(rare < runs / 5, rare + " rare rooms in " + runs + " dungeons");
   }
 
-  @Test
-  void specialColumnHoldsPuzzlesTrapAndMiniboss() {
-    DungeonGenerator generator = new DungeonGenerator(DungeonConfig.forFloor(DungeonFloor.FLOOR_4), HypixelRooms.pool());
+  @ParameterizedTest
+  @EnumSource(value = DungeonFloor.class, names = {"FLOOR_4", "FLOOR_5", "FLOOR_6"})
+  void specialColumnIsFullOfSpecialRooms(DungeonFloor floor) {
+    DungeonGenerator generator = new DungeonGenerator(DungeonConfig.forFloor(floor), HypixelRooms.pool());
     for (long seed = 0; seed < 100; seed++) {
       DungeonLayout layout = generator.generate(seed);
-      for (PlacedRoom r : layout.getRooms()) {
-        if (r.type() == RoomType.PUZZLE || r.type() == RoomType.TRAP || r.type() == RoomType.MINIBOSS) {
-          assertEquals(layout.getWidth() - 1, r.cells().get(0).x(), "seed " + seed + "\n" + layout.render());
-        }
+      for (int y = 0; y < layout.getHeight(); y++) {
+        RoomType type = layout.roomAt(new Position(layout.getWidth() - 1, y)).type();
+        assertTrue(type == RoomType.PUZZLE || type == RoomType.TRAP || type == RoomType.MINIBOSS,
+            floor + " seed " + seed + "\n" + layout.render());
       }
     }
   }

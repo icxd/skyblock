@@ -9,10 +9,11 @@ import net.icxd.dungeons.dungeons.generation.room.RoomShape;
  * Knobs for one generation run. {@link #forFloor} gives the defaults; everything marked "tuning"
  * is not documented anywhere for Hypixel and was picked to make maps look right.
  *
- * @param specialColumn      puzzles, trap and miniboss all go in the map's last column (F4-F6, from
- *                           Odin's {@code SpecialColumn} map heuristic)
- * @param entranceOnEdge     tuning: entrance always on the map's border
- * @param bloodOnEdge        tuning: blood room always on the map's border
+ * @param specialColumn      the map's last column is filled with puzzles, trap and miniboss (F4-F6,
+ *                           from Odin's {@code SpecialColumn} map heuristic)
+ * @param entranceOnEdge     entrance always on the map's border (matches play experience)
+ * @param bloodOnEdge        blood room always on the map's border, far from the entrance (matches
+ *                           play experience)
  * @param bloodDistance      tuning: min entrance-blood distance as a fraction of the map's diagonal
  * @param deadEndEdgeWeight  tuning: how much more likely puzzles/trap/miniboss are on the border
  * @param shapeWeights       tuning: relative chance of each regular room shape
