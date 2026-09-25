@@ -112,7 +112,7 @@
                             <rules>
                                 <requireJavaVersion>
                                     <version>[25,)</version>
-                                    <message>Paper 26.2 and WorldEdit 7.4.5 are compiled for Java 25, so Maven has to run on JDK 25 or newer. Point JAVA_HOME (or your IDE's Maven runner JRE) at a JDK 25.</message>
+                                    <message>Maven is running on Java ${java.version} from ${java.home}, but Paper 26.2 and WorldEdit 7.4.5 need JDK 25 or newer. Maven uses JAVA_HOME, not the java on your PATH (in IntelliJ: Settings > Build Tools > Maven > Runner > JRE), so point that at a JDK 25.</message>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
