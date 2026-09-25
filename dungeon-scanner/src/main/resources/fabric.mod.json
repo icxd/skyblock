@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "dungeonscanner",
+  "version": "${version}",
+  "name": "Dungeon Scanner",
+  "description": "Scans a Hypixel Catacombs run and saves every room as a schematic, plus the run's layout.",
+  "authors": ["icxd"],
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["net.icxd.dungeonscanner.DungeonScannerClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

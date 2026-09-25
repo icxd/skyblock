@@ -232,6 +232,15 @@ Averages over 1000 seeds:
 - Multi-cell rooms are believed to have no restricted walls. The generator still supports them
   (`doorSlots` on a multi-cell template), so a prefab that needs it can use it.
 
+## 6. Capturing real rooms
+
+`dungeon-scanner/` is a client-side Fabric mod (Minecraft 26.2). During a Catacombs run it saves
+every room to a schematic in its own frame (roof marker north-west), both as a modern `.schem`
+and as a 1.8 `.schematic`. Next to each schematic is a JSON with the room's cells and door slots
+in that same frame, which is what the generator's templates need. It also writes each run's full
+layout to `runs/*.json`, which is real data to check the generator's statistics against. See
+`dungeon-scanner/README.md`.
+
 ## Sources
 - IllegalMap (`utils/rooms.json`, `components/DungeonMap.js`): https://github.com/UnclaimedBloom6/IllegalMap
 - BetterMap (`Data/roomdata.json`): https://github.com/BetterMap/BetterMap
