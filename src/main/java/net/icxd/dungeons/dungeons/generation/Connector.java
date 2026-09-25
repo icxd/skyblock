@@ -466,7 +466,7 @@ final class Connector {
           if (n.x() >= width || n.y() >= height) continue;
           int a = grid[x][y];
           int b = grid[n.x()][n.y()];
-          if (a == b) continue;
+          if (a == b || a < 0 || b < 0) continue;
           Edge edge = new Edge(p, n);
           adjacency.get(a).computeIfAbsent(b, k -> new ArrayList<>()).add(edge);
           adjacency.get(b).computeIfAbsent(a, k -> new ArrayList<>()).add(edge);

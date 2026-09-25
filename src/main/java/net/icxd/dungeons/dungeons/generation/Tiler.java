@@ -125,7 +125,7 @@ final class Tiler {
       if (!inside(n)) continue;
       int id = grid[n.x()][n.y()];
       if (id == -1) return false;
-      if (id == self || blocked.contains(id)) continue;
+      if (id == self || id == DungeonLayout.EMPTY || blocked.contains(id)) continue;
       if (exit != -2 && exit != id) return false;
       exit = id;
     }

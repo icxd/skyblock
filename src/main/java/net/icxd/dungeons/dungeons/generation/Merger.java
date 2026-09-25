@@ -44,7 +44,7 @@ final class Merger {
       List<Edge> doors = new ArrayList<>(parent.doors);
       doors.remove(inner);
       List<Placement> all = new ArrayList<>();
-      for (Room t : pool.templates(RoomType.REGULAR, shape, config.floor())) all.addAll(Placement.enumerate(t, union, w, h));
+      for (Room t : pool.templates(RoomType.REGULAR, shape, config.floor())) all.addAll(Placement.enumerate(t, union, grid));
       List<Placement> fitting = new ArrayList<>();
       for (Placement p : all) if (p.fits(doors)) fitting.add(p);
       if (fitting.isEmpty()) continue;
@@ -73,7 +73,9 @@ final class Merger {
       r.id = newId.get(r.id);
       if (r.parent >= 0) r.parent = newId.get(r.parent);
     }
-    for (int x = 0; x < w; x++) for (int y = 0; y < h; y++) grid[x][y] = newId.get(grid[x][y]);
+    for (int x = 0; x < w; x++) {
+      for (int y = 0; y < h; y++) if (grid[x][y] >= 0) grid[x][y] = newId.get(grid[x][y]);
+    }
     criticalPath.replaceAll(newId::get);
     rooms.clear();
     rooms.addAll(kept);

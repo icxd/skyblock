@@ -186,9 +186,21 @@ public final class HypixelRooms {
   }
 
   private static Room room(String id, RoomType type, RoomShape shape, String doors, int minFloor) {
-    Room.RoomBuilder b = Room.builder().id(id).type(type).shape(shape).minimumFloor(floor(minFloor));
+    Room.RoomBuilder b = Room.builder().id(id).type(type).shape(shape).minimumFloor(floor(minFloor)).rotations(rotations(shape));
     if (doors != null) b.doorSlots(slots(doors)).exactDoors(true);
     return b.build();
+  }
+
+  /**
+   * Straight rooms are only ever horizontal (0) or vertical (1) and 2x2s never turn: on 23 captured
+   * multi-cell rooms the roof marker was always in that position.
+   */
+  public static Set<Integer> rotations(RoomShape shape) {
+    return switch (shape) {
+      case ONE_BY_TWO, ONE_BY_THREE, ONE_BY_FOUR -> Set.of(0, 1);
+      case TWO_BY_TWO -> Set.of(0);
+      default -> Set.of(0, 1, 2, 3);
+    };
   }
 
   /** "N E S W" bit string -> door slots of a 1x1 room. */

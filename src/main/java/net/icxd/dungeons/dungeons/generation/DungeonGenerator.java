@@ -15,6 +15,7 @@ import net.icxd.dungeons.dungeons.generation.room.Room;
 import net.icxd.dungeons.dungeons.generation.room.RoomShape;
 import net.icxd.dungeons.dungeons.generation.room.RoomType;
 import net.icxd.dungeons.dungeons.generation.utils.Edge;
+import net.icxd.dungeons.dungeons.generation.utils.Position;
 
 /**
  * Generates a dungeon layout. See {@code DUNGEON_GEN.md} for the reasoning behind each stage.
@@ -75,13 +76,14 @@ public final class DungeonGenerator {
       grid[s.cell().x()][s.cell().y()] = id;
       rooms.add(new RoomNode(id, s.type(), RoomShape.ONE_BY_ONE, List.of(s.cell())));
     }
+    for (Position p : specials.voidCells()) grid[p.x()][p.y()] = DungeonLayout.EMPTY;
 
     // 2. Regular rooms everywhere else.
     Set<Integer> blocked = new HashSet<>();
     for (RoomNode r : rooms) if (r.type == RoomType.START || r.type == RoomType.BLOOD) blocked.add(r.id);
     Map<Tiler.Piece, Integer> capacityCache = new HashMap<>();
     Tiler tiler = new Tiler(grid, random, config.shapeWeights(), pool.shapeLimits(config.floor()), blocked,
-        piece -> capacityCache.computeIfAbsent(piece, pc -> doorCapacity(pc, w, h)));
+        piece -> capacityCache.computeIfAbsent(piece, pc -> doorCapacity(pc, grid)));
     for (Tiler.Piece piece : tiler.fill(rooms.size())) {
       rooms.add(new RoomNode(rooms.size(), RoomType.REGULAR, piece.shape(), piece.cells()));
     }
@@ -89,7 +91,7 @@ public final class DungeonGenerator {
     for (RoomNode room : rooms) {
       room.options = new ArrayList<>();
       for (Room template : pool.templates(room.type, room.shape, config.floor())) {
-        room.options.addAll(Placement.enumerate(template, room.cells, w, h));
+        room.options.addAll(Placement.enumerate(template, room.cells, grid));
       }
       if (room.options.isEmpty()) return fail("no template for " + room.type + " " + room.shape);
       room.allOptions = room.options;
@@ -114,7 +116,7 @@ public final class DungeonGenerator {
       if (room.type == RoomType.REGULAR && room.shape == RoomShape.ONE_BY_ONE && room.doors.size() == 1) {
         List<Placement> rare = new ArrayList<>();
         for (Room template : pool.templates(RoomType.RARE, RoomShape.ONE_BY_ONE, config.floor())) {
-          for (Placement p : Placement.enumerate(template, room.cells, w, h)) if (p.fits(room.doors)) rare.add(p);
+          for (Placement p : Placement.enumerate(template, room.cells, grid)) if (p.fits(room.doors)) rare.add(p);
         }
         if (!rare.isEmpty()) {
           room.type = RoomType.RARE;
@@ -156,13 +158,13 @@ public final class DungeonGenerator {
           room.id, room.type, room.shape, p.template(), p.rotation(), room.cells,
           room.parent, room.depth, List.copyOf(doorsPerRoom.get(room.id))));
     }
-    return new DungeonLayout(grid, placed, doors, path, seed, attempt);
+    return new DungeonLayout(grid, placed, doors, path, seed, attempt, config.specialColumn());
   }
 
-  private int doorCapacity(Tiler.Piece piece, int w, int h) {
+  private int doorCapacity(Tiler.Piece piece, int[][] grid) {
     int best = 0;
     for (Room t : pool.templates(RoomType.REGULAR, piece.shape(), config.floor())) {
-      for (Placement p : Placement.enumerate(t, piece.cells(), w, h)) {
+      for (Placement p : Placement.enumerate(t, piece.cells(), grid)) {
         best = Math.max(best, Math.min(p.doorLimit(), p.allowedDoors().size()));
       }
     }
@@ -191,15 +193,19 @@ public final class DungeonGenerator {
     return null;
   }
 
-  /** Default shape weights (tuning, picked by eye to make maps look like Hypixel's). */
+  /**
+   * Default shape weights (tuning). Nudged towards the shape mix of captured F6 runs: per dungeon
+   * about 4 regular 1x1s, 2 1x2s, 1 1x3, 1-2 1x4s and 1-2 2x2s or Ls. Big rooms end up rarer than
+   * their weight suggests because they need free space.
+   */
   public static Map<RoomShape, Double> defaultShapeWeights() {
     Map<RoomShape, Double> weights = new EnumMap<>(RoomShape.class);
     weights.put(RoomShape.ONE_BY_ONE, 4.0);
-    weights.put(RoomShape.ONE_BY_TWO, 3.0);
+    weights.put(RoomShape.ONE_BY_TWO, 2.0);
     weights.put(RoomShape.ONE_BY_THREE, 2.0);
-    weights.put(RoomShape.ONE_BY_FOUR, 1.5);
-    weights.put(RoomShape.TWO_BY_TWO, 2.0);
-    weights.put(RoomShape.L_SHAPE, 1.5);
+    weights.put(RoomShape.ONE_BY_FOUR, 4.0);
+    weights.put(RoomShape.TWO_BY_TWO, 6.0);
+    weights.put(RoomShape.L_SHAPE, 2.0);
     return weights;
   }
 }

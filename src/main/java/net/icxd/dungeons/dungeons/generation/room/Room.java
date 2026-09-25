@@ -21,6 +21,9 @@ import net.icxd.dungeons.dungeons.generation.secrets.Secret;
  *       work: each one is built with a fixed set of doorways (straight, corner, T, cross or dead
  *       end), and the generator has to rotate it so they line up with its neighbours.
  *   <li>{@link #maxDoors}: cap on the number of doors for rooms without exact slots.
+ *   <li>{@link #rotations}: which rotations (clockwise quarter turns) the template may be placed
+ *       in. Hypixel never turns a straight room or a 2x2 around: horizontal is always rotation 0,
+ *       vertical 1, 2x2 always 0.
  * </ul>
  */
 @Builder
@@ -35,6 +38,8 @@ public class Room {
   private final boolean exactDoors = false;
   @Builder.Default
   private final int maxDoors = Integer.MAX_VALUE;
+  @Builder.Default
+  private final Set<Integer> rotations = Set.of(0, 1, 2, 3);
   @Builder.Default
   private final DungeonFloor minimumFloor = DungeonFloor.ENTRANCE;
   @Builder.Default

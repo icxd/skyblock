@@ -52,16 +52,22 @@ class DungeonGeneratorTest {
 
   @ParameterizedTest
   @EnumSource(value = DungeonFloor.class, names = {"FLOOR_4", "FLOOR_5", "FLOOR_6"})
-  void specialColumnIsFullOfSpecialRooms(DungeonFloor floor) {
+  void specialColumnHoldsOnlySpecialRooms(DungeonFloor floor) {
     DungeonGenerator generator = new DungeonGenerator(DungeonConfig.forFloor(floor), HypixelRooms.pool());
+    int used = 0;
     for (long seed = 0; seed < 100; seed++) {
       DungeonLayout layout = generator.generate(seed);
+      assertTrue(layout.hasSpecialColumn());
       for (int y = 0; y < layout.getHeight(); y++) {
-        RoomType type = layout.roomAt(new Position(layout.getWidth() - 1, y)).type();
-        assertTrue(type == RoomType.PUZZLE || type == RoomType.TRAP || type == RoomType.MINIBOSS,
+        PlacedRoom room = layout.roomAt(new Position(layout.getWidth() - 1, y));
+        if (room == null) continue;
+        used++;
+        assertTrue(room.type() == RoomType.PUZZLE || room.type() == RoomType.TRAP || room.type() == RoomType.MINIBOSS,
             floor + " seed " + seed + "\n" + layout.render());
       }
     }
+    // Mostly empty (real F6 maps have 0-1 rooms in it), but not always.
+    assertTrue(used > 0 && used < 100 * 2, floor + ": " + used + " special column rooms in 100 dungeons");
   }
 
   /** Templates with restricted walls: the generator must rotate/place them so every door fits. */

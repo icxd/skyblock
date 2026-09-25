@@ -47,9 +47,14 @@ public final class LayoutValidator {
       if (r.template().getType() != r.type()) errors.add("room " + r.id() + " template type mismatch");
       if (!isConnected(r.cells())) errors.add("room " + r.id() + " footprint not connected");
     }
+    int[][] grid = new int[w][h];
+    for (int x = 0; x < w; x++) {
+      for (int y = 0; y < h; y++) grid[x][y] = owner[x][y] == -1 ? DungeonLayout.EMPTY : owner[x][y];
+    }
     for (int x = 0; x < w; x++) {
       for (int y = 0; y < h; y++) {
-        if (owner[x][y] == -1) errors.add("cell " + x + "," + y + " empty");
+        boolean mayBeEmpty = layout.hasSpecialColumn() && x == w - 1;
+        if (owner[x][y] == -1 && !mayBeEmpty) errors.add("cell " + x + "," + y + " empty");
       }
     }
 
@@ -67,7 +72,7 @@ public final class LayoutValidator {
       if (!pairs.add(Math.min(a, b) + "-" + Math.max(a, b))) errors.add("second door between " + a + " and " + b);
       for (int id : new int[]{a, b}) {
         PlacedRoom r = rooms.get(id);
-        boolean allowed = Placement.enumerate(r.template(), r.cells(), w, h).stream()
+        boolean allowed = Placement.enumerate(r.template(), r.cells(), grid).stream()
             .filter(p -> p.rotation() == r.rotation())
             .anyMatch(p -> p.allows(e));
         if (!allowed) errors.add("door " + e + " not allowed by " + r.template().getId() + " rot " + r.rotation());
@@ -77,7 +82,7 @@ public final class LayoutValidator {
     }
     for (PlacedRoom r : rooms) {
       List<Edge> edges = r.doors().stream().map(Door::edge).toList();
-      boolean fits = Placement.enumerate(r.template(), r.cells(), w, h).stream()
+      boolean fits = Placement.enumerate(r.template(), r.cells(), grid).stream()
           .anyMatch(p -> p.rotation() == r.rotation() && p.fits(edges));
       if (!fits) {
         errors.add("room " + r.id() + " (" + r.template().getId() + " rot " + r.rotation() + ") can't have doors " + edges);

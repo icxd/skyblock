@@ -14,6 +14,8 @@ import net.icxd.dungeons.dungeons.generation.utils.Position;
 
 /** The finished dungeon map: which room is where, how it's rotated, and where the doors are. */
 public final class DungeonLayout {
+  /** Grid value of a cell with no room (only in a floor's special column). */
+  public static final int EMPTY = -2;
 
   /**
    * @param rotation clockwise quarter turns applied to the template (rotate the schematic by
@@ -50,8 +52,11 @@ public final class DungeonLayout {
   private final long seed;
   private final int attempts;
   private final Map<Edge, Door> doorsByEdge = new HashMap<>();
+  private final boolean specialColumn;
 
-  DungeonLayout(int[][] grid, List<PlacedRoom> rooms, List<Door> doors, List<Integer> criticalPath, long seed, int attempts) {
+  DungeonLayout(int[][] grid, List<PlacedRoom> rooms, List<Door> doors, List<Integer> criticalPath, long seed, int attempts,
+                boolean specialColumn) {
+    this.specialColumn = specialColumn;
     this.width = grid.length;
     this.height = grid[0].length;
     this.grid = grid;
@@ -93,8 +98,15 @@ public final class DungeonLayout {
     return criticalPath;
   }
 
+  /** The room covering {@code cell}, or null for an empty special-column cell. */
   public PlacedRoom roomAt(Position cell) {
-    return rooms.get(grid[cell.x()][cell.y()]);
+    int id = grid[cell.x()][cell.y()];
+    return id < 0 ? null : rooms.get(id);
+  }
+
+  /** Whether the last column is a special column (empty except for the odd special room). */
+  public boolean hasSpecialColumn() {
+    return specialColumn;
   }
 
   public Door doorAt(Edge edge) {
@@ -162,6 +174,7 @@ public final class DungeonLayout {
   }
 
   private String label(PlacedRoom room, Position cell) {
+    if (room == null) return "";
     // Label only the top-left cell of multi-cell rooms so the shape reads clearly.
     Position first = room.cells().get(0);
     for (Position c : room.cells()) {

@@ -9,11 +9,13 @@ import net.icxd.dungeons.dungeons.generation.room.RoomShape;
  * Knobs for one generation run. {@link #forFloor} gives the defaults; everything marked "tuning"
  * is not documented anywhere for Hypixel and was picked to make maps look right.
  *
- * @param specialColumn      the map's last column is filled with puzzles, trap and miniboss (F4-F6,
- *                           from Odin's {@code SpecialColumn} map heuristic)
- * @param entranceOnEdge     entrance always on the map's border (matches play experience)
- * @param bloodOnEdge        blood room always on the map's border, far from the entrance (matches
- *                           play experience)
+ * @param specialColumn      the map's last column is not part of the dungeon proper: it's empty
+ *                           except for the odd special room sticking out (F4-F6; Odin's
+ *                           {@code SpecialColumn} heuristic, confirmed on F6 captures)
+ * @param specialColumnChance tuning: chance for each puzzle/trap/miniboss to go in that column
+ * @param entranceOnEdge     entrance always on the map's border (4/4 captured runs)
+ * @param bloodEdgeWeight    how much more likely the blood room is on the border (3 of 4 captured
+ *                           runs; one had it inside)
  * @param bloodDistance      tuning: min entrance-blood distance as a fraction of the map's diagonal
  * @param deadEndEdgeWeight  tuning: how much more likely puzzles/trap/miniboss are on the border
  * @param shapeWeights       tuning: relative chance of each regular room shape
@@ -32,8 +34,9 @@ public record DungeonConfig(
     int traps,
     int minibosses,
     boolean specialColumn,
+    double specialColumnChance,
     boolean entranceOnEdge,
-    boolean bloodOnEdge,
+    double bloodEdgeWeight,
     double bloodDistance,
     double deadEndEdgeWeight,
     Map<RoomShape, Double> shapeWeights,
@@ -52,8 +55,9 @@ public record DungeonConfig(
         floor.getTraps(),
         floor.getMinibosses(),
         floor.isSpecialColumn(),
+        0.1,
         true,
-        true,
+        4.0,
         0.6,
         2.0,
         DungeonGenerator.defaultShapeWeights(),
