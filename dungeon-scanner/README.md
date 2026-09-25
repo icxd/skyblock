@@ -34,6 +34,7 @@ minutes pass.
 | `/dscan stop` | stop |
 | `/dscan status` | how many of the 140 known rooms you have, and which are missing |
 | `/dscan auto true\|false` | toggle auto mode |
+| `/dscan reconvert` | rebuild every `.schematic` from its `.schem` with the current converter, and cut L rooms saved by older versions down to their own blocks (see below) |
 
 Each room is saved once. Scanning the same room again in another run (even rotated) produces an
 identical file, and it's skipped. To collect them all you'll need many runs across floors: some
@@ -50,7 +51,19 @@ runs/<time>_<floor>.json               the full layout of each run
 ```
 
 **Frame.** Every room is saved in its own frame: the blue terracotta roof marker (Hypixel puts
-one in a corner of every room) is at the north-west corner. x is east and z is south.
+one in a corner of every room) is at the north-west corner. x is east and z is south. Straight
+rooms and 2x2s aren't searched for a marker: Hypixel only ever places them with it in one spot
+(north-west for horizontal ones and 2x2s, north-east for vertical ones), so the mod uses that and
+only checks the marker is there. 1x1 and L rooms are searched on all four corners, over the
+room's full height.
+
+**L rooms.** The box around an L also holds the cell it's missing, which belongs to some other
+room. Only the L's own cells and the gaps between them are saved; the rest is air. Rooms saved
+before this was added still have their neighbour in them: `/dscan reconvert` cuts them down and
+renames them to their new hash, merging copies of the same room.
+
+**Doors.** A door's type sticks for the whole run, so a wither door someone already opened is
+still saved as a wither door.
 
 **Height.** `originY` in the JSON is the world y the schematic's bottom layer came from. Dungeon
 floors are at y=68, so paste at that height to keep doors lined up.
@@ -91,6 +104,8 @@ Room JSON example:
 
 - **Entities:** unnamed armor stands, item frames and paintings are only in the `.schem`, not the
   1.8 `.schematic`. Mobs aren't saved at all; they're spawned by the game.
+- **Reconvert** only rewrites `.schem` files for old L rooms; everything else keeps its `.schem`
+  and gets a fresh `.schematic`, which is identical unless the 1.8 conversion changed.
 - **Chests:** chest contents aren't saved, because the client doesn't have them.
 - **Not tested on Hypixel.** The unit tests use a fake world. If a room has no roof marker it's
   saved unrotated, and the chat message says so.

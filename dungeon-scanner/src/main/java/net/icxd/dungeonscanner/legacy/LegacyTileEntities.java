@@ -119,7 +119,7 @@ public final class LegacyTileEntities {
       }
       return Optional.of(new LegacyBlock(SKULL, 1));
     }
-    if (POTTED.containsKey(block)) return Optional.of(new LegacyBlock(FLOWER_POT, 0));
+    if (POTTED.containsKey(block) || block == Blocks.FLOWER_POT) return Optional.of(new LegacyBlock(FLOWER_POT, 0));
     if (block instanceof AbstractBannerBlock) {
       if (block instanceof WallBannerBlock) {
         return Optional.of(new LegacyBlock(WALL_BANNER, facingData(state.getValue(WallBannerBlock.FACING))));

@@ -69,6 +69,10 @@ public final class DungeonScannerClient implements ClientModInitializer {
               status();
               return 1;
             }))
+            .then(ClientCommands.literal("reconvert").executes(c -> {
+              reconvert();
+              return 1;
+            }))
             .then(ClientCommands.literal("auto")
                 .then(ClientCommands.argument("enabled", BoolArgumentType.bool()).executes(c -> {
                   auto = BoolArgumentType.getBool(c, "enabled");
@@ -128,6 +132,20 @@ public final class DungeonScannerClient implements ClientModInitializer {
       LOG.error("Dungeon scan failed", e);
       say("Scan failed: " + e + " (see log)", ChatFormatting.RED);
       stop("aborted");
+    }
+  }
+
+  /** Rebuilds all 1.8 schematics from the modern ones (after the 1.8 conversion got better). */
+  private void reconvert() {
+    try {
+      if (mapper == null) mapper = new LegacyMapper();
+      var result = net.icxd.dungeonscanner.export.Reconverter.reconvertAll(root, mapper);
+      say("Rebuilt " + result.rebuilt() + " .schematic files" + (result.trimmed() > 0
+          ? ", cut " + result.trimmed() + " L rooms down to their own blocks (" + result.merged() + " were duplicates)." : "."),
+          ChatFormatting.GREEN);
+    } catch (Exception e) {
+      LOG.error("Reconvert failed", e);
+      say("Reconvert failed: " + e, ChatFormatting.RED);
     }
   }
 

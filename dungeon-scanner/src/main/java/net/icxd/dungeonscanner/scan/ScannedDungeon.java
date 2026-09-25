@@ -22,7 +22,8 @@ public record ScannedDungeon(List<Room> rooms, List<Door> doors, int width, int 
 
   /**
    * @param info            null if the room isn't in the database
-   * @param rotation        null if the roof marker wasn't found
+   * @param rotation        null if it couldn't be worked out (1x1/L without a roof marker)
+   * @param markerFound     the roof marker was where {@code rotation} says it should be
    * @param clayX           world position of the roof marker (or where it should be)
    * @param complete        every cell and every surrounding gap was loaded, so the room's extent
    *                        and doors are final
@@ -34,6 +35,7 @@ public record ScannedDungeon(List<Room> rooms, List<Door> doors, int width, int 
       int core,
       int roof,
       RoomRotation rotation,
+      boolean markerFound,
       int clayX,
       int clayY,
       int clayZ,

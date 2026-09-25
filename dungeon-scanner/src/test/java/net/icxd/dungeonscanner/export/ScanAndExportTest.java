@@ -181,6 +181,178 @@ class ScanAndExportTest {
     assertTrue(Files.list(dir.resolve("doors").resolve("wither")).findAny().isPresent());
   }
 
+  @Test
+  void markerAboveTheCoreScanIsFound() {
+    // A 1x1 whose roof is above y=140, where the core scan stops.
+    FakeWorld tall = new FakeWorld();
+    Cell cell = new Cell(0, 0);
+    tall.fill(cell.centerX() - 15, 68, cell.centerZ() - 15, cell.centerX() + 15, 68, cell.centerZ() + 15, Blocks.STONE.defaultBlockState());
+    tall.fill(cell.centerX() - 15, 150, cell.centerZ() - 15, cell.centerX() + 15, 150, cell.centerZ() + 15, Blocks.STONE.defaultBlockState());
+    tall.set(cell.centerX() + 15, 150, cell.centerZ() + 15, Blocks.DYED_TERRACOTTA.blue().defaultBlockState()); // SE -> NORTH
+    Room room = DungeonScan.scan(tall, EMPTY_DB).rooms().get(0);
+    assertEquals(RoomRotation.NORTH, room.rotation());
+    assertTrue(room.markerFound());
+  }
+
+  @Test
+  void straightRoomsFollowTheShapeConvention() {
+    // Horizontal 1x2 with blue terracotta on every roof corner: still SOUTH (marker north-west).
+    FakeWorld w = new FakeWorld();
+    Cell a = new Cell(2, 2);
+    Cell b = new Cell(3, 2);
+    BlockState stone = Blocks.STONE.defaultBlockState();
+    w.fill(a.centerX() - 15, 68, a.centerZ() - 15, b.centerX() + 15, 68, b.centerZ() + 15, stone);
+    w.fill(a.centerX() - 15, ROOF, a.centerZ() - 15, b.centerX() + 15, ROOF, b.centerZ() + 15, stone);
+    for (int x : new int[]{a.centerX() - 15, b.centerX() + 15}) {
+      for (int z : new int[]{a.centerZ() - 15, a.centerZ() + 15}) w.set(x, ROOF, z, Blocks.DYED_TERRACOTTA.blue().defaultBlockState());
+    }
+    Room room = DungeonScan.scan(w, EMPTY_DB).rooms().get(0);
+    assertEquals(2, room.cells().size());
+    assertEquals(RoomRotation.SOUTH, room.rotation());
+    assertEquals(a.centerX() - 15, room.clayX());
+    assertEquals(a.centerZ() - 15, room.clayZ());
+  }
+
+  @Test
+  void openedWitherDoorStaysAWitherDoor(@TempDir Path dir) throws Exception {
+    FakeWorld w = new FakeWorld();
+    Cell a = new Cell(0, 0);
+    Cell b = new Cell(1, 0);
+    BlockState stone = Blocks.STONE.defaultBlockState();
+    for (Cell c : List.of(a, b)) {
+      w.fill(c.centerX() - 15, 68, c.centerZ() - 15, c.centerX() + 15, 68, c.centerZ() + 15, stone);
+      w.fill(c.centerX() - 15, ROOF, c.centerZ() - 15, c.centerX() + 15, ROOF, c.centerZ() + 15, stone);
+    }
+    w.set(a.centerX(), 70, a.centerZ(), Blocks.GLASS.defaultBlockState());
+    w.set(a.centerX() + 16, 68, a.centerZ(), stone);
+    w.set(a.centerX() + 16, 73, a.centerZ(), stone);
+    w.set(a.centerX() + 16, 69, a.centerZ(), Blocks.COAL_BLOCK.defaultBlockState());
+    Exporter exporter = new Exporter(dir, new LegacyMapper(), "F1");
+    exporter.export(w, DungeonScan.scan(w, EMPTY_DB));
+    w.set(a.centerX() + 16, 69, a.centerZ(), Blocks.AIR.defaultBlockState()); // someone opened it
+    exporter.export(w, DungeonScan.scan(w, EMPTY_DB));
+    Path run;
+    try (var s = Files.list(dir.resolve("runs"))) {
+      run = s.findFirst().orElseThrow();
+    }
+    assertTrue(Files.readString(run).contains("\"type\": \"WITHER\""), Files.readString(run));
+  }
+
+  @Test
+  void reconvertRebuildsTheSameLegacySchematic(@TempDir Path dir) throws Exception {
+    LegacyMapper mapper = new LegacyMapper();
+    new Exporter(dir, mapper, "F7").export(world, DungeonScan.scan(world, EMPTY_DB));
+    List<Path> legacy;
+    try (var s = Files.walk(dir.resolve("rooms"))) {
+      legacy = s.filter(p -> p.toString().endsWith(".schematic")).toList();
+    }
+    java.util.Map<Path, byte[]> before = new java.util.HashMap<>();
+    for (Path p : legacy) before.put(p, Files.readAllBytes(p));
+    for (Path p : legacy) Files.delete(p);
+    assertTrue(Reconverter.reconvertAll(dir, mapper).rebuilt() >= legacy.size());
+    for (Path p : legacy) {
+      CompoundTag a = NbtIo.readCompressed(new java.io.ByteArrayInputStream(before.get(p)), NbtAccounter.unlimitedHeap());
+      CompoundTag b = NbtIo.readCompressed(p, NbtAccounter.unlimitedHeap());
+      assertEquals(a, b, p.toString());
+    }
+  }
+
+  /** An L room (north-east cell missing) next to a 1x1 that sits in that missing cell. */
+  private static FakeWorld lRoomWorld() {
+    FakeWorld w = new FakeWorld();
+    BlockState stone = Blocks.STONE.defaultBlockState();
+    Cell a = new Cell(0, 0);
+    Cell b = new Cell(0, 1);
+    Cell c = new Cell(1, 1);
+    Cell other = new Cell(1, 0);
+    for (Cell cell : List.of(a, b, c, other)) {
+      w.fill(cell.centerX() - 15, 68, cell.centerZ() - 15, cell.centerX() + 15, 68, cell.centerZ() + 15, stone);
+      w.fill(cell.centerX() - 15, ROOF, cell.centerZ() - 15, cell.centerX() + 15, ROOF, cell.centerZ() + 15, stone);
+    }
+    // Gaps inside the L are filled to the roof.
+    w.fill(a.centerX() - 15, 68, a.centerZ() + 16, a.centerX() + 15, ROOF, a.centerZ() + 16, stone);
+    w.fill(b.centerX() + 16, 68, b.centerZ() - 15, b.centerX() + 16, ROOF, b.centerZ() + 15, stone);
+    w.set(a.centerX(), 70, a.centerZ(), Blocks.GLASS.defaultBlockState());
+    w.set(a.centerX() - 15, ROOF, a.centerZ() - 15, Blocks.DYED_TERRACOTTA.blue().defaultBlockState()); // NW -> SOUTH
+    // The neighbour: something tall so it would also stretch the L's height if it were saved.
+    w.fill(other.centerX(), 69, other.centerZ(), other.centerX(), ROOF + 20, other.centerZ(), Blocks.GLOWSTONE.defaultBlockState());
+    return w;
+  }
+
+  private static Path onlyFile(Path dir, String id, String ext) throws Exception {
+    try (var s = Files.list(dir.resolve("rooms").resolve(id))) {
+      List<Path> files = s.filter(p -> p.toString().endsWith(ext)).toList();
+      assertEquals(1, files.size(), files.toString());
+      return files.get(0);
+    }
+  }
+
+  private static void assertOnlyOwnBlocks(Path schem) throws Exception {
+    CompoundTag file = NbtIo.readCompressed(schem, NbtAccounter.unlimitedHeap()).getCompoundOrEmpty("Schematic");
+    assertEquals(63, file.getShortOr("Width", (short) 0));
+    assertEquals(ROOF - 68 + 1, file.getShortOr("Height", (short) 0));
+    var view = Reconverter.view(file);
+    for (int y = 0; y < file.getShortOr("Height", (short) 0); y++) {
+      for (int x = 31; x < 63; x++) {
+        for (int z = 0; z < 32; z++) assertTrue(view.getBlockState(x, y, z).isAir(), x + "," + y + "," + z);
+      }
+    }
+    assertEquals(Blocks.STONE, view.getBlockState(31, 10, 40).getBlock()); // gap between two of its own cells
+  }
+
+  @Test
+  void lRoomCaptureLeavesOutItsMissingCorner(@TempDir Path dir) throws Exception {
+    FakeWorld w = lRoomWorld();
+    ScannedDungeon scanned = DungeonScan.scan(w, EMPTY_DB);
+    Room l = roomAt(scanned, 0, 0);
+    assertEquals(3, l.cells().size());
+    new Exporter(dir, new LegacyMapper(), "F1").export(w, scanned);
+    assertOnlyOwnBlocks(onlyFile(dir, l.id(), ".schem"));
+  }
+
+  @Test
+  void reconvertCutsOldLRoomCaptures(@TempDir Path dir) throws Exception {
+    FakeWorld w = lRoomWorld();
+    ScannedDungeon scanned = DungeonScan.scan(w, EMPTY_DB);
+    Room l = roomAt(scanned, 0, 0);
+    new Exporter(dir, new LegacyMapper(), "F1").export(w, scanned);
+    Path good = onlyFile(dir, l.id(), ".schem");
+    String goodName = good.getFileName().toString();
+    JsonObject goodJson = com.google.gson.JsonParser.parseString(Files.readString(onlyFile(dir, l.id(), ".json"))).getAsJsonObject();
+
+    // What an older scanner saved: the whole bounding box, neighbour included, under its own hash.
+    for (Path p : List.of(good, onlyFile(dir, l.id(), ".schematic"), onlyFile(dir, l.id(), ".json"))) Files.delete(p);
+    int[] box = {new Cell(0, 0).centerX() - 15, new Cell(0, 0).centerZ() - 15, new Cell(1, 1).centerX() + 15, new Cell(1, 1).centerZ() + 15};
+    Capture old = new Capture(w, box[0], w.minY(), box[1], box[2], w.maxY() - 1, box[3], RoomRotation.SOUTH, box[0], box[1], true, true);
+    Path base = dir.resolve("rooms").resolve(l.id()).resolve(l.id() + "_" + SchematicWriter.hash(old).substring(0, 10));
+    SchematicWriter.writeSponge(old, base.resolveSibling(base.getFileName() + ".schem"), new CompoundTag());
+    JsonObject oldJson = goodJson.deepCopy();
+    oldJson.addProperty("originY", old.originY);
+    com.google.gson.JsonArray size = new com.google.gson.JsonArray();
+    size.add(old.width);
+    size.add(old.height);
+    size.add(old.length);
+    oldJson.add("size", size);
+    Files.writeString(base.resolveSibling(base.getFileName() + ".json"), oldJson.toString());
+    // A second old capture of the same room that only differs in the neighbour.
+    w.set(new Cell(1, 0).centerX() + 3, 70, new Cell(1, 0).centerZ(), Blocks.GOLD_BLOCK.defaultBlockState());
+    Capture old2 = new Capture(w, box[0], w.minY(), box[1], box[2], w.maxY() - 1, box[3], RoomRotation.SOUTH, box[0], box[1], true, true);
+    Path base2 = base.resolveSibling(l.id() + "_" + SchematicWriter.hash(old2).substring(0, 10));
+    SchematicWriter.writeSponge(old2, base2.resolveSibling(base2.getFileName() + ".schem"), new CompoundTag());
+    Files.writeString(base2.resolveSibling(base2.getFileName() + ".json"), oldJson.toString());
+
+    Reconverter.Result result = Reconverter.reconvertAll(dir, new LegacyMapper());
+    assertEquals(2, result.trimmed());
+    assertEquals(1, result.merged());
+    Path now = onlyFile(dir, l.id(), ".schem");
+    assertEquals(goodName, now.getFileName().toString());
+    assertOnlyOwnBlocks(now);
+    JsonObject json = com.google.gson.JsonParser.parseString(Files.readString(onlyFile(dir, l.id(), ".json"))).getAsJsonObject();
+    assertEquals(goodJson.get("originY"), json.get("originY"));
+    assertEquals(goodJson.get("size"), json.get("size"));
+    onlyFile(dir, l.id(), ".schematic");
+  }
+
   private static String readString(Path p) {
     try {
       return Files.readString(p);

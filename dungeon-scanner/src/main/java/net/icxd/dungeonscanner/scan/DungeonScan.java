@@ -147,25 +147,36 @@ public final class DungeonScan {
       maxZ = Math.max(maxZ, c.centerZ() + HALF);
     }
 
-    // Blue terracotta marker on one corner of the roof; the fairy room has none.
+    // Blue terracotta marker on one corner of the roof; the fairy room has none. Straight rooms and
+    // 2x2s only ever face one way per footprint (horizontal/2x2 SOUTH, vertical WEST; checked on
+    // real captures), so for them the corner is known and only verified. Some rooms have more blue
+    // terracotta on the roof edge, so the convention wins over a marker found elsewhere.
+    int[][] corners = {{minX, minZ}, {maxX, minZ}, {maxX, maxZ}, {minX, maxZ}};
+    RoomRotation[] forCorner = {RoomRotation.SOUTH, RoomRotation.WEST, RoomRotation.NORTH, RoomRotation.EAST};
+    String shape = info != null ? info.shape() : shapeOf(cells);
     RoomRotation rotation = null;
+    boolean markerFound = false;
     int clayX = minX, clayY = roof, clayZ = minZ;
     if (info != null && info.type().equals("FAIRY")) {
       rotation = RoomRotation.SOUTH;
+      markerFound = true;
+    } else if (!shape.equals("1x1") && !shape.equals("L")) {
+      int corner = shape.equals("2x2") || maxX - minX > maxZ - minZ ? 0 : 1;
+      rotation = forCorner[corner];
+      clayX = corners[corner][0];
+      clayZ = corners[corner][1];
+      int y = markerY(world, clayX, clayZ, roof);
+      markerFound = y != Integer.MIN_VALUE;
+      if (markerFound) clayY = y;
     } else {
-      int[][] corners = {{minX, minZ}, {maxX, minZ}, {maxX, maxZ}, {minX, maxZ}};
-      RoomRotation[] forCorner = {RoomRotation.SOUTH, RoomRotation.WEST, RoomRotation.NORTH, RoomRotation.EAST};
-      search:
-      for (int y = roof + 2; y >= roof - 4; y--) {
-        for (int i = 0; i < 4; i++) {
-          if (world.getBlockState(corners[i][0], y, corners[i][1]).getBlock() == Blocks.DYED_TERRACOTTA.blue()) {
-            rotation = forCorner[i];
-            clayX = corners[i][0];
-            clayY = y;
-            clayZ = corners[i][1];
-            break search;
-          }
-        }
+      for (int i = 0; i < 4 && rotation == null; i++) {
+        int y = markerY(world, corners[i][0], corners[i][1], roof);
+        if (y == Integer.MIN_VALUE) continue;
+        rotation = forCorner[i];
+        markerFound = true;
+        clayX = corners[i][0];
+        clayY = y;
+        clayZ = corners[i][1];
       }
     }
 
@@ -185,7 +196,24 @@ public final class DungeonScan {
         if (l == Link.UNKNOWN) complete = false;
       }
     }
-    return new Room(id, info, List.copyOf(cells), core, roof, rotation, clayX, clayY, clayZ, complete);
+    return new Room(id, info, List.copyOf(cells), core, roof, rotation, markerFound, clayX, clayY, clayZ, complete);
+  }
+
+  /**
+   * Height of the roof marker in a corner column, or MIN_VALUE. Looks around the roof height from
+   * the core scan first, then at the top of the column: the core scan stops at y=140 and some
+   * rooms (Supertall, Cathedral) are taller.
+   */
+  private static int markerY(WorldView world, int x, int z, int roof) {
+    Block clay = Blocks.DYED_TERRACOTTA.blue();
+    for (int y = roof + 2; y >= roof - 4; y--) {
+      if (world.getBlockState(x, y, z).getBlock() == clay) return y;
+    }
+    int top = topBlock(world, x, z);
+    for (int y = top; y >= top - 3 && y > roof + 2; y--) {
+      if (world.getBlockState(x, y, z).getBlock() == clay) return y;
+    }
+    return Integer.MIN_VALUE;
   }
 
   private static int topBlock(WorldView world, int x, int z) {

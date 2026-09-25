@@ -95,6 +95,7 @@ class LegacyMapperTest {
     assertEquals("144:5", legacy(Blocks.PLAYER_WALL_HEAD.defaultBlockState()
         .setValue(net.minecraft.world.level.block.WallSkullBlock.FACING, Direction.EAST)));
     assertEquals("140:0", legacy(Blocks.POTTED_POPPY.defaultBlockState()));
+    assertEquals("140:0", legacy(Blocks.FLOWER_POT.defaultBlockState()));
     assertEquals("175:8", legacy(Blocks.TALL_GRASS.defaultBlockState()
         .setValue(net.minecraft.world.level.block.DoublePlantBlock.HALF, DoubleBlockHalf.UPPER)));
     assertEquals("175:2", legacy(Blocks.TALL_GRASS.defaultBlockState()));

@@ -53,6 +53,11 @@ public final class Exporter {
   /** Rooms (by id + first cell) already captured in this run. */
   private final Set<String> captured = new HashSet<>();
   private final Set<String> capturedDoors = new HashSet<>();
+  /**
+   * Door types as first seen. A wither door that's opened later turns into air and would read as a
+   * normal door, so a special type is never downgraded.
+   */
+  private final java.util.Map<String, ScannedDungeon.DoorType> doorTypes = new java.util.HashMap<>();
 
   public Exporter(Path root, LegacyMapper mapper, String floor) {
     this.root = root;
@@ -65,7 +70,14 @@ public final class Exporter {
   }
 
   /** Captures every complete room (and its doors) not captured yet in this run. */
-  public Result export(WorldView world, ScannedDungeon dungeon) throws IOException {
+  public Result export(WorldView world, ScannedDungeon scanned) throws IOException {
+    List<Door> sticky = new ArrayList<>();
+    for (Door d : scanned.doors()) {
+      ScannedDungeon.DoorType type = doorTypes.merge(d.x() + "," + d.z(), d.type(),
+          (old, now) -> old != ScannedDungeon.DoorType.NORMAL ? old : now);
+      sticky.add(new Door(d.a(), d.b(), type, d.x(), d.z()));
+    }
+    ScannedDungeon dungeon = new ScannedDungeon(scanned.rooms(), sticky, scanned.width(), scanned.height(), scanned.complete());
     List<String> fresh = new ArrayList<>();
     List<String> known = new ArrayList<>();
     List<String> problems = new ArrayList<>();
@@ -75,9 +87,13 @@ public final class Exporter {
       if (!room.complete() || !captured.add(key)) continue;
       RoomRotation rotation = room.rotation() != null ? room.rotation() : RoomRotation.SOUTH;
       if (room.rotation() == null) problems.add(room.id() + ": roof marker not found, saved unrotated");
+      else if (!room.markerFound()) problems.add(room.id() + ": roof marker not found, rotation assumed from its shape");
 
       int[] box = box(room);
-      Capture capture = new Capture(world, box[0], world.minY(), box[1], box[2], Math.min(world.maxY(), 256) - 1, box[3],
+      List<int[]> cells = new ArrayList<>();
+      for (Cell c : room.cells()) cells.add(new int[]{c.x(), c.z()});
+      WorldView own = RoomMask.of(world, cells, DungeonScan.CENTER - DungeonScan.HALF);
+      Capture capture = new Capture(own, box[0], world.minY(), box[1], box[2], Math.min(world.maxY(), 256) - 1, box[3],
           rotation, room.clayX(), room.clayZ(), true, true);
       String hash = SchematicWriter.hash(capture).substring(0, 10);
       Path dir = root.resolve("rooms").resolve(room.id());
@@ -130,7 +146,7 @@ public final class Exporter {
     json.addProperty("shape", room.shape());
     json.addProperty("core", room.core());
     json.addProperty("capturedRotation", rotation.name());
-    json.addProperty("rotationVerified", room.rotation() != null);
+    json.addProperty("rotationVerified", room.markerFound());
     json.addProperty("originY", capture.originY);
     JsonArray size = new JsonArray();
     size.add(capture.width);
