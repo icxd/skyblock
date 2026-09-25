@@ -3,3 +3,4 @@ version: '${project.version}'
 main: net.icxd.dungeons.Dungeons
 description: remake of hypixel skyblock dungeons
 author: icxd
+softdepend: [WorldEdit]

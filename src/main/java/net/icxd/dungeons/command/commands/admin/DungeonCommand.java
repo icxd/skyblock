@@ -1,15 +1,21 @@
 package net.icxd.dungeons.command.commands.admin;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 
 import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
@@ -24,11 +30,18 @@ import net.icxd.dungeons.dungeons.generation.LayoutValidator;
 import net.icxd.dungeons.dungeons.generation.room.HypixelRooms;
 import net.icxd.dungeons.dungeons.generation.utils.Edge;
 import net.icxd.dungeons.dungeons.generation.utils.Position;
+import net.icxd.dungeons.dungeons.paste.PastePlan;
+import net.icxd.dungeons.dungeons.paste.RoomLibrary;
+import net.icxd.dungeons.dungeons.paste.WorldEditPaster;
 import net.icxd.dungeons.user.Rank;
 
 /**
  * {@code /dungeon [floor] [seed]}: generates a layout, prints it to the console and builds a
  * block preview at y=100 around 0,0. Floor is e.g. {@code E}, {@code F7}, {@code M3}.
+ *
+ * <p>{@code /dungeon paste [floor] [seed]}: generates a layout from the captured rooms in
+ * {@code plugins/<plugin>/dungeon-rooms} (the scanner's {@code rooms/} and {@code doors/}
+ * folders) and pastes it with WorldEdit where Hypixel has it, from -200,-200.
  */
 @CommandParameters(aliases = "dungeon", permission = Rank.STAFF)
 public class DungeonCommand extends SCommand {
@@ -36,25 +49,103 @@ public class DungeonCommand extends SCommand {
   /** Blocks per grid cell in the preview. */
   private static final int CELL = 5;
   private static final int PREVIEW_Y = 100;
+  private static final String ROOM_FOLDER = "dungeon-rooms";
 
   @Override
   public void run(CommandSource source, String[] args) {
-    DungeonFloor floor = args.length > 0 ? parseFloor(args[0]) : DungeonFloor.FLOOR_7;
-    if (floor == null) {
-      source.send(ChatColor.RED + "Unknown floor " + args[0] + ", use E, F1-F7 or M1-M7.");
+    if (args.length > 0 && args[0].equalsIgnoreCase("paste")) {
+      paste(source, Arrays.copyOfRange(args, 1, args.length));
       return;
     }
-    long seed;
-    try {
-      seed = args.length > 1 ? Long.parseLong(args[1]) : new java.util.Random().nextLong();
-    } catch (NumberFormatException e) {
-      source.send(ChatColor.RED + "Seed must be a number.");
-      return;
-    }
+    DungeonFloor floor = floor(source, args);
+    Long seed = seed(source, args);
+    if (floor == null || seed == null) return;
 
     DungeonLayout layout = new DungeonGenerator(DungeonConfig.forFloor(floor), HypixelRooms.pool()).generate(seed);
     List<String> problems = LayoutValidator.validate(layout);
+    log(floor, seed, layout, problems);
 
+    renderPreview(layout, source.getPlayer().getWorld());
+    source.send(ChatColor.GREEN + floor.getName() + " seed " + seed + ": " + layout.getRooms().size() + " rooms"
+        + (problems.isEmpty() ? "" : ChatColor.RED + " (" + problems.size() + " problems, see console)"));
+    source.send(ChatColor.GRAY + "Preview at y=" + PREVIEW_Y + ": lime = critical path, gold = door, "
+        + "infested stone = entrance door, coal = wither door, pink wool = fairy door, redstone = blood door. "
+        + "Map printed to the console.");
+  }
+
+  private void paste(CommandSource source, String[] args) {
+    Player player = source.getPlayer();
+    if (player == null) {
+      source.send(ChatColor.RED + "Only players can paste a dungeon.");
+      return;
+    }
+    if (Bukkit.getPluginManager().getPlugin("WorldEdit") == null) {
+      source.send(ChatColor.RED + "Pasting needs WorldEdit 6.");
+      return;
+    }
+    DungeonFloor floor = floor(source, args);
+    Long seed = seed(source, args);
+    if (floor == null || seed == null) return;
+
+    Logger log = instance.getLogger();
+    File folder = new File(instance.getDataFolder(), ROOM_FOLDER);
+    RoomLibrary library;
+    try {
+      library = RoomLibrary.load(folder.toPath());
+    } catch (IOException e) {
+      source.send(ChatColor.RED + "Couldn't read rooms from " + folder + ": " + e.getMessage());
+      source.send(ChatColor.GRAY + "Copy the scanner's rooms/ and doors/ folders there.");
+      return;
+    }
+    library.problems().forEach(p -> log.warning("Room library: " + p));
+
+    DungeonLayout layout;
+    try {
+      layout = new DungeonGenerator(DungeonConfig.forFloor(floor), library.pool()).generate(seed);
+    } catch (IllegalStateException e) {
+      source.send(ChatColor.RED + "Not enough captured rooms for " + floor.getName() + ": " + e.getMessage());
+      return;
+    }
+    List<String> problems = LayoutValidator.validate(layout);
+    log(floor, seed, layout, problems);
+
+    PastePlan plan = PastePlan.create(layout, library, PastePlan.HYPIXEL_BASE, PastePlan.HYPIXEL_BASE, seed);
+    plan.problems().forEach(p -> log.warning("Paste: " + p));
+    long start = System.currentTimeMillis();
+    int changed;
+    try {
+      changed = new WorldEditPaster(player.getWorld()).paste(plan);
+    } catch (Exception e) {
+      source.send(ChatColor.RED + "Paste failed: " + e.getMessage());
+      e.printStackTrace();
+      return;
+    }
+    long took = System.currentTimeMillis() - start;
+
+    PastePlan.Block entrance = plan.entrance();
+    player.teleport(standingSpot(player.getWorld(), entrance.x(), entrance.y(), entrance.z()));
+    source.send(ChatColor.GREEN + floor.getName() + " seed " + seed + ": pasted " + plan.rooms().size() + " rooms and "
+        + plan.doors().size() + " doors (" + changed + " blocks, " + took + " ms) from " + library.summary() + ".");
+    int issues = problems.size() + plan.problems().size() + library.problems().size();
+    if (issues > 0) source.send(ChatColor.RED + "" + issues + " problems, see console.");
+  }
+
+  private static DungeonFloor floor(CommandSource source, String[] args) {
+    DungeonFloor floor = args.length > 0 ? parseFloor(args[0]) : DungeonFloor.FLOOR_7;
+    if (floor == null) source.send(ChatColor.RED + "Unknown floor " + args[0] + ", use E, F1-F7 or M1-M7.");
+    return floor;
+  }
+
+  private static Long seed(CommandSource source, String[] args) {
+    try {
+      return args.length > 1 ? Long.parseLong(args[1]) : new java.util.Random().nextLong();
+    } catch (NumberFormatException e) {
+      source.send(ChatColor.RED + "Seed must be a number.");
+      return null;
+    }
+  }
+
+  private static void log(DungeonFloor floor, long seed, DungeonLayout layout, List<String> problems) {
     Logger log = instance.getLogger();
     log.info("Dungeon " + floor.getName() + " seed " + seed + " (" + layout.getAttempts() + " attempts)");
     for (String line : layout.render().split("\n")) log.info(line);
@@ -63,13 +154,17 @@ public class DungeonCommand extends SCommand {
           r.id(), r.type(), r.shape(), r.template().getId(), r.rotation(), r.parent(), r.doors().size(), r.cells()));
     }
     problems.forEach(p -> log.warning("INVALID: " + p));
+  }
 
-    renderPreview(layout, source.getPlayer().getWorld());
-    source.send(ChatColor.GREEN + floor.getName() + " seed " + seed + ": " + layout.getRooms().size() + " rooms"
-        + (problems.isEmpty() ? "" : ChatColor.RED + " (" + problems.size() + " problems, see console)"));
-    source.send(ChatColor.GRAY + "Preview at y=" + PREVIEW_Y + ": lime = critical path, gold = door, "
-        + "infested stone = entrance door, coal = wither door, pink wool = fairy door, redstone = blood door. "
-        + "Map printed to the console.");
+  /** First spot at or above y with two free blocks over something to stand on. */
+  private static Location standingSpot(World world, int x, int y, int z) {
+    for (int top = Math.min(y + 60, 254); y < top; y++) {
+      if (world.getBlockAt(x, y - 1, z).getType().isSolid() && !world.getBlockAt(x, y, z).getType().isSolid()
+          && !world.getBlockAt(x, y + 1, z).getType().isSolid()) {
+        break;
+      }
+    }
+    return new Location(world, x + 0.5, y, z + 0.5);
   }
 
   private static DungeonFloor parseFloor(String arg) {
