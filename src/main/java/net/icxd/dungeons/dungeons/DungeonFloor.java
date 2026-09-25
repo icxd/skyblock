@@ -8,7 +8,7 @@ import lombok.Getter;
  * contradict.
  *
  * <p>Special rooms: one miniboss (yellow) room per floor, one trap room from F3 up. Puzzles are
- * from play experience: usually 2 on the small maps and 4-5 on the big ones; 5x5 sits in between.
+ * from play experience: usually 2 up to F3 and 4-5 from F4 on.
  *
  * <p>{@code specialColumn}: on F4-F6 Odin's map assumes the last column is filled with puzzles,
  * trap and miniboss ({@code SpecialColumn.kt}), i.e. those floors are a 5-wide dungeon with a
@@ -18,15 +18,15 @@ import lombok.Getter;
 public enum DungeonFloor {
     ENTRANCE("Entrance", false, 0, 4, 4, 2, 2, 0, false),
     FLOOR_1("Floor 1", false, 1, 4, 5, 2, 2, 0, false),
-    FLOOR_2("Floor 2", false, 2, 5, 5, 2, 3, 0, false),
-    FLOOR_3("Floor 3", false, 3, 5, 5, 2, 3, 1, false),
+    FLOOR_2("Floor 2", false, 2, 5, 5, 2, 2, 0, false),
+    FLOOR_3("Floor 3", false, 3, 5, 5, 2, 2, 1, false),
     FLOOR_4("Floor 4", false, 4, 6, 5, 4, 5, 1, true),
     FLOOR_5("Floor 5", false, 5, 6, 6, 4, 5, 1, true),
     FLOOR_6("Floor 6", false, 6, 6, 6, 4, 5, 1, true),
     FLOOR_7("Floor 7", false, 7, 6, 6, 4, 5, 1, false),
     MASTER_FLOOR_1("Master Floor 1", true, 1, 4, 5, 2, 2, 0, false),
-    MASTER_FLOOR_2("Master Floor 2", true, 2, 5, 5, 2, 3, 0, false),
-    MASTER_FLOOR_3("Master Floor 3", true, 3, 5, 5, 2, 3, 1, false),
+    MASTER_FLOOR_2("Master Floor 2", true, 2, 5, 5, 2, 2, 0, false),
+    MASTER_FLOOR_3("Master Floor 3", true, 3, 5, 5, 2, 2, 1, false),
     MASTER_FLOOR_4("Master Floor 4", true, 4, 6, 5, 4, 5, 1, true),
     MASTER_FLOOR_5("Master Floor 5", true, 5, 6, 6, 4, 5, 1, true),
     MASTER_FLOOR_6("Master Floor 6", true, 6, 6, 6, 4, 5, 1, true),

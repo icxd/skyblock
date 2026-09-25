@@ -124,6 +124,7 @@ public final class LayoutValidator {
       DoorType expected = !onPath ? DoorType.NORMAL
           : rooms.get(d.child()).type() == RoomType.BLOOD ? DoorType.BLOOD
           : rooms.get(d.parent()).type() == RoomType.START ? DoorType.ENTRANCE
+          : rooms.get(d.child()).type() == RoomType.FAIRY ? DoorType.FAIRY
           : DoorType.WITHER;
       if (d.type() != expected) errors.add("door " + d.edge() + " is " + d.type() + ", expected " + expected);
     }

@@ -68,7 +68,8 @@ public class DungeonCommand extends SCommand {
     source.send(ChatColor.GREEN + floor.getName() + " seed " + seed + ": " + layout.getRooms().size() + " rooms"
         + (problems.isEmpty() ? "" : ChatColor.RED + " (" + problems.size() + " problems, see console)"));
     source.send(ChatColor.GRAY + "Preview at y=" + PREVIEW_Y + ": lime = critical path, gold = door, "
-        + "infested stone = entrance door, coal = wither door, redstone = blood door. Map printed to the console.");
+        + "infested stone = entrance door, coal = wither door, pink wool = fairy door, redstone = blood door. "
+        + "Map printed to the console.");
   }
 
   private static DungeonFloor parseFloor(String arg) {
@@ -134,13 +135,14 @@ public class DungeonCommand extends SCommand {
       boolean horizontal = e.a().y() == e.b().y(); // cells side by side -> door in the x gap
       int x = horizontal ? e.a().x() * size + CELL : e.a().x() * size + CELL / 2;
       int z = horizontal ? e.a().y() * size + CELL / 2 : e.a().y() * size + CELL;
-      Material m = switch (door.type()) {
-        case NORMAL -> Material.GOLD_BLOCK;
-        case ENTRANCE -> Material.MONSTER_EGGS;
-        case WITHER -> Material.COAL_BLOCK;
-        case BLOOD -> Material.REDSTONE_BLOCK;
-      };
-      world.getBlockAt(x, PREVIEW_Y, z).setType(m);
+      Block block = world.getBlockAt(x, PREVIEW_Y, z);
+      switch (door.type()) {
+        case NORMAL -> block.setType(Material.GOLD_BLOCK);
+        case ENTRANCE -> block.setType(Material.MONSTER_EGGS);
+        case WITHER -> block.setType(Material.COAL_BLOCK);
+        case FAIRY -> wool(block, (byte) 6);
+        case BLOOD -> block.setType(Material.REDSTONE_BLOCK);
+      }
     }
   }
 

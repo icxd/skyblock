@@ -24,7 +24,8 @@ import net.icxd.dungeons.dungeons.generation.utils.Position;
  *   <li>the critical path Entrance -> Fairy -> Blood, found with a depth-first search that is
  *       biased towards the next waypoint but randomised, so it's direct-ish without being a
  *       straight line. Only regular rooms can be walked through, so the rooms right before the
- *       fairy and blood rooms are always regular rooms (that's where their keys drop);
+ *       fairy and blood rooms are always regular rooms (that's where the keys for the doors after
+ *       the fairy and into blood drop);
  *   <li>everything else hung off that path with a "growing tree" (the maze algorithm): keep a list
  *       of rooms that can still take doors, pick one (usually the newest, sometimes a random one),
  *       open a door from it into an unvisited neighbour. Rooms that still <em>need</em> doors (a

@@ -19,6 +19,7 @@ final class DoorTyper {
       Edge entry = room.doors.get(0); // the door a room was entered through is always its first
       if (room.type == RoomType.BLOOD) types.put(entry, DoorType.BLOOD);
       else if (i == 1) types.put(entry, DoorType.ENTRANCE);
+      else if (room.type == RoomType.FAIRY) types.put(entry, DoorType.FAIRY);
       else types.put(entry, DoorType.WITHER);
     }
     return types;

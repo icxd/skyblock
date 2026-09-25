@@ -109,7 +109,7 @@ public final class DungeonLayout {
 
   /**
    * Draws the map with ASCII: {@code #} normal door, {@code E} entrance door, {@code W} wither
-   * door, {@code B} blood door, no wall between cells of the same room. Labels: S entrance,
+   * door, {@code F} fairy door, {@code B} blood door, no wall between cells of the same room. Labels: S entrance,
    * F fairy, BL blood, P puzzle, T trap, M miniboss, R rare, r regular ({@code r*} = on the
    * critical path), followed by the room id.
    */
@@ -156,6 +156,7 @@ public final class DungeonLayout {
       case NORMAL -> '#';
       case ENTRANCE -> 'E';
       case WITHER -> 'W';
+      case FAIRY -> 'F';
       case BLOOD -> 'B';
     };
   }

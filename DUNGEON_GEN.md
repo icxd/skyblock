@@ -15,14 +15,14 @@ The code lives in `src/main/java/net/icxd/dungeons/dungeons/generation`. `/dunge
 prints a map like the ones below to the console and builds a block preview.
 
 ```
-F7, seed 2024. E = entrance door, W = wither door, B = blood door, # = normal door.
+F7, seed 2024. E = entrance door, W = wither door, F = fairy door, B = blood door, # = normal door.
 r* = room on the critical path. S entrance, F fairy, BL blood, P puzzle, T trap, M miniboss.
 +-------+-------+-------+-------+-------+-------+
 |  P3   |  r20  # r*18          E  S0   |  P6   |
 +---#---+---#---+-------+---W---+-------+---#---+
 |  r22  #  r21  | r*16  | r*17  |  P7   #  r9   |
 +       +-------+       +       +-------+---#---+
-|       | r*19  |       |       W r*14  W  F2   |
+|       | r*19  |       |       W r*14  F  F2   |
 +-------+       +       +-------+---#---+---W---+
 |  BL1  B       W       | r*15  |  P5   | r*11  |
 +-------+-------+       +       +-------+       +
@@ -66,10 +66,10 @@ room.
 ### Doors on the critical path
 | Fact | Confidence | Source |
 |---|---|---|
-| On the entrance → blood path, the first door is the **entrance door** (infested stone), the last is the **blood door** (stained clay), and **every door in between is a wither door** (coal). No other door is special. | confirmed | IllegalMap `setupTree`, wiki ("the critical path … is always marked using doors requiring wither keys") |
+| On the entrance → blood path, the first door is the **entrance door** (infested stone), the last is the **blood door** (stained clay), and **every other door is a wither door** (coal), except the one into the fairy room. No door off the path is special. | confirmed | IllegalMap `setupTree`, wiki ("the critical path … is always marked using doors requiring wither keys") |
 | The key for a door drops in the room before it. The blood key drops "in the last room before the Blood Room". | confirmed | wiki *Wither Key* / *Blood Key* |
-| So the rooms just before the fairy and just before blood are regular rooms (the fairy and blood rooms have no mobs to drop a key). | inferred | |
-| The fairy door is black but reportedly opens without a key. FunnyMap shows "wither doors − 1". | conflicting sources | 2021 guide vs. a forum guide |
+| The **door into the fairy room needs no key**. It's pink on the map. | played + Odin (separate `Fairy` door type, drawn in the fairy room's colour) | |
+| So the rooms just before the fairy and just before blood are regular rooms. The fairy room has no mobs, so the key for the door after it has to come from the room before it. | inferred | |
 
 ### Special rooms per floor
 | Fact | Confidence | Source |
@@ -77,7 +77,7 @@ room.
 | Every floor: 1 entrance, 1 fairy, 1 blood, 1 yellow (miniboss) room, and at least 2 puzzles. F7 has up to 5 puzzles. Trap room from F3 up. | confirmed | wiki *Dungeons*, forum guides |
 | Puzzles never repeat in a dungeon. Available puzzles: Tic Tac Toe, Three Weirdos, Creeper Beams, Water Board and Teleport Maze on all floors; Higher or Lower, Boulder and Ice Path from F3; Quiz from F4; Ice Fill on F7. Bomb Defuse was removed in 0.20.5. | confirmed | wiki *Dungeon Puzzle Rooms* |
 | **On F4–F6 the last column (x = 5) is filled with puzzles, trap and miniboss.** Specials that don't fit go elsewhere; Odin handles a trap or miniboss outside the column. | confirmed as a working mod heuristic | Odin `SpecialColumn.kt` / `MapScan.kt` |
-| Puzzles: usually 2 on the small maps, 4–5 on the big ones. | played | `DungeonFloor` |
+| Puzzles: usually 2 up to F3, 4–5 from F4 on. | played | `DungeonFloor` |
 | The entrance and blood room are both on the map border, far apart. | played | |
 
 The special column is the most surprising find. It suggests that on F4–F6 Hypixel generates a
@@ -159,8 +159,8 @@ repeats is a bipartite matching (Kuhn's algorithm, randomised, most constrained 
 repeat only happens when the pool has fewer templates of a kind than the map has rooms of it.
 
 ### Stage 4: door types (`DoorTyper`)
-Along the critical path: the first door is ENTRANCE, the last is BLOOD, and everything in between
-is WITHER. Every other door is NORMAL.
+Along the critical path: the first door is ENTRANCE, the door into the fairy room is FAIRY
+(keyless), the last door is BLOOD, and every other door is WITHER. Doors off the path are NORMAL.
 
 `LayoutValidator` checks every rule above. The tests run it over 300 seeds per floor, plus a pool
 where the only multi-cell rooms are corridors that open only at their ends and 2x2s with a sealed
@@ -219,18 +219,16 @@ Shapes in their rotation-0 frame (x → east, y → south):
 | `entranceOnEdge`, `bloodOnEdge` | true, true | both on the border (played) |
 | `bloodDistance` | 0.6 | how far apart entrance and blood must be |
 | `deadEndEdgeWeight` | 2.0 | how much special rooms prefer the border |
-| puzzles per floor | E–F1 2, F2–F3 2–3, F4–F7 4–5 | `DungeonFloor`; 5x5 is interpolated |
+| puzzles per floor | E–F3 2, F4–F7 4–5 | `DungeonFloor` (played) |
 
 Averages over 1000 seeds:
 
 | Floor | Rooms | Critical path (rooms) | Wither doors | Rare rooms / dungeon |
 |---|---|---|---|---|
-| Entrance | 12.1 | 5.9 | 2.9 | 0.08 |
-| F7 | 23.6 | 7.4 | 4.4 | 0.08 |
+| Entrance | 12.1 | 6.0 | 2.0 | 0.08 |
+| F7 | 23.6 | 7.4 | 3.4 | 0.08 |
 
-## 5. Open questions
-- Puzzle count on the 5x5 floors (F2–F3), currently 2–3.
-- Whether the fairy door counts as a wither door for key purposes.
+## 5. Notes
 - Multi-cell rooms are believed to have no restricted walls. The generator still supports them
   (`doorSlots` on a multi-cell template), so a prefab that needs it can use it.
 
