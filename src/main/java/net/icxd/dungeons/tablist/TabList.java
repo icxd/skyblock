@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -78,6 +81,8 @@ public class TabList {
 
     /** What each viewer has been sent, per slot. Weak, so a player who rejoins starts over. */
     private static final Map<Player, Line[]> sent = new WeakHashMap<>();
+    /** Players whose tab list failed to build, so it's logged once each. */
+    private static final Set<UUID> failed = new HashSet<>();
 
     public static void handle() {
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), TabList::update, 200, 60);
@@ -90,7 +95,14 @@ public class TabList {
             for (Player other : online) {
                 if (viewer.isListed(other)) viewer.unlistPlayer(other);
             }
-            send(viewer, lines(viewer, online));
+            try {
+                send(viewer, lines(viewer, online));
+            } catch (RuntimeException e) {
+                // One player's broken data shouldn't stop everyone else's tab list.
+                if (failed.add(viewer.getUniqueId())) {
+                    Dungeons.getInstance().getLogger().log(Level.WARNING, "Couldn't build " + viewer.getName() + "'s tab list", e);
+                }
+            }
         }
     }
 
@@ -126,18 +138,23 @@ public class TabList {
         if (hub) {
             Region region = Region.regionCache.get(viewer.getUniqueId());
             lines.add(new Line("§b§lArea: §7" + (region != null ? region.getType().getName() : "Village"), GRAY));
-            lines.add(new Line("§f Server: §8dev01a", GRAY));
+            lines.add(new Line("§f Server: §8" + Dungeons.getSkyBlockServer().getName(), GRAY));
             lines.add(new Line("§f Gems: §a" + user.getGems(), GRAY));
             lines.add(new Line("§3§l§6", GRAY));
-            lines.add(new Line("§b§l" + user.getFaction().getName() + " Reputation:", GRAY));
-            lines.add(new Line(" §c" + user.getFactionReputation(), GRAY));
-            lines.add(new Line(" §cadd progress bar here", GRAY));
-            lines.add(new Line("§d" + user.getFactionTitle().getName() + "       "
-                    + (user.getFactionTitle().next() == null ? "§a§lMAXED!" : user.getFactionTitle().next().getName()), GRAY));
+            if (user.getFaction() == null) {
+                lines.add(new Line("§b§lFaction: §7None yet", GRAY));
+                for (int i = 0; i < 3; i++) lines.add(new Line("§8§a§b" + i + " ", GRAY));
+            } else {
+                lines.add(new Line("§b§l" + user.getFaction().getName() + " Reputation:", GRAY));
+                lines.add(new Line(" §c" + user.getFactionReputation(), GRAY));
+                lines.add(new Line(" §cadd progress bar here", GRAY));
+                lines.add(new Line("§d" + user.getFactionTitle().getName() + "       "
+                        + (user.getFactionTitle().next() == null ? "§a§lMAXED!" : user.getFactionTitle().next().getName()), GRAY));
+            }
             for (int i = 0; i < 11; i++) lines.add(new Line("§8§a§a ", GRAY));
         } else {
             lines.add(new Line("§b§lArea: §7Private Island", GRAY));
-            lines.add(new Line("§f Server: §8dev01a", GRAY));
+            lines.add(new Line("§f Server: §8" + Dungeons.getSkyBlockServer().getName(), GRAY));
             lines.add(new Line("§f Crystals: §d0", GRAY));
             for (int i = 0; i < 16; i++) lines.add(new Line("§8§a§1§a ", GRAY));
         }

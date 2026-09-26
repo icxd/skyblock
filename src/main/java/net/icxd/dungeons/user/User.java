@@ -6,68 +6,81 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.bank.BankTransaction;
 import net.icxd.dungeons.crimsonisle.factions.FactionTitle;
 import net.icxd.dungeons.crimsonisle.factions.FactionType;
-import net.icxd.dungeons.database.ICollection;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+/** A player's data, held by this server while they're on it (see {@link UserStore}). */
 @Getter
 public class User {
-  public static HashMap<UUID, User> usersCache = new HashMap<>();
+  /** Written by logins (off the main thread), read everywhere. */
+  private static final Map<UUID, User> usersCache = new ConcurrentHashMap<>();
 
-  private UUID uuid;
+  private final UUID uuid;
   private Document document;
-
-  private Player player;
+  /** When this server claimed the data, and how long loading it took. */
+  private long claimedAt;
+  private long loadMillis;
+  /** Handed off: still readable while the player is here, but no longer saved from this server. */
+  private volatile boolean released;
   private int skyBlockXp;
 
   @Setter
   private boolean inDungeon = false;
 
-  public User(UUID uuid) {
+  private User(UUID uuid) {
     this.uuid = uuid;
-    this.player = Bukkit.getPlayer(uuid);
   }
 
+  /** The player's data. For players on this server it's loaded before they join. */
   public static User getUser(UUID uuid) {
-    if (usersCache.containsKey(uuid))
-      return usersCache.get(uuid);
+    return usersCache.computeIfAbsent(uuid, User::new);
+  }
+
+  /** The user if this server holds their data, else null. */
+  public static User cached(UUID uuid) {
+    return usersCache.get(uuid);
+  }
+
+  static List<User> all() {
+    return List.copyOf(usersCache.values());
+  }
+
+  static User loaded(UUID uuid, Document document, long startedAt) {
     User user = new User(uuid);
+    user.document = document;
+    user.claimedAt = System.currentTimeMillis();
+    user.loadMillis = user.claimedAt - startedAt;
     usersCache.put(uuid, user);
     return user;
   }
 
-  public void load() {
-    ICollection users = Dungeons.getUserCollection();
-    Document found = users.get().find(new Document("uuid", uuid.toString())).first();
-
-    if (found == null) {
-      document = users.defaultDocument()
-          .append("uuid", uuid.toString())
-          .append("username", player.getName())
-          .append("ip", player.getAddress().getAddress().getHostAddress());
-      users.get().insertOne(document);
-    }
-
-    document = found;
-
-    for (String key : users.defaultDocument().keySet()) {
-      if (document.containsKey(key)) continue;
-      document.append(key, users.defaultDocument().get(key));
-    }
-
-    users.get().replaceOne(new Document("uuid", uuid.toString()), document);
-    usersCache.put(uuid, this);
+  static void forget(User user) {
+    usersCache.remove(user.uuid, user);
   }
 
+  void markReleased() {
+    released = true;
+  }
+
+  public boolean isLoaded() {
+    return document != null;
+  }
+
+  public Player getPlayer() {
+    return Bukkit.getPlayer(uuid);
+  }
+
+  /** Saves in the background. Main thread. */
   public void save() {
-    ICollection users = Dungeons.getUserCollection();
-    users.get().replaceOne(new Document("uuid", uuid.toString()), document);
+    Dungeons.getUserStore().save(this);
   }
 
   public <T> T get(String path, Class<T> clazz) {
@@ -87,7 +100,11 @@ public class User {
   public int getBankBalance() { return get("bank.balance", Integer.class); }
   public int getBits() { return get("bits", Integer.class); }
   public int getGems() { return get("gems", Integer.class); }
-  public FactionType getFaction() { return FactionType.valueOf(get("crimsonIsle.selectedFaction", String.class)); }
+  /** Null until they pick one. */
+  public FactionType getFaction() {
+    String faction = get("crimsonIsle.selectedFaction", String.class);
+    return faction == null ? null : FactionType.valueOf(faction);
+  }
   public int getFactionReputation() { return get("crimsonIsle.factions."+getFaction().name().toLowerCase()+".reputation", Integer.class); }
   public FactionTitle getFactionTitle() { return FactionTitle.get(getFactionReputation()); }
 
@@ -99,7 +116,7 @@ public class User {
     double newBalance = getBankBalance() - amount;
     document.get("bank", Document.class).append("balance", newBalance);
     document.get("bank", Document.class).getList("transactions", Document.class)
-        .add(new BankTransaction(player, amount, BankTransaction.TransactionType.WITHDRAW).toDocument());
+        .add(new BankTransaction(getPlayer(), amount, BankTransaction.TransactionType.WITHDRAW).toDocument());
     save();
   }
 
@@ -107,7 +124,7 @@ public class User {
     double newBalance = getBankBalance() + amount;
     document.get("bank", Document.class).append("balance", newBalance);
     document.get("bank", Document.class).getList("transactions", Document.class)
-        .add(new BankTransaction(player, amount, BankTransaction.TransactionType.DEPOSIT).toDocument());
+        .add(new BankTransaction(getPlayer(), amount, BankTransaction.TransactionType.DEPOSIT).toDocument());
     save();
   }
 

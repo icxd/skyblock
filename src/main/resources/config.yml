@@ -1,4 +1,6 @@
 server:
+    # Every server on the network needs its own name: it's how servers tell which one holds a
+    # player's data.
     name: 'hub01a'
     port: 25565
     type: 'LOBBY'

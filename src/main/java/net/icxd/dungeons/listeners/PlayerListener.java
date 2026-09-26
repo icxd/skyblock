@@ -14,6 +14,7 @@ import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.user.Rank;
 import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.user.UserStore;
 import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -21,6 +22,7 @@ import org.bukkit.*;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -28,25 +30,53 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.util.HashMap;
 import java.util.UUID;
 
 public class PlayerListener implements Listener {
 
+    /** Loads the player's data before they join, waiting for another server to let go of it (see UserStore). */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPreLogin(AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+        try {
+            Dungeons.getUserStore().claim(event.getUniqueId(), event.getName(), event.getAddress().getHostAddress());
+        } catch (UserStore.HeldElsewhereException e) {
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    Component.text("Your profile is still being saved on another server. Try again in a moment.", NamedTextColor.RED));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Component.text("Couldn't load your profile.", NamedTextColor.RED));
+        } catch (RuntimeException e) {
+            Dungeons.getInstance().getLogger().log(java.util.logging.Level.SEVERE, "Couldn't load " + event.getName() + "'s data", e);
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Component.text("Couldn't load your profile.", NamedTextColor.RED));
+        }
+    }
+
+    /** Another plugin refused the login after the data was claimed: let it go again. */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPreLoginRefused(AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+        Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
+            User user = User.cached(event.getUniqueId());
+            if (user != null && user.getPlayer() == null) Dungeons.getUserStore().leave(user);
+        });
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         event.setJoinMessage(null);
         Player player = event.getPlayer();
 
-        long cms = System.currentTimeMillis();
-
-        Utils.async(() -> {
-            User user = User.getUser(player.getUniqueId());
-            user.load();
-
-            player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + (System.currentTimeMillis() - cms) + "ms)"));
-        });
+        User user = User.cached(player.getUniqueId());
+        if (user == null || !user.isLoaded()) {
+            player.kick(Component.text("Couldn't load your profile, please rejoin.", NamedTextColor.RED));
+            return;
+        }
+        player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
 
 //        player.teleport(new Location(Bukkit.getWorld("world"), 0, 100, 0));
 //        World world = Bukkit.getWorld(Dungeons.getSkyBlockServer().getServerType().getWorldName());
@@ -56,12 +86,8 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onLeave(PlayerQuitEvent event) {
         event.setQuitMessage(null);
-        Player player = event.getPlayer();
-
-        Utils.async(() -> {
-            User user = User.getUser(player.getUniqueId());
-            user.save();
-        });
+        User user = User.cached(event.getPlayer().getUniqueId());
+        if (user != null) Dungeons.getUserStore().leave(user);
     }
 
     @EventHandler

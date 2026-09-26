@@ -15,7 +15,9 @@ import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.rune.RuneRunnable;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.stats.StatsRunnable;
+import net.icxd.dungeons.tablist.TabList;
 import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.user.UserStore;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
@@ -29,6 +31,7 @@ public class Dungeons extends JavaPlugin {
     @Getter private static Dungeons instance;
     @Getter private static MongoClient mongoClient;
     @Getter private static ICollection userCollection;
+    @Getter private static UserStore userStore;
 
     @Getter
     public CommandMap commandMap;
@@ -48,6 +51,9 @@ public class Dungeons extends JavaPlugin {
         saveConfig();
 
         skyBlockServer = new SkyBlockServer(getConfig());
+        userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
+                mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection.defaultDocument());
+        userStore.start();
 
         new CheckHandler();
         new ItemRegistry();
@@ -73,21 +79,27 @@ public class Dungeons extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, new ScoreboardRunnable(), 0, 20);
         Bukkit.getScheduler().runTaskTimer(this, new EntityRunnable(), 0, 1);
         Bukkit.getScheduler().runTaskTimer(this, new RuneRunnable(), 0, 1);
+        if (getServer().getPluginManager().isPluginEnabled("packetevents")) {
+            TabList.handle();
+        } else {
+            getLogger().warning("PacketEvents isn't installed, so there's no tab list");
+        }
 
+        // Players already online when the plugin (re)loads.
         for (Player player : Bukkit.getOnlinePlayers()) {
-            long cms = System.currentTimeMillis();
-
-            Utils.async(() -> {
-                User user = User.getUser(player.getUniqueId());
-                user.load();
-
-                player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + (System.currentTimeMillis() - cms) + "ms)"));
-            });
+            try {
+                userStore.claim(player.getUniqueId(), player.getName(), player.getAddress().getAddress().getHostAddress());
+            } catch (UserStore.HeldElsewhereException | InterruptedException | RuntimeException e) {
+                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't load " + player.getName() + "'s data", e);
+                player.kick(net.kyori.adventure.text.Component.text("Couldn't load your profile, please rejoin."));
+            }
         }
     }
 
     @Override
     public void onDisable() {
+        if (userStore != null) userStore.stop();
+        if (mongoClient != null) mongoClient.close();
         instance = null;
     }
 }
