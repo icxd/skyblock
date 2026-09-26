@@ -75,7 +75,7 @@ public final class Transfers {
         if (hub.isEmpty()) return;
         String reason = event.getServerKickReason().map(r -> PlainTextComponentSerializer.plainText().serialize(r)).orElse("");
         Component message = Chat.text("§cA kick occurred in your connection, so you have been routed to the Hub.");
-        if (!reason.isBlank()) message = message.append(Component.newline()).append(Chat.text("§7" + reason));
+        if (!reason.isBlank()) message = Chat.join(message, Component.newline(), Chat.text("§7" + reason));
         event.setResult(KickedFromServerEvent.RedirectPlayer.create(hub.get(), message));
     }
 

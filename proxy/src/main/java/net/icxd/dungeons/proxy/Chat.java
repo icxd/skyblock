@@ -1,8 +1,12 @@
 package net.icxd.dungeons.proxy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.velocitypowered.api.command.CommandSource;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 /** Messages in Hypixel's style, written with section-sign colour codes like the Paper plugin's. */
@@ -21,11 +25,21 @@ public final class Chat {
         to.sendMessage(text(legacy));
     }
 
+    /**
+     * Parts side by side. Appending to a component makes the new part its child, and children take
+     * on their parent's style unless they set their own: the rule's strikethrough ran through every
+     * line after it that way. These are siblings under an unstyled root instead.
+     */
+    public static Component join(Component... parts) {
+        return Component.textOfChildren(parts);
+    }
+
     /** Between two rules, one line each. */
     public static Component framed(Component... lines) {
-        Component out = text(RULE);
-        for (Component line : lines) out = out.append(Component.newline()).append(line);
-        return out.append(Component.newline()).append(text(RULE));
+        List<Component> all = new ArrayList<>(List.of(lines));
+        all.add(0, text(RULE));
+        all.add(text(RULE));
+        return Component.join(JoinConfiguration.newlines(), all);
     }
 
     public static Component framed(String... lines) {

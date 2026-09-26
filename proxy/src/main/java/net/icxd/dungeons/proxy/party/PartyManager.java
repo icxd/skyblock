@@ -22,6 +22,7 @@ import net.icxd.dungeons.proxy.Transfers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Parties, as on Hypixel: {@code /party <player>} starts one, invites last 60 seconds, the leader
@@ -98,8 +99,8 @@ public final class PartyManager {
         tell(party, Chat.framed(profiles.display(from) + " §einvited " + profiles.display(to) + " §eto the party! They have §c"
                 + INVITE_SECONDS + " §eseconds to accept."));
         String accept = "/party accept " + inviter.getUsername();
-        Component join = Chat.text("§eYou have §c" + INVITE_SECONDS + " §eseconds to accept. ")
-                .append(Chat.text("§6Click here to join!")
+        Component join = Chat.join(Chat.text("§eYou have §c" + INVITE_SECONDS + " §eseconds to accept. "),
+                Chat.text("§6Click here to join!")
                         .clickEvent(ClickEvent.runCommand(accept))
                         .hoverEvent(HoverEvent.showText(Chat.text("§eClick to run\n" + accept))));
         target.sendMessage(Chat.framed(Chat.text(profiles.display(from) + " §ehas invited you to join their party!"), join));
@@ -292,7 +293,8 @@ public final class PartyManager {
         Party party = partyFor(player);
         if (party == null) return;
         // What they typed stays plain text: no colour codes from players.
-        tell(party, Chat.text("§9Party §8> " + profiles.display(player.getUniqueId()) + "§f: ").append(Component.text(message)));
+        tell(party, Chat.join(Chat.text("§9Party §8> " + profiles.display(player.getUniqueId()) + "§f: "),
+                Component.text(message, NamedTextColor.WHITE)));
     }
 
     /** Brings every member to the leader's server. */
