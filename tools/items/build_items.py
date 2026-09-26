@@ -52,13 +52,13 @@ def plugin_enums():
         'gem': 'item/gemstone/GemstoneType.java', 'essence': 'item/cost/essence/EssenceType.java',
         'slayer': 'item/requirement/slayer/SlayerBossType.java', 'dungeon': 'item/requirement/dungeontier/DungeonType.java',
         'skill': 'skill/Skill.java', 'kuudra': 'crimsonisle/kuudra/KuudraTier.java',
-        'activation': 'item/ability/AbilityActivation.java', 'block': 'item/ability/AbilityType.java'}.items()}
+        'activation': 'item/ability/AbilityActivation.java'}.items()}
 
 
 # The API requirement types item/requirement/ has a class for.
 MODELLED_REQUIREMENTS = {'SKILL', 'SLAYER', 'DUNGEON_TIER', 'HEART_OF_THE_MOUNTAIN', 'KUUDRA_COMPLETION'}
-# Block kinds as the plugin's AbilityType names them.
-BLOCK_TYPE = {'ABILITY': 'ABILITY', 'SHORTBOW': 'SHORTBOW', 'PIECE': 'PIECE_BONUS', 'FULL_SET': 'FULL_SET_BONUS'}
+# Block kinds format 1 has (the plugin's ItemBlock shows any of them; what an ability does is up to its code).
+BLOCK_KINDS = {'ABILITY', 'FULL_SET', 'PIECE', 'TIERED', 'EXTRA', 'SHORTBOW'}
 
 
 def class_fields(jar, name):
@@ -882,7 +882,7 @@ class Builder:
         blocks = []
         for b in parsed['blocks']:
             block = {'kind': b['kind'], 'name': text(i, b['name']), 'header': text(i, b['header'])}
-            if b['kind'] not in BLOCK_TYPE or BLOCK_TYPE[b['kind']] not in self.enums['block']:
+            if b['kind'] not in BLOCK_KINDS:
                 self.note('block kind', b['kind'], i)
             if b['label'] not in ('Ability', 'Passive', 'Shortbow') and b['kind'] == 'ABILITY':
                 self.note('ability header', b['label'], i)

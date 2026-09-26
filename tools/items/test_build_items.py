@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # python3 tools/items/test_build_items.py
 #
-# Checks of build_items.py's lore parsing on made-up lore (no Hypixel data needed).
+# Checks of build_items.py's lore parsing on made-up lore, and that it finds the plugin's enums (no Hypixel
+# data needed).
 import os
 import sys
 import unittest
@@ -53,6 +54,16 @@ class OwnerText(unittest.TestCase):
         # a date is provenance only in a section of provenance lines
         parsed = build_items.parse_lore(['§7Released in', '§8July 2022', '', '§9§lRARE'])
         self.assertEqual(parsed['own'], ['§7Released in', '§8July 2022'])
+
+
+class PluginEnums(unittest.TestCase):
+    """The names the data is checked against are read from the plugin's enums, before any item is built."""
+
+    def test_every_enum_file_is_there(self):
+        enums = build_items.plugin_enums()
+        self.assertIn('RIGHT_CLICK', enums['activation'])
+        self.assertIn('LEGENDARY', enums['rarity'])
+        self.assertTrue(all(enums.values()), [k for k, v in enums.items() if not v])
 
 
 if __name__ == '__main__':

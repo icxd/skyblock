@@ -1,26 +1,21 @@
 package net.icxd.dungeons.item.ability.abilities;
 
 import net.icxd.dungeons.item.SkyBlockItem;
-import net.icxd.dungeons.item.ability.Ability;
-import net.icxd.dungeons.item.ability.AbilityActivation;
-import net.icxd.dungeons.item.ability.AbilityType;
+import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 /** Aspect of the End/Void: up to 8 blocks the way you're looking, stopping short of anything solid. */
-public class InstantTransmission extends Ability {
+public class InstantTransmission implements AbilityHandler {
     private static final double DISTANCE = 8;
     private static final double STEP = 0.25;
 
-    public InstantTransmission() {
-        super("Instant Transmission", AbilityType.ABILITY, AbilityActivation.RIGHT_CLICK,
-                "&7Teleport &a8 blocks&7 ahead of you and\n&7gain &a+50 &f✦ Speed&7 for &a3 seconds&7.", 0, 45, 0);
-    }
-
     @Override
-    public void activate(Player player, SkyBlockItem item) {
+    public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
         Location from = player.getLocation();
         Vector direction = from.getDirection().normalize();
         Location to = null;

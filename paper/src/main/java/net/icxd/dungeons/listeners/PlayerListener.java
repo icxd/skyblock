@@ -8,7 +8,9 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.item.SkyBlockItem;
-import net.icxd.dungeons.item.ability.Ability;
+import net.icxd.dungeons.item.ability.Abilities;
+import net.icxd.dungeons.item.behaviour.ItemBehaviours;
+import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.stats.Stat;
@@ -25,6 +27,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -44,6 +47,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -176,12 +180,20 @@ public class PlayerListener implements Listener {
         player.getInventory().setItem(event.getNewSlot(), builtItem);
     }
 
+    /**
+     * A click with a SkyBlock item uses the ability its blocks (with what its behaviour adds) have for that
+     * click, if something does what it says (see {@link Abilities#forClick}); else a shortbow shoots, except
+     * on a right click that uses the block they clicked (a chest, a door): that one is the block's.
+     */
     @EventHandler
     public void onAbilityUse(PlayerInteractEvent event) {
         // Fired once per hand since 1.9; the ability is on the main hand item.
         if (event.getHand() != EquipmentSlot.HAND) return;
         // Denied (e.g. while the player's data is being handed to another server).
         if (event.useItemInHand() == Event.Result.DENY) return;
+        boolean right = event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK;
+        boolean left = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
+        if (!right && !left) return;
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType() == Material.AIR) return;
@@ -189,42 +201,62 @@ public class PlayerListener implements Listener {
         if (tag == null) return;
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
-        Ability ability = sbItem.ability();
-        if (ability == null) return;
-        boolean right = event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK;
-        boolean left = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
-        switch (ability.getActivation()) {
-            case RIGHT_CLICK -> { if (right) useAbility(player, sbItem, ability); }
-            case LEFT_CLICK -> { if (left) useAbility(player, sbItem, ability); }
-            default -> { }
+        List<ItemBlock> blocks = ItemBehaviours.of(sbItem).blocks(sbItem, tag, sbItem.blocks());
+        ItemBlock block = Abilities.forClick(blocks, right, player.isSneaking(), name -> Abilities.get(name) != null);
+        if (block == null) return;
+        if (block.isShortbow()) {
+            if (right && usesBlock(event)) return;
+            // It has shot, so no drawing it too.
+            if (right) event.setUseItemInHand(Event.Result.DENY);
+            shoot(player, sbItem, tag, block);
+        } else {
+            useAbility(player, sbItem, tag, block);
         }
     }
 
-    /** Mana first: a cast that fails for lack of it doesn't start the cooldown (cooldowns are per ability). */
-    private void useAbility(Player player, SkyBlockItem sbItem, Ability ability) {
+    /** Whether the click uses the block itself, as a right click on a chest or lever does unless they're sneaking. */
+    private static boolean usesBlock(PlayerInteractEvent event) {
+        Block clicked = event.getClickedBlock();
+        return event.getAction() == Action.RIGHT_CLICK_BLOCK && !event.getPlayer().isSneaking()
+                && clicked != null && clicked.getType().isInteractable();
+    }
+
+    /**
+     * Cooldown, then mana: a cast that fails for lack of mana doesn't start the cooldown (cooldowns are per
+     * ability). Its mana cost is what it says, and its share of their max mana.
+     */
+    private void useAbility(Player player, SkyBlockItem sbItem, NBTTagCompound tag, ItemBlock ability) {
         PlayerSession session = PlayerSession.of(player);
-        String cooldown = "ability:" + ability.getName();
+        String cooldown = "ability:" + ability.name();
         if (session.cooldownLeft(cooldown) > 0) {
             player.sendMessage("§cYou currently have a cooldown for this ability!");
             return;
         }
 
         int mana = Math.max(0, session.getMana());
-        int cost = ability.getManaCost();
+        int cost = Abilities.manaCost(ability, session.maxMana());
         if (mana < cost) {
             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
             return;
         }
 
-        if (ability.getCooldown() > 0) session.startCooldown(cooldown, ability.getCooldown() * 1000L);
+        if (ability.cooldown() > 0) session.startCooldown(cooldown, (long) (ability.cooldown() * 1000));
         session.setMana(mana - cost);
-        ability.activate(player, sbItem);
+        Abilities.handler(ability).use(player, sbItem, tag, ability);
 
-        if (ability.isShowManaCost()) {
+        if (cost > 0) {
             session.setDefenseReplacement(Replacement.forMillis(
-                    "§b-" + cost + " Mana (§6" + ability.getName() + "§b)", 400));
+                    "§b-" + cost + " Mana (§6" + ability.name() + "§b)", 400));
         }
+    }
+
+    /** A shortbow's shot, at most one per its shot cooldown (whichever shortbow they shot last). */
+    private void shoot(Player player, SkyBlockItem sbItem, NBTTagCompound tag, ItemBlock shortbow) {
+        PlayerSession session = PlayerSession.of(player);
+        if (session.cooldownLeft("shortbow") > 0) return;
+        if (sbItem.shotCooldown() > 0) session.startCooldown("shortbow", (long) (sbItem.shotCooldown() * 1000));
+        Abilities.handler(shortbow).use(player, sbItem, tag, shortbow);
     }
 
     /**

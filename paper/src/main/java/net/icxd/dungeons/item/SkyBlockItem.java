@@ -1,6 +1,5 @@
 package net.icxd.dungeons.item;
 
-import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.cost.UpgradeCosts;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enums.GenericItemType;
@@ -53,8 +52,11 @@ public interface SkyBlockItem {
 
     /** The item's own text, between its enchantments and abilities: a line each, "" for a blank line. */
     default List<String> lore() { return List.of(); }
-    default Ability ability() { return null; }
-    /** Abilities and bonuses from data, shown where {@link #ability()} is; Java items use ability(). */
+    /**
+     * Its abilities and bonuses, in the order they show, after its text. What an ability does is Java code
+     * (see {@link net.icxd.dungeons.item.ability.Abilities}); what an item's data changes about them, too (see
+     * {@link net.icxd.dungeons.item.behaviour.ItemBehaviour}).
+     */
     default List<ItemBlock> blocks() { return List.of(); }
 
     /** "This item can be reforged!" while it has no reforge. Weapons, armor, tools and equipment can. */

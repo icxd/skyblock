@@ -1,23 +1,28 @@
 package net.icxd.dungeons.item.ability.abilities;
 
 import net.icxd.dungeons.item.SkyBlockItem;
-import net.icxd.dungeons.item.ability.Ability;
-import net.icxd.dungeons.item.ability.AbilityActivation;
-import net.icxd.dungeons.item.ability.AbilityType;
+import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Location;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 
-public class InstantlyShoots extends Ability {
-    private final int arrows;
-    public InstantlyShoots(int arrowAmount) {
-        super("Instantly shoots!", AbilityType.SHORTBOW, AbilityActivation.LEFT_CLICK, "", 0, 0, 0);
-        this.arrows = arrowAmount;
-        setShowManaCost(false);
+import java.util.Locale;
+import java.util.Map;
+
+/** A shortbow's shot ("Shortbow: Instantly shoots!"): its arrows at once, fanned out 10° apart. */
+public class InstantlyShoots implements AbilityHandler {
+    /** How many arrows a shot is, by item id (upper case, as the registry has them); 1 for the rest. */
+    private static final Map<String, Integer> ARROWS = Map.of("TERMINATOR", 3);
+
+    public static int arrows(SkyBlockItem item) {
+        return ARROWS.getOrDefault(item.id().toUpperCase(Locale.ROOT), 1);
     }
 
     @Override
-    public void activate(Player player, SkyBlockItem item) {
+    public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+        int arrows = arrows(item);
         Location location = player.getEyeLocation();
         for (int i = 0; i < arrows; i++) {
             Location l = location.clone();

@@ -14,8 +14,8 @@ import org.bukkit.Material;
 import java.util.List;
 
 /**
- * A SkyBlock item from items.json (see {@link ItemData}): everything it says is data. It has no
- * {@link #ability()}: its abilities are {@link #blocks()}, text only.
+ * A SkyBlock item from items.json (see {@link ItemData}): everything it says is data. Its abilities are
+ * {@link #blocks()}; what they do is Java code, by ability name (see {@link net.icxd.dungeons.item.ability.Abilities}).
  *
  * @param specificItemType NONE when its type isn't one of those (see {@link #typeKey} for what it is)
  * @param typeKey its Hypixel type ("SWORD", "SACK"), "OTHER" if it has none

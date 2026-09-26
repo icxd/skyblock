@@ -7,8 +7,6 @@ import io.papermc.paper.datacomponent.item.ItemLore;
 import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.attributes.Attribute;
 import net.icxd.dungeons.dungeons.DungeonLevels;
-import net.icxd.dungeons.item.ability.Ability;
-import net.icxd.dungeons.item.ability.AbilityActivation;
 import net.icxd.dungeons.item.behaviour.ItemBehaviour;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.cost.Cost;
@@ -264,7 +262,6 @@ public final class ItemBuilder {
         ItemBehaviour behaviour = ItemBehaviours.of(item);
         sections.add(behaviour.lore(item, tag, item.lore()));
         sections.add(runeLines(tag));
-        if (item.ability() != null) sections.add(abilityLore(item.ability(), rarity));
         for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(block, rarity));
 
         List<String> lore = new ArrayList<>();
@@ -422,32 +419,12 @@ public final class ItemBuilder {
     }
 
     /**
-     * "&6Ability: Instant Transmission  &e&lRIGHT CLICK" (two spaces; a passive one ends in one), its
-     * description, then what it costs and its cooldown. A shortbow's is just "Shortbow: Instantly shoots!".
-     */
-    public static List<String> abilityLore(Ability ability, Rarity rarity) {
-        List<String> lines = new ArrayList<>();
-        switch (ability.getType()) {
-            case SHORTBOW -> {
-                lines.add(rarity.getColor() + "Shortbow: Instantly shoots!");
-                return lines;
-            }
-            case PIECE_BONUS -> lines.add("&6Piece Bonus: " + ability.getName());
-            case FULL_SET_BONUS -> lines.add("&6Full Set Bonus: " + ability.getName() + " &7(0/4)");
-            default -> lines.add("&6Ability: " + ability.getName() + (ability.getActivation() == AbilityActivation.PASSIVE ? " "
-                    : "  &e&l" + ability.getActivation().getDisplay()));
-        }
-        lines.addAll(ability.descriptionLines());
-        costLines(lines, ability.getManaCost(), 0, ability.getSoulflowCost(), 0, 0, ability.getCooldown());
-        return lines;
-    }
-
-    /**
-     * A data item's ability or bonus: its header as Hypixel shows it, its text, then its costs as above. A
-     * shortbow's line is written here, as abilityLore's: it's in the rarity's colour, which recombobulating changes.
+     * An ability or bonus: its header as Hypixel shows it ("&6Ability: Instant Transmission  &e&lRIGHT CLICK"),
+     * its text, then what it costs and its cooldown. A shortbow's line is written here: it's in the rarity's
+     * colour, which recombobulating changes.
      */
     public static List<String> blockLore(ItemBlock block, Rarity rarity) {
-        if ("SHORTBOW".equals(block.kind())) {
+        if (block.isShortbow()) {
             return List.of(rarity.getColor() + "Shortbow: " + (block.name() != null ? block.name() : "Instantly shoots!"));
         }
         List<String> lines = new ArrayList<>();

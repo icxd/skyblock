@@ -122,7 +122,6 @@ class ItemDataTest {
         assertEquals(new Stats().set(Stat.DAMAGE, 120).set(Stat.CRIT_CHANCE, 2.5), item.stats());
         assertEquals(0.25, item.shotCooldown());
         assertEquals(List.of("&7A sword for tests.", "", "&7More about it."), item.lore());
-        assertNull(item.ability());
         assertNull(ItemBehaviours.of(item).nbt(item));
         assertTrue(item.isOwnable());
 

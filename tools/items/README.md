@@ -10,7 +10,7 @@ git clone --depth 1 https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO /t
 python3 tools/items/build_items.py --neu /tmp/neu                          # fetches the items API
 python3 tools/items/build_items.py --api items.json --neu /tmp/neu --out DIR   # a saved response, elsewhere
 python3 tools/items/check_items.py [DIR/items.json]                        # checks the file against format 1
-python3 tools/items/test_build_items.py                                    # the lore parser's tests
+python3 tools/items/test_build_items.py                                    # its tests
 ```
 
 It turns every item Hypixel has (about 5,650) into one `items.json`, and writes `report.md` next to it.
