@@ -12,8 +12,7 @@ import net.icxd.dungeons.database.mongo.Settings;
 import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.dungeons.instance.RunManager;
-import net.icxd.dungeons.entity.EntityRegistry;
-import net.icxd.dungeons.entity.EntityRunnable;
+import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.rune.RuneRunnable;
@@ -68,7 +67,6 @@ public class Dungeons extends JavaPlugin {
 
         new CheckHandler();
         getLogger().info(ItemRegistry.getRegistry().size() + " SkyBlock items");
-        new EntityRegistry();
 
         this.commandMap = Bukkit.getCommandMap();
 
@@ -93,7 +91,7 @@ public class Dungeons extends JavaPlugin {
 
         Bukkit.getScheduler().runTaskTimer(this, new StatsRunnable(), 0, 20);
         Bukkit.getScheduler().runTaskTimer(this, new ScoreboardRunnable(), 0, 20);
-        Bukkit.getScheduler().runTaskTimer(this, new EntityRunnable(), 0, 1);
+        Mobs.start();
         Bukkit.getScheduler().runTaskTimer(this, new RuneRunnable(), 0, 1);
         if (getServer().getPluginManager().isPluginEnabled("packetevents")) {
             TabList.handle();

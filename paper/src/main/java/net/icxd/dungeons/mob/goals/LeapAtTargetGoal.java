@@ -1,4 +1,4 @@
-package net.icxd.dungeons.entity.goals;
+package net.icxd.dungeons.mob.goals;
 
 import java.util.EnumSet;
 import java.util.concurrent.ThreadLocalRandom;

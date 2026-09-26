@@ -3,10 +3,7 @@ package net.icxd.dungeons.listeners;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.dungeons.instance.DungeonMobs;
-import net.icxd.dungeons.entity.CustomEntity;
-import net.icxd.dungeons.entity.EntityBuilder;
-import net.icxd.dungeons.entity.EntityRegistry;
-import net.icxd.dungeons.entity.enums.EntityDropType;
+import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.session.PlayerSession;
@@ -259,39 +256,11 @@ public class PlayerListener implements Listener {
             DungeonMobs.playerHit(event, player, dungeonMob, finalDamage, criticalHit);
             return;
         }
-        CustomEntity customEntity = EntityRegistry.get(target);
-        if (customEntity == null) {
+        Mobs.Live mob = Mobs.of(target);
+        if (mob == null) {
             event.setCancelled(true);
             return;
         }
-
-        if (target.getHealth() - finalDamage <= 0) {
-            event.setCancelled(true);
-            customEntity.onDeath(target);
-            if (!customEntity.isBoss()) drop(player, target, customEntity, stats.get(Stat.MAGIC_FIND));
-            EntityBuilder.forget(target);
-            target.remove();
-            return;
-        }
-        customEntity.onDamaged(target, finalDamage);
-        event.setDamage(finalDamage);
-        // The name tag catches up on the next tick (EntityRunnable).
-        DungeonMobs.showDamage(target, finalDamage, criticalHit);
-    }
-
-    /** Each drop rolls on its own (magic find raises the chance); only what drops is announced. */
-    private static void drop(Player player, LivingEntity target, CustomEntity customEntity, double magicFind) {
-        if (customEntity.getDrops() == null) return;
-        customEntity.getDrops().forEach(drop -> {
-            double chance = drop.getChance() / 100 * (1 + magicFind / 100);
-            if (Math.random() >= chance) return;
-            ItemStack stack = ItemBuilder.build(drop.getItem());
-            stack.setAmount(Utils.random(drop.getMinAmount(), drop.getMaxAmount()));
-            target.getWorld().dropItemNaturally(target.getLocation(), stack);
-            String kind = drop.getType() == EntityDropType.RNGESUS_INCARNATE ? "INSANE DROP! "
-                    : (drop.getType() == EntityDropType.CRAZY_RARE ? "CRAZY " : "") + "RARE DROP! ";
-            player.sendMessage(drop.getType().getColor() + "" + ChatColor.BOLD + kind + drop.getItem().rarity().getColor() + drop.getItem().name()
-                    + " " + ChatColor.AQUA + "(+" + Utils.round(magicFind, 0) + "% ✯ Magic Find)");
-        });
+        Mobs.playerHit(event, player, mob, finalDamage, criticalHit);
     }
 }

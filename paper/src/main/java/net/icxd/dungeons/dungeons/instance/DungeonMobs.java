@@ -72,7 +72,7 @@ public final class DungeonMobs {
      * A mob hits a player for SkyBlock damage, less their defense (SkyBlock's {@code defense /
      * (defense + 100)}). Vanilla armor doesn't count again, so their health is set directly.
      */
-    static void hit(Player player, double damage, Entity by) {
+    public static void hit(Player player, double damage, Entity by) {
         if (player.isDead() || player.getGameMode() == org.bukkit.GameMode.CREATIVE || player.getGameMode() == org.bukkit.GameMode.SPECTATOR) return;
         Stats stats = PlayerSession.of(player).stats();
         double defense = stats == null ? 0 : stats.get(Stat.DEFENSE);
