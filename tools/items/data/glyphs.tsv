@@ -1,0 +1,78 @@
+# Hypixel's private-use glyphs (drawn by its resource pack) -> the classic symbol the plugin shows. An empty
+# symbol: none is known, so the glyph is dropped (and listed in the report).
+# codepoint	symbol	how
+E001	⚔	Attack Speed (what it precedes in NEU's text): Stat.ATTACK_SPEED in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E002	๑	Ability Damage (what it precedes in NEU's text): Stat.ABILITY_DAMAGE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E003	✎	Intelligence (what it precedes in NEU's text): Stat.INTELLIGENCE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E004	⚡	Mana Regen (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E005	Ⓟ	Breaking Power (what it precedes in NEU's text): Stat.BREAKING_POWER in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E006	❄	Cold Resistance (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E007	☠	Crit Damage (what it precedes in NEU's text): Stat.CRIT_DAMAGE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E008	❈	Defense (what it precedes in NEU's text): Stat.DEFENSE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E009	⚓	Double Hook Chance (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E00A	☠	Fear (not in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E00B	⫽	Ferocity (what it precedes in NEU's text): Stat.FEROCITY in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E00C	☂	Fishing Speed (what it precedes in NEU's text): Stat.FISHING_SPEED in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E00D	❁	Strength (what it precedes in NEU's text): Stat.STRENGTH in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E00E	♢	Fuel (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E00F	▚	Gemstone Spread (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E010	❤	Health (what it precedes in NEU's text): Stat.HEALTH in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E011	❣	Health Regen (what it precedes in NEU's text): Stat.HEALTH_REGEN in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E012	♨	Heat (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data has no fallback; fandom Module:Statname/Data
+E013	♣	Pet Luck (what it precedes in NEU's text): Stat.PET_LUCK in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E014	☄	Mending (what it precedes in NEU's text): Stat.MENDING in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E015	⸕	Mining Speed (what it precedes in NEU's text): Stat.MINING_SPEED in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E016	▚	Mining Spread (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E017	ʬ	Overflow Mana (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E018		Pests, the currency (what it precedes in NEU's text): both wikis' Module:Currency/Data draw it as an image, no classic symbol: dropped
+E019	ൠ	Bonus Pest Chance (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E01A	✯	Magic Find (what it precedes in NEU's text): Stat.MAGIC_FIND in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E01B	❍	Pressure (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E01C	✧	Pristine (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E01D	⚶	Respiration (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E01E	❁	Rift Damage (what it precedes in NEU's text): Stat.RIFT_DAMAGE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E01F	❤	Hearts (not in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E020	ф	Rift Time (what it precedes in NEU's text): Stat.RIFT_TIME in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E021	α	Sea Creature Chance (what it precedes in NEU's text): Stat.SEA_CREATURE_CHANCE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E022	✦	Speed (what it precedes in NEU's text): Stat.SPEED in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E023	∮	Sweep (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E024	Ⓢ	Swing Range (what it precedes in NEU's text): Stat.SWING_RANGE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E025	⛃	Treasure Chance (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E027	❂	True Defense (what it precedes in NEU's text): Stat.TRUE_DEFENSE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E028	♨	Vitality (what it precedes in NEU's text): Stat.VITALITY in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E02A	♔	Trophy Chance (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E02B	☀	Overbloom (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E02C	☣	Crit Chance (what it precedes in NEU's text): Stat.CRIT_CHANCE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E02D	ᛷ	Pull (not in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E02E		Timber (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data has no fallback, fandom has no Timber: dropped
+E050	❁	Damage (what it precedes in NEU's text): Stat.DAMAGE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E051	☘	Farming Fortune (what it precedes in NEU's text): Stat.FARMING_FORTUNE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E053	☘	Mining Fortune (what it precedes in NEU's text): Stat.MINING_FORTUNE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E054	☘	Foraging Fortune (what it precedes in NEU's text): Stat.FORAGING_FORTUNE in Stat.java; minecraft.wiki Module:Stat/Data agrees
+E05B	☘	Hunting Fortune (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat)
+E068	⚚	before fragged items' names in NEU; minecraft.wiki Template:Fragged is this glyph, and fandom writes these items "⚚ <name>"
+E070	✈	Airborne mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E071	☮	Animal mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E072	⚓	Aquatic mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E073	♃	Arcane mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E074	Ж	Arthropod mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E075	⚙	Construct mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType (its text-style selector U+FE0E left out)
+E076	⚂	Cubic mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E077	❃	Tracking (what it precedes in NEU's text): minecraft.wiki Module:Stat/Data fallback (no plugin Stat); also the Elusive mob type (Module:MobType/Data), fandom Template:MobType ❃
+E078	⊙	Ender mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E079	❆	Frozen mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E07A	❆	Glacial mob type (not in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E07B	✰	Humanoid mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E07C	♨	Infernal mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E07D	♆	Magmatic mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E07E	✿	Mythological mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E07F	ൠ	Pest mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E080	⛨	Shielded mob type (not in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E081	🦴	Skeletal mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType (outside the BMP)
+E082	☽	Spooky mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E083	⸕	Subterranean mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E084	༕	Undead mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E085	☠	Wither mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E086	⸙	Woodland mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; symbol from fandom Template:MobType
+E087		Critter mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; not in fandom Template:MobType, no classic symbol: dropped
+E088		Timid mob type (what it precedes in NEU's text): minecraft.wiki Module:MobType/Data; not in fandom Template:MobType, no classic symbol: dropped
