@@ -42,6 +42,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -49,9 +50,11 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.map.MapView;
@@ -179,6 +182,7 @@ public final class RunManager {
         }));
         Bukkit.getPluginManager().registerEvents(new Events(), plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20, 20);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::tickRuns, 1, 1);
     }
 
     /** Ends every run; players still in one go back to the main world. */
@@ -211,6 +215,13 @@ public final class RunManager {
                 for (Document doc : assigned) run(doc);
             });
         });
+    }
+
+    /** Keys, the map, the Watcher. */
+    private void tickRuns() {
+        for (Run run : List.copyOf(byId.values())) {
+            if (run.lifecycle != null && !run.ended) run.lifecycle.tick();
+        }
     }
 
     /** Online on this server, and still in this run. */
@@ -295,7 +306,8 @@ public final class RunManager {
             step(run, "chunks");
             List<PastePlan.Box> clear = wasEmpty ? List.of() : List.of(largest);
             new WorldEditPaster(world, clear).paste(plugin, plan, result -> {
-                world.removePluginChunkTickets(plugin);
+                // The floor's chunks stay loaded (the tickets) until the run ends: keys, doors and
+                // the Watcher can be anywhere on it.
                 // Only now, so generating it doesn't slow this run's chunks down.
                 prepareSpare();
                 if (run.ended) return;
@@ -311,7 +323,7 @@ public final class RunManager {
                 platform(world, entrance, Material.AIR);
                 run.map = takeMap(world);
                 run.lifecycle = new DungeonRun(this, plugin, run.id, run.floor, run.members, world, entrance, plan.entranceDoor(),
-                        plan.roomCount(), plan.puzzleCount(), run.map);
+                        new RunLayout(plan.layout()), plan.roomCount(), plan.puzzleCount(), run.map);
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runs.updateOne(eq("_id", run.id), set(Runs.STATE, Runs.RUNNING)));
                 for (Player player : online(run)) send(player, run);
             });
@@ -484,6 +496,7 @@ public final class RunManager {
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);
         world.setGameRule(GameRules.SHOW_ADVANCEMENT_MESSAGES, false);
         world.setGameRule(GameRules.MOB_GRIEFING, false);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
         world.setTime(6000);
         return world;
     }
@@ -592,7 +605,39 @@ public final class RunManager {
         @EventHandler
         public void onArmorStand(PlayerArmorStandManipulateEvent event) {
             DungeonRun run = runIn(event.getRightClicked().getWorld());
-            if (run != null && run.isMort(event.getRightClicked())) event.setCancelled(true);
+            if (run != null && (run.isMort(event.getRightClicked()) || run.isKey(event.getRightClicked()))) event.setCancelled(true);
+        }
+
+        /** Right-clicking a wither door or the Blood Door, with the key or without. */
+        @EventHandler
+        public void onClickBlock(PlayerInteractEvent event) {
+            if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null || event.getHand() != EquipmentSlot.HAND) return;
+            DungeonRun run = runOf(event.getPlayer());
+            if (run != null && run.clickBlock(event.getPlayer(), event.getClickedBlock())) event.setCancelled(true);
+        }
+
+        /**
+         * Hits on dungeon mobs that {@code PlayerListener} didn't deal with (fists, other items,
+         * arrows) do the player's fist damage; nothing else hurts them.
+         */
+        @EventHandler(priority = EventPriority.HIGH)
+        public void onMobHurt(EntityDamageEvent event) {
+            DungeonMobs.Mob mob = DungeonMobs.of(event.getEntity());
+            if (mob == null || DungeonMobs.isHandled(event)) return;
+            if (event instanceof EntityDamageByEntityEvent hit && playerBehind(hit.getDamager()) instanceof Player player) {
+                if (!event.isCancelled()) DungeonMobs.playerHit(hit, player, mob, DungeonMobs.fistDamage(player), false);
+                return;
+            }
+            if (event.getCause() != EntityDamageEvent.DamageCause.KILL) event.setCancelled(true);
+        }
+
+        /** Their own attacks (the Parasites' silverfish) do SkyBlock damage. */
+        @EventHandler(priority = EventPriority.LOW)
+        public void onMobAttack(EntityDamageByEntityEvent event) {
+            DungeonMobs.Mob mob = DungeonMobs.of(event.getDamager());
+            if (mob == null || !(event.getEntity() instanceof Player player)) return;
+            event.setCancelled(true);
+            if (mob.attackDamage() > 0) DungeonMobs.hit(player, mob.attackDamage(), event.getDamager());
         }
 
         /** They arrive a few blocks above the back of the entrance room, as on Hypixel; the drop doesn't hurt. */
@@ -611,18 +656,35 @@ public final class RunManager {
         /** For EXTRA STATS and the tab list. */
         @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
         public void onDamage(EntityDamageByEntityEvent event) {
-            if (event.getEntity() instanceof Player) return;
+            // Dungeon mobs count their own.
+            if (event.getEntity() instanceof Player || event.getEntity().getScoreboardTags().contains(DungeonMobs.TAG)) return;
             Player damager = playerBehind(event.getDamager());
             DungeonRun run = damager == null ? null : runOf(damager);
             if (run != null) run.damageDealt(damager.getUniqueId(), event.getFinalDamage());
         }
 
+        /** Dungeon mobs drop nothing (their kills are counted by the mobs themselves). */
+        @EventHandler
+        public void onMobDeath(EntityDeathEvent event) {
+            if (!event.getEntity().getScoreboardTags().contains(DungeonMobs.TAG)) return;
+            event.getDrops().clear();
+            event.setDroppedExp(0);
+        }
+
         @EventHandler(priority = EventPriority.MONITOR)
         public void onKill(EntityDeathEvent event) {
-            if (event.getEntity() instanceof Player) return;
+            if (event.getEntity() instanceof Player || event.getEntity().getScoreboardTags().contains(DungeonMobs.TAG)) return;
             Player killer = event.getEntity().getKiller();
             DungeonRun run = killer == null ? null : runOf(killer);
             if (run != null) run.killed(killer.getUniqueId());
+        }
+
+        /** Until there are ghosts, dying in a run brings you back in its entrance room rather than out of the run. */
+        @EventHandler
+        public void onRespawn(PlayerRespawnEvent event) {
+            if (event.getRespawnReason() != PlayerRespawnEvent.RespawnReason.DEATH) return;
+            Run run = byMember.get(event.getPlayer().getUniqueId());
+            if (run != null && !run.ended && run.lifecycle != null && run.entrance != null) event.setRespawnLocation(run.entrance);
         }
 
         @EventHandler(priority = EventPriority.MONITOR)

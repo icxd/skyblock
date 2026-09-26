@@ -196,6 +196,10 @@ public final class PastePlan {
     return Direction.SOUTH;
   }
 
+  public DungeonLayout layout() {
+    return layout;
+  }
+
   /** Rooms in the layout, for the score. */
   public int roomCount() {
     return layout.getRooms().size();

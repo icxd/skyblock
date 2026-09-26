@@ -37,14 +37,66 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
 **Running.**
 - Mort: "Here, I found this map when I first entered the dungeon.", 2 s later "You should find it
   useful if you get lost.", 1.5 s after that "Good luck."
-- The Magical Map goes in hotbar slot 9 (it's blank until clearing is done). Whatever was there
-  moves to a free slot. Run items are never saved to the player's stored inventory.
-- The door turns to barrier 0.2 s after the start and opens 0.8 s after it.
-- Sidebar: Keys, Time Elapsed, Cleared (with the score), then the other members
-  (`[B] Name 1,234❤`) or "Solo". The tab list shows each member's class and level.
+- The Magical Map goes in hotbar slot 9. Whatever was there moves to a free slot. Run items are
+  never saved to the player's stored inventory.
+- The entrance door opens 0.2 s after the start (see Doors).
+- Sidebar: Keys (`■ ✓/✗` for the Blood Key, `■ 1x` for Wither Keys), Time Elapsed, Cleared (the
+  share of rooms completed, with the score), then the other members (`[B] Name 1,234❤`) or "Solo".
+  The tab list shows each member's class and level, and Opened and Completed Rooms from the map.
 - Damage dealt, kills and deaths are counted for EXTRA STATS and the tab list.
+- Until there are ghosts, dying brings you back in the entrance room, with everything you had
+  (run worlds keep inventories).
 
-**Ending** (for now only `/dungeon end`, staff):
+**Doors and keys** (`RunDoors`, `DoorAnimation`).
+- Wither doors are coal blocks and the Blood Door red terracotta, 3x4x3 across the gap between the
+  rooms like the entrance door; normal and fairy doors are open from the start.
+- Every door opens the same way: each block becomes a falling block riding an invisible bat (sent
+  as packets, so only the run sees them), 0.65625 below the block; the bats sink 0.3125 a tick
+  from the 5th tick, the doorway is barrier until the 12th, and they're gone on the 22nd.
+- On Hypixel a key drops from the last starred mob (or the miniboss) of the room before its door.
+  With no mobs yet, it waits in that room from the start (the fairy room is skipped, going back
+  one more room), on the floor near the middle of its first cell at about doorway height: a
+  floating head with "Wither Key" or "Blood Key", on two invisible armor stands 0.71875 and
+  0.46875 below the floor. Walking into it picks it up for the team: "Name has obtained
+  Wither Key!" and the RIGHT CLICK hint, to everyone.
+- Right-clicking a shut door with the key opens it: "Name opened a WITHER door!", or "The BLOOD
+  DOOR has been opened!" and "A shiver runs down your spine...". Without: "You do not have the key
+  for this door!". Each key opens one door.
+
+**The Magical Map** (`RunMap`), pixel for pixel Hypixel's: rooms 18 pixels (16 on 6-wide floors)
+with 4 between, centred. A room shows once someone walks into it (the entrance from the start),
+and each room behind its doors as a grey cell with a question mark. Doors are 7 pixels wide in the
+gap, in the colour of the room they lead into (black for a shut wither door, red for the Blood
+Door). Rooms with nothing to clear get their green tick when found (the fairy room), and the Blood
+Room when the Watcher is done. You're a green arrow, the others blue.
+
+**The Watcher** (`Watcher`, `Undead`, `UndeadType`). The Blood Door starts his fight.
+- He's an invisible zombie wearing his head, floating 4 blocks over the middle of the room, with
+  "﴾ ✦ The Watcher ﴿" over him and each line he says for 2 seconds over that. His lines go to chat
+  as "[BOSS] The Watcher: ...", at most one every 2 seconds.
+- His welcome: the Entrance's five lines as recorded, 3 to 4 seconds apart; other floors have the
+  wiki's.
+- The boss bar "The Watcher" (red) shows 2 seconds after the door opens, to whoever is in the
+  Blood Room, and goes down a ninth per undead killed.
+- He summons 9 undeads: the first 23.8 s after the door opens, three more 1 to 2.5 s apart, then
+  11.7 s later five more, 4.5 to 7 s apart (1 to 3 s once none are left alive). Each summon has a
+  line ("Go, fight!", "Go and live again!", ...) and each kill may get one ("Not bad.", ...). After
+  the last summon, if any are still alive: "That will be enough for now.". While summoning he flies
+  between the display cases on the walls at 14 blocks a second.
+- Undeads appear over him and drop to the floor: player-shaped (the named skins we have, the
+  generic Undead one otherwise), in random chainmail, iron or leather armour with a gold or iron
+  axe, "☠ Leech 20,000❤" over them (green, yellow under half). They run at the nearest player in
+  the Blood Room and hit every second; with nobody in the room they go back to him.
+- Health: 12k to 20k on the Entrance (as recorded), and the same spread around the wiki's number on
+  other floors. Damage per floor from the wiki. Their perks (healing, teleporting behind you,
+  exploding, more health or damage, Parasite's silverfish, going for a class first) only from
+  Floor 2.
+- He can't be hurt: hitting him zaps you with an elder guardian's beam, for as much as an undead
+  hits.
+- When the last one dies: "You have proven yourself. You may pass.", and 5 seconds later the run
+  ends (there are no bosses yet).
+
+**Ending** (when the Watcher lets you pass, or `/dungeon end`, staff):
 - The summary between bold green rules: "The Catacombs - Entrance", "Team Score: 84 (D)",
   "☠ Defeated The Watcher in 01m 49s", and "> EXTRA STATS <" (click: `/showextrastats`). Lines
   are centred the way Hypixel does it (the vanilla font's widths around 160 pixels).
@@ -66,7 +118,9 @@ clearing, so for now the score is the base.
 
 ## Not yet
 
-- The Watcher, keys and doors, clearing, the map's contents, the boss bar compass.
+- Clearing rooms (mobs, secrets, puzzles, crypts), keys dropping from mobs, the bosses, the boss
+  bar compass. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
+  his real icons (placeholders for now).
 - Deaths as ghosts, revives.
 - Classes beyond picking one: their stats in the Ready Up menu, Class Details (right click), the
   Dungeon Orb, "stats are doubled because you are the only player using this class".

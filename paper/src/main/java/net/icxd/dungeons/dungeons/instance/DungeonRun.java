@@ -14,7 +14,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -28,6 +27,8 @@ import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.dungeons.DungeonLevels;
 import net.icxd.dungeons.dungeons.DungeonProfile;
+import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
+import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.stats.Stats;
@@ -49,12 +50,14 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
  *       with Mort (the Ready Up menu), where they also pick a class. A run
  *       nobody starts closes after 2 minutes, with warnings for the last 30 seconds.</li>
  *   <li>Once everyone here is ready, it starts 4 seconds later (readying down stops that).</li>
- *   <li>Running: Mort hands out the map, the door opens, the clock runs.</li>
- *   <li>Ended (for now only with {@code /dungeon end}): the score and a re-queue link, and 20
- *       seconds later everyone goes to the Dungeon Hub.</li>
+ *   <li>Running: Mort hands out the map, the door opens, the clock runs. Keys open the wither
+ *       doors and the Blood Door ({@link RunDoors}), the map fills in as rooms are walked into
+ *       ({@link RunMap}), and the Blood Door starts the Watcher's fight ({@link Watcher}).</li>
+ *   <li>Ended, when the Watcher lets them pass (no bosses yet) or with {@code /dungeon end}: the
+ *       score and a re-queue link, and 20 seconds later everyone goes to the Dungeon Hub.</li>
  * </ol>
  *
- * <p>Main thread. {@link RunManager} ticks it every second.
+ * <p>Main thread. {@link RunManager} ticks it every tick and every second.
  */
 public final class DungeonRun {
     public enum Phase { WAITING, STARTING, RUNNING, ENDED }
@@ -62,9 +65,10 @@ public final class DungeonRun {
     static final long AUTO_CLOSE_MILLIS = 120_000;
     private static final int COUNTDOWN_SECONDS = 4;
     private static final Set<Integer> CLOSE_WARNINGS = Set.of(30, 15, 10, 5, 4, 3, 2, 1);
-    /** Ticks after the start until the door turns to barrier, and until that goes too (Hypixel's timing). */
-    private static final long DOOR_TO_BARRIER = 4;
-    private static final long DOOR_OPENS = 16;
+    /** Ticks after the start until the entrance door opens (Hypixel's timing). */
+    private static final long DOOR_OPENS = 4;
+    /** How often the map checks which rooms people are in. */
+    private static final int FIND_ROOMS_EVERY = 10;
     /** How long after arriving auto ready kicks in. */
     private static final long AUTO_READY_DELAY = 40;
     /** Ticks after the end: the re-queue link, the warning, and closing (Hypixel's +2.1, +10.1 and +20.2 seconds). */
@@ -78,10 +82,6 @@ public final class DungeonRun {
     private static final int ARRIVAL_BACK = 4;
     private static final double ARRIVAL_Y = 76.5;
     private static final int MORT_FORWARD = 11;
-    /** The shut door: 3x4x3 of infested chiseled stone bricks filling the doorway, across the gap between the rooms. */
-    private static final int GAP = PastePlan.CELL / 2 + 1;
-    private static final int DOOR_BOTTOM = 69;
-    private static final int DOOR_TOP = 72;
 
     /** Someone in the run, and what they've done in it. */
     static final class Member {
@@ -123,8 +123,11 @@ public final class DungeonRun {
     private final int rooms;
     private final int puzzles;
     private final Mort mort;
-    /** What the doorway held before it was shut. */
-    private final List<BlockState> door = new ArrayList<>();
+    private final RunLayout layout;
+    private final RunDoors doors;
+    private final RunMap runMap;
+    private Watcher watcher;
+    private int ticks;
     private final MapView map;
     private Phase phase = Phase.WAITING;
     private final long closesAt;
@@ -135,7 +138,7 @@ public final class DungeonRun {
     private boolean closed;
 
     DungeonRun(RunManager manager, Plugin plugin, String id, DungeonFloor floor, List<UUID> members, World world,
-               PastePlan.Block center, Direction door, int rooms, int puzzles, MapView map) {
+               PastePlan.Block center, Direction door, RunLayout layout, int rooms, int puzzles, MapView map) {
         this.manager = manager;
         this.plugin = plugin;
         this.id = id;
@@ -144,6 +147,7 @@ public final class DungeonRun {
         this.rooms = rooms;
         this.puzzles = puzzles;
         this.map = map;
+        this.layout = layout;
         for (UUID member : members) this.members.put(member, new Member(member));
         this.closesAt = System.currentTimeMillis() + AUTO_CLOSE_MILLIS;
 
@@ -154,36 +158,15 @@ public final class DungeonRun {
         this.entrance = RunManager.standingSpot(world, cx, center.y(), cz);
         this.mort = Mort.spawn(new Location(world, cx + 0.5 + MORT_FORWARD * door.dx, center.y(), cz + 0.5 + MORT_FORWARD * door.dy,
                 yaw(-door.dx, -door.dy), 0));
-        shutDoor(cx + GAP * door.dx, cz + GAP * door.dy, door);
+        this.doors = new RunDoors(this, plugin, world, layout);
+        this.runMap = new RunMap(this, layout);
+        PlacedRoom start = layout.roomAt(entrance);
+        if (start != null) runMap.find(start);
     }
 
     /** Minecraft's yaw for looking along (dx, dz): 0 is south (+z), 90 west. */
     private static float yaw(int dx, int dz) {
         return (float) Math.toDegrees(Math.atan2(-dx, dz));
-    }
-
-    /** Across the gap and a block into each room, three wide. */
-    private void shutDoor(int gx, int gz, Direction side) {
-        int acrossX = Math.abs(side.dy);
-        int acrossZ = Math.abs(side.dx);
-        for (int along = -1; along <= 1; along++) {
-            for (int across = -1; across <= 1; across++) {
-                for (int y = DOOR_BOTTOM; y <= DOOR_TOP; y++) {
-                    Block block = world.getBlockAt(gx + along * side.dx + across * acrossX, y, gz + along * side.dy + across * acrossZ);
-                    door.add(block.getState());
-                    block.setType(Material.INFESTED_CHISELED_STONE_BRICKS, false);
-                }
-            }
-        }
-    }
-
-    private void doorTo(Material material) {
-        for (BlockState state : door) state.getBlock().setType(material, false);
-    }
-
-    private void openDoor() {
-        for (BlockState state : door) state.update(true, false);
-        door.clear();
     }
 
     public Phase phase() {
@@ -203,18 +186,18 @@ public final class DungeonRun {
     }
 
     /** Members here, in this run (after a re-queue they're in the next one). */
-    private List<Player> online() {
+    List<Player> players() {
         return members.keySet().stream().filter(m -> manager.belongs(m, this)).map(Bukkit::getPlayer)
                 .filter(p -> p != null && p.getWorld().equals(world)).toList();
     }
 
-    private void tell(String message) {
+    void tell(String message) {
         String colored = Utils.color(message);
-        for (Player player : online()) player.sendMessage(colored);
+        for (Player player : players()) player.sendMessage(colored);
     }
 
     private void tell(Component message) {
-        for (Player player : online()) player.sendMessage(message);
+        for (Player player : players()) player.sendMessage(message);
     }
 
     // Arriving
@@ -277,6 +260,53 @@ public final class DungeonRun {
         return user == null || !user.isLoaded() ? 0 : DungeonProfile.classLevel(user, classOf(id));
     }
 
+    // Every tick
+
+    void tick() {
+        if (closed || phase != Phase.RUNNING) return;
+        ticks++;
+        List<Player> here = players();
+        doors.tick(here);
+        if (ticks % FIND_ROOMS_EVERY == 0) {
+            for (Player player : here) {
+                PlacedRoom room = layout.roomAt(player.getLocation());
+                if (room != null) runMap.find(room);
+            }
+        }
+        if (watcher != null) watcher.tick();
+    }
+
+    // Doors, keys and the map
+
+    /** A right-click on a block; true if it was a shut door (and taken care of). */
+    boolean clickBlock(Player player, Block block) {
+        return phase == Phase.RUNNING && doors.click(player, block);
+    }
+
+    boolean isShut(Door door) {
+        return doors.isShut(door);
+    }
+
+    boolean isKey(org.bukkit.entity.Entity entity) {
+        return doors.isKey(entity);
+    }
+
+    void doorOpened(Door door) {
+        runMap.changed();
+    }
+
+    /** The Watcher's fight starts. */
+    void bloodDoorOpened() {
+        PlacedRoom blood = layout.bloodRoom();
+        if (blood != null && watcher == null) watcher = new Watcher(this, layout, blood);
+    }
+
+    /** "You have proven yourself. You may pass.": the Blood Room is done. */
+    void bloodRoomCleared() {
+        PlacedRoom blood = layout.bloodRoom();
+        if (blood != null) runMap.complete(blood);
+    }
+
     // Every second
 
     void second() {
@@ -293,7 +323,7 @@ public final class DungeonRun {
                 if (CLOSE_WARNINGS.contains(seconds)) {
                     tell("&cWarning! &eThis instance will &cclose &ein &a" + seconds + " &e" + (seconds == 1 ? "second" : "seconds") + " if it isn't started!");
                 }
-                List<Player> here = online();
+                List<Player> here = players();
                 if (!here.isEmpty() && here.stream().allMatch(p -> members.get(p.getUniqueId()).ready)) {
                     phase = Phase.STARTING;
                     countdown = COUNTDOWN_SECONDS;
@@ -316,14 +346,17 @@ public final class DungeonRun {
         phase = Phase.RUNNING;
         startedAt = System.currentTimeMillis();
         mortSays("Here, I found this map when I first entered the dungeon.");
-        for (Player player : online()) giveMap(player, "&bMagical Map", List.of("&7Shows the layout of the Dungeon as", "&7it is explored and completed."));
-        later(DOOR_TO_BARRIER, () -> doorTo(Material.BARRIER));
-        later(DOOR_OPENS, this::openDoor);
+        runMap.show(map);
+        for (Player player : players()) giveMap(player, "&bMagical Map", List.of("&7Shows the layout of the Dungeon as", "&7it is explored and completed."));
+        later(DOOR_OPENS, () -> {
+            Door entranceDoor = doors.entranceDoor();
+            if (entranceDoor != null) doors.open(entranceDoor);
+        });
         later(40, () -> mortSays("You should find it useful if you get lost."));
         later(70, () -> mortSays("Good luck."));
     }
 
-    private void later(long ticks, Runnable task) {
+    void later(long ticks, Runnable task) {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!closed) task.run();
         }, ticks);
@@ -387,7 +420,7 @@ public final class DungeonRun {
                 .hoverEvent(HoverEvent.showText(Component.text("Click to view extra stats!", NamedTextColor.YELLOW))));
         tell(RunText.RULE);
         ScoreCard.draw(map, floor, finalScore);
-        for (Player player : online()) giveMap(player, "&a&lYour Score Summary", List.of());
+        for (Player player : players()) giveMap(player, "&a&lYour Score Summary", List.of());
         later(REQUEUE_MESSAGE, this::requeueMessage);
         later(CLOSE_WARNING, () -> tell("&cWarning! &eThe instance will &cclose &ein &a10s&e."));
         later(CLOSE, this::close);
@@ -452,7 +485,7 @@ public final class DungeonRun {
     /** Everyone to the Dungeon Hub, and the run is done. */
     private void close() {
         if (closed) return;
-        for (Player player : online()) {
+        for (Player player : players()) {
             player.closeInventory();
             manager.leave(player);
         }
@@ -463,8 +496,9 @@ public final class DungeonRun {
     void dispose() {
         closed = true;
         mort.remove();
-        openDoor();
-        for (Player player : online()) takeRunItems(player);
+        doors.dispose();
+        if (watcher != null) watcher.dispose();
+        for (Player player : players()) takeRunItems(player);
         ScoreCard.blank(map);
     }
 
@@ -493,8 +527,8 @@ public final class DungeonRun {
         int deaths = members.values().stream().mapToInt(m -> m.deaths).sum();
         int secrets = members.values().stream().mapToInt(m -> m.secrets).sum();
         double seconds = startedAt == 0 ? 0 : (now - startedAt) / 1000.0;
-        // Rooms, secrets, puzzles, crypts and the mimic come with clearing.
-        return Score.of(floor, new Score.Inputs(0, rooms, secrets, 0, deaths, false, 0, 0, false, false, seconds));
+        // Secrets, puzzles, crypts and the mimic come with clearing.
+        return Score.of(floor, new Score.Inputs(runMap.completedRooms(), rooms, secrets, 0, deaths, false, 0, 0, false, false, seconds));
     }
 
     // Sidebar and tab list
@@ -527,9 +561,9 @@ public final class DungeonRun {
             lines.add(time);
             lines.add(where);
             lines.add("");
-            lines.add("&fKeys: &c■ &c✗ &8■ &a0x");
+            lines.add("&fKeys: &c■ " + (doors.hasBloodKey() ? "&a✓" : "&c✗") + " &8■ &a" + doors.witherKeys() + "x");
             lines.add("&fTime Elapsed: &a" + RunText.elapsed(now - startedAt));
-            lines.add("&fCleared: &c0% &8(" + score.total() + ")");
+            lines.add("&fCleared: &c" + cleared() + "% &8(" + score.total() + ")");
             lines.add("");
             List<Member> others = members.values().stream().filter(m -> !m.id.equals(viewer.getUniqueId())).toList();
             if (others.isEmpty()) lines.add("&3&lSolo");
@@ -583,8 +617,8 @@ public final class DungeonRun {
         column(out, "       &3&lDungeon Stats", () -> {
             List<TabEntry> stats = texts(
                     "&b&lDungeon: &7Catacombs",
-                    " Opened Rooms: &50",
-                    " Completed Rooms: &d0",
+                    " Opened Rooms: &5" + runMap.foundRooms(),
+                    " Completed Rooms: &d" + runMap.completedRooms(),
                     " Secrets Found: &e0%",
                     " Time: &6" + (started ? RunText.elapsed(now - startedAt) : "Soon!"),
                     "",
@@ -607,6 +641,11 @@ public final class DungeonRun {
                 " Crit Damage: &9" + (stats == null ? 0 : (int) stats.getCriticalDamage()),
                 " Attack Speed: &e" + (stats == null ? 0 : (int) stats.getAttackSpeed())));
         return out;
+    }
+
+    /** How much of the floor is done, by rooms. */
+    private int cleared() {
+        return rooms == 0 ? 0 : runMap.completedRooms() * 100 / rooms;
     }
 
     private static List<TabEntry> texts(String... lines) {

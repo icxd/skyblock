@@ -1,6 +1,7 @@
 package net.icxd.dungeons.listeners;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.entity.CustomEntity;
 import net.icxd.dungeons.entity.EntityBuilder;
 import net.icxd.dungeons.entity.EntityRegistry;
@@ -391,6 +392,11 @@ public class PlayerListener implements Listener {
                 finalDamage *= (1 + critDamage / 100);
 
             LivingEntity target = (LivingEntity) damaged;
+            DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
+            if (dungeonMob != null) {
+                DungeonMobs.playerHit(event, player, dungeonMob, finalDamage, criticalHit);
+                return;
+            }
             CustomEntity customEntity = EntityRegistry.get(target);
             if (customEntity == null) {
                 event.setCancelled(true);
