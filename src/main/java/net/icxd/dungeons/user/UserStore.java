@@ -332,7 +332,10 @@ public final class UserStore {
       copy = doc.toBsonDocument(Document.class, users.getCodecRegistry());
     } catch (RuntimeException e) {
       log.log(Level.SEVERE, "Couldn't save " + user.getUuid(), e);
-      return CompletableFuture.failedFuture(e);
+      if (!release) return CompletableFuture.failedFuture(e);
+      // Still let go of it, or they couldn't join any other server until this one restarts.
+      return CompletableFuture.runAsync(() -> users.updateOne(and(eq("uuid", user.getUuid().toString()), eq("session.server", server)),
+          set("session", null)), writer);
     }
     if (release) copy.put("session", BsonNull.VALUE);
     return CompletableFuture.runAsync(() -> {

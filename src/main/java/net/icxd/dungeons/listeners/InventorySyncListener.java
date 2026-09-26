@@ -43,6 +43,7 @@ public class InventorySyncListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getPlayer();
+        if (frozen(player)) return;
         Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
             User user = User.cached(player.getUniqueId());
             if (player.isOnline() && user != null && user.isLoaded()) user.save();
@@ -59,6 +60,14 @@ public class InventorySyncListener implements Listener {
 
     private static void freeze(HumanEntity player, Cancellable event) {
         if (frozen(player)) event.setCancelled(true);
+    }
+
+    /** Their items went with their data, so dropping them here too would duplicate them. */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onFrozenDeath(PlayerDeathEvent event) {
+        if (!frozen(event.getPlayer())) return;
+        event.setKeepInventory(true);
+        event.getDrops().clear();
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
