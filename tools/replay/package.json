@@ -1,0 +1,16 @@
+{
+  "name": "skyblock-replay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Decodes Replay Mod recordings (.mcpr) into readable timelines of chat, sidebar, tab list, menus and maps.",
+  "main": "replay.js",
+  "bin": { "replay": "replay.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "minecraft-data": "^3.117.0",
+    "minecraft-protocol": "^1.68.0",
+    "pngjs": "^7.0.0",
+    "prismarine-nbt": "^2.8.0"
+  }
+}
