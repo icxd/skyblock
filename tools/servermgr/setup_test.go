@@ -66,6 +66,49 @@ func TestLinkData(t *testing.T) {
 	}
 }
 
+// On Windows without developer mode, linkDir makes junctions, which have to count as links too.
+func TestLinkDataJunction(t *testing.T) {
+	root := t.TempDir()
+	data := filepath.Join(root, "data")
+	moved := filepath.Join(root, "moved", "items")
+	for _, d := range []string{filepath.Join(data, "items"), moved} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	n := &Network{Dir: filepath.Join(root, "network"), DungeonData: data}
+	items := func(s *Server) string { return filepath.Join(n.serverDir(s), "plugins", "dungeons", "items") }
+	hub := &Server{Name: "hub01", Type: "LOBBY"}
+	old := &Server{Name: "hub02", Type: "LOBBY"}
+	for s, dest := range map[*Server]string{hub: filepath.Join(data, "items"), old: moved} {
+		if err := os.MkdirAll(filepath.Dir(items(s)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		makeJunction(t, dest, items(s))
+	}
+	if err := os.RemoveAll(filepath.Dir(moved)); err != nil { // hub02's junction now leads nowhere
+		t.Fatal(err)
+	}
+	var messages []string
+	progress := func(m string) { messages = append(messages, m) }
+
+	for i := 0; i < 2; i++ {
+		n.linkData(hub, progress)
+	}
+	if len(messages) > 0 {
+		t.Fatalf("hub01's junction to the data isn't taken as a link to it: %v", messages)
+	}
+	n.linkData(old, progress)
+	if len(messages) != 1 || !strings.Contains(messages[0], "relinked") {
+		t.Errorf("want one message about relinking hub02, got %v", messages)
+	}
+	for _, s := range []*Server{hub, old} {
+		if !samePath(items(s), filepath.Join(data, "items")) {
+			t.Errorf("%s: items not linked", s.Name)
+		}
+	}
+}
+
 // The README's quick start runs init from the repository with --data ../skyblock-dungeon-data, and
 // older network.json files keep that relative path.
 func TestLinkDataRelativePath(t *testing.T) {

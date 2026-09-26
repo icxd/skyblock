@@ -546,7 +546,7 @@ func (n *Network) linkDataDir(s *Server, name, link string, progress func(string
 	relinked := false
 	if _, err := os.Lstat(link); err == nil {
 		if !danglingDataLink(link, name) {
-			if resolved, err := filepath.EvalSymlinks(link); err != nil || !samePath(resolved, target) {
+			if !samePath(link, target) {
 				progress(fmt.Sprintf("! %s: %s is there already and isn't a link to %s; left as it is", s.Name, link, target))
 			}
 			return
@@ -581,11 +581,13 @@ func danglingDataLink(link, name string) bool {
 	return errors.Is(err, fs.ErrNotExist)
 }
 
-// samePath: whether two paths are the same folder, whatever links lead to them.
+// samePath: whether two paths are the same folder, whatever links or junctions lead to them.
+// os.Stat follows both; filepath.EvalSymlinks doesn't follow junctions (since Go 1.23), and a
+// junction is what linkDir makes on Windows without developer mode.
 func samePath(a, b string) bool {
-	ra, errA := filepath.EvalSymlinks(a)
-	rb, errB := filepath.EvalSymlinks(b)
-	return errA == nil && errB == nil && filepath.Clean(ra) == filepath.Clean(rb)
+	fa, errA := os.Stat(a)
+	fb, errB := os.Stat(b)
+	return errA == nil && errB == nil && os.SameFile(fa, fb)
 }
 
 // removeServer takes a stopped server off the network, and deletes its folder unless keep.

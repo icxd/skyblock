@@ -33,6 +33,11 @@ func linkDir(target, link string) error {
 	if err := os.Symlink(target, link); err == nil {
 		return nil
 	}
+	return junction(target, link)
+}
+
+// junction makes a directory junction, which any user may.
+func junction(target, link string) error {
 	out, err := exec.Command("cmd", "/c", "mklink", "/J", link, target).CombinedOutput()
 	if err != nil {
 		return errors.New(string(out))
