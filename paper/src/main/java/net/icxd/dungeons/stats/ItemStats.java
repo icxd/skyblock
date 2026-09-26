@@ -40,8 +40,7 @@ public final class ItemStats {
             for (Stat stat : Stat.values()) stats.add(stat, base.get(stat) * 0.02 * stars);
         }
         if (tag.getBoolean("art_of_war")) stats.add(Stat.STRENGTH, 5);
-        String rarityName = tag.getString("rarity");
-        Rarity rarity = rarityName.isEmpty() ? item.rarity() : Rarity.valueOf(rarityName);
+        Rarity rarity = ItemBuilder.rarity(item, tag);
         if (!tag.getString("reforge").isEmpty()) stats.add(Reforge.valueOf(tag.getString("reforge")).getStats().at(rarity));
 
         int books = tag.getInt("hot_potato_books");

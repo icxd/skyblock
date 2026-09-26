@@ -134,7 +134,10 @@ public final class ItemBuilder {
         player.getInventory().setContents(contents);
     }
 
-    /** What every new item starts with, plus the item's own {@link SkyBlockItem#nbt()}. */
+    /**
+     * What every new item starts with, plus the item's own {@link SkyBlockItem#nbt()}. Its rarity and
+     * soulbound are written as they always were, but what shows is the item's own (see {@link #rarity}).
+     */
     static NBTTagCompound newData(SkyBlockItem item) {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setString("id", item.id());
@@ -269,9 +272,8 @@ public final class ItemBuilder {
         List<String> footer = new ArrayList<>();
         if (item.reforgeable() && reforge(tag) == null) footer.add("&8This item can be reforged!");
         footer.addAll(requirementLines(item, owner));
-        String soulbound = tag.getString("soulbound");
-        if (!soulbound.isEmpty() && Soulbound.valueOf(soulbound) != Soulbound.NONE) {
-            footer.add("&8&l* &8" + (Soulbound.valueOf(soulbound) == Soulbound.COOP ? "Co-op " : "") + "Soulbound &8&l*");
+        if (item.soulbound() != Soulbound.NONE) {
+            footer.add("&8&l* &8" + (item.soulbound() == Soulbound.COOP ? "Co-op " : "") + "Soulbound &8&l*");
         }
         if (!lore.isEmpty()) lore.add("");
         lore.addAll(footer);
@@ -458,9 +460,12 @@ public final class ItemBuilder {
         return tag.getBoolean("recombobulated") ? bold + "&ka&r " + line + " " + bold + "&ka" : line;
     }
 
-    private static Rarity rarity(SkyBlockItem item, NBTTagCompound tag) {
-        String rarity = tag.getString("rarity");
-        return rarity.isEmpty() ? item.rarity() : Rarity.valueOf(rarity);
+    /**
+     * The item's rarity, one up while it's recombobulated. Items kept a copy of their rarity in their
+     * data (and /recombobulate changed it); that isn't read, so a change to the item shows on every copy.
+     */
+    public static Rarity rarity(SkyBlockItem item, NBTTagCompound tag) {
+        return tag.getBoolean("recombobulated") ? item.rarity().upgrade() : item.rarity();
     }
 
     private static Reforge reforge(NBTTagCompound tag) {

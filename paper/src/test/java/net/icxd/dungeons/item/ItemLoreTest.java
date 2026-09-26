@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item;
 
+import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import org.junit.jupiter.api.Test;
@@ -107,13 +108,29 @@ class ItemLoreTest {
         assertEquals(" &d✪&6✪✪✪✪", ItemBuilder.stars(ItemRegistry.get("INFERNAL_CRIMSON_HELMET"), crimson));
     }
 
+    /** One rarity up, in the name and the rarity line, from the item's own rarity and the flag. */
     @Test
     void recombobulated() {
+        SkyBlockItem hyperion = ItemRegistry.get("HYPERION");
         NBTTagCompound tag = data("HYPERION");
+        tag.setBoolean("recombobulated", true);
+        assertEquals(Rarity.MYTHIC, ItemBuilder.rarity(hyperion, tag));
+        assertEquals("§dHyperion", ItemBuilder.name(hyperion, tag));
+        List<String> lore = lore("HYPERION", tag);
+        assertEquals("§d§l&ka&r §d§lMYTHIC DUNGEON SWORD §d§l&ka", lore.get(lore.size() - 1));
+    }
+
+    /** Items used to keep their rarity in their data too; what they show now is the item's. */
+    @Test
+    void storedRarityIsIgnored() {
+        SkyBlockItem hyperion = ItemRegistry.get("HYPERION");
+        NBTTagCompound tag = data("HYPERION");
+        tag.setString("rarity", "COMMON");
+        assertEquals(Rarity.LEGENDARY, ItemBuilder.rarity(hyperion, tag));
+        // As /recombobulate left them: the upgraded rarity stored as well as the flag.
         tag.setString("rarity", "MYTHIC");
         tag.setBoolean("recombobulated", true);
-        assertEquals("§d§l&ka&r §d§lMYTHIC DUNGEON SWORD §d§l&ka", ItemBuilder.rarityLine(ItemRegistry.get("HYPERION"), tag,
-                net.icxd.dungeons.item.enums.Rarity.MYTHIC));
+        assertEquals(Rarity.MYTHIC, ItemBuilder.rarity(hyperion, tag));
     }
 
     @Test
