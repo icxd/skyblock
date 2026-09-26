@@ -83,6 +83,12 @@ func (n *Network) deploy(o DeployOptions, output func(string)) error {
 	if paper == "" && proxy == "" {
 		return errors.New("nothing built yet; deploy with the build on")
 	}
+	if paper == "" {
+		output("! The SkyBlock plugin isn't built (no skyblock-dungeons jar in paper/target)")
+	}
+	if proxy == "" {
+		output("! The proxy plugin isn't built (no skyblock-proxy jar in proxy/target); the proxy needs it for its console")
+	}
 	var restart []string
 	if paper != "" {
 		for _, s := range n.Servers {

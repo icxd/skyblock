@@ -222,6 +222,9 @@ func (n *Network) waitReady(name string, timeout time.Duration) error {
 		if _, err := n.command(name, "list"); err == nil {
 			return nil
 		}
+		if name == proxyDirName && portOpen(n.Proxy.Port) {
+			return nil // up, but without its console (see proxyConsoleProblem)
+		}
 		time.Sleep(time.Second)
 	}
 	return fmt.Errorf("%s didn't come up within %s", name, timeout)

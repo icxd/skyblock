@@ -296,6 +296,9 @@ func cmdStatus(n *Network, args []string) error {
 			mem = fmt.Sprintf("%.0f MB", s.MemoryMB)
 		}
 		fmt.Printf("%-14s %-14s %-6d %s %-8s %-6s %-9s %s\n", s.Name, s.Type, s.Port, stateStyle(s.State).Width(9).Render(s.State), players, tps, mem, s.Uptime)
+		if s.Note != "" {
+			fmt.Println(warnStyle.Render("  ! " + s.Note))
+		}
 	}
 	return nil
 }

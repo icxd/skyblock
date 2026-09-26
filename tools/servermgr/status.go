@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"net"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,6 +28,7 @@ type Status struct {
 	MSPT       float64  `json:"mspt,omitempty"`
 	MemoryMB   float64  `json:"memoryMB,omitempty"`
 	CPU        float64  `json:"cpu,omitempty"`
+	Note       string   `json:"note,omitempty"` // why some details are missing
 }
 
 var (
@@ -101,6 +105,12 @@ func (n *Network) status(name string, samplers *Samplers) Status {
 	if name == proxyDirName {
 		out, err := n.command(name, "glist")
 		if err != nil {
+			// Velocity opens its port once it's up, so it can be running without its console
+			// (the proxy plugin adds that).
+			if portOpen(st.Port) {
+				st.State = "running"
+				st.Note = "no console: " + n.proxyConsoleProblem()
+			}
 			return st
 		}
 		st.State = "running"
@@ -135,6 +145,23 @@ func (n *Network) status(name string, samplers *Samplers) Status {
 		}
 	}
 	return st
+}
+
+func portOpen(port int) bool {
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 500*time.Millisecond)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
+}
+
+// proxyConsoleProblem guesses why a running proxy's console doesn't answer.
+func (n *Network) proxyConsoleProblem() string {
+	if jars, _ := filepath.Glob(filepath.Join(n.proxyDir(), "plugins", "skyblock-proxy-*.jar")); len(jars) == 0 {
+		return "the proxy plugin isn't installed (deploy builds and installs it)"
+	}
+	return "the proxy plugin didn't start it (see the proxy's console)"
 }
 
 func shortDuration(d time.Duration) string {

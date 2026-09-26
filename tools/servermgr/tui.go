@@ -53,6 +53,7 @@ type model struct {
 	width    int
 	height   int
 	statuses []Status
+	notes    map[string]string // last note logged per server
 	samplers *Samplers
 	cursor   int
 
@@ -243,6 +244,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(logTick(), m.readLogs())
 	case statusMsg:
 		m.statuses = msg
+		for _, st := range msg {
+			if st.Note != "" && m.notes[st.Name] != st.Note {
+				m.log("! " + st.Name + ": " + st.Note)
+			}
+			if m.notes == nil {
+				m.notes = map[string]string{}
+			}
+			m.notes[st.Name] = st.Note
+		}
 		return m, nil
 	case javaMsg:
 		m.java = string(msg)
