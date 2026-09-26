@@ -56,7 +56,7 @@ id, keys sorted, and every default left out, so a changed item is a one-line dif
 | `material` | a 26.2 `Material` name |
 | `rarity`, `type`, `type_label` | `Rarity` name (COMMON left out); Hypixel's category; the rarity line's words when they aren't `type`'s (the plugin adds DUNGEON) |
 | `categories`, `lore` | the dark gray lines under the name; the item's own lines (`""` a blank line) |
-| `texture`, `skin`, `color` | a head's texture hash (for `Utils.texture`), or a whole skin value; leather's `#rrggbb` |
+| `texture`, `skin`, `color` | a head's texture hash (up to 64 lower-case hex digits, for `Utils.texture`), or a whole skin value; leather's `#rrggbb` |
 | `glowing`, `unstackable`, `dungeon_item`, `can_have_attributes` | only when true |
 | `reforgeable` | whether NEU's dump says it can be reforged (only items NEU has) |
 | `soulbound`, `gear_score`, `npc_sell_price`, `shot_cooldown` | `COOP`/`SOLO`; the Gear Score shown; coins; seconds |

@@ -193,11 +193,16 @@ class ItemDataTest {
     @Test
     void headsAndColours() throws IOException {
         String hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        // Mojang's hashes lose their leading zeros, so some are shorter.
+        String shorter = hash.substring(1);
         ItemData.Result result = load(
                 "\"TEST_HEAD\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test Head\",\"texture\":\"" + hash + "\"}",
+                "\"TEST_SHORTER\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test Head\",\"texture\":\"" + shorter + "\"}",
                 "\"TEST_SKIN\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test Skin\",\"skin\":\"dGVzdA==\",\"texture\":\"" + hash + "\"}",
                 "\"TEST_BOOTS\":{\"color\":\"#E65300\",\"material\":\"LEATHER_BOOTS\",\"name\":\"Test Boots\",\"type\":\"BOOTS\"}");
+        assertEquals(List.of(), result.errors());
         assertEquals(Utils.texture(hash), result.items().get("TEST_HEAD").skin());
+        assertEquals(Utils.texture(shorter), result.items().get("TEST_SHORTER").skin());
         // An exact skin wins over the texture.
         assertEquals("dGVzdA==", result.items().get("TEST_SKIN").skin());
         assertEquals(Color.fromRGB(0xE65300), result.items().get("TEST_BOOTS").color());
@@ -235,6 +240,11 @@ class ItemDataTest {
                 "\"NULL_COST\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[null]]}",
                 "\"NULL_STAR\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[null]}",
                 "\"EMPTY_STAR\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[{\"coins\":100}],[]]}",
+                "\"NUMBER_NAME\":{\"material\":\"STONE\",\"name\":5}",
+                "\"FLAG_LORE\":{\"lore\":[1,true],\"material\":\"STONE\",\"name\":\"Test\"}",
+                "\"NUMBER_ITEM\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[{\"amount\":1,\"item\":5}]]}",
+                "\"NUMBER_TEXTURE\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test\",\"texture\":12}",
+                "\"BAD_TEXTURE\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test\",\"texture\":\"http://textures.minecraft.net/texture/ab\"}",
                 "\"NO_AMOUNT\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[{\"item\":\"TEST_ROCK\"}]]}",
                 "\"NO_LEVEL\":{\"material\":\"STONE\",\"name\":\"Test\",\"requirements\":[{\"skill\":\"COMBAT\",\"type\":\"SKILL\"}]}",
                 "\"LIST_FOR_TEXT\":{\"lore\":\"one line\",\"material\":\"STONE\",\"name\":\"Test\"}",
@@ -255,6 +265,8 @@ class ItemDataTest {
                 Map.entry("STRING_NUMBER", "value"), Map.entry("FRACTION", "value"), Map.entry("STRING_FLAG", "value"),
                 Map.entry("STRING_STAT", "value"), Map.entry("BAD_COLOR", "value"), Map.entry("EMPTY_COST", "value"),
                 Map.entry("NULL_COST", "value"), Map.entry("NULL_STAR", "value"), Map.entry("EMPTY_STAR", "value"),
+                Map.entry("NUMBER_NAME", "value"), Map.entry("FLAG_LORE", "value"), Map.entry("NUMBER_ITEM", "value"),
+                Map.entry("NUMBER_TEXTURE", "value"), Map.entry("BAD_TEXTURE", "value"),
                 Map.entry("NO_AMOUNT", "value"), Map.entry("NO_LEVEL", "value"), Map.entry("LIST_FOR_TEXT", "value"),
                 Map.entry("NOT_AN_OBJECT", "value"))), kinds);
         assertEquals(List.of(), result.warnings());

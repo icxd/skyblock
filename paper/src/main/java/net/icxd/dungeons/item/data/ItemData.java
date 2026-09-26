@@ -59,9 +59,9 @@ import java.util.regex.Pattern;
  * <ul>
  *   <li>Errors, the item is skipped: no name ("name"); no material, or one that isn't a current,
  *       non-legacy Material ("material"); an unknown rarity ("rarity") or soulbound ("soulbound"); an
- *       id that came before ("duplicate"); a value of the wrong kind, such as a string where a number
- *       goes, a fraction for a whole number, a colour that isn't "#rrggbb", a cost of nothing or an
- *       upgrade star with no costs ("value").</li>
+ *       id that came before ("duplicate"); a value of the wrong kind, such as a number where a string
+ *       goes or a string where a number goes, a fraction for a whole number, a colour that isn't
+ *       "#rrggbb", a texture that isn't a hex hash, a cost of nothing or an upgrade star with no costs ("value").</li>
  *   <li>Warnings, the item loads without the name this plugin doesn't have (yet): a stat ("stat"),
  *       gemstone slot type ("gemstone slot"), essence ("essence"), requirement, or its skill, slayer
  *       boss, dungeon or Kuudra tier ("requirement"), or activation ("activation"). A type that isn't a
@@ -113,13 +113,17 @@ public final class ItemData {
 
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            // Gson would take "true" and "5" from strings, and 1.5 as the whole number 1; here they're errors.
+            // Gson would take "true" and "5" from strings, 5 and true as strings, and 1.5 as the whole number 1;
+            // here they're errors.
+            .registerTypeAdapter(String.class, only(JsonToken.STRING, JsonReader::nextString))
             .registerTypeAdapter(Boolean.class, only(JsonToken.BOOLEAN, JsonReader::nextBoolean))
             .registerTypeAdapter(Double.class, only(JsonToken.NUMBER, JsonReader::nextDouble))
             .registerTypeAdapter(Integer.class, only(JsonToken.NUMBER, ItemData::wholeNumber))
             .create();
     private static final TypeAdapter<JsonElement> TREE = GSON.getAdapter(JsonElement.class);
     private static final Pattern COLOR = Pattern.compile("#[0-9a-fA-F]{6}");
+    // Up to 64 digits: Mojang's hashes lose their leading zeros.
+    private static final Pattern TEXTURE = Pattern.compile("[0-9a-f]{1,64}");
 
     private ItemData() {
     }
@@ -198,6 +202,7 @@ public final class ItemData {
             if (!COLOR.matcher(json.color()).matches()) throw new Skip("value", "color " + json.color());
             color = Color.fromRGB(Integer.parseInt(json.color().substring(1), 16));
         }
+        if (json.texture() != null && !TEXTURE.matcher(json.texture()).matches()) throw new Skip("value", "texture " + json.texture());
         String skin = json.skin() != null ? json.skin() : json.texture() == null ? null : Utils.texture(json.texture());
 
         Stats stats = new Stats();
