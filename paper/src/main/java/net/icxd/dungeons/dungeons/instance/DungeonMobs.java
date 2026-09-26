@@ -17,6 +17,8 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Utils;
 
@@ -72,8 +74,8 @@ public final class DungeonMobs {
      */
     static void hit(Player player, double damage, Entity by) {
         if (player.isDead() || player.getGameMode() == org.bukkit.GameMode.CREATIVE || player.getGameMode() == org.bukkit.GameMode.SPECTATOR) return;
-        Stats stats = Stats.STATS_CACHE.get(player.getUniqueId());
-        double defense = stats == null ? 0 : stats.getDefense();
+        Stats stats = PlayerSession.of(player).stats();
+        double defense = stats == null ? 0 : stats.get(Stat.DEFENSE);
         double taken = damage * 100 / (defense + 100);
         player.setHealth(Math.max(0, player.getHealth() - taken));
         if (player.isDead()) return;
@@ -122,8 +124,8 @@ public final class DungeonMobs {
 
     /** What a player's fist (or a non-SkyBlock item) does: 5 base damage with their damage and strength. */
     public static double fistDamage(Player player) {
-        Stats stats = Stats.STATS_CACHE.get(player.getUniqueId());
+        Stats stats = PlayerSession.of(player).stats();
         if (stats == null) return 5;
-        return (5 + stats.getDamage()) * (1 + stats.getStrength() / 100);
+        return (5 + stats.get(Stat.DAMAGE)) * (1 + stats.get(Stat.STRENGTH) / 100);
     }
 }

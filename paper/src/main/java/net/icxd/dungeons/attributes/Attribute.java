@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.icxd.dungeons.crimsonisle.kuudra.KuudraTier;
 import net.icxd.dungeons.item.enums.GenericItemType;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.User;
 import org.bukkit.entity.Player;
@@ -19,7 +20,7 @@ import java.util.function.Predicate;
 @Getter
 public enum Attribute {
     // TODO: Arachno
-    ATTACK_SPEED("Attack Speed", List.of(GenericItemType.WEAPON), Arrays.asList("§7Grants §e%s⚔ Bonus Attack", "§eSpeed§7."), KuudraTier.HOT, level -> new Stats().setAttackSpeed(level)),
+    ATTACK_SPEED("Attack Speed", List.of(GenericItemType.WEAPON), Arrays.asList("§7Grants §e%s⚔ Bonus Attack", "§eSpeed§7."), KuudraTier.HOT, level -> new Stats().set(Stat.ATTACK_SPEED, level)),
     // TODO: Blazing
     // TODO: Combo
     // TODO: Elite
@@ -40,14 +41,14 @@ public enum Attribute {
     // TODO: Fortitude
     // TODO: Life Regeneration
     // TODO: Lifeline
-    MAGIC_FIND("Magic Find", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §b%s✯ Magic Find§7."), KuudraTier.INFERNAL, level -> new Stats().setMagicFind(0.5 * level)),
-    MANA_POOL("Mana Pool", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §b+%s✎ Intelligence§7."), KuudraTier.NONE, level -> new Stats().setIntelligence(20* level)),
+    MAGIC_FIND("Magic Find", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §b%s✯ Magic Find§7."), KuudraTier.INFERNAL, level -> new Stats().set(Stat.MAGIC_FIND, 0.5 * level)),
+    MANA_POOL("Mana Pool", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §b+%s✎ Intelligence§7."), KuudraTier.NONE, level -> new Stats().set(Stat.INTELLIGENCE, 20* level)),
     // TODO: Mana Regeneration
-    MENDING("Mending", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §a%s☄ Mending§7."), KuudraTier.BURNING, level -> new Stats().setMending(3 * level)),
-    VITALITY("Vitality", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §4%s♨ Vitality§7."), KuudraTier.BURNING, level -> new Stats().setVitality(3 * level)),
-    SPEED("Speed", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §f%s✦ Speed§7."), KuudraTier.NONE, level -> new Stats().setWalkSpeed(5 * level)),
+    MENDING("Mending", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §a%s☄ Mending§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.MENDING, 3 * level)),
+    VITALITY("Vitality", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §4%s♨ Vitality§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.VITALITY, 3 * level)),
+    SPEED("Speed", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §f%s✦ Speed§7."), KuudraTier.NONE, level -> new Stats().set(Stat.SPEED, 5 * level)),
     // TODO: Undead Resistance
-    VETERAN("Veteran", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §3%s☯ Combat Wisdom§7."), KuudraTier.BURNING, level -> new Stats().setCombatWisdom(0.75 * level)),
+    VETERAN("Veteran", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §3%s☯ Combat Wisdom§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.COMBAT_WISDOM, 0.75 * level)),
     // TODO: Blazing Fortune
     // TODO: Fishing Experience
     // TODO: Infection

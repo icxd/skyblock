@@ -31,6 +31,8 @@ import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
+import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
@@ -633,17 +635,17 @@ public final class DungeonRun {
         });
 
         User user = User.cached(viewer.getUniqueId());
-        Stats stats = Stats.STATS_CACHE.get(viewer.getUniqueId());
+        Stats stats = PlayerSession.of(viewer).stats();
         column(out, "       &6&lAccount Info", () -> texts(
                 "&e&lProfile: &cN/A",
                 " Bank: &6" + (user != null && user.isLoaded() ? Utils.formatNumber(user.getBankBalance()) : "0"),
                 "",
                 "&e&lSkills:",
-                " Speed: &f" + (stats == null ? 0 : (int) stats.getWalkSpeed()),
-                " Strength: &c" + (stats == null ? 0 : (int) stats.getStrength()),
-                " Crit Chance: &9" + (stats == null ? 0 : (int) stats.getCriticalChance()),
-                " Crit Damage: &9" + (stats == null ? 0 : (int) stats.getCriticalDamage()),
-                " Attack Speed: &e" + (stats == null ? 0 : (int) stats.getAttackSpeed())));
+                " Speed: &f" + (stats == null ? 0 : (int) stats.get(Stat.SPEED)),
+                " Strength: &c" + (stats == null ? 0 : (int) stats.get(Stat.STRENGTH)),
+                " Crit Chance: &9" + (stats == null ? 0 : (int) stats.get(Stat.CRIT_CHANCE)),
+                " Crit Damage: &9" + (stats == null ? 0 : (int) stats.get(Stat.CRIT_DAMAGE)),
+                " Attack Speed: &e" + (stats == null ? 0 : (int) stats.get(Stat.ATTACK_SPEED))));
         return out;
     }
 

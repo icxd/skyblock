@@ -16,6 +16,8 @@ import org.bukkit.Material;
 import java.awt.*;
 import java.util.*;
 
+import static net.icxd.dungeons.stats.Stat.*;
+
 public class FieryCrimsonChestplate implements SkyBlockItem {
     @Override public Material material() { return Material.LEATHER_CHESTPLATE; }
     @Override public Color color() { return new Color(255,111,12); }
@@ -23,7 +25,7 @@ public class FieryCrimsonChestplate implements SkyBlockItem {
     @Override public SpecificItemType specificItemType() { return SpecificItemType.CHESTPLATE; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }
     @Override public Soulbound soulbound() { return Soulbound.COOP; }
-    @Override public Stats stats() { return new Stats(0, 0, 460, 130, 60, 10, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
+    @Override public Stats stats() { return new Stats().set(HEALTH, 460).set(DEFENSE, 130).set(STRENGTH, 60).set(INTELLIGENCE, 10).set(CRIT_DAMAGE, 40); }
     @Override public Requirements requirements() { return new Requirements(new SkillRequirement(Skill.COMBAT, 24)); }
     @Override public boolean canHaveAttributes() { return true; }
     @Override public UpgradeCosts upgradeCosts() { return new UpgradeCosts(new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 5000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 5600)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 6300)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 7000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 8000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 9000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 10200)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 11500), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 3)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 13000), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 4)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 14500), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 5))); }

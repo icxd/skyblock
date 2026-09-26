@@ -24,13 +24,15 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import static net.icxd.dungeons.stats.Stat.*;
+
 public class Hyperion implements SkyBlockItem {
     @Override public Material material() { return Material.IRON_SWORD; }
     @Override public int itemDurability() { return -1; }
     @Override public String name() { return "Hyperion"; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.SWORD; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }
-    @Override public Stats stats() { return new Stats(260, 30, 0, 0, 150, 350, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
+    @Override public Stats stats() { return new Stats().set(DAMAGE, 260).set(FEROCITY, 30).set(STRENGTH, 150).set(INTELLIGENCE, 350); }
     @Override public double npcSellPrice() { return 200; }
     @Override public UpgradeCosts upgradeCosts() { return new UpgradeCosts(new UpgradeCost(new EssenceCost(EssenceType.WITHER, 150)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 300)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 500)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 900)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 1500))); }
     @Override public Requirements requirements() { return new Requirements(new DungeonTierRequirement(DungeonType.CATACOMBS, 7)); }

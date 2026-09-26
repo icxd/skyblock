@@ -1,36 +1,27 @@
 package net.icxd.dungeons.mining;
 
+import net.icxd.dungeons.session.PlayerSession;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class MiningManager {
-    // nextPhases is a terrible name for this variable, really what it is, is basically just
-    // the next time a break animation can start.
-    private static final Map<UUID, Long> NEXT_PHASES = new HashMap<>();
     private static final Map<Location, Integer> BLOCK_BREAK_PROGRESS = new HashMap<>();
 
-    public static boolean updatePhaseCooldown(Player player, int timeToBreakInTicks) {
-        final List<UUID> toRemove = new ArrayList<>();
-        NEXT_PHASES.forEach((uuid, phase) -> {
-            if (phase <= System.currentTimeMillis())
-                toRemove.add(uuid);
-        });
-        toRemove.forEach(NEXT_PHASES::remove);
-        if (NEXT_PHASES.containsKey(player.getUniqueId())) return false;
-        nextPhase(player, timeToBreakInTicks);
+    /**
+     * Whether the player's next crack stage may start now; if so, the one after waits {@code ticks}.
+     * (The wait is kept in their session.)
+     */
+    public static boolean updatePhaseCooldown(Player player, int ticks) {
+        PlayerSession session = PlayerSession.of(player);
+        long now = System.currentTimeMillis();
+        if (session.getNextBreakPhase() > now) return false;
+        session.setNextBreakPhase(now + ticks * 50L);
         return true;
-    }
-
-    public static void nextPhase(Player player, int ticks) {
-        NEXT_PHASES.put(player.getUniqueId(), System.currentTimeMillis() + ticks * 50L);
     }
 
     public static void sendBlockDamage(Player player, Location location) {

@@ -17,13 +17,15 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import static net.icxd.dungeons.stats.Stat.*;
+
 public class DivansDrill implements SkyBlockItem {
     @Override public Material material() { return Material.PRISMARINE_SHARD; }
     @Override public String name() { return "Divan's Drill"; }
     @Override public boolean glowing() { return true; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.DRILL; }
     @Override public Rarity rarity() { return Rarity.MYTHIC; }
-    @Override public Stats stats() { return new Stats(70, 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 1800, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
+    @Override public Stats stats() { return new Stats().set(DAMAGE, 70).set(MINING_FORTUNE, 150).set(MINING_SPEED, 1800).set(BREAKING_POWER, 10); }
     @Override public Requirements requirements() { return new Requirements(); }
     @Override public boolean museum() { return true; }
     @Override public GemstoneSlots gemstoneSlots() { return new GemstoneSlots(new GemstoneSlot(GemstoneType.AMBER), new GemstoneSlot(GemstoneType.AMBER), new GemstoneSlot(GemstoneType.JADE, new CoinCost(50000), new ItemCost(ItemRegistry.get("FINE_JADE_GEM"), 20)), new GemstoneSlot(GemstoneType.JADE, new CoinCost(100000), new ItemCost(ItemRegistry.get("FINE_JADE_GEM"), 40)), new GemstoneSlot(GemstoneType.MINING, new CoinCost(250000), new ItemCost(ItemRegistry.get("FLAWLESS_JADE_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_AMBER_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_TOPAZ_GEM"), 1))); }

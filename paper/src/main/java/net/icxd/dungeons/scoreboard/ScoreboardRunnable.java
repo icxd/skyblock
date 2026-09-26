@@ -5,8 +5,8 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.SkyBlockServer;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
-import net.icxd.dungeons.region.Region;
 import net.icxd.dungeons.region.RegionType;
+import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
@@ -77,8 +77,8 @@ public class ScoreboardRunnable implements Runnable {
         } else {
             lines.add("&fEarly Summer 23rd");
             lines.add("&e \u2600 &79:30am");
-            Region region = Region.regionCache.get(id);
-            lines.add("&7 \u23e3 &7" + (region != null ? region : new Region(RegionType.getRegionType(player.getLocation()))));
+            RegionType region = PlayerSession.of(player).getRegion();
+            lines.add("&7 \u23e3 &7" + (region != null ? region : RegionType.getRegionType(player.getLocation())).displayName());
         }
         lines.add("&7");
         lines.add(coins.toString());

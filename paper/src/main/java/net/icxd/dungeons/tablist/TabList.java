@@ -33,8 +33,8 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
-import net.icxd.dungeons.region.Region;
 import net.icxd.dungeons.region.RegionType;
+import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -156,9 +156,9 @@ public class TabList {
         // Column 3: server info.
         lines.add(new Line("      §3§lServer Info     ", DARK_AQUA));
         if (hub) {
-            Region region = Region.regionCache.get(viewer.getUniqueId());
+            RegionType region = PlayerSession.of(viewer).getRegion();
             String area = type == ServerType.DUNGEON_HUB ? type.getDisplayName()
-                    : (region != null ? region.getType() : RegionType.getRegionType(viewer.getLocation())).getName();
+                    : (region != null ? region : RegionType.getRegionType(viewer.getLocation())).getName();
             lines.add(new Line("§b§lArea: §7" + area, GRAY));
             lines.add(new Line("§f Server: §8" + Dungeons.getSkyBlockServer().getName(), GRAY));
             lines.add(new Line("§f Gems: §a" + user.getGems(), GRAY));

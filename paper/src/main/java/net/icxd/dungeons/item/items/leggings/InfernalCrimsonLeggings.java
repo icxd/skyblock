@@ -16,6 +16,8 @@ import org.bukkit.Material;
 import java.awt.*;
 import java.util.*;
 
+import static net.icxd.dungeons.stats.Stat.*;
+
 public class InfernalCrimsonLeggings implements SkyBlockItem {
     @Override public Material material() { return Material.LEATHER_LEGGINGS; }
     @Override public Color color() { return new Color(230,97,5); }
@@ -23,7 +25,7 @@ public class InfernalCrimsonLeggings implements SkyBlockItem {
     @Override public SpecificItemType specificItemType() { return SpecificItemType.LEGGINGS; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }
     @Override public Soulbound soulbound() { return Soulbound.COOP; }
-    @Override public Stats stats() { return new Stats(0, 0, 517, 139, 76, 13, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
+    @Override public Stats stats() { return new Stats().set(HEALTH, 517).set(DEFENSE, 139).set(STRENGTH, 76).set(INTELLIGENCE, 13).set(CRIT_DAMAGE, 50); }
     @Override public Requirements requirements() { return new Requirements(new SkillRequirement(Skill.COMBAT, 24)); }
     @Override public boolean canHaveAttributes() { return true; }
     @Override public GemstoneSlots gemstoneSlots() { return new GemstoneSlots(new GemstoneSlot(GemstoneType.COMBAT, new CoinCost(250000), new ItemCost(ItemRegistry.get("FLAWLESS_JASPER_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_SAPPHIRE_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_RUBY_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_AMETHYST_GEM"), 1)), new GemstoneSlot(GemstoneType.COMBAT, new CoinCost(250000), new ItemCost(ItemRegistry.get("FLAWLESS_JASPER_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_SAPPHIRE_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_RUBY_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_AMETHYST_GEM"), 1))); }

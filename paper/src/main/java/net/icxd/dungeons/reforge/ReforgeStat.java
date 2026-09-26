@@ -1,12 +1,19 @@
 package net.icxd.dungeons.reforge;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import net.icxd.dungeons.item.enums.Rarity;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class ReforgeStat {
-    private double common = 0, uncommon = 0, rare = 0, epic = 0, legendary = 0, mythic = 0;
+/** One stat of a reforge, at each rarity. */
+public record ReforgeStat(double common, double uncommon, double rare, double epic, double legendary, double mythic) {
+    /** 0 for rarities above mythic (divine, special, ...). */
+    public double at(Rarity rarity) {
+        return switch (rarity) {
+            case COMMON -> common;
+            case UNCOMMON -> uncommon;
+            case RARE -> rare;
+            case EPIC -> epic;
+            case LEGENDARY -> legendary;
+            case MYTHIC -> mythic;
+            default -> 0;
+        };
+    }
 }

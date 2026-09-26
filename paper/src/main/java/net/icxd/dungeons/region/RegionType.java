@@ -103,6 +103,11 @@ public enum RegionType {
         this.color = color;
     }
 
+    /** Its name in its colour, as the sidebar and action bar show it. */
+    public String displayName() {
+        return color + name;
+    }
+
     public static RegionType getType(String string) {
         try {
             return valueOf(string);

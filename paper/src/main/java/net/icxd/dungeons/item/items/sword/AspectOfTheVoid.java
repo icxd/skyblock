@@ -17,12 +17,14 @@ import org.bukkit.Material;
 import java.awt.*;
 import java.util.*;
 
+import static net.icxd.dungeons.stats.Stat.*;
+
 public class AspectOfTheVoid implements SkyBlockItem {
     @Override public Material material() { return Material.DIAMOND_SHOVEL; }
     @Override public String name() { return "Aspect of the Void"; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.SWORD; }
     @Override public Rarity rarity() { return Rarity.EPIC; }
-    @Override public Stats stats() { return new Stats(120, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
+    @Override public Stats stats() { return new Stats().set(DAMAGE, 120).set(STRENGTH, 100); }
     @Override public Ability ability() { return new InstantTransmission(); }
     @Override public double npcSellPrice() { return 56000; }
     @Override public GemstoneSlots gemstoneSlots() { return new GemstoneSlots(new GemstoneSlot(GemstoneType.SAPPHIRE)); }

@@ -9,12 +9,13 @@ import net.icxd.dungeons.entity.EntityRegistry;
 import net.icxd.dungeons.entity.enums.EntityDropType;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
+import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
-import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
@@ -46,7 +47,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -110,8 +110,7 @@ public class PlayerListener implements Listener {
     public void onLeave(PlayerQuitEvent event) {
         event.setQuitMessage(null);
         UUID id = event.getPlayer().getUniqueId();
-        lastAbilityUse.keySet().removeIf(key -> key.player().equals(id));
-        StatsRunnable.forget(id);
+        PlayerSession.end(id);
         User user = User.cached(id);
         if (user == null) return;
         // Vanilla drops the cursor and crafting grid after this event; they're saved with the rest instead.
@@ -172,12 +171,6 @@ public class PlayerListener implements Listener {
         player.getInventory().setItem(event.getNewSlot(), builtItem);
     }
 
-    /** When each player last used each ability (cooldowns are per ability). */
-    private record AbilityUse(UUID player, String ability) {
-    }
-
-    private final Map<AbilityUse, Long> lastAbilityUse = new HashMap<>();
-
     @EventHandler
     public void onAbilityUse(PlayerInteractEvent event) {
         // Fired once per hand since 1.9; the ability is on the main hand item.
@@ -202,57 +195,36 @@ public class PlayerListener implements Listener {
         }
     }
 
-    /** Mana first: a cast that fails for lack of it doesn't start the cooldown. */
+    /** Mana first: a cast that fails for lack of it doesn't start the cooldown (cooldowns are per ability). */
     private void useAbility(Player player, SkyBlockItem sbItem, Ability ability) {
-        AbilityUse use = new AbilityUse(player.getUniqueId(), ability.getName());
-        Long last = lastAbilityUse.get(use);
-        if (last != null && System.currentTimeMillis() - last < ability.getCooldown() * 1000L) {
+        PlayerSession session = PlayerSession.of(player);
+        String cooldown = "ability:" + ability.getName();
+        if (session.cooldownLeft(cooldown) > 0) {
             player.sendMessage(ChatColor.RED + "You currently have a cooldown for this ability!");
             return;
         }
 
-        int mana = StatsRunnable.MANA_MAP.getOrDefault(player.getUniqueId(), 0);
+        int mana = Math.max(0, session.getMana());
         int cost = ability.getManaCost();
         if (mana < cost) {
             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
-            long now = System.currentTimeMillis();
-            StatsRunnable.MANA_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
-                @Override
-                public String getReplacement() {
-                    return "" + ChatColor.RED + ChatColor.BOLD + "NOT ENOUGH MANA";
-                }
-
-                @Override
-                public long getEnd() {
-                    return now + 2000;
-                }
-            });
+            session.setManaReplacement(Replacement.forMillis("" + ChatColor.RED + ChatColor.BOLD + "NOT ENOUGH MANA", 2000));
             return;
         }
 
-        if (ability.getCooldown() > 0) lastAbilityUse.put(use, System.currentTimeMillis());
-        StatsRunnable.MANA_MAP.put(player.getUniqueId(), mana - cost);
+        if (ability.getCooldown() > 0) session.startCooldown(cooldown, ability.getCooldown() * 1000L);
+        session.setMana(mana - cost);
         ability.activate(player, sbItem);
 
         if (ability.isShowManaCost()) {
-            long now = System.currentTimeMillis();
-            StatsRunnable.DEFENSE_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
-                @Override
-                public String getReplacement() {
-                    return ChatColor.AQUA + "-" + cost + " Mana (" + ChatColor.GOLD + ability.getName() + ChatColor.AQUA + ")";
-                }
-
-                @Override
-                public long getEnd() {
-                    return now + 400;
-                }
-            });
+            session.setDefenseReplacement(Replacement.forMillis(
+                    ChatColor.AQUA + "-" + cost + " Mana (" + ChatColor.GOLD + ability.getName() + ChatColor.AQUA + ")", 400));
         }
     }
 
     /**
      * A player's melee hit with a SkyBlock item: (5 + damage) x (1 + strength / 100), crits, then
-     * One For All. Their stats already include armor and the held item (see {@link Stats#of}). Arrows
+     * One For All. Their stats already include armor and the held item (see {@link PlayerSession#stats}). Arrows
      * count as the shooter's hit with what they're holding.
      * Cancelled hits (sweeps, see CombatListener) don't count.
      */
@@ -270,15 +242,15 @@ public class PlayerListener implements Listener {
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
 
-        Stats stats = Stats.STATS_CACHE.computeIfAbsent(player.getUniqueId(), id -> Stats.of(player));
+        Stats stats = PlayerSession.of(player).stats();
         double damageMultiplier = 1;
         var enchantments = tag.getList("enchantments", 10);
         for (int i = 0; i < enchantments.size(); i++) {
             if (enchantments.get(i).getString("name").equalsIgnoreCase("one_for_all")) damageMultiplier = 5;
         }
-        double finalDamage = (5 + stats.getDamage()) * (1 + stats.getStrength() / 100) * damageMultiplier;
-        boolean criticalHit = Math.random() * 100 < stats.getCriticalChance();
-        if (criticalHit) finalDamage *= 1 + stats.getCriticalDamage() / 100;
+        double finalDamage = (5 + stats.get(Stat.DAMAGE)) * (1 + stats.get(Stat.STRENGTH) / 100) * damageMultiplier;
+        boolean criticalHit = Math.random() * 100 < stats.get(Stat.CRIT_CHANCE);
+        if (criticalHit) finalDamage *= 1 + stats.get(Stat.CRIT_DAMAGE) / 100;
 
         DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
         if (dungeonMob != null) {
@@ -294,7 +266,7 @@ public class PlayerListener implements Listener {
         if (target.getHealth() - finalDamage <= 0) {
             event.setCancelled(true);
             customEntity.onDeath(target);
-            if (!customEntity.isBoss()) drop(player, target, customEntity, stats.getMagicFind());
+            if (!customEntity.isBoss()) drop(player, target, customEntity, stats.get(Stat.MAGIC_FIND));
             EntityBuilder.forget(target);
             target.remove();
             return;

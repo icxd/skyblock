@@ -7,6 +7,8 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Tuple;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -48,16 +50,16 @@ public class BlockListener implements Listener {
         String id = tag.getString("id");
         SkyBlockItem skyBlockItem = ItemRegistry.get(id);
         if (skyBlockItem == null) return;
-        int breakingPower = (int) skyBlockItem.stats().getBreakingPower();
+        int breakingPower = (int) skyBlockItem.stats().get(Stat.BREAKING_POWER);
         if (breakingPower < minableBlock.minBreakingPower()) {
             player.sendMessage("You need a pickaxe with at least " + minableBlock.minBreakingPower() + " breaking power to break this block.");
             return;
         }
         // The player's own mining speed and fortune (tool, armor and all), not just the tool's.
-        Stats stats = Stats.STATS_CACHE.computeIfAbsent(player.getUniqueId(), uuid -> Stats.of(player));
-        int miningSpeed = (int) stats.getMiningSpeed();
+        Stats stats = PlayerSession.of(player).stats();
+        int miningSpeed = (int) stats.get(Stat.MINING_SPEED);
         if (miningSpeed <= 0) return;
-        double fortune = stats.getMiningFortune();
+        double fortune = stats.get(Stat.MINING_FORTUNE);
 
         if (minableBlock.instaBreakStrength() != -1 && miningSpeed >= minableBlock.instaBreakStrength()) {
             block.setType(minableBlock.blockWhenBroken());

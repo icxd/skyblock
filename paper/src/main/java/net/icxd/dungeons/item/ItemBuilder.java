@@ -24,6 +24,7 @@ import net.icxd.dungeons.item.requirement.slayer.SlayerRequirement;
 import net.icxd.dungeons.reforge.Reforge;
 import net.icxd.dungeons.reforge.ReforgeStat;
 import net.icxd.dungeons.rune.Rune;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
@@ -184,55 +185,55 @@ public class ItemBuilder {
         Stats stats = item.stats();
         Stats tempStats = item.stats();
         if (reforge != null) {
-            tempStats.addReforgeStat(tempStats, rarity, reforge.getStats());
+            tempStats.add(reforge.getStats().at(rarity));
         }
 
-        if (tempStats.getBreakingPower() != 0) lore.add(ChatColor.DARK_GRAY + "Breaking Power " + (int) stats.getBreakingPower());
+        if (tempStats.get(Stat.BREAKING_POWER) != 0) lore.add(ChatColor.DARK_GRAY + "Breaking Power " + (int) stats.get(Stat.BREAKING_POWER));
         double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
         if (item.gearScore() >= 0) lore.add(ChatColor.GRAY + "Gear Score: " + ChatColor.LIGHT_PURPLE + item.gearScore() +
                 ChatColor.DARK_GRAY + " (" + (int) (item.gearScore() + (item.gearScore() * boost)) + ")");
-        if (tempStats.getDamage() != 0) lore.add(stat("Damage", ChatColor.RED, stats.getDamage(), ' ', tag,
+        if (tempStats.get(Stat.DAMAGE) != 0) lore.add(stat("Damage", ChatColor.RED, stats.get(Stat.DAMAGE), ' ', tag,
                 (item.genericItemType() == GenericItemType.WEAPON ? (tag.getInt("hot_potato_books") * 2) : 0)));
-        if (tempStats.getStrength() != 0) lore.add(stat("Strength", ChatColor.RED, stats.getStrength(), ' ', tag,
+        if (tempStats.get(Stat.STRENGTH) != 0) lore.add(stat("Strength", ChatColor.RED, stats.get(Stat.STRENGTH), ' ', tag,
                 (item.genericItemType() == GenericItemType.WEAPON ? (tag.getInt("hot_potato_books") * 2) : 0), tag.getBoolean("art_of_war"),
-                (reforge != null ? reforge.getStats().strength() : null)));
-        if (tempStats.getCriticalChance() != 0) lore.add(stat("Crit Chance", ChatColor.RED, stats.getCriticalChance(), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().critChance() : null)));
-        if (tempStats.getCriticalDamage() != 0) lore.add(stat("Crit Damage", ChatColor.RED, stats.getCriticalDamage(), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().critDamage() : null)));
-        if (tempStats.getAttackSpeed() != 0) lore.add(stat("Bonus Attack Speed", ChatColor.RED, stats.getAttackSpeed(), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().attackSpeed() : null)));
-        if (tempStats.getWeaponAbilityDamage() != 0) lore.add(stat("Ability Damage", ChatColor.RED, stats.getWeaponAbilityDamage(), '%', tag));
-        if (tempStats.getSeaCreatureChance() != 0) lore.add(stat("Sea Creature Chance", ChatColor.RED, stats.getSeaCreatureChance(), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().seaCreatureChance() : null)));
+                (reforge != null ? reforge.getStats().get(Stat.STRENGTH) : null)));
+        if (tempStats.get(Stat.CRIT_CHANCE) != 0) lore.add(stat("Crit Chance", ChatColor.RED, stats.get(Stat.CRIT_CHANCE), '%', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.CRIT_CHANCE) : null)));
+        if (tempStats.get(Stat.CRIT_DAMAGE) != 0) lore.add(stat("Crit Damage", ChatColor.RED, stats.get(Stat.CRIT_DAMAGE), '%', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.CRIT_DAMAGE) : null)));
+        if (tempStats.get(Stat.ATTACK_SPEED) != 0) lore.add(stat("Bonus Attack Speed", ChatColor.RED, stats.get(Stat.ATTACK_SPEED), '%', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.ATTACK_SPEED) : null)));
+        if (tempStats.get(Stat.WEAPON_ABILITY_DAMAGE) != 0) lore.add(stat("Ability Damage", ChatColor.RED, stats.get(Stat.WEAPON_ABILITY_DAMAGE), '%', tag));
+        if (tempStats.get(Stat.SEA_CREATURE_CHANCE) != 0) lore.add(stat("Sea Creature Chance", ChatColor.RED, stats.get(Stat.SEA_CREATURE_CHANCE), '%', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.SEA_CREATURE_CHANCE) : null)));
 
-        if (tempStats.getHealth() != 0) lore.add(stat("Health", ChatColor.GREEN, stats.getHealth(), ' ', tag,
+        if (tempStats.get(Stat.HEALTH) != 0) lore.add(stat("Health", ChatColor.GREEN, stats.get(Stat.HEALTH), ' ', tag,
                 (item.genericItemType() == GenericItemType.ARMOR ? (tag.getInt("hot_potato_books") * 4) : 0), false,
-                (reforge != null ? reforge.getStats().health() : null)));
-        if (tempStats.getDefense() != 0) lore.add(stat("Defense", ChatColor.GREEN, stats.getDefense(), ' ', tag,
+                (reforge != null ? reforge.getStats().get(Stat.HEALTH) : null)));
+        if (tempStats.get(Stat.DEFENSE) != 0) lore.add(stat("Defense", ChatColor.GREEN, stats.get(Stat.DEFENSE), ' ', tag,
                 (item.genericItemType() == GenericItemType.ARMOR ? (tag.getInt("hot_potato_books") * 2) : 0), false,
-                (reforge != null ? reforge.getStats().defense() : null)));
-        if (tempStats.getWalkSpeed() != 0) lore.add(stat("Speed", ChatColor.GREEN, stats.getWalkSpeed(), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().speed() : null)));
-        if (tempStats.getIntelligence() != 0) lore.add(stat("Intelligence", ChatColor.GREEN, stats.getIntelligence(), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().intelligence() : null)));
-        if (tempStats.getMagicFind() != 0) lore.add(stat("Magic Find", ChatColor.GREEN, stats.getMagicFind(), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().magicFind() : null)));
-        if (tempStats.getPetLuck() != 0) lore.add(stat("Pet Luck", ChatColor.GREEN, stats.getPetLuck(), tag));
-        if (tempStats.getTrueDefense() != 0) lore.add(stat("True Defense", ChatColor.GREEN, stats.getTrueDefense(), tag));
-        if (tempStats.getFerocity() != 0) lore.add(stat("Ferocity", ChatColor.GREEN, stats.getFerocity(), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().ferocity() : null)));
-        if (tempStats.getMiningSpeed() != 0) lore.add(stat("Mining Speed", ChatColor.GREEN, stats.getMiningSpeed(), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().miningSpeed() : null)));
-        if (tempStats.getMiningFortune() != 0) lore.add(stat("Mining Fortune", ChatColor.GREEN, stats.getMiningFortune(), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().miningFortune() : null)));
-        if (tempStats.getCombatWisdom() != 0) lore.add(stat("Combat Wisdom", ChatColor.GREEN, stats.getCombatWisdom(), tag));
-        if (tempStats.getFarmingWisdom() != 0) lore.add(stat("Farming Wisdom", ChatColor.GREEN, stats.getFarmingWisdom(), tag));
-        if (tempStats.getForagingWisdom() != 0) lore.add(stat("Foraging Wisdom", ChatColor.GREEN, stats.getForagingWisdom(), tag));
-        if (tempStats.getFishingWisdom() != 0) lore.add(stat("Fishing Wisdom", ChatColor.GREEN, stats.getFishingWisdom(), tag));
-        if (tempStats.getFishingSpeed() != 0) lore.add(stat("Fishing Speed", ChatColor.GREEN, stats.getFishingSpeed(), tag));
-        if (tempStats.getVitality() != 0) lore.add(stat("Vitality", ChatColor.GREEN, stats.getVitality(), tag));
-        if (tempStats.getMending() != 0) lore.add(stat("Mending", ChatColor.GREEN, stats.getMending(), tag));
+                (reforge != null ? reforge.getStats().get(Stat.DEFENSE) : null)));
+        if (tempStats.get(Stat.SPEED) != 0) lore.add(stat("Speed", ChatColor.GREEN, stats.get(Stat.SPEED), ' ', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.SPEED) : null)));
+        if (tempStats.get(Stat.INTELLIGENCE) != 0) lore.add(stat("Intelligence", ChatColor.GREEN, stats.get(Stat.INTELLIGENCE), ' ', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.INTELLIGENCE) : null)));
+        if (tempStats.get(Stat.MAGIC_FIND) != 0) lore.add(stat("Magic Find", ChatColor.GREEN, stats.get(Stat.MAGIC_FIND), ' ', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.MAGIC_FIND) : null)));
+        if (tempStats.get(Stat.PET_LUCK) != 0) lore.add(stat("Pet Luck", ChatColor.GREEN, stats.get(Stat.PET_LUCK), tag));
+        if (tempStats.get(Stat.TRUE_DEFENSE) != 0) lore.add(stat("True Defense", ChatColor.GREEN, stats.get(Stat.TRUE_DEFENSE), tag));
+        if (tempStats.get(Stat.FEROCITY) != 0) lore.add(stat("Ferocity", ChatColor.GREEN, stats.get(Stat.FEROCITY), ' ', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.FEROCITY) : null)));
+        if (tempStats.get(Stat.MINING_SPEED) != 0) lore.add(stat("Mining Speed", ChatColor.GREEN, stats.get(Stat.MINING_SPEED), ' ', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.MINING_SPEED) : null)));
+        if (tempStats.get(Stat.MINING_FORTUNE) != 0) lore.add(stat("Mining Fortune", ChatColor.GREEN, stats.get(Stat.MINING_FORTUNE), ' ', tag, 0, false,
+                (reforge != null ? reforge.getStats().get(Stat.MINING_FORTUNE) : null)));
+        if (tempStats.get(Stat.COMBAT_WISDOM) != 0) lore.add(stat("Combat Wisdom", ChatColor.GREEN, stats.get(Stat.COMBAT_WISDOM), tag));
+        if (tempStats.get(Stat.FARMING_WISDOM) != 0) lore.add(stat("Farming Wisdom", ChatColor.GREEN, stats.get(Stat.FARMING_WISDOM), tag));
+        if (tempStats.get(Stat.FORAGING_WISDOM) != 0) lore.add(stat("Foraging Wisdom", ChatColor.GREEN, stats.get(Stat.FORAGING_WISDOM), tag));
+        if (tempStats.get(Stat.FISHING_WISDOM) != 0) lore.add(stat("Fishing Wisdom", ChatColor.GREEN, stats.get(Stat.FISHING_WISDOM), tag));
+        if (tempStats.get(Stat.FISHING_SPEED) != 0) lore.add(stat("Fishing Speed", ChatColor.GREEN, stats.get(Stat.FISHING_SPEED), tag));
+        if (tempStats.get(Stat.VITALITY) != 0) lore.add(stat("Vitality", ChatColor.GREEN, stats.get(Stat.VITALITY), tag));
+        if (tempStats.get(Stat.MENDING) != 0) lore.add(stat("Mending", ChatColor.GREEN, stats.get(Stat.MENDING), tag));
 
         if (tag.getList("gemstone_slots", 10) != null && !tag.getList("gemstone_slots", 10).isEmpty()) {
             NBTTagList slots = tag.getList("gemstone_slots", 10);
@@ -418,15 +419,7 @@ public class ItemBuilder {
 
     private static String stat(String name, ChatColor color, double value, char ending, NBTTagCompound tag, int hotPotatoBooks, boolean artOfWar, ReforgeStat reforgeStat) {
         Rarity rarity = tag.getString("rarity").isEmpty() ? Rarity.COMMON : Rarity.valueOf(tag.getString("rarity"));
-        double rsv = reforgeStat == null ? 0 : switch (rarity) {
-            case COMMON -> reforgeStat.getCommon();
-            case UNCOMMON -> reforgeStat.getUncommon();
-            case RARE -> reforgeStat.getRare();
-            case EPIC -> reforgeStat.getEpic();
-            case LEGENDARY -> reforgeStat.getLegendary();
-            case MYTHIC -> reforgeStat.getMythic();
-            default -> 0;
-        };
+        double rsv = reforgeStat == null ? 0 : reforgeStat.at(rarity);
         double boost = tag.getString("dungeon_star").isEmpty() ? 0 : DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
         double val = value + hotPotatoBooks + (artOfWar ? 5 : 0) + rsv;
         double wb = val + (val * boost);

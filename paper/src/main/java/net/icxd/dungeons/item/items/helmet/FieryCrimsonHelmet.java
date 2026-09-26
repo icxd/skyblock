@@ -16,6 +16,8 @@ import org.bukkit.Material;
 import java.awt.*;
 import java.util.*;
 
+import static net.icxd.dungeons.stats.Stat.*;
+
 public class FieryCrimsonHelmet implements SkyBlockItem {
     @Override public Material material() { return Material.PLAYER_HEAD; }
     @Override public String skin() { return "ewogICJ0aW1lc3RhbXAiIDogMTY0NTUwNDM2NTM3OSwKICAicHJvZmlsZUlkIiA6ICI2OTBkMDM2OGM2NTE0OGM5ODZjMzEwN2FjMmRjNjFlYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ5emZyXzciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTFmMGM3YWZmZjE3ODI0NjVkOGNkYjVlYmEyNjFiNjU0MjNhN2EwNzEyZWUzYTRjNTcyYzMzZjk0YzY4YzU1IgogICAgfQogIH0KfQ=="; }
@@ -23,7 +25,7 @@ public class FieryCrimsonHelmet implements SkyBlockItem {
     @Override public SpecificItemType specificItemType() { return SpecificItemType.HELMET; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }
     @Override public Soulbound soulbound() { return Soulbound.COOP; }
-    @Override public Stats stats() { return new Stats(0, 0, 320, 100, 60, 30, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
+    @Override public Stats stats() { return new Stats().set(HEALTH, 320).set(DEFENSE, 100).set(STRENGTH, 60).set(INTELLIGENCE, 30).set(CRIT_DAMAGE, 40); }
     @Override public Requirements requirements() { return new Requirements(new SkillRequirement(Skill.COMBAT, 24)); }
     @Override public boolean canHaveAttributes() { return true; }
     @Override public UpgradeCosts upgradeCosts() { return new UpgradeCosts(new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 5000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 5600)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 6300)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 7000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 8000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 9000)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 10200)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 11500), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 3)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 13000), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 4)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 14500), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 5))); }

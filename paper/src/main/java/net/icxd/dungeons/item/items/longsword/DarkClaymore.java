@@ -17,13 +17,15 @@ import org.bukkit.Material;
 import java.awt.*;
 import java.util.*;
 
+import static net.icxd.dungeons.stats.Stat.*;
+
 public class DarkClaymore implements SkyBlockItem {
     @Override public Material material() { return Material.STONE_SWORD; }
     @Override public String name() { return "Dark Claymore"; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.LONGSWORD; }
     @Override public Rarity rarity() { return Rarity.LEGENDARY; }
     @Override public String description() { return "%%gray%%%%italic%%That thing was too big to be called a sword, it was more like a large hunk of stone."; }
-    @Override public Stats stats() { return new Stats(500, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
+    @Override public Stats stats() { return new Stats().set(DAMAGE, 500).set(STRENGTH, 100).set(CRIT_DAMAGE, 30); }
     @Override public double npcSellPrice() { return 0; }
     @Override public UpgradeCosts upgradeCosts() { return new UpgradeCosts(new UpgradeCost(new EssenceCost(EssenceType.WITHER, 150)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 300)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 500)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 900)), new UpgradeCost(new EssenceCost(EssenceType.WITHER, 1500))); }
     @Override public Requirements requirements() { return new Requirements(new DungeonTierRequirement(DungeonType.MASTER_CATACOMBS, 7)); }
