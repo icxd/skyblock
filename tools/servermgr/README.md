@@ -49,7 +49,9 @@ The network lives in `./network` unless you pass `--dir FOLDER` or set `SKYBLOCK
   `tools/items/build_items.py`), and dungeon servers its captured rooms
   (`plugins/dungeons/dungeon-rooms/rooms` → `rooms/`). They come from Hypixel, so they stay in that
   private repository rather than in this one or the plugin. `deploy` adds links that are missing, so
-  older servers get them too.
+  older servers get them too, and replaces ones that lead nowhere (say the data checkout moved); a
+  folder or link a server has of its own is left alone. `init` stores `--data` and `--repo` as
+  absolute paths, so a relative one like the quick start's works from anywhere.
 - **Per type**: dungeon servers get random ticks and mob spawning turned off on first start. Every
   server gets fixed time and weather and no advancement messages.
 - Downloads are checked against their published checksums and cached in `network/cache`.

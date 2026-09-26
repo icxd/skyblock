@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -36,14 +37,24 @@ func initNetwork(o InitOptions, progress func(string)) (*Network, error) {
 	if !o.AcceptEULA {
 		return nil, errors.New("the servers can't run without accepting the Minecraft EULA (https://aka.ms/MinecraftEULA)")
 	}
+	// Stored absolute, like dir: a path relative to where init ran means something else to later
+	// commands run elsewhere, and to a link, whose target counts from the link's own folder.
+	repo, err := absPath(o.Repo)
+	if err != nil {
+		return nil, err
+	}
+	data, err := absPath(o.DungeonData)
+	if err != nil {
+		return nil, err
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
 	n := &Network{
 		Dir:             dir,
 		Java:            o.Java,
-		Repo:            o.Repo,
-		DungeonData:     o.DungeonData,
+		Repo:            repo,
+		DungeonData:     data,
 		MongoURI:        o.MongoURI,
 		MongoDatabase:   o.MongoDatabase,
 		PaperVersion:    "26.2",
@@ -75,6 +86,14 @@ func initNetwork(o InitOptions, progress func(string)) (*Network, error) {
 	n.installProxyPlugin(progress)
 	progress("Proxy ready: Velocity " + n.VelocityVersion + " build " + strconv.Itoa(velocity.Build))
 	return n, n.save()
+}
+
+// absPath makes a configured path absolute, leaving "" (not configured) as it is.
+func absPath(p string) (string, error) {
+	if p == "" {
+		return "", nil
+	}
+	return filepath.Abs(p)
 }
 
 // writeProxyFiles writes velocity.toml (all of it only when fresh; otherwise just [servers]), the
@@ -513,16 +532,31 @@ func (n *Network) linkData(s *Server, progress func(string)) {
 }
 
 func (n *Network) linkDataDir(s *Server, name, link string, progress func(string)) {
-	target := filepath.Join(n.DungeonData, name)
+	// Absolute, because a link's target counts from the link's folder. (Older network.json files
+	// can hold the path as typed at init, relative to where servermgr runs.)
+	target, err := filepath.Abs(filepath.Join(n.DungeonData, name))
+	if err != nil {
+		progress("! " + err.Error())
+		return
+	}
 	if _, err := os.Stat(target); err != nil {
 		progress(fmt.Sprintf("! %s: the data folder has no %s/ yet", s.Name, name))
 		return
 	}
+	relinked := false
 	if _, err := os.Lstat(link); err == nil {
-		if resolved, err := filepath.EvalSymlinks(link); err != nil || !samePath(resolved, target) {
-			progress(fmt.Sprintf("! %s: %s is there already and isn't a link to %s; left as it is", s.Name, link, target))
+		if !danglingDataLink(link, name) {
+			if resolved, err := filepath.EvalSymlinks(link); err != nil || !samePath(resolved, target) {
+				progress(fmt.Sprintf("! %s: %s is there already and isn't a link to %s; left as it is", s.Name, link, target))
+			}
+			return
 		}
-		return
+		// Removing a link never touches what it pointed at.
+		if err := os.Remove(link); err != nil {
+			progress(fmt.Sprintf("! %s: couldn't replace %s, which leads nowhere: %v", s.Name, link, err))
+			return
+		}
+		relinked = true
 	}
 	if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
 		progress("! " + err.Error())
@@ -530,7 +564,21 @@ func (n *Network) linkDataDir(s *Server, name, link string, progress func(string
 	}
 	if err := linkDir(target, link); err != nil {
 		progress(fmt.Sprintf("! %s: couldn't link %s/: %v", s.Name, name, err))
+	} else if relinked {
+		progress(fmt.Sprintf("%s: relinked %s/, which led nowhere", s.Name, name))
 	}
+}
+
+// danglingDataLink: whether link is a link (or junction) to a missing folder called name, the way
+// servermgr makes them: one made from a relative data path, or to a data checkout that has moved.
+// A folder of the server's own, or a link to anything else, isn't.
+func danglingDataLink(link, name string) bool {
+	dest, err := os.Readlink(link)
+	if err != nil || filepath.Base(dest) != name {
+		return false
+	}
+	_, err = os.Stat(link)
+	return errors.Is(err, fs.ErrNotExist)
 }
 
 // samePath: whether two paths are the same folder, whatever links lead to them.

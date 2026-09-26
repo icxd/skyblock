@@ -65,3 +65,84 @@ func TestLinkData(t *testing.T) {
 		t.Error("hub03 got a link to nothing")
 	}
 }
+
+// The README's quick start runs init from the repository with --data ../skyblock-dungeon-data, and
+// older network.json files keep that relative path.
+func TestLinkDataRelativePath(t *testing.T) {
+	root := t.TempDir()
+	repo := filepath.Join(root, "skyblock")
+	data := filepath.Join(root, "skyblock-dungeon-data")
+	if err := os.MkdirAll(filepath.Join(data, "items"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(data, "items", "items.json"), []byte("[]"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(repo, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(repo)
+	n := &Network{Dir: filepath.Join(repo, "network"), DungeonData: "../skyblock-dungeon-data"}
+	var messages []string
+	progress := func(m string) { messages = append(messages, m) }
+	items := func(s *Server) string { return filepath.Join(n.serverDir(s), "plugins", "dungeons", "items") }
+	reachable := func(s *Server) bool {
+		_, err := os.Stat(filepath.Join(items(s), "items.json"))
+		return err == nil
+	}
+
+	hub := &Server{Name: "hub01", Type: "LOBBY"}
+	n.linkData(hub, progress)
+	if !reachable(hub) {
+		t.Errorf("hub01: items.json isn't there through the link (messages %v)", messages)
+	}
+
+	// Links left leading nowhere are servermgr's to replace: one made from the relative path as it
+	// used to be, and one to a data checkout that has since moved.
+	stale := map[*Server]string{
+		{Name: "hub02", Type: "LOBBY"}: filepath.Join(n.DungeonData, "items"),
+		{Name: "hub03", Type: "LOBBY"}: filepath.Join(root, "moved-away", "items"),
+	}
+	for s, dest := range stale {
+		if err := os.MkdirAll(filepath.Dir(items(s)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(dest, items(s)); err != nil {
+			t.Fatal(err)
+		}
+		messages = nil
+		n.linkData(s, progress)
+		if !reachable(s) {
+			t.Errorf("%s: the link to %s wasn't replaced (messages %v)", s.Name, dest, messages)
+		}
+		if len(messages) != 1 || !strings.Contains(messages[0], "relinked") {
+			t.Errorf("%s: want one message about relinking, got %v", s.Name, messages)
+		}
+	}
+
+	// Links of the user's own stay, even one that leads nowhere.
+	elsewhere := filepath.Join(root, "my-items")
+	if err := os.MkdirAll(elsewhere, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	own := map[*Server]string{
+		{Name: "hub04", Type: "LOBBY"}: elsewhere,
+		{Name: "hub05", Type: "LOBBY"}: filepath.Join(root, "unplugged-drive"),
+	}
+	for s, dest := range own {
+		if err := os.MkdirAll(filepath.Dir(items(s)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(dest, items(s)); err != nil {
+			t.Fatal(err)
+		}
+		messages = nil
+		n.linkData(s, progress)
+		if got, err := os.Readlink(items(s)); err != nil || got != dest {
+			t.Errorf("%s: its own link to %s became %q (%v)", s.Name, dest, got, err)
+		}
+		if len(messages) != 1 || !strings.Contains(messages[0], "isn't a link") {
+			t.Errorf("%s: want one warning about its own link, got %v", s.Name, messages)
+		}
+	}
+}
