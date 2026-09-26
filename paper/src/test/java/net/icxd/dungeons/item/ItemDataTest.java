@@ -48,7 +48,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -73,7 +72,7 @@ class ItemDataTest {
             "upgrade_costs":[[{"amount":10,"essence":"WITHER"}],[{"amount":20,"essence":"CRIMSON"},{"amount":1,"item":"TEST_GEM"}]]}""";
 
     @AfterEach
-    void javaItemsOnly() {
+    void noItems() {
         ItemRegistry.clearData();
     }
 
@@ -442,7 +441,7 @@ class ItemDataTest {
                 "&8This item can be reforged!",
                 "&8&l* &8Soulbound &8&l*",
                 "§9§lRARE WAND"), ItemBuilder.lore(staff, tag));
-        // The shortbow line is in the rarity's colour, as the Java Terminator's is, so recombobulating changes it.
+        // The shortbow line is in the rarity's colour, so recombobulating changes it.
         tag.setBoolean("recombobulated", true);
         assertTrue(ItemBuilder.lore(staff, tag).contains("§5Shortbow: Instantly shoots!"));
     }
@@ -484,22 +483,18 @@ class ItemDataTest {
         return lore.get(lore.size() - 1);
     }
 
-    /** The Java items win over data with their ids, and a second load replaces the first one's items. */
+    /** The registry holds just the file's items, and a second load replaces the first one's. */
     @Test
-    void registryKeepsJavaItems(@TempDir Path folder) throws IOException {
-        SkyBlockItem hyperion = ItemRegistry.get("HYPERION");
-        int javaItems = ItemRegistry.getRegistry().size();
+    void registryIsTheData(@TempDir Path folder) throws IOException {
         Path file = folder.resolve("items.json");
-        Files.writeString(file, "{\"format\":1,\"items\":{\"HYPERION\":{\"material\":\"STONE\",\"name\":\"Test Rock\"},"
-                + "\"TEST_ROCK\":{\"material\":\"STONE\",\"name\":\"Test Rock\"},\"NO_NAME\":{\"material\":\"STONE\"}}}");
+        Files.writeString(file, "{\"format\":1,\"items\":{\"TEST_ROCK\":{\"material\":\"STONE\",\"name\":\"Test Rock\"},"
+                + "\"TEST_STONE\":{\"material\":\"STONE\",\"name\":\"Test Stone\"},\"NO_NAME\":{\"material\":\"STONE\"}}}");
         ItemRegistry.LoadReport report = ItemRegistry.loadData(file);
         assertNull(report.failure());
-        assertEquals(1, report.loaded());
-        assertEquals(1, report.javaKept());
+        assertEquals(2, report.loaded());
         assertEquals(Map.of("name", 1), report.errorsByKind());
-        assertSame(hyperion, ItemRegistry.get("HYPERION"));
         assertInstanceOf(DataItem.class, ItemRegistry.get("test_rock"));
-        assertEquals(javaItems + 1, ItemRegistry.getRegistry().size());
+        assertEquals(List.of("TEST_ROCK", "TEST_STONE"), List.copyOf(ItemRegistry.getRegistry().keySet()));
 
         Files.writeString(file, "{\"format\":1,\"items\":{\"TEST_PEBBLE\":{\"material\":\"STONE\",\"name\":\"Test Pebble\"}}}");
         ItemRegistry.loadData(file);
@@ -508,31 +503,28 @@ class ItemDataTest {
 
         ItemRegistry.LoadReport missing = ItemRegistry.loadData(folder.resolve("none.json"));
         assertEquals("missing", missing.failure());
-        assertEquals(javaItems, ItemRegistry.getRegistry().size());
+        assertEquals(Map.of(), ItemRegistry.getRegistry());
     }
 
     /**
-     * The real items.json (-Ditems.file, else the private data repository next to this one), when it's
-     * here: it loads as a whole, and every item it has renders.
+     * The real items.json (see {@link GoldenItemsTest#itemsFile}), when it's here: it loads as a whole, and
+     * every item it has renders.
      */
     @Test
     void realFile() {
-        String property = System.getProperty("items.file");
-        Path repository = Path.of(System.getProperty("basedir", ".")).toAbsolutePath().normalize().getParent();
-        Path file = property != null ? Path.of(property) : repository.resolveSibling("skyblock-dungeon-data/items/items.json");
+        Path file = GoldenItemsTest.itemsFile();
         assumeTrue(Files.exists(file), "no " + file);
 
         ItemRegistry.LoadReport report = ItemRegistry.loadData(file);
         assertNull(report.failure(), "the file didn't load");
-        System.out.println(file + ": " + report.loaded() + " items loaded in " + report.millis() + " ms, " + report.javaKept()
-                + " kept as their Java items; " + report.errors().size() + " skipped " + report.errorsByKind() + "; "
+        System.out.println(file + ": " + report.loaded() + " items loaded in " + report.millis() + " ms; "
+                + report.errors().size() + " skipped " + report.errorsByKind() + "; "
                 + report.warnings().size() + " names dropped " + report.warningsByKind());
 
         long start = System.nanoTime();
         Map<String, List<String>> failures = new TreeMap<>();
         int rendered = 0;
         for (SkyBlockItem item : ItemRegistry.getRegistry().values()) {
-            if (!(item instanceof DataItem)) continue;
             try {
                 NBTTagCompound tag = fresh(item);
                 ItemBuilder.name(item, tag);

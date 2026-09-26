@@ -78,6 +78,8 @@ public class BlockListener implements Listener {
 
             if (minableBlock.drops() != null) {
                 for (Tuple<SkyBlockItem, Integer> drop : minableBlock.drops()) {
+                    // Null without the items' data.
+                    if (drop.first() == null) continue;
                     ItemStack stack = ItemBuilder.build(drop.first());
                     stack.setAmount(withFortune(drop.second(), fortune));
                     for (ItemStack left : player.getInventory().addItem(stack).values()) {

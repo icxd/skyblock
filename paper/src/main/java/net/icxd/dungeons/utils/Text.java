@@ -65,13 +65,6 @@ public final class Text {
         return (value < 0 ? "" : "+") + number(value);
     }
 
-    /** "3k", "100k", "1.5M": how Hypixel shortens big round numbers (a drill's fuel capacity). */
-    public static String compact(double value) {
-        if (Math.abs(value) >= 1_000_000) return number(value / 1_000_000) + "M";
-        if (Math.abs(value) >= 1_000) return number(value / 1_000) + "k";
-        return number(value);
-    }
-
     /** How wide the text is in the default font, in pixels (colour codes take none; bold adds one a letter). */
     public static int width(String text) {
         int width = 0;

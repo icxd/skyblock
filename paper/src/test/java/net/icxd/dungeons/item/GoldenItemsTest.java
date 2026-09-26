@@ -2,16 +2,14 @@ package net.icxd.dungeons.item;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
-import net.icxd.dungeons.item.data.DataItem;
+import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.gemstone.GemstoneSlot;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -23,6 +21,7 @@ import net.icxd.dungeons.item.requirement.skill.SkillRequirement;
 import net.icxd.dungeons.item.requirement.slayer.SlayerRequirement;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -34,43 +33,72 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Every item in {@link ItemRegistry} as it is today: all it says about itself, the data a new one
- * starts with, and its name and lore fresh, with 7 stars, with Sharpness V, recombobulated and (on
- * dungeon items) with two enchantments. Compared with src/test/resources/golden/items.json, so a
- * change that shows on any item fails here; {@code -Dgolden.update=true} writes the file anew.
+ * Every item in the real items.json as the plugin shows it: all it says about itself, the data a new one
+ * starts with, and its name and lore fresh, with 7 stars, with Sharpness V, recombobulated and (on dungeon
+ * items) with two enchantments. Compared with golden.json, so a change that shows on any item fails here;
+ * {@code -Dgolden.update=true} writes it anew. Both files are Hypixel's text, so they're in the private data
+ * repository (see {@link #itemsFile}, and -Ditems.golden for another golden); without them, this is skipped.
  */
 class GoldenItemsTest {
-    private static final Path GOLDEN = Path.of(System.getProperty("basedir", "."), "src/test/resources/golden/items.json");
     /** Data that's random on every new item. */
     private static final List<String> RANDOM = List.of("attribute_1", "attribute_1_level", "attribute_2", "attribute_2_level", "uuid");
 
+    @AfterEach
+    void noItems() {
+        ItemRegistry.clearData();
+    }
+
+    /** The private data repository's items.json: -Ditems.file, else the checkout next to this repository's. */
+    static Path itemsFile() {
+        String property = System.getProperty("items.file");
+        if (property != null) return Path.of(property);
+        Path repository = Path.of(System.getProperty("basedir", ".")).toAbsolutePath().normalize().getParent();
+        return repository.resolveSibling("skyblock-dungeon-data/items/items.json");
+    }
+
+    /** -Ditems.golden, else golden.json next to items.json. */
+    private static Path goldenFile() {
+        String property = System.getProperty("items.golden");
+        return property != null ? Path.of(property) : itemsFile().resolveSibling("golden.json");
+    }
+
     @Test
     void itemsAreUnchanged() throws IOException {
-        assertEquals(71, javaItems().size());
-        String actual = golden();
-        if (Boolean.getBoolean("golden.update")) {
-            Files.createDirectories(GOLDEN.getParent());
-            Files.writeString(GOLDEN, actual, StandardCharsets.UTF_8);
+        Path items = itemsFile(), golden = goldenFile();
+        boolean update = Boolean.getBoolean("golden.update");
+        assumeTrue(Files.exists(items), "no " + items);
+        assumeTrue(update || Files.exists(golden), "no " + golden + "; run with -Dgolden.update=true to write it");
+        assertNull(ItemRegistry.loadData(items).failure(), "the items didn't load");
+        String actual = golden(ItemRegistry.getRegistry());
+        if (update) {
+            Files.writeString(golden, actual, StandardCharsets.UTF_8);
             return;
         }
-        assertTrue(Files.exists(GOLDEN), GOLDEN + " is missing; run with -Dgolden.update=true to write it");
-        String expected = Files.readString(GOLDEN, StandardCharsets.UTF_8);
+        String expected = Files.readString(golden, StandardCharsets.UTF_8);
         if (expected.equals(actual)) return;
-        // The first line that differs, rather than the whole file.
+        // The first line that differs and whose item it is, rather than the whole file.
         String[] want = expected.split("\n", -1), got = actual.split("\n", -1);
         for (int i = 0; i < Math.max(want.length, got.length); i++) {
             String a = i < want.length ? want[i] : "<end>", b = i < got.length ? got[i] : "<end>";
-            if (!a.equals(b)) fail("items differ from " + GOLDEN + " at line " + (i + 1) + "\nexpected: " + a + "\nactual:   " + b);
+            if (a.equals(b)) continue;
+            String item = "?";
+            for (int j = Math.min(i, want.length - 1); j >= 0; j--) {
+                if (want[j].startsWith("  \"") && want[j].endsWith("{")) {
+                    item = want[j].trim();
+                    break;
+                }
+            }
+            fail("items differ from " + golden + " at line " + (i + 1) + ", in " + item + "\nexpected: " + a + "\nactual:   " + b);
         }
     }
 
-    static String golden() {
-        Map<String, SkyBlockItem> byId = javaItems();
+    private static String golden(Map<String, SkyBlockItem> items) {
+        Map<String, SkyBlockItem> byId = new TreeMap<>(items);
         JsonObject all = new JsonObject();
         for (SkyBlockItem item : byId.values()) {
             JsonObject entry = new JsonObject();
@@ -101,13 +129,6 @@ class GoldenItemsTest {
             all.add(item.id(), entry);
         }
         return new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeNulls().create().toJson(all) + "\n";
-    }
-
-    /** By id; without any items from data another test loaded. */
-    private static Map<String, SkyBlockItem> javaItems() {
-        Map<String, SkyBlockItem> items = new TreeMap<>(ItemRegistry.getRegistry());
-        items.values().removeIf(item -> item instanceof DataItem);
-        return items;
     }
 
     private static NBTTagCompound fresh(SkyBlockItem item) {
@@ -144,6 +165,8 @@ class GoldenItemsTest {
         o.addProperty("glowing", item.glowing());
         o.addProperty("specific_item_type", item.specificItemType().name());
         o.addProperty("generic_item_type", item.genericItemType() == null ? null : item.genericItemType().name());
+        o.addProperty("type_key", item.typeKey());
+        o.addProperty("type_label", item.typeLabel());
         o.add("categories", strings(item.categories()));
         o.addProperty("gear_score", item.gearScore());
         o.add("stats", stats(item.stats()));
@@ -161,7 +184,9 @@ class GoldenItemsTest {
             o.add("gemstone_slots", slots);
         }
         o.add("lore", strings(item.lore()));
-        o.add("ability", ability(item.ability()));
+        JsonArray blocks = new JsonArray();
+        for (ItemBlock block : item.blocks()) blocks.add(block(block));
+        o.add("blocks", blocks);
         o.addProperty("reforgeable", item.reforgeable());
         o.addProperty("soulbound", item.soulbound().name());
         if (item.requirements() == null) {
@@ -214,18 +239,20 @@ class GoldenItemsTest {
         return array;
     }
 
-    private static JsonElement ability(Ability ability) {
-        if (ability == null) return JsonNull.INSTANCE;
+    private static JsonObject block(ItemBlock block) {
         JsonObject o = new JsonObject();
-        o.addProperty("class", ability.getClass().getSimpleName());
-        o.addProperty("name", ability.getName());
-        o.addProperty("type", ability.getType().name());
-        o.addProperty("activation", ability.getActivation().name());
-        o.addProperty("description", ability.getDescription());
-        o.addProperty("cooldown", ability.getCooldown());
-        o.addProperty("mana_cost", ability.getManaCost());
-        o.addProperty("soulflow_cost", ability.getSoulflowCost());
-        o.addProperty("show_mana_cost", ability.isShowManaCost());
+        o.addProperty("kind", block.kind());
+        o.addProperty("name", block.name());
+        o.addProperty("header", block.header());
+        o.addProperty("activation", block.activation());
+        o.add("text", strings(block.text()));
+        o.addProperty("mana", block.mana());
+        o.addProperty("mana_percent", block.manaPercent());
+        o.addProperty("cooldown", block.cooldown());
+        o.addProperty("soulflow", block.soulflow());
+        o.addProperty("health_cost", block.healthCost());
+        o.addProperty("vitality", block.vitality());
+        o.addProperty("pieces", block.pieces());
         return o;
     }
 

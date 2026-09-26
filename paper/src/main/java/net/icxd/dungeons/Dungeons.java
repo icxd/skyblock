@@ -72,7 +72,7 @@ public class Dungeons extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
-        // Hypixel's items, as data kept out of this repository (servermgr links it in); without it, just the Java items.
+        // Hypixel's items, as data kept out of this repository (servermgr links it in); without it, there are no items.
         ItemRegistry.loadData(getDataFolder().toPath().resolve("items/items.json"));
 
         skyBlockServer = new SkyBlockServer(getConfig());
@@ -85,8 +85,6 @@ public class Dungeons extends JavaPlugin {
                     mongoClient.getDatabase(Settings.DATABASE).getCollection(Runs.COLLECTION), proxyLink);
             runManager.start();
         }
-
-        getLogger().info(ItemRegistry.getRegistry().size() + " SkyBlock items");
 
         // Each on its own, so one that fails doesn't take the rest with it.
         listen(PlayerListener.class, PlayerListener::new);

@@ -18,9 +18,12 @@ It turns every item Hypixel has (about 5,650) into one `items.json`, and writes 
 - **Where it goes, and why not here.** By default into `items/` of the private data repository's
   checkout, `skyblock-dungeon-data/`, next to this repository's. servermgr links that `items/` folder
   into every server as `plugins/dungeons/items`, and the plugin reads `items/items.json` from its data
-  folder when it starts (without it, only the Java items are there). The file is Hypixel's item text
+  folder when it starts (without it, there are no items). The file is Hypixel's item text
   and numbers, and this repository is public, so only the code and tables that make it are here.
-  Commit `items.json` and `report.md` in the private repository after reading the report.
+  The plugin's `GoldenItemsTest` compares every item as it renders with `items/golden.json` there, so
+  a rebuilt file fails it until that is written anew: run the plugin's tests with `-Dgolden.update=true`
+  (`-Ditems.file` and `-Ditems.golden` for other files) and read the golden's diff. Commit `items.json`,
+  `report.md` and `golden.json` together in the private repository after reading the report.
 - **Sources.** [Hypixel's items API](https://api.hypixel.net/v2/resources/skyblock/items) (no key)
   wins for the numbers: stats, costs, requirements, sell price, rarity, flags and material. NEU's
   in-game dumps give the text: the name, the dark gray lines under it, the item's own lines, and its
@@ -81,8 +84,7 @@ codes.
 
 - **NotEnoughUpdates-REPO** (`items/<ID>.json`, https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO):
   in-game dumps of every item's name and lore, including each enchanted book at each level. The
-  item text (gemstones, Crimson armor, the hand-written items) and the enchantment descriptions come
-  from here.
+  item text and the enchantment descriptions come from here.
 - **The recordings** (the private data repository): the items in a real inventory, and what they look
   like with reforges, enchantments, stars and gemstones. The layout rules in `ItemBuilder` were checked
   against these.

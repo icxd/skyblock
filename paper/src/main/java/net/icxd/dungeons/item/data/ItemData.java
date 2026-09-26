@@ -322,7 +322,7 @@ public final class ItemData {
                 return new HeartOfTheMountainRequirement(need(json.tier(), "Heart of the Mountain tier"));
             }
             case "KUUDRA_COMPLETION" -> {
-                // The API calls the basic tier NONE; the game says "Kuudra Basic Tier Completion" (see CrimsonArmor).
+                // The API calls the basic tier NONE; the game says "Kuudra Basic Tier Completion".
                 String name = need(json.kuudraTier(), "Kuudra tier");
                 KuudraTier tier = name.equals("NONE") ? KuudraTier.BASIC : named(KuudraTier.class, name);
                 if (tier != null) return new KuudraTierRequirement(tier);
