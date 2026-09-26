@@ -9,6 +9,7 @@ import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
+import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.gemstone.GemstoneSlot;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -207,7 +208,8 @@ class GoldenItemsTest {
         o.addProperty("dungeon_item", item.dungeonItem());
         o.addProperty("unstackable", item.unstackable());
         o.addProperty("npc_sell_price", item.npcSellPrice());
-        o.add("nbt_keys", item.nbt() == null ? JsonNull.INSTANCE : strings(item.nbt().keySet()));
+        NBTTagCompound nbt = ItemBehaviours.of(item).nbt(item);
+        o.add("nbt_keys", nbt == null ? JsonNull.INSTANCE : strings(nbt.keySet()));
         o.addProperty("ownable", item.isOwnable());
         return o;
     }

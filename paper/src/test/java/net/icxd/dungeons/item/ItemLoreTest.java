@@ -5,13 +5,19 @@ import net.icxd.dungeons.item.data.ItemData;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * How item names and lore are laid out, as Hypixel lays them out, on made-up items (Hypixel's text stays
@@ -36,6 +42,16 @@ class ItemLoreTest {
     private static final DataItem HELMET = item("""
             "TEST_HELMET":{"material":"IRON_HELMET","name":"Test Helmet","rarity":"LEGENDARY","stats":{"DEFENSE":100},\
             "type":"HELMET","upgrade_costs":[@,@,@,@,@,@,@,@,@,@]}""".replace("@", STAR));
+
+    /** A Necron's blade (see ItemBehaviours): its id is what gives it the scrolls. */
+    private static final String BLADE = """
+            "NECRON_BLADE":{"dungeon_item":true,"lore":["&7A blade for tests.","","&eRight-click to use your class ability!"],\
+            "material":"IRON_SWORD","name":"Test Blade","rarity":"LEGENDARY","reforgeable":true,"stats":{"DAMAGE":100},"type":"SWORD"}""";
+
+    @AfterEach
+    void noItems() {
+        ItemRegistry.clearData();
+    }
 
     private static DataItem item(String json) {
         try {
@@ -157,6 +173,77 @@ class ItemLoreTest {
         tag.setString("rarity", "MYTHIC");
         tag.setBoolean("recombobulated", true);
         assertEquals(Rarity.MYTHIC, ItemBuilder.rarity(DUNGEON_SWORD, tag));
+    }
+
+    /** A scroll's item, whose ability block is what a blade with the scroll gets. */
+    private static String scroll(String id, String ability, int mana) {
+        return "\"" + id + "\":{\"abilities\":[{\"activation\":\"RIGHT_CLICK\",\"cooldown\":10,\"header\":\"&6Ability: " + ability
+                + "  &e&lRIGHT CLICK\",\"kind\":\"ABILITY\",\"mana\":" + mana + ",\"name\":\"" + ability + "\",\"text\":[\"&7" + ability
+                + " for tests.\"]}],\"lore\":[\"&7A scroll for tests.\"],\"material\":\"PAPER\",\"name\":\"" + ability + " Scroll\"}";
+    }
+
+    /** The lore under the blade's own text, which it always starts with. */
+    private static List<String> afterText(SkyBlockItem blade, boolean implosion, boolean shield, boolean warp) {
+        NBTTagCompound tag = data(blade);
+        tag.setBoolean("implosion", implosion);
+        tag.setBoolean("wither_shield", shield);
+        tag.setBoolean("shadow_warp", warp);
+        List<String> lore = ItemBuilder.lore(blade, tag);
+        assertEquals(List.of("&7Damage: &c+100 &8(+110)", "", "&7A blade for tests."), lore.subList(0, 3));
+        return new ArrayList<>(lore.subList(3, lore.size()));
+    }
+
+    /**
+     * A Necron's blade's scrolls are its abilities, each as its scroll's item shows it, always in the order
+     * Implosion, Wither Shield, Shadow Warp; all three make Wither Impact. The class ability line goes once
+     * it has any.
+     */
+    @Test
+    void necronsBladeScrolls(@TempDir Path folder) throws IOException {
+        Path file = folder.resolve("items.json");
+        Files.writeString(file, "{\"format\":1,\"items\":{" + String.join(",", BLADE, scroll("IMPLOSION_SCROLL", "Test Burst", 300),
+                scroll("WITHER_SHIELD_SCROLL", "Test Guard", 150), scroll("SHADOW_WARP_SCROLL", "Test Warp", 300)) + "}}");
+        ItemRegistry.loadData(file);
+        SkyBlockItem blade = ItemRegistry.get("NECRON_BLADE");
+
+        NBTTagCompound fresh = ItemBuilder.newData(blade);
+        assertEquals(List.of("0b", "0b", "0b"), List.of(fresh.get("implosion").toString(), fresh.get("wither_shield").toString(),
+                fresh.get("shadow_warp").toString()));
+        String rarity = "§6§lLEGENDARY DUNGEON SWORD";
+        assertEquals(List.of("", "&eRight-click to use your class ability!", "", "&8This item can be reforged!", rarity),
+                afterText(blade, false, false, false));
+        assertEquals(List.of(
+                "",
+                "&6Ability: Test Burst  &e&lRIGHT CLICK",
+                "&7Test Burst for tests.",
+                "&8Mana Cost: &b300✎",
+                "&8Cooldown: &a10s",
+                "",
+                "&6Ability: Test Warp  &e&lRIGHT CLICK",
+                "&7Test Warp for tests.",
+                "&8Mana Cost: &b300✎",
+                "&8Cooldown: &a10s",
+                "",
+                "&8This item can be reforged!",
+                rarity), afterText(blade, true, false, true));
+        assertEquals(List.of(
+                "",
+                "&6Ability: Test Guard  &e&lRIGHT CLICK",
+                "&7Test Guard for tests.",
+                "&8Mana Cost: &b150✎",
+                "&8Cooldown: &a10s",
+                "",
+                "&6Ability: Test Warp  &e&lRIGHT CLICK",
+                "&7Test Warp for tests.",
+                "&8Mana Cost: &b300✎",
+                "&8Cooldown: &a10s",
+                "",
+                "&8This item can be reforged!",
+                rarity), afterText(blade, false, true, true));
+        List<String> impact = afterText(blade, true, true, true);
+        assertEquals(List.of("", "&6Ability: Wither Impact  &e&lRIGHT CLICK"), impact.subList(0, 2));
+        assertEquals(List.of("&8Mana Cost: &b300✎", "", "&8This item can be reforged!", rarity), impact.subList(impact.size() - 4, impact.size()));
+        assertTrue(impact.stream().noneMatch(line -> line.contains("Test") || line.contains("class ability")), () -> "" + impact);
     }
 
     @Test

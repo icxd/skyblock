@@ -1,6 +1,7 @@
 package net.icxd.dungeons.item;
 
 import net.icxd.dungeons.crimsonisle.kuudra.KuudraTier;
+import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
@@ -122,7 +123,7 @@ class ItemDataTest {
         assertEquals(0.25, item.shotCooldown());
         assertEquals(List.of("&7A sword for tests.", "", "&7More about it."), item.lore());
         assertNull(item.ability());
-        assertNull(item.nbt());
+        assertNull(ItemBehaviours.of(item).nbt(item));
         assertTrue(item.isOwnable());
 
         List<GemstoneSlot> slots = item.gemstoneSlots().getSlots();

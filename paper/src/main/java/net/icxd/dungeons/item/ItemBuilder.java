@@ -9,6 +9,8 @@ import net.icxd.dungeons.attributes.Attribute;
 import net.icxd.dungeons.dungeons.DungeonLevels;
 import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.ability.AbilityActivation;
+import net.icxd.dungeons.item.behaviour.ItemBehaviour;
+import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
@@ -56,8 +58,8 @@ import java.util.UUID;
  *   <li>gemstone slots</li>
  *   <li>enchantments: with descriptions when there are up to 5 (and it isn't a dungeon item), one
  *       a line up to 9, else three a line</li>
- *   <li>attributes, the item's own text, rune, ability (or a data item's abilities and bonuses), then text
- *       from the item's data</li>
+ *   <li>attributes, the item's own text, rune, then its abilities and bonuses (text and abilities as its
+ *       {@link ItemBehaviour} has them with the item's data)</li>
  *   <li>"This item can be reforged!", requirements the owner doesn't meet, soulbound, rarity line</li>
  * </ol>
  * Every line is one {@code &}-coded string turned into a component (see {@link Text#line}).
@@ -137,8 +139,8 @@ public final class ItemBuilder {
     }
 
     /**
-     * What every new item starts with, plus the item's own {@link SkyBlockItem#nbt()}. Its rarity and
-     * soulbound are written as they always were, but what shows is the item's own (see {@link #rarity}).
+     * What every new item starts with, plus what its behaviour adds (see {@link ItemBehaviour#nbt}). Its rarity
+     * and soulbound are written as they always were, but what shows is the item's own (see {@link #rarity}).
      */
     static NBTTagCompound newData(SkyBlockItem item) {
         NBTTagCompound tag = new NBTTagCompound();
@@ -170,8 +172,9 @@ public final class ItemBuilder {
         tag.set("gemstone_slots", new NBTTagList());
         tag.set("enchantments", new NBTTagList());
         tag.setInt("upgrade_count", 0);
-        if (item.nbt() != null) {
-            for (String key : item.nbt().keySet()) tag.set(key, item.nbt().get(key));
+        NBTTagCompound extra = ItemBehaviours.of(item).nbt(item);
+        if (extra != null) {
+            for (String key : extra.keySet()) tag.set(key, extra.get(key));
         }
         if (item.unstackable()) tag.setString("uuid", UUID.randomUUID().toString());
         return tag;
@@ -258,12 +261,11 @@ public final class ItemBuilder {
 
         sections.add(enchantmentLines(item, tag));
         sections.add(attributeLines(tag, owner));
-        sections.add(item.lore());
+        ItemBehaviour behaviour = ItemBehaviours.of(item);
+        sections.add(behaviour.lore(item, tag, item.lore()));
         sections.add(runeLines(tag));
         if (item.ability() != null) sections.add(abilityLore(item.ability(), rarity));
-        for (ItemBlock block : item.blocks()) sections.add(blockLore(block, rarity));
-        List<String> fromData = item.nbtLore(tag);
-        if (fromData != null) sections.add(fromData);
+        for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(block, rarity));
 
         List<String> lore = new ArrayList<>();
         for (List<String> section : sections) {

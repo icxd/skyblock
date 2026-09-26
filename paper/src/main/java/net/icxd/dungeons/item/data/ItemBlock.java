@@ -17,4 +17,9 @@ public record ItemBlock(String kind, String name, String header, String activati
     public ItemBlock {
         text = text == null ? List.of() : List.copyOf(text);
     }
+
+    /** An ability, used on a click or passive (not a bonus). */
+    public boolean isAbility() {
+        return "ABILITY".equals(kind);
+    }
 }

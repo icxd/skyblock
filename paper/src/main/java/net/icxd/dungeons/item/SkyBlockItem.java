@@ -8,7 +8,6 @@ import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.Soulbound;
 import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.item.gemstone.GemstoneSlots;
-import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.requirement.Requirements;
 import net.icxd.dungeons.stats.Stats;
 import org.bukkit.Color;
@@ -57,8 +56,6 @@ public interface SkyBlockItem {
     default Ability ability() { return null; }
     /** Abilities and bonuses from data, shown where {@link #ability()} is; Java items use ability(). */
     default List<ItemBlock> blocks() { return List.of(); }
-    /** More text that depends on the item's data (drill parts, scroll abilities); null for none. */
-    default List<String> nbtLore(NBTTagCompound tag) { return null; }
 
     /** "This item can be reforged!" while it has no reforge. Weapons, armor, tools and equipment can. */
     default boolean reforgeable() {
@@ -88,9 +85,6 @@ public interface SkyBlockItem {
     default boolean dungeonItem() { return false; }
     default boolean unstackable() { return false; }
     default double npcSellPrice() { return 0; }
-
-    /** Data a new item of this kind starts with, besides what every item has. */
-    default NBTTagCompound nbt() { return null; }
 
     default boolean isOwnable() { return requirements() != null; }
 }
