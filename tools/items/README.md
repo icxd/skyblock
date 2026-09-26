@@ -10,6 +10,7 @@ git clone --depth 1 https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO /t
 python3 tools/items/build_items.py --neu /tmp/neu                          # fetches the items API
 python3 tools/items/build_items.py --api items.json --neu /tmp/neu --out DIR   # a saved response, elsewhere
 python3 tools/items/check_items.py [DIR/items.json]                        # checks the file against format 1
+python3 tools/items/test_build_items.py                                    # the lore parser's tests
 ```
 
 It turns every item Hypixel has (about 5,650) into one `items.json`, and writes `report.md` next to it.
@@ -28,8 +29,17 @@ It turns every item Hypixel has (about 5,650) into one `items.json`, and writes 
   can be reforged!". An item NEU has no dump of gets the API's description, wrapped the way `Text.wrap`
   does it. `source` in the file records the API's `lastUpdated` and the NEU commit.
 - **What the plugin writes itself is left out**: stat lines, the gemstone line, cost lines under a
-  block, the reforge note, requirements, soulbound and the rarity line. So are lines that change with
-  the item or its owner; the report lists which items have them.
+  block, the reforge note, requirements, soulbound and the rarity line (a stat line or cost the format
+  has no number or field for stays a line of text).
+- **So is what belongs to the one copy NEU captured**: the lines naming its owner (Purchased by, Earned
+  by, Player:, Awarded to, Found by, Discoverer, Hunter, a gift's To and From, with the rest of their
+  section, such as Position and Score) and the copy's auction, bid and edition number and date. The
+  plugin doesn't write these yet; the report lists the items (`owner_text`).
+- **Also left out, and not written by the plugin yet**: "Works while in Accessory Bag!", the
+  Rift-Transferable line, Accessory Power and the capture menu's "Right-click to view recipes!"; the
+  report counts them.
+- **Kept as captured**: lines whose values change with the item's state (counters, progress, minion
+  stats) show the state NEU caught; the report lists them (`dynamic_text`).
 - **Tables** (`data/`): `materials.tsv` turns Hypixel's 1.8 material and data value into the 26.2
   material (rows marked `vanilla` come from vanilla's own ItemIdFix and ItemStackTheFlatteningFix, the
   rest were done by hand and checked against the item ids Hypixel sends today, in NEU's

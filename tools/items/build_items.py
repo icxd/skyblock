@@ -345,7 +345,15 @@ FOOTER_DROPPED = {'§8Works while in Accessory Bag!': 'Works while in Accessory 
 RIFT_RE = re.compile(r'Rift-Transferable')
 # How the capture's menu showed the item, not the item's own text.
 MENU_LINES = {'§eRight-click to view recipes!'}
-# Values that change with the item's state or its owner; the plugin writes these with code (nbtLore).
+# Who NEU's captured copy belongs to: its buyer, who earned, found or was awarded it, a gift's To and From. Every copy
+# made from the data would name that player, so the section these lines are in is left out (owner_text in the report).
+OWNER_RE = re.compile(r'^§7(?:§7)?(?:Purchased (?:by?|for):|Earned by\b|Player:|Awarded [Tt]o:|Found by:|To:|From:'
+                      r'|Discoverer:|Hunter:)')
+# That copy's auction, bid and edition number and its date, which Hypixel puts in a section of their own.
+MONTH = '(?:January|February|March|April|May|June|July|August|September|October|November|December)'
+PROVENANCE_RE = re.compile(r'^§8(?:Auction #|Bid #|Edition\b|' + MONTH + r'(?: \d{1,2}(?:st|nd|rd|th)?,?)? \d{4}$)')
+# Values that change with the item's state (counters, progress, minion stats). They stay as captured, a state the
+# item can be in, and the report lists them (dynamic_text): nothing in the plugin writes them yet.
 DYNAMIC_RES = [re.compile(p) for p in [
     r'§8/', r'\b\d[\d,]*/\d[\d,]*\b(?!\))', r'Not Installed', r'Your kills', r'Earned by', r'Purchased (by|for)',
     r'^§7Player:', r'^§7Charge:', r'^§7Fuel:', r'Time Between Actions', r'Max Storage', r'Resources Generated',
@@ -509,6 +517,15 @@ def parse_lore(lore):
                 # a reforge's, potato books' or gemstones' bracket: NEU captured a changed item, not a new one
                 if BONUS_BRACKET.search(line):
                     flag('modified_capture', line[:60])
+
+    # the captured copy's owner and provenance: not the item's text, nor its block's (Wizard Wand's come after its ability)
+    kept = []
+    for section in sections:
+        if any(OWNER_RE.match(line) for line in section) or all(PROVENANCE_RE.match(line) for line in section):
+            flag('owner_text', section[0][:60])
+        else:
+            kept.append(section)
+    sections = kept
 
     # A block that follows text without a blank line (Skeleton Master armor) is still a block; the plugin will
     # put the blank line in.
@@ -1020,11 +1037,16 @@ def report(b, items, source, total, glyph_rows):
         lines += ['None.']
     lines += ['', '### Lore issues (items per kind)', '',
               'manual: the text can\'t be laid out as Hypixel has it without a person; dynamic: lines with values that change '
-              'with the item or its owner; note: only informational.', '',
+              'with the item\'s state, kept as captured; note: only informational. owner_text is a note: the lines naming '
+              'the captured copy\'s owner, and its auction, edition and date, are left out (code could write them).', '',
               '| kind | class | items | examples |', '|---|---|---:|---|']
     for kind, ids in sorted(b.issue_items.items(), key=lambda kv: -len(kv[1])):
         cls = 'manual' if kind in MANUAL_KINDS else 'dynamic' if kind in DYNAMIC_KINDS else 'note'
         lines.append(f'| {kind} | {cls} | {len(ids)} | {examples(ids)} |')
+    if b.issue_items.get('owner_text'):
+        # all of them: code that writes these lines from the item's owner needs to know which items had them
+        lines += ['', 'Items whose captured owner or provenance was left out (owner_text): '
+                  + ', '.join(sorted(b.issue_items['owner_text'])) + '.']
     if b.headers:
         lines += ['', 'Headers that look like a block\'s but aren\'t one the format knows (kept as text): '
                   + ', '.join(f'"{h}" ({len(ids)})' for h, ids in sorted(b.headers.items(), key=lambda kv: -len(kv[1]))) + '.']
