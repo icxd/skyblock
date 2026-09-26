@@ -97,6 +97,7 @@ public final class SkyBlockProxy {
         register("pc", new PartyCommand.ChatCommand(parties), "pchat");
         register("pl", new PartyCommand.ListCommand(parties));
         register("joininstance", new JoinInstanceCommand(queue), "joindungeon");
+        register("instancerequeue", new JoinInstanceCommand.Requeue(queue));
         logger.info("SkyBlock proxy plugin enabled with {} backend servers", proxy.getAllServers().size());
     }
 

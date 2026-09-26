@@ -133,10 +133,11 @@ public final class Transfers {
         };
     }
 
-    /** To the emptiest server of a type (not the one they're on). */
+    /** To the emptiest server of a type (not the one they're on); a hub if it's the Dungeon Hub and there's none. */
     public CompletableFuture<Boolean> sendTo(Player player, ServerType type) {
         RegisteredServer here = player.getCurrentServer().map(ServerConnection::getServer).orElse(null);
         Optional<RegisteredServer> target = directory.leastLoaded(type, here);
+        if (target.isEmpty() && type == ServerType.DUNGEON_HUB) target = directory.leastLoaded(ServerType.LOBBY, here);
         if (target.isEmpty()) {
             Chat.send(player, "§cThere's no " + type.getDisplayName() + " server to send you to right now.");
             return CompletableFuture.completedFuture(false);
@@ -144,7 +145,7 @@ public final class Transfers {
         return connect(player, target.get());
     }
 
-    /** A server's SEND request: a server type ({@code LOBBY}) or {@code server:NAME}. */
+    /** A server's SEND request: a server type ({@code LOBBY}, {@code DUNGEON_HUB}) or {@code server:NAME}. */
     void sendRequested(ServerConnection from, String destination) {
         Player player = from.getPlayer();
         if (destination.startsWith("server:")) {

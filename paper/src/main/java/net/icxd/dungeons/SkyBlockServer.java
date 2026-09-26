@@ -36,8 +36,8 @@ public class SkyBlockServer {
         return only == null || serverType == ServerType.NONE || List.of(only.value()).contains(serverType);
     }
 
-    /** Areas with regions (the hub, the mines, ...); dungeons have rooms instead. */
+    /** Areas with regions (the hub, the mines, ...); dungeons have rooms instead, and the Dungeon Hub is one area. */
     public boolean hasRegions() {
-        return serverType != ServerType.DUNGEONS;
+        return serverType != ServerType.DUNGEONS && serverType != ServerType.DUNGEON_HUB;
     }
 }

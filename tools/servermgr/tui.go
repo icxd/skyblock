@@ -545,7 +545,7 @@ func (m *model) startCreateForm() {
 	start := true
 	var options []huh.Option[string]
 	for _, t := range serverTypes {
-		label := map[string]string{"LOBBY": "LOBBY: the hub", "DUNGEONS": "DUNGEONS: dungeon runs", "CRIMSON_ISLE": "CRIMSON_ISLE",
+		label := map[string]string{"LOBBY": "LOBBY: the hub", "DUNGEON_HUB": "DUNGEON_HUB: where runs end", "DUNGEONS": "DUNGEONS: dungeon runs", "CRIMSON_ISLE": "CRIMSON_ISLE",
 			"DWARVEN_MINES": "DWARVEN_MINES", "NONE": "NONE: development, runs everything"}[t]
 		options = append(options, huh.NewOption(label, t))
 	}

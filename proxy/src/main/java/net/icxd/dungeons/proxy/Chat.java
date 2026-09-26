@@ -13,6 +13,8 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 public final class Chat {
     /** The blue rule above and below party messages. */
     public static final String RULE = "§9§m-----------------------------------------------------";
+    /** The shorter one around "X entered The Catacombs, Entrance!". */
+    public static final String SHORT_RULE = "§9§m-----------------------------";
 
     private Chat() {
     }
@@ -36,9 +38,13 @@ public final class Chat {
 
     /** Between two rules, one line each. */
     public static Component framed(Component... lines) {
+        return between(RULE, lines);
+    }
+
+    public static Component between(String rule, Component... lines) {
         List<Component> all = new ArrayList<>(List.of(lines));
-        all.add(0, text(RULE));
-        all.add(text(RULE));
+        all.add(0, text(rule));
+        all.add(text(rule));
         return Component.join(JoinConfiguration.newlines(), all);
     }
 

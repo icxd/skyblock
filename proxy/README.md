@@ -11,7 +11,8 @@ The Velocity side of the network. `target/skyblock-proxy-1.0-SNAPSHOT.jar` goes 
   old server takes the data back and the player carries on there.
 - **Routing.** New players go to the emptiest hub (`LOBBY` server). Players kicked from a server
   (it stopped or crashed) go to another hub. Players who drop out of a dungeon run and log back in
-  go back into it.
+  go back into it. Finished runs send their players to the Dungeon Hub (`DUNGEON_HUB` server), or a
+  hub if there's none.
 - **Parties**, as on Hypixel (below). They live on the proxy and follow players between servers;
   a proxy restart clears them.
 - **Dungeons.** `/joininstance` sends a party to the dungeon server with the fewest runs. That
@@ -28,6 +29,7 @@ The Velocity side of the network. `target/skyblock-proxy-1.0-SNAPSHOT.jar` goes 
 | `/party <player>...` (`/p`) | invite; also `accept`, `leave`, `list`, `kick`, `kickoffline`, `disband`, `transfer`, `promote`, `demote`, `warp`, `chat`, `settings allinvite`, `help` |
 | `/pc <message>`, `/pl` | party chat, party list |
 | `/joininstance <floor>` (`/joindungeon`) | `CATACOMBS_FLOOR_SEVEN` and the like, or `E`, `F1`-`F7`, `M1`-`M7` |
+| `/instancerequeue` | the floor of your last run again (the "Click HERE to re-queue" at the end of one) |
 
 Party rules: invites last 60 seconds; the leader can promote moderators, who may invite and kick
 members; `settings allinvite` lets everyone invite. A member who disconnects has 5 minutes to come
@@ -55,7 +57,7 @@ online, and only the leader can start one.
 - **Proxy and servers talk** over the `skyblock:main` plugin-message channel, through a player's
   connection (`common/.../ProxyMessage.java`): `HANDOFF` / `HANDED_OFF` before a move, `RECLAIM`
   after a failed one, and `SEND` for a server to ask the proxy to move someone (a server type
-  like `LOBBY`, or `server:NAME`). The proxy drops anything a client sends on the channel.
+  like `DUNGEON_HUB`, or `server:NAME`). The proxy drops anything a client sends on the channel.
 - **Dungeon runs** are documents in the `runs` collection (`common/.../Runs.java`). The proxy writes
   one (floor, leader, members, server) and sends the party. The dungeon server picks it up and marks
   it `running` once the floor is pasted, then `ended` a minute after everyone has left.

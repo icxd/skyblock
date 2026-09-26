@@ -54,7 +54,7 @@ The network lives in `./network` unless you pass `--dir FOLDER` or set `SKYBLOCK
 | | |
 |---|---|
 | `init` | new network with its proxy (`--java --repo --data --mongo --database --port --accept-eula`) |
-| `create NAME --type TYPE` | add a Paper server (`--memory 2G`, `--start`); types: LOBBY, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES, NONE |
+| `create NAME --type TYPE` | add a Paper server (`--memory 2G`, `--start`); types: LOBBY, DUNGEON_HUB, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES, NONE |
 | `remove NAME` | take a stopped server off the network (`--keep-files` keeps its folder) |
 | `start / stop / restart [NAME\|all]` | servers start in parallel and the proxy last; stopping does the proxy first |
 | `kill NAME` | end it now |

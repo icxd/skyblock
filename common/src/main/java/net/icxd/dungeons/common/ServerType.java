@@ -6,6 +6,8 @@ package net.icxd.dungeons.common;
  */
 public enum ServerType {
     LOBBY("Hub"),
+    /** Where players go after a dungeon run; falls back to a hub when there's none. */
+    DUNGEON_HUB("Dungeon Hub"),
     /** Dungeon runs. */
     DUNGEONS("The Catacombs"),
     CRIMSON_ISLE("Crimson Isle"),

@@ -111,7 +111,7 @@ public class TabList {
     private static Line[] lines(Player viewer, Collection<? extends Player> online) {
         User user = User.getUser(viewer.getUniqueId());
         ServerType type = Dungeons.getSkyBlockServer().getServerType();
-        boolean hub = type == ServerType.LOBBY || type == ServerType.NONE;
+        boolean hub = type == ServerType.LOBBY || type == ServerType.DUNGEON_HUB || type == ServerType.NONE;
         List<Line> lines = new ArrayList<>(SLOTS);
 
         // Column 1: players.
@@ -140,7 +140,9 @@ public class TabList {
         lines.add(new Line("      §3§lServer Info     ", DARK_AQUA));
         if (hub) {
             Region region = Region.regionCache.get(viewer.getUniqueId());
-            lines.add(new Line("§b§lArea: §7" + (region != null ? region.getType() : RegionType.getRegionType(viewer.getLocation())).getName(), GRAY));
+            String area = type == ServerType.DUNGEON_HUB ? type.getDisplayName()
+                    : (region != null ? region.getType() : RegionType.getRegionType(viewer.getLocation())).getName();
+            lines.add(new Line("§b§lArea: §7" + area, GRAY));
             lines.add(new Line("§f Server: §8" + Dungeons.getSkyBlockServer().getName(), GRAY));
             lines.add(new Line("§f Gems: §a" + user.getGems(), GRAY));
             lines.add(new Line("§3§l§6", GRAY));

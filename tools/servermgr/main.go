@@ -27,7 +27,7 @@ Commands:
   init                       set up a new network with its proxy (asks for anything not given)
       --java PATH --repo PATH --data PATH --mongo URI --database NAME --port N --accept-eula
   create NAME --type TYPE    add a Paper server behind the proxy
-      --memory 2G --start    types: LOBBY, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES, NONE
+      --memory 2G --start    types: LOBBY, DUNGEON_HUB, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES, NONE
   remove NAME [--keep-files] take a (stopped) server off the network
   start|stop|restart [NAME|all]
   kill NAME                  end a server right away
@@ -197,7 +197,7 @@ func cmdInit(dir string, args []string) error {
 
 func cmdCreate(n *Network, args []string) error {
 	fs := flag.NewFlagSet("create", flag.ExitOnError)
-	typ := fs.String("type", "", "LOBBY, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES or NONE")
+	typ := fs.String("type", "", "LOBBY, DUNGEON_HUB, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES or NONE")
 	memory := fs.String("memory", "2G", "heap size")
 	start := fs.Bool("start", false, "start it once it's created")
 	name, rest := firstArg(args)

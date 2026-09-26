@@ -63,6 +63,10 @@ public class ScoreboardRunnable implements Runnable {
         lines.add("&0");
         if (server.getServerType() == ServerType.DUNGEONS) {
             lines.add("&7 \u23e3 &c" + server.getServerType().getDisplayName());
+        } else if (server.getServerType() == ServerType.DUNGEON_HUB) {
+            lines.add("&fEarly Summer 23rd");
+            lines.add("&e \u2600 &79:30am");
+            lines.add("&7 \u23e3 &c" + server.getServerType().getDisplayName());
         } else {
             lines.add("&fEarly Summer 23rd");
             lines.add("&e \u2600 &79:30am");

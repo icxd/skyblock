@@ -13,7 +13,7 @@ import (
 )
 
 // Server types, as the Paper plugin's config.yml calls them (common/ServerType.java).
-var serverTypes = []string{"LOBBY", "DUNGEONS", "CRIMSON_ISLE", "DWARVEN_MINES", "NONE"}
+var serverTypes = []string{"LOBBY", "DUNGEON_HUB", "DUNGEONS", "CRIMSON_ISLE", "DWARVEN_MINES", "NONE"}
 
 const (
 	configFile       = "network.json"

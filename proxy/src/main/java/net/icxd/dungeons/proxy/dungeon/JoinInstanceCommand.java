@@ -48,4 +48,19 @@ public final class JoinInstanceCommand implements SimpleCommand {
                 .filter(n -> n.startsWith(typed))
                 .toList();
     }
+
+    /** {@code /instancerequeue}: the "Click HERE to re-queue" at the end of a run. */
+    public static final class Requeue implements SimpleCommand {
+        private final DungeonQueue queue;
+
+        public Requeue(DungeonQueue queue) {
+            this.queue = queue;
+        }
+
+        @Override
+        public void execute(Invocation invocation) {
+            if (invocation.source() instanceof Player player) queue.requeue(player);
+            else Chat.send(invocation.source(), "§cOnly players can enter dungeons.");
+        }
+    }
 }

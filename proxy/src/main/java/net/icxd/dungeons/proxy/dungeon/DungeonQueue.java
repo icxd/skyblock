@@ -1,5 +1,8 @@
 package net.icxd.dungeons.proxy.dungeon;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Sorts.descending;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -25,6 +28,7 @@ import net.icxd.dungeons.proxy.ServerDirectory;
 import net.icxd.dungeons.proxy.Transfers;
 import net.icxd.dungeons.proxy.party.Party;
 import net.icxd.dungeons.proxy.party.PartyManager;
+import net.kyori.adventure.text.Component;
 
 /**
  * Starting dungeon runs: a party (or a player on their own) goes to the dungeon server with the
@@ -67,6 +71,35 @@ public final class DungeonQueue {
     public static String displayName(DungeonFloor floor) {
         String where = floor.getNumber() == 0 ? "Entrance" : "Floor " + ROMAN[floor.getNumber() - 1];
         return (floor.isMasterMode() ? "MM " : "") + "The Catacombs, " + where;
+    }
+
+    /** "&aThe Catacombs&e, Entrance!", as in the message when a party enters. */
+    private static String enteredName(DungeonFloor floor) {
+        String where = floor.getNumber() == 0 ? "Entrance" : "Floor " + ROMAN[floor.getNumber() - 1];
+        return "§a" + (floor.isMasterMode() ? "MM " : "") + "The Catacombs§e, " + where + "!";
+    }
+
+    /** {@code /instancerequeue}, from the message at the end of a run: the floor of the player's last run again. */
+    public void requeue(Player player) {
+        Document last = null;
+        try {
+            if (runs != null) {
+                last = runs.find(eq(Runs.MEMBERS, player.getUniqueId().toString())).sort(descending(Runs.CREATED)).first();
+            }
+        } catch (RuntimeException e) {
+            logger.warn("Couldn't look up {}'s last dungeon run: {}", player.getUsername(), e.toString());
+        }
+        DungeonFloor floor = null;
+        try {
+            if (last != null) floor = DungeonFloor.valueOf(last.getString(Runs.FLOOR));
+        } catch (IllegalArgumentException | NullPointerException ignored) {
+            // A floor this version doesn't know.
+        }
+        if (floor == null) {
+            Chat.send(player, "§cYou haven't played a dungeon to re-queue into.");
+            return;
+        }
+        join(player, floor);
     }
 
     public void join(Player player, DungeonFloor floor) {
@@ -166,7 +199,8 @@ public final class DungeonQueue {
             return;
         }
         directory.countRun(name);
-        tell(entry, profiles.display(entry.leader()) + " §eentered §c" + displayName(entry.floor()) + "§e!");
+        Component entered = Chat.between(Chat.SHORT_RULE, Chat.text(profiles.display(entry.leader()) + "§f §eentered " + enteredName(entry.floor())));
+        for (UUID member : entry.members()) proxy.getPlayer(member).ifPresent(p -> p.sendMessage(entered));
         for (UUID member : entry.members()) proxy.getPlayer(member).ifPresent(p -> transfers.connect(p, server));
     }
 
