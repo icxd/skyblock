@@ -12,7 +12,7 @@ how sure it is:
 - **tuning**: not documented anywhere; picked so the maps look right.
 - **captured**: seen in the 5 runs recorded with the dungeon scanner (1 Entrance, 4 F6).
 
-The code lives in `src/main/java/net/icxd/dungeons/dungeons/generation`. `/dungeon [floor] [seed]`
+The code lives in `paper/src/main/java/net/icxd/dungeons/dungeons/generation`. `/dungeon [floor] [seed]`
 prints a map like the ones below to the console and builds a block preview. `/dungeon paste
 [floor] [seed]` builds it for real out of rooms captured on Hypixel (section 7).
 

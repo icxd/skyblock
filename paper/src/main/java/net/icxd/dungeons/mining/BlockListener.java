@@ -1,7 +1,7 @@
 package net.icxd.dungeons.mining;
 
+import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.OnlyOn;
-import net.icxd.dungeons.SkyBlockServer;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.ItemBuilder;
@@ -26,7 +26,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Set;
 
 /** Mining: the mithril in the Dwarven Mines. */
-@OnlyOn({SkyBlockServer.Type.DWARVEN_MINES})
+@OnlyOn({ServerType.DWARVEN_MINES})
 public class BlockListener implements Listener {
 
   @EventHandler

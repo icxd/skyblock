@@ -4,15 +4,27 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Builds everything: mvn clean package. The jars end up in each module's target/. -->
     <groupId>net.icxd</groupId>
-    <artifactId>skyblock-dungeons</artifactId>
+    <artifactId>skyblock-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <!-- Code the Paper plugin and the proxy plugin share. -->
+        <module>common</module>
+        <!-- The Paper plugin (hub, dungeon and other servers). -->
+        <module>paper</module>
+        <!-- The Velocity plugin. -->
+        <module>proxy</module>
+    </modules>
 
     <properties>
-        <!-- Paper 26.2 needs Java 25. -->
+        <!-- Paper 26.2 and Velocity 4.2 need Java 25. -->
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lombok.version>1.18.48</lombok.version>
+        <velocity.version>4.2.0</velocity.version>
     </properties>
 
     <repositories>
@@ -34,69 +46,53 @@
         </repository>
     </repositories>
 
-    <dependencies>
-        <dependency>
-            <groupId>io.papermc.paper</groupId>
-            <artifactId>paper-api</artifactId>
-            <version>26.2.build.129-stable</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- WorldEdit 7 for pasting dungeon rooms (optional at runtime, see plugin.yml softdepend) -->
-        <dependency>
-            <groupId>com.sk89q.worldedit</groupId>
-            <artifactId>worldedit-bukkit</artifactId>
-            <version>7.4.5</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- Packets for the tab list; the PacketEvents plugin (2.13.0+) must be installed -->
-        <dependency>
-            <groupId>com.github.retrooper</groupId>
-            <artifactId>packetevents-spigot</artifactId>
-            <version>2.13.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- Downloaded by Paper at startup, see "libraries" in plugin.yml -->
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.10.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>3.12.11</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.2</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.16</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>net.icxd</groupId>
+                <artifactId>skyblock-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
-        <resources>
-            <!-- Fills in ${project.version} in plugin.yml -->
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
+                <plugin>
+                    <!-- Puts skyblock-common into a plugin's jar; everything else is provided at runtime. -->
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.0</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                            <configuration>
+                                <createDependencyReducedPom>false</createDependencyReducedPom>
+                                <artifactSet>
+                                    <includes>
+                                        <include>net.icxd:skyblock-common</include>
+                                    </includes>
+                                </artifactSet>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -112,34 +108,13 @@
                             <rules>
                                 <requireJavaVersion>
                                     <version>[25,)</version>
-                                    <message>Maven is running on Java ${java.version} from ${java.home}, but Paper 26.2 and WorldEdit 7.4.5 need JDK 25 or newer. Maven uses JAVA_HOME, not the java on your PATH (in IntelliJ: Settings > Build Tools > Maven > Runner > JRE), so point that at a JDK 25.</message>
+                                    <message>Maven is running on Java ${java.version} from ${java.home}, but Paper 26.2, Velocity 4.2 and WorldEdit 7.4.5 need JDK 25 or newer. Maven uses JAVA_HOME, not the java on your PATH (in IntelliJ: Settings > Build Tools > Maven > Runner > JRE), so point that at a JDK 25.</message>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <!-- Since JDK 23 javac only runs annotation processors that are listed explicitly. -->
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
         </plugins>
     </build>
-
 </project>

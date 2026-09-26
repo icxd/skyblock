@@ -3,6 +3,7 @@ package net.icxd.dungeons;
 import java.util.List;
 
 import lombok.Getter;
+import net.icxd.dungeons.common.ServerType;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -16,29 +17,12 @@ import org.bukkit.configuration.file.FileConfiguration;
 public class SkyBlockServer {
     private final String name;
     private final int port;
-    private final Type serverType;
+    private final ServerType serverType;
 
     public SkyBlockServer(FileConfiguration config) {
         this.name = config.getString("server.name");
         this.port = config.getInt("server.port");
-        this.serverType = Type.valueOf(config.getString("server.type"));
-    }
-
-    public enum Type {
-        LOBBY("Hub"),
-        /** Dungeon runs. */
-        DUNGEONS("The Catacombs"),
-        CRIMSON_ISLE("Crimson Isle"),
-        DWARVEN_MINES("Dwarven Mines"),
-        /** For development: runs everything. */
-        NONE("Dev");
-
-        @Getter
-        private final String displayName;
-
-        Type(String displayName) {
-            this.displayName = displayName;
-        }
+        this.serverType = ServerType.valueOf(config.getString("server.type"));
     }
 
     /** The world the area is in (level-name in server.properties). Dungeon runs get worlds of their own. */
@@ -49,11 +33,11 @@ public class SkyBlockServer {
     /** Whether something marked {@link OnlyOn} belongs on this server. */
     public boolean runs(Class<?> type) {
         OnlyOn only = type.getAnnotation(OnlyOn.class);
-        return only == null || serverType == Type.NONE || List.of(only.value()).contains(serverType);
+        return only == null || serverType == ServerType.NONE || List.of(only.value()).contains(serverType);
     }
 
     /** Areas with regions (the hub, the mines, ...); dungeons have rooms instead. */
     public boolean hasRegions() {
-        return serverType != Type.DUNGEONS;
+        return serverType != ServerType.DUNGEONS;
     }
 }

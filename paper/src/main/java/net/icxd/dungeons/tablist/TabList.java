@@ -1,5 +1,6 @@
 package net.icxd.dungeons.tablist;
 
+import net.icxd.dungeons.common.ServerType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +29,6 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate.PlayerInfo;
 
 import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.SkyBlockServer;
 import net.icxd.dungeons.region.Region;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.user.User;
@@ -110,8 +110,8 @@ public class TabList {
 
     private static Line[] lines(Player viewer, Collection<? extends Player> online) {
         User user = User.getUser(viewer.getUniqueId());
-        SkyBlockServer.Type type = Dungeons.getSkyBlockServer().getServerType();
-        boolean hub = type == SkyBlockServer.Type.LOBBY || type == SkyBlockServer.Type.NONE;
+        ServerType type = Dungeons.getSkyBlockServer().getServerType();
+        boolean hub = type == ServerType.LOBBY || type == ServerType.NONE;
         List<Line> lines = new ArrayList<>(SLOTS);
 
         // Column 1: players.

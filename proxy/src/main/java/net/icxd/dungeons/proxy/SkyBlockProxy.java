@@ -1,0 +1,29 @@
+package net.icxd.dungeons.proxy;
+
+import com.google.inject.Inject;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.proxy.ProxyServer;
+import org.slf4j.Logger;
+
+/**
+ * The Velocity side of the network: parties, queues and sending players between the hub and
+ * dungeon servers will live here.
+ */
+@Plugin(id = "skyblock", name = "SkyBlock", version = "1.0-SNAPSHOT", authors = {"icxd"})
+public final class SkyBlockProxy {
+    private final ProxyServer proxy;
+    private final Logger logger;
+
+    @Inject
+    public SkyBlockProxy(ProxyServer proxy, Logger logger) {
+        this.proxy = proxy;
+        this.logger = logger;
+    }
+
+    @Subscribe
+    public void onProxyInitialize(ProxyInitializeEvent event) {
+        logger.info("SkyBlock proxy plugin enabled with {} backend servers", proxy.getAllServers().size());
+    }
+}

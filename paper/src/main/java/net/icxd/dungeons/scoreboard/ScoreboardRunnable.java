@@ -1,5 +1,6 @@
 package net.icxd.dungeons.scoreboard;
 
+import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.SkyBlockServer;
 import net.icxd.dungeons.region.Region;
@@ -60,7 +61,7 @@ public class ScoreboardRunnable implements Runnable {
         List<String> lines = new ArrayList<>();
         lines.add("&7" + Utils.getDateFormatted(new Date()) + " &8" + server.getName());
         lines.add("&0");
-        if (server.getServerType() == SkyBlockServer.Type.DUNGEONS) {
+        if (server.getServerType() == ServerType.DUNGEONS) {
             lines.add("&7 \u23e3 &c" + server.getServerType().getDisplayName());
         } else {
             lines.add("&fEarly Summer 23rd");
