@@ -8,7 +8,8 @@ public enum GenericItemType {
     WEAPON(SpecificItemType.SWORD, SpecificItemType.WAND, SpecificItemType.LONGSWORD, SpecificItemType.FISHING_WEAPON, SpecificItemType.BOW),
     TOOL(SpecificItemType.PICKAXE, SpecificItemType.SHEARS, SpecificItemType.AXE, SpecificItemType.SPADE, SpecificItemType.HOE, SpecificItemType.DRILL),
     CONSUMABLE(SpecificItemType.BAIT, SpecificItemType.PET_ITEM, SpecificItemType.DUNGEON_PASS, SpecificItemType.REFORGE_STONE, SpecificItemType.COSMETIC, SpecificItemType.PORTAL, SpecificItemType.TRAVEL_SCROLL),
-    OTHER(SpecificItemType.NONE, SpecificItemType.DEPLOYABLE, SpecificItemType.ARROW, SpecificItemType.ARROW_POISON, SpecificItemType.ACCESSORY);
+    OTHER(SpecificItemType.NONE, SpecificItemType.DEPLOYABLE, SpecificItemType.ARROW, SpecificItemType.ARROW_POISON, SpecificItemType.ACCESSORY,
+            SpecificItemType.GEMSTONE, SpecificItemType.DWARVEN_METAL);
 
     @Getter
     private final SpecificItemType[] specificItemTypes;

@@ -102,6 +102,8 @@ public class PlayerListener implements Listener {
             player.kick(Component.text("Couldn't load your inventory, please rejoin.", NamedTextColor.RED));
             return;
         }
+        // Items made before an update to how items look (or are stored) are brought up to date.
+        ItemBuilder.refreshInventory(player);
         player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
     }
 

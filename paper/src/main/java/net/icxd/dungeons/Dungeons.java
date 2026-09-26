@@ -67,7 +67,7 @@ public class Dungeons extends JavaPlugin {
         }
 
         new CheckHandler();
-        new ItemRegistry();
+        getLogger().info(ItemRegistry.getRegistry().size() + " SkyBlock items");
         new EntityRegistry();
 
         this.commandMap = Bukkit.getCommandMap();

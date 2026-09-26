@@ -1,7 +1,14 @@
 package net.icxd.dungeons.item;
 
+import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.DyedItemColor;
+import io.papermc.paper.datacomponent.item.ItemLore;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.attributes.Attribute;
+import net.icxd.dungeons.dungeons.DungeonLevels;
 import net.icxd.dungeons.item.ability.Ability;
+import net.icxd.dungeons.item.ability.AbilityActivation;
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
@@ -17,32 +24,63 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.item.requirement.Requirement;
-import net.icxd.dungeons.item.requirement.dungeontier.DungeonTierRequirement;
-import net.icxd.dungeons.item.requirement.hotm.HeartOfTheMountainRequirement;
-import net.icxd.dungeons.item.requirement.skill.SkillRequirement;
-import net.icxd.dungeons.item.requirement.slayer.SlayerRequirement;
 import net.icxd.dungeons.reforge.Reforge;
-import net.icxd.dungeons.reforge.ReforgeStat;
 import net.icxd.dungeons.rune.Rune;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
+import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-public class ItemBuilder {
+/**
+ * Makes the item stack for a SkyBlock item: its data (kept with {@link ItemNBT}), and its name and
+ * lore laid out the way Hypixel's item tooltips are today. The rules come from Hypixel's own items:
+ * the recordings, the NEU item repository's dumps and the live auction house (see tools/items):
+ * <ol>
+ *   <li>name: rarity colour, reforge, name, stars ({@code ✪}, master stars {@code ➊}-{@code ➎})</li>
+ *   <li>dark gray lines: breaking power, categories ("Collection Item")</li>
+ *   <li>gear score, then stats in Hypixel's order, each with its bonuses: {@code &e(hot potato books)
+ *       &6[Art of War] &9(reforge) &8(in a dungeon)}, the last on dungeon items</li>
+ *   <li>gemstone slots</li>
+ *   <li>enchantments: with descriptions when there are up to 5 (and it isn't a dungeon item), one
+ *       a line up to 9, else three a line</li>
+ *   <li>attributes, the item's own text, rune, ability, then text from the item's data</li>
+ *   <li>"This item can be reforged!", requirements the owner doesn't meet, soulbound, rarity line</li>
+ * </ol>
+ * Every line is one {@code &}-coded string turned into a component (see {@link Text#line}).
+ */
+public final class ItemBuilder {
+    /** The vanilla tooltip lines Hypixel hides on its items (loaded when first needed: it takes a server). */
+    private static final class Hidden {
+        static final DataComponentType[] COMPONENTS = {
+                DataComponentTypes.ATTRIBUTE_MODIFIERS, DataComponentTypes.UNBREAKABLE, DataComponentTypes.DYED_COLOR,
+                DataComponentTypes.TRIM, DataComponentTypes.JUKEBOX_PLAYABLE, DataComponentTypes.MAP_ID,
+                DataComponentTypes.FIREWORKS, DataComponentTypes.WRITTEN_BOOK_CONTENT, DataComponentTypes.BANNER_PATTERNS,
+                DataComponentTypes.POTION_CONTENTS, DataComponentTypes.CHARGED_PROJECTILES, DataComponentTypes.ENCHANTMENTS};
+    }
+
+    /** Stats Hypixel scales by Catacombs level in dungeons (the rest only by stars, or not at all). */
+    private static final Set<Stat> CATACOMBS_SCALED = EnumSet.of(Stat.HEALTH, Stat.DEFENSE, Stat.STRENGTH, Stat.DAMAGE,
+            Stat.CRIT_DAMAGE, Stat.INTELLIGENCE, Stat.SPEED, Stat.SEA_CREATURE_CHANCE, Stat.MINING_SPEED, Stat.MINING_FORTUNE,
+            Stat.FARMING_FORTUNE);
+    /** Stats dungeons don't boost at all (health regen and vitality since 0.26.1). */
+    private static final Set<Stat> NOT_SCALED = EnumSet.of(Stat.HEALTH_REGEN, Stat.VITALITY, Stat.MENDING, Stat.SWING_RANGE);
+
+    private static final String MASTER_STARS = "➊➋➌➍➎";
+
+    private ItemBuilder() {
+    }
 
     public static ItemStack build(SkyBlockItem item) {
         return build(item, null);
@@ -60,393 +98,384 @@ public class ItemBuilder {
         return itemStack;
     }
 
+    /** A new item of this kind if {@code tag} is null, else the item that data describes. */
     public static ItemStack build(SkyBlockItem item, NBTTagCompound tag) {
-        ItemStack stack = new ItemStack(item.material());
-        if (item.durability() != 0 && stack.getType().getMaxDurability() > 0) stack.setDurability((short) item.durability());
-        ItemNBT nmsStack = ItemNBT.of(stack);
-        if (tag == null) {
-            tag = new NBTTagCompound();
-            tag.setString("id", item.id());
-            tag.setString("name", item.name());
-            tag.setString("rarity", item.rarity().name());
-            tag.setString("dungeon_star", DungeonStar.ZERO.name());
-            tag.setString("specific_item_type", item.specificItemType().name());
-            tag.setString("generic_item_type", item.genericItemType().name());
-            tag.setString("soulbound", item.soulbound().name());
-            tag.setBoolean("dungeon_item", item.dungeonItem());
-            tag.setBoolean("can_have_attributes", item.canHaveAttributes());
-            if (item.canHaveAttributes()) {
-                Attribute attribute1 = Attribute.random(item.genericItemType(), null);
-                Attribute attribute2 = Attribute.random(item.genericItemType(), attribute1);
-                tag.setString("attribute_1", attribute1.name());
-                tag.setInt("attribute_1_level", Utils.random(1, 2));
-                tag.setString("attribute_2", attribute2.name());
-                tag.setInt("attribute_2_level", Utils.random(1, 2));
-            }
-            tag.setBoolean("recombobulated", false);
-            tag.setInt("hot_potato_books", 0);
-            tag.setBoolean("art_of_war", false);
-            tag.setString("owner", "");
-            tag.setString("reforge", "");
-            tag.setString("rune", "");
-            tag.setInt("rune_level", 0);
-            tag.set("gemstone_slots", new NBTTagList());
-            tag.set("enchantments", new NBTTagList());
-            tag.setInt("upgrade_count", 0);
-            if (item.nbt() != null) {
-                for (String key : item.nbt().c()) {
-                    tag.set(key, item.nbt().get(key));
-                }
-            }
-            if (item.unstackable()) {
-                tag.setString("uuid", UUID.randomUUID().toString());
-            }
-        }
-        if (item.gemstoneSlots() != null && tag.getList("gemstone_slots", 10).isEmpty()) {
-            NBTTagList gemstoneSlots = new NBTTagList();
-            for (GemstoneSlot slot : item.gemstoneSlots().getSlots()) {
-                NBTTagCompound gemstoneSlot = new NBTTagCompound();
-                boolean locked = !slot.getCosts().isEmpty();
-                gemstoneSlot.setBoolean("locked", locked);
-                if (locked) {
-                    NBTTagList costs = new NBTTagList();
-                    for (Cost cost : slot.getCosts()) {
-                        NBTTagCompound costTag = new NBTTagCompound();
-                        if (cost instanceof CoinCost coinCost) {
-                            costTag.setString("type", "coin");
-                            costTag.setInt("amount", coinCost.getAmount());
-                        } else if (cost instanceof ItemCost itemCost) {
-                            costTag.setString("type", "item");
-                            costTag.setString("item_id", itemCost.getItem().id());
-                            costTag.setInt("amount", itemCost.getAmount());
-                        } else if (cost instanceof EssenceCost essenceCost) {
-                            costTag.setString("type", "essence");
-                            costTag.setString("essence", essenceCost.getEssenceType().name());
-                            costTag.setInt("amount", essenceCost.getAmount());
-                        }
-                        costs.add(costTag);
-                    }
-                    gemstoneSlot.set("costs", costs);
-                }
-                gemstoneSlots.add(gemstoneSlot);
-            }
-            tag.set("gemstone_slots", gemstoneSlots);
-        }
-        nmsStack.setTag(tag);
-        stack = nmsStack.toItemStack();
+        if (tag == null) tag = newData(item);
+        addGemstoneSlots(item, tag);
+        ItemNBT nbt = ItemNBT.of(new ItemStack(item.material()));
+        nbt.setTag(tag);
+        ItemStack stack = nbt.toItemStack();
+        if (item.material() == Material.PLAYER_HEAD && item.skin() != null) Utils.skull(stack, item.skin());
 
-        if (item.color() != null) {
-            LeatherArmorMeta meta = (LeatherArmorMeta) stack.getItemMeta();
-            meta.setColor(Color.fromRGB(item.color().getRed(), item.color().getGreen(), item.color().getBlue()));
-            stack.setItemMeta(meta);
-        } else if (item.material() == Material.PLAYER_HEAD) {
-            Utils.skull(stack, item.skin());
-        }
-
-        Rarity rarity = Rarity.valueOf(tag.getString("rarity"));
-
-        ItemMeta meta = stack.getItemMeta();
-        Reforge reforge = tag.getString("reforge").isEmpty() ? null : Reforge.valueOf(tag.getString("reforge"));
-        meta.setDisplayName(rarity.getColor() + (reforge == null ? "" : reforge.getName() + " ") +
-                item.name() + (switch (DungeonStar.valueOf(tag.getString("dungeon_star"))) {
-            case ZERO -> "";
-            case ONE -> ChatColor.GOLD + " ✪";
-            case TWO -> ChatColor.GOLD + " ✪✪";
-            case THREE -> ChatColor.GOLD + " ✪✪✪";
-            case FOUR -> ChatColor.GOLD + " ✪✪✪✪";
-            case FIVE -> ChatColor.GOLD + " ✪✪✪✪✪";
-            case SIX -> ChatColor.GOLD + " ✪✪✪✪✪" + ChatColor.RED + "❶";
-            case SEVEN -> ChatColor.GOLD + " ✪✪✪✪✪" + ChatColor.RED + "❷";
-            case EIGHT -> ChatColor.GOLD + " ✪✪✪✪✪" + ChatColor.RED + "❸";
-            case NINE -> ChatColor.GOLD + " ✪✪✪✪✪" + ChatColor.RED + "❹";
-            case TEN -> ChatColor.GOLD + " ✪✪✪✪✪" + ChatColor.RED + "❺";
-        }) + (switch (tag.getInt("upgrade_count")) {
-            case 0 -> "";
-            case 1 -> ChatColor.GOLD + " ✪";
-            case 2 -> ChatColor.GOLD + " ✪✪";
-            case 3 -> ChatColor.GOLD + " ✪✪✪";
-            case 4 -> ChatColor.GOLD + " ✪✪✪✪";
-            case 5 -> ChatColor.GOLD + " ✪✪✪✪✪";
-            case 6 -> ChatColor.LIGHT_PURPLE + " ✪" + ChatColor.GOLD + "✪✪✪✪";
-            case 7 -> ChatColor.LIGHT_PURPLE + " ✪✪" + ChatColor.GOLD + "✪✪✪";
-            case 8 -> ChatColor.LIGHT_PURPLE + " ✪✪✪" + ChatColor.GOLD + "✪✪";
-            case 9 -> ChatColor.LIGHT_PURPLE + " ✪✪✪✪" + ChatColor.GOLD + "✪";
-            case 10 -> ChatColor.LIGHT_PURPLE + " ✪✪✪✪✪";
-            case 11 -> ChatColor.AQUA + " ✪" + ChatColor.LIGHT_PURPLE + "✪✪✪✪";
-            case 12 -> ChatColor.AQUA + " ✪✪" + ChatColor.LIGHT_PURPLE + "✪✪✪";
-            case 13 -> ChatColor.AQUA + " ✪✪✪" + ChatColor.LIGHT_PURPLE + "✪✪";
-            case 14 -> ChatColor.AQUA + " ✪✪✪✪" + ChatColor.LIGHT_PURPLE + "✪";
-            case 15 -> ChatColor.AQUA + " ✪✪✪✪✪";
-            default -> throw new IllegalStateException("Unexpected value: " + tag.getInt("upgrade_count"));
-        }));
-
-        ArrayList<String> lore = new ArrayList<>();
-
-        Stats stats = item.stats();
-        Stats tempStats = item.stats();
-        if (reforge != null) {
-            tempStats.add(reforge.getStats().at(rarity));
-        }
-
-        if (tempStats.get(Stat.BREAKING_POWER) != 0) lore.add(ChatColor.DARK_GRAY + "Breaking Power " + (int) stats.get(Stat.BREAKING_POWER));
-        double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
-        if (item.gearScore() >= 0) lore.add(ChatColor.GRAY + "Gear Score: " + ChatColor.LIGHT_PURPLE + item.gearScore() +
-                ChatColor.DARK_GRAY + " (" + (int) (item.gearScore() + (item.gearScore() * boost)) + ")");
-        if (tempStats.get(Stat.DAMAGE) != 0) lore.add(stat("Damage", ChatColor.RED, stats.get(Stat.DAMAGE), ' ', tag,
-                (item.genericItemType() == GenericItemType.WEAPON ? (tag.getInt("hot_potato_books") * 2) : 0)));
-        if (tempStats.get(Stat.STRENGTH) != 0) lore.add(stat("Strength", ChatColor.RED, stats.get(Stat.STRENGTH), ' ', tag,
-                (item.genericItemType() == GenericItemType.WEAPON ? (tag.getInt("hot_potato_books") * 2) : 0), tag.getBoolean("art_of_war"),
-                (reforge != null ? reforge.getStats().get(Stat.STRENGTH) : null)));
-        if (tempStats.get(Stat.CRIT_CHANCE) != 0) lore.add(stat("Crit Chance", ChatColor.RED, stats.get(Stat.CRIT_CHANCE), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.CRIT_CHANCE) : null)));
-        if (tempStats.get(Stat.CRIT_DAMAGE) != 0) lore.add(stat("Crit Damage", ChatColor.RED, stats.get(Stat.CRIT_DAMAGE), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.CRIT_DAMAGE) : null)));
-        if (tempStats.get(Stat.ATTACK_SPEED) != 0) lore.add(stat("Bonus Attack Speed", ChatColor.RED, stats.get(Stat.ATTACK_SPEED), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.ATTACK_SPEED) : null)));
-        if (tempStats.get(Stat.WEAPON_ABILITY_DAMAGE) != 0) lore.add(stat("Ability Damage", ChatColor.RED, stats.get(Stat.WEAPON_ABILITY_DAMAGE), '%', tag));
-        if (tempStats.get(Stat.SEA_CREATURE_CHANCE) != 0) lore.add(stat("Sea Creature Chance", ChatColor.RED, stats.get(Stat.SEA_CREATURE_CHANCE), '%', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.SEA_CREATURE_CHANCE) : null)));
-
-        if (tempStats.get(Stat.HEALTH) != 0) lore.add(stat("Health", ChatColor.GREEN, stats.get(Stat.HEALTH), ' ', tag,
-                (item.genericItemType() == GenericItemType.ARMOR ? (tag.getInt("hot_potato_books") * 4) : 0), false,
-                (reforge != null ? reforge.getStats().get(Stat.HEALTH) : null)));
-        if (tempStats.get(Stat.DEFENSE) != 0) lore.add(stat("Defense", ChatColor.GREEN, stats.get(Stat.DEFENSE), ' ', tag,
-                (item.genericItemType() == GenericItemType.ARMOR ? (tag.getInt("hot_potato_books") * 2) : 0), false,
-                (reforge != null ? reforge.getStats().get(Stat.DEFENSE) : null)));
-        if (tempStats.get(Stat.SPEED) != 0) lore.add(stat("Speed", ChatColor.GREEN, stats.get(Stat.SPEED), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.SPEED) : null)));
-        if (tempStats.get(Stat.INTELLIGENCE) != 0) lore.add(stat("Intelligence", ChatColor.GREEN, stats.get(Stat.INTELLIGENCE), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.INTELLIGENCE) : null)));
-        if (tempStats.get(Stat.MAGIC_FIND) != 0) lore.add(stat("Magic Find", ChatColor.GREEN, stats.get(Stat.MAGIC_FIND), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.MAGIC_FIND) : null)));
-        if (tempStats.get(Stat.PET_LUCK) != 0) lore.add(stat("Pet Luck", ChatColor.GREEN, stats.get(Stat.PET_LUCK), tag));
-        if (tempStats.get(Stat.TRUE_DEFENSE) != 0) lore.add(stat("True Defense", ChatColor.GREEN, stats.get(Stat.TRUE_DEFENSE), tag));
-        if (tempStats.get(Stat.FEROCITY) != 0) lore.add(stat("Ferocity", ChatColor.GREEN, stats.get(Stat.FEROCITY), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.FEROCITY) : null)));
-        if (tempStats.get(Stat.MINING_SPEED) != 0) lore.add(stat("Mining Speed", ChatColor.GREEN, stats.get(Stat.MINING_SPEED), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.MINING_SPEED) : null)));
-        if (tempStats.get(Stat.MINING_FORTUNE) != 0) lore.add(stat("Mining Fortune", ChatColor.GREEN, stats.get(Stat.MINING_FORTUNE), ' ', tag, 0, false,
-                (reforge != null ? reforge.getStats().get(Stat.MINING_FORTUNE) : null)));
-        if (tempStats.get(Stat.COMBAT_WISDOM) != 0) lore.add(stat("Combat Wisdom", ChatColor.GREEN, stats.get(Stat.COMBAT_WISDOM), tag));
-        if (tempStats.get(Stat.FARMING_WISDOM) != 0) lore.add(stat("Farming Wisdom", ChatColor.GREEN, stats.get(Stat.FARMING_WISDOM), tag));
-        if (tempStats.get(Stat.FORAGING_WISDOM) != 0) lore.add(stat("Foraging Wisdom", ChatColor.GREEN, stats.get(Stat.FORAGING_WISDOM), tag));
-        if (tempStats.get(Stat.FISHING_WISDOM) != 0) lore.add(stat("Fishing Wisdom", ChatColor.GREEN, stats.get(Stat.FISHING_WISDOM), tag));
-        if (tempStats.get(Stat.FISHING_SPEED) != 0) lore.add(stat("Fishing Speed", ChatColor.GREEN, stats.get(Stat.FISHING_SPEED), tag));
-        if (tempStats.get(Stat.VITALITY) != 0) lore.add(stat("Vitality", ChatColor.GREEN, stats.get(Stat.VITALITY), tag));
-        if (tempStats.get(Stat.MENDING) != 0) lore.add(stat("Mending", ChatColor.GREEN, stats.get(Stat.MENDING), tag));
-
-        if (tag.getList("gemstone_slots", 10) != null && !tag.getList("gemstone_slots", 10).isEmpty()) {
-            NBTTagList slots = tag.getList("gemstone_slots", 10);
-            StringBuilder gemstoneSlots = new StringBuilder();
-            // The item's slots are what it can have; the tag's are what this one has.
-            List<GemstoneSlot> kinds = item.gemstoneSlots() == null ? List.of() : item.gemstoneSlots().getSlots();
-            for (int i = 0; i < slots.size() && i < kinds.size(); i++) {
-                NBTTagCompound slot = slots.get(i);
-                GemstoneSlot gemstoneSlot = kinds.get(i);
-                gemstoneSlots.append(ChatColor.DARK_GRAY)
-                        .append(" [")
-                        .append(slot.getBoolean("locked") ? ChatColor.DARK_GRAY : ChatColor.GRAY)
-                        .append(gemstoneSlot.getType().getIcon())
-                        .append(ChatColor.DARK_GRAY)
-                        .append("]");
-            }
-            lore.add(gemstoneSlots.toString());
-            lore.add("");
-        }
-
-        if (tag.get("enchantments") != null && !tag.getList("enchantments", 10).isEmpty()) {
-            int amount = tag.getList("enchantments", 10).size();
-            NBTTagList enchantmentsn = tag.getList("enchantments", 10);
-            List<Enchantment> enchantments = new ArrayList<>();
-            for (int i = 0; i < amount; i++) {
-                NBTTagCompound enchantment = enchantmentsn.get(i);
-                String name = enchantment.getString("name");
-                int level = enchantment.getInt("lvl");
-                Enchantment enchant = Enchantment.getByIdentifiable(name + "." + level);
-                // Enchantments this version doesn't know are left off.
-                if (enchant.getType() != null) enchantments.add(enchant);
-            }
-            enchantments.sort((o1, o2) -> Boolean.compare(o1.getType().isUltimate(), o2.getType().isUltimate()));
-            List<String> stringEnchantments = new ArrayList<>();
-            for (Enchantment enchantment : enchantments)
-                stringEnchantments.add(enchantment.getDisplayName());
-            Collections.sort(stringEnchantments);
-            if (amount <= 5) {
-                for (Enchantment enchantment : enchantments) {
-                    lore.add(ChatColor.GRAY + enchantment.getDisplayName());
-                    for (String line : Utils.splitByWordAndLength(enchantment.getDescription(), 30, "\\s"))
-                        lore.add(ChatColor.GRAY + Utils.color(line));
-                }
-            } else if (amount <= 10) {
-                for (Enchantment enchantment : enchantments)
-                    lore.add(enchantment.getDisplayName());
-            } else if (amount <= 25) {
-                lore.addAll(Utils.combineElements(stringEnchantments, ", ", 2));
-            } else {
-                lore.addAll(Utils.combineElements(stringEnchantments, ", ", 3));
-            }
-            lore.add("");
-        }
-
-        if (tag.hasKey("attribute_1")) {
-            Attribute attribute = Attribute.of(tag.getString("attribute_1"));
-            int level = tag.getInt("attribute_1_level");
-            if (tag.hasKey("owner") && !tag.getString("owner").isEmpty()) {
-                Player player = Bukkit.getPlayer(UUID.fromString(tag.getString("owner")));
-                if (player != null && attribute.requirement().test(player)) {
-                    lore.add("§b" + attribute.getName() + " " + Utils.getRomanNumeral(level));
-                } else {
-                    lore.add("§c" + attribute.getName() + " " + Utils.getRomanNumeral(level) + " ✖");
-                }
-            } else {
-                lore.add("§c" + attribute.getName() + " " + Utils.getRomanNumeral(level) + " ✖");
-            }
-            lore.addAll(attribute.getLore(level));
-            if (!tag.hasKey("attribute_2"))
-                lore.add("");
-        }
-        if (tag.hasKey("attribute_2")) {
-            Attribute attribute = Attribute.of(tag.getString("attribute_2"));
-            int level = tag.getInt("attribute_2_level");
-            if (tag.hasKey("owner") && !tag.getString("owner").isEmpty()) {
-                Player player = Bukkit.getPlayer(UUID.fromString(tag.getString("owner")));
-                if (player != null && attribute.requirement().test(player)) {
-                    lore.add("§b" + attribute.getName() + " " + Utils.getRomanNumeral(level));
-                } else {
-                    lore.add("§c" + attribute.getName() + " " + Utils.getRomanNumeral(level) + " ✖");
-                }
-            } else {
-                lore.add("§c" + attribute.getName() + " " + Utils.getRomanNumeral(level) + " ✖");
-            }
-            lore.addAll(attribute.getLore(level));
-            lore.add("");
-        }
-
-        if (item.description() != null) {
-            String description = Utils.colorize(item.description());
-            for (String line : Utils.splitByWordAndLength(description, 30, "\\s"))
-                lore.add(ChatColor.GRAY + line);
-            lore.add("");
-        }
-
-        if (!tag.getString("rune").isEmpty()) {
-            Rune rune = Rune.valueOf(tag.getString("rune"));
-            int runeLevel = tag.getInt("rune_level");
-            lore.add(rune.getColor() + "◆ " + rune.getName() + " Rune " + runeLevel);
-            lore.add("");
-        }
-
-        if (item.ability() != null) {
-            buildAbility(item.ability(), lore);
-            lore.add("");
-        }
-
-        if (item.nbtLore(tag) != null) {
-            for (String line : item.nbtLore(tag))
-                lore.add(ChatColor.GRAY + line);
-            lore.add("");
-        }
-
-        if (tag.getString("soulbound") != null && !Soulbound.valueOf(tag.getString("soulbound")).equals(Soulbound.NONE)) {
-            lore.add(ChatColor.DARK_GRAY + "* " + (Soulbound.valueOf(tag.getString("soulbound")).equals(Soulbound.COOP) ? "Co-op " : "") + "Soulbound *");
-        }
-        if (item.requirements() != null) {
-            for (Requirement requirement : item.requirements().getRequirements()) {
-                if (requirement.requirement() == null) continue;
-                if (tag.getString("owner") == null || tag.getString("owner").isEmpty()) continue;
-                Player player = Bukkit.getPlayer(UUID.fromString(tag.getString("owner")));
-                if (requirement.requirement().test(player)) continue;
-
-                if (requirement instanceof SkillRequirement skillRequirement) {
-                    lore.add(
-                            ChatColor.DARK_RED + "❣ " +
-                            ChatColor.RED + "Requires " +
-                            ChatColor.GREEN + skillRequirement.getSkill().getName() + " Skill " + skillRequirement.getLevel() + "."
-                    );
-                } else if (requirement instanceof DungeonTierRequirement dungeonTierRequirement) {
-                    lore.add(
-                            ChatColor.DARK_RED + "❣ " +
-                            ChatColor.RED + "Requires " +
-                            ChatColor.GREEN + dungeonTierRequirement.getDungeonType().getName() + " Floor " + dungeonTierRequirement.getTier() + " Completion."
-                    );
-                } else if (requirement instanceof SlayerRequirement slayerRequirement) {
-                    lore.add(
-                            ChatColor.DARK_RED + "☠ " +
-                                    ChatColor.RED + "Requires " +
-                                    ChatColor.DARK_PURPLE + slayerRequirement.getBossType().getName() + " Slayer " + slayerRequirement.getLevel() + "."
-                    );
-                } else if (requirement instanceof HeartOfTheMountainRequirement heartOfTheMountainRequirement) {
-                    lore.add(
-                            ChatColor.DARK_RED + "❣ " +
-                                    ChatColor.RED + "Requires " +
-                                    ChatColor.DARK_PURPLE + "Heart of the"
-                    );
-                    lore.add(
-                            ChatColor.DARK_PURPLE + "Mountain Tier " + heartOfTheMountainRequirement.getLevel()
-                    );
-                }
-            }
-        }
-        lore.add(
-                rarity.getBoldedColor() +
-                        (tag.getBoolean("recombobulated") ? rarity.getBoldedColor() + ChatColor.MAGIC + "A" + rarity.getBoldedColor() + " " : "") +
-                        rarity.name() +
-                        (item.specificItemType() != SpecificItemType.NONE ? (
-                                (tag.getBoolean("dungeon_item") ? " DUNGEON" : "") +
-                                " " + item.specificItemType().name().replace("_", " ")
-                        ) : "") +
-                        (tag.getBoolean("recombobulated") ? " " + rarity.getBoldedColor() + ChatColor.MAGIC + "A" + rarity.getBoldedColor() : "")
-        );
-
-        meta.setUnbreakable(true);
-        meta.setLore(lore);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_PLACED_ON);
-
-        stack.setItemMeta(meta);
+        stack.setData(DataComponentTypes.CUSTOM_NAME, Text.line(name(item, tag)));
+        stack.setData(DataComponentTypes.LORE, ItemLore.lore(Text.lines(lore(item, tag))));
+        stack.setData(DataComponentTypes.UNBREAKABLE);
+        stack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().addHiddenComponents(Hidden.COMPONENTS).build());
+        if (item.color() != null) stack.setData(DataComponentTypes.DYED_COLOR, DyedItemColor.dyedItemColor(item.color()));
+        if (item.glowing() || !enchantments(tag).isEmpty()) stack.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
         return stack;
     }
 
-    public static void buildAbility(Ability ability, ArrayList<String> lore) {
-        lore.add(ChatColor.GOLD + ability.getType().getName() + ": " + ability.getName() + " " +
-                ChatColor.YELLOW + ChatColor.BOLD + ability.getActivation().name().replace("_", " "));
-        for (String line : Utils.splitByWordAndLength(ability.getDescription(), 30, "\\s"))
-            lore.add(ChatColor.GRAY + Utils.color(line));
-        if (ability.getManaCost() != 0)
-            lore.add(ChatColor.DARK_GRAY + "Mana Cost: " + ChatColor.DARK_AQUA + ability.getManaCost());
-        if (ability.getCooldown() != 0)
-            lore.add(ChatColor.DARK_GRAY + "Cooldown: " + ChatColor.GREEN + ability.getCooldown() + "s");
+    /**
+     * The SkyBlock item made again from its data, so it looks as items do now (and its data is kept
+     * the current way); anything else as it is.
+     */
+    public static ItemStack refresh(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return stack;
+        NBTTagCompound tag = ItemNBT.of(stack).getTag();
+        SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
+        return item == null ? stack : build(item, tag, stack.getAmount());
     }
 
-    private static String stat(String name, ChatColor color, double value, char ending, NBTTagCompound tag, int hotPotatoBooks, boolean artOfWar, ReforgeStat reforgeStat) {
-        Rarity rarity = tag.getString("rarity").isEmpty() ? Rarity.COMMON : Rarity.valueOf(tag.getString("rarity"));
-        double rsv = reforgeStat == null ? 0 : reforgeStat.at(rarity);
-        double boost = tag.getString("dungeon_star").isEmpty() ? 0 : DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
-        double val = value + hotPotatoBooks + (artOfWar ? 5 : 0) + rsv;
-        double wb = val + (val * boost);
-        return Utils.color(
-                "&7" + name + ": " +
-                        color + (val < 0 ? (int) val : "+" + (int) val) + (ending != ' ' ? ending : "") + " " +
-                        (hotPotatoBooks > 0 ? "&e(+" + hotPotatoBooks + ") " : "") +
-                        (artOfWar ? "&6[+5] " : "") +
-                        (rsv != 0 ? ("&9(" + (rsv < 0 ? (int) rsv : "+" + (int) rsv) + (ending != ' ' ? ""+ending : "") + ") ") : "") +
-                        (tag.getBoolean("dungeon_item") ? "&8(+" + Utils.formatStat(wb) + (ending != ' ' ? ending : "") + ")" : "")
-                ).stripTrailing();
+    /** Every SkyBlock item a player has, {@link #refresh refreshed}. */
+    public static void refreshInventory(Player player) {
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length; i++) contents[i] = refresh(contents[i]);
+        player.getInventory().setContents(contents);
     }
 
-    private static String stat(String name, ChatColor color, double value, char ending, NBTTagCompound tag, int hotPotatoBooks, boolean artOfWar) {
-        return stat(name, color, value, ending, tag, hotPotatoBooks, artOfWar, null);
+    /** What every new item starts with, plus the item's own {@link SkyBlockItem#nbt()}. */
+    static NBTTagCompound newData(SkyBlockItem item) {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("id", item.id());
+        tag.setString("name", item.name());
+        tag.setString("rarity", item.rarity().name());
+        tag.setString("dungeon_star", DungeonStar.ZERO.name());
+        tag.setString("specific_item_type", item.specificItemType().name());
+        GenericItemType generic = item.genericItemType();
+        tag.setString("generic_item_type", generic == null ? GenericItemType.OTHER.name() : generic.name());
+        tag.setString("soulbound", item.soulbound().name());
+        tag.setBoolean("dungeon_item", item.dungeonItem());
+        tag.setBoolean("can_have_attributes", item.canHaveAttributes());
+        if (item.canHaveAttributes()) {
+            Attribute attribute1 = Attribute.random(item.genericItemType(), null);
+            Attribute attribute2 = Attribute.random(item.genericItemType(), attribute1);
+            tag.setString("attribute_1", attribute1.name());
+            tag.setInt("attribute_1_level", Utils.random(1, 2));
+            tag.setString("attribute_2", attribute2.name());
+            tag.setInt("attribute_2_level", Utils.random(1, 2));
+        }
+        tag.setBoolean("recombobulated", false);
+        tag.setInt("hot_potato_books", 0);
+        tag.setBoolean("art_of_war", false);
+        tag.setString("owner", "");
+        tag.setString("reforge", "");
+        tag.setString("rune", "");
+        tag.setInt("rune_level", 0);
+        tag.set("gemstone_slots", new NBTTagList());
+        tag.set("enchantments", new NBTTagList());
+        tag.setInt("upgrade_count", 0);
+        if (item.nbt() != null) {
+            for (String key : item.nbt().keySet()) tag.set(key, item.nbt().get(key));
+        }
+        if (item.unstackable()) tag.setString("uuid", UUID.randomUUID().toString());
+        return tag;
     }
 
-    private static String stat(String name, ChatColor color, double value, char ending, NBTTagCompound tag, int hotPotatoBooks) {
-        return stat(name, color, value, ending, tag, hotPotatoBooks, false);
+    /** The item's slots, each locked if it has an unlock cost, the first time the item is built. */
+    private static void addGemstoneSlots(SkyBlockItem item, NBTTagCompound tag) {
+        if (item.gemstoneSlots() == null || !tag.getList("gemstone_slots", 10).isEmpty()) return;
+        NBTTagList slots = new NBTTagList();
+        for (GemstoneSlot slot : item.gemstoneSlots().getSlots()) {
+            NBTTagCompound slotTag = new NBTTagCompound();
+            boolean locked = !slot.getCosts().isEmpty();
+            slotTag.setBoolean("locked", locked);
+            if (locked) {
+                NBTTagList costs = new NBTTagList();
+                for (Cost cost : slot.getCosts()) {
+                    NBTTagCompound costTag = new NBTTagCompound();
+                    if (cost instanceof CoinCost coinCost) {
+                        costTag.setString("type", "coin");
+                        costTag.setInt("amount", coinCost.getAmount());
+                    } else if (cost instanceof ItemCost itemCost) {
+                        costTag.setString("type", "item");
+                        costTag.setString("item_id", itemCost.getItemId());
+                        costTag.setInt("amount", itemCost.getAmount());
+                    } else if (cost instanceof EssenceCost essenceCost) {
+                        costTag.setString("type", "essence");
+                        costTag.setString("essence", essenceCost.getEssenceType().name());
+                        costTag.setInt("amount", essenceCost.getAmount());
+                    }
+                    costs.add(costTag);
+                }
+                slotTag.set("costs", costs);
+            }
+            slots.add(slotTag);
+        }
+        tag.set("gemstone_slots", slots);
     }
 
-    private static String stat(String name, ChatColor color, double value, char ending, NBTTagCompound tag) {
-        return stat(name, color, value, ending, tag, 0, false);
+    // ---------- the name ----------
+
+    static String name(SkyBlockItem item, NBTTagCompound tag) {
+        Reforge reforge = reforge(tag);
+        return rarity(item, tag).getColor() + (reforge == null ? "" : reforge.getName() + " ") + item.name() + stars(item, tag);
     }
 
-    private static String stat(String name, ChatColor color, double value, NBTTagCompound tag) {
-        return stat(name, color, value, ' ', tag, 0, false);
+    /** How many stars it has: its upgrades (older items kept dungeon stars separately). */
+    public static int starCount(NBTTagCompound tag) {
+        String legacy = tag.getString("dungeon_star");
+        int dungeonStars = legacy.isEmpty() ? 0 : DungeonStar.valueOf(legacy).ordinal();
+        return Math.max(tag.getInt("upgrade_count"), dungeonStars);
     }
 
+    /**
+     * " &6✪✪✪": dungeon items show five gold stars, then a red master star (➊ to ➎); others turn their
+     * stars purple from the left after five (and aqua after ten).
+     */
+    static String stars(SkyBlockItem item, NBTTagCompound tag) {
+        int stars = starCount(tag);
+        if (stars <= 0) return "";
+        if (item.dungeonItem()) {
+            return " &6" + "✪".repeat(Math.min(stars, 5)) + (stars > 5 ? "&c" + MASTER_STARS.charAt(Math.min(stars, 10) - 6) : "");
+        }
+        if (stars <= 5) return " &6" + "✪".repeat(stars);
+        if (stars <= 10) return " &d" + "✪".repeat(stars - 5) + (stars < 10 ? "&6" + "✪".repeat(10 - stars) : "");
+        return " &b" + "✪".repeat(Math.min(stars, 15) - 10) + (stars < 15 ? "&d" + "✪".repeat(15 - stars) : "");
+    }
+
+    // ---------- the lore ----------
+
+    static List<String> lore(SkyBlockItem item, NBTTagCompound tag) {
+        Rarity rarity = rarity(item, tag);
+        Player owner = owner(tag);
+        List<List<String>> sections = new ArrayList<>();
+
+        List<String> header = new ArrayList<>();
+        if (item.stats().has(Stat.BREAKING_POWER)) header.add("&8Breaking Power " + (int) item.stats().get(Stat.BREAKING_POWER));
+        for (String category : item.categories()) header.add("&8" + category);
+        sections.add(header);
+
+        List<String> stats = new ArrayList<>(statLines(item, tag, rarity, owner));
+        String gemstones = gemstoneLine(item, tag);
+        if (gemstones != null) stats.add(gemstones);
+        sections.add(stats);
+
+        sections.add(enchantmentLines(item, tag));
+        sections.add(attributeLines(tag, owner));
+        sections.add(item.lore());
+        sections.add(runeLines(tag));
+        if (item.ability() != null) sections.add(abilityLore(item.ability(), rarity));
+        List<String> fromData = item.nbtLore(tag);
+        if (fromData != null) sections.add(fromData);
+
+        List<String> lore = new ArrayList<>();
+        for (List<String> section : sections) {
+            if (section.isEmpty()) continue;
+            if (!lore.isEmpty()) lore.add("");
+            lore.addAll(section);
+        }
+
+        List<String> footer = new ArrayList<>();
+        if (item.reforgeable() && reforge(tag) == null) footer.add("&8This item can be reforged!");
+        footer.addAll(requirementLines(item, owner));
+        String soulbound = tag.getString("soulbound");
+        if (!soulbound.isEmpty() && Soulbound.valueOf(soulbound) != Soulbound.NONE) {
+            footer.add("&8&l* &8" + (Soulbound.valueOf(soulbound) == Soulbound.COOP ? "Co-op " : "") + "Soulbound &8&l*");
+        }
+        if (!lore.isEmpty()) lore.add("");
+        lore.addAll(footer);
+        lore.add(rarityLine(item, tag, rarity));
+        return lore;
+    }
+
+    /**
+     * Each stat the item has, in Hypixel's order: the total (with {@code %} for percentage stats), then
+     * what the upgrades and reforge add, then (on dungeon items) what it comes to in a dungeon.
+     */
+    static List<String> statLines(SkyBlockItem item, NBTTagCompound tag, Rarity rarity, Player owner) {
+        List<String> lines = new ArrayList<>();
+        if (item.gearScore() > 0) lines.add("&7Gear Score: &d" + item.gearScore());
+        Stats base = item.stats();
+        Reforge reforge = reforge(tag);
+        GenericItemType generic = item.genericItemType();
+        int books = tag.getInt("hot_potato_books");
+        int stars = item.dungeonItem() ? Math.min(starCount(tag), 5) : 0;
+        double catacombs = item.dungeonItem() ? catacombsBoost(owner) : 0;
+        Stats enchanted = new Stats();
+        for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
+        for (Stat stat : Stat.values()) {
+            if (stat == Stat.BREAKING_POWER || stat == Stat.WEAPON_ABILITY_DAMAGE) continue;
+            double potatoBooks = generic == GenericItemType.WEAPON && (stat == Stat.DAMAGE || stat == Stat.STRENGTH) ? books * 2
+                    : generic == GenericItemType.ARMOR && stat == Stat.HEALTH ? books * 4
+                    : generic == GenericItemType.ARMOR && stat == Stat.DEFENSE ? books * 2 : 0;
+            double artOfWar = stat == Stat.STRENGTH && tag.getBoolean("art_of_war") ? 5 : 0;
+            double reforged = reforge == null || reforge.getStats().get(stat) == null ? 0 : reforge.getStats().get(stat).at(rarity);
+            // Stars add 2% of the base stat each out of a dungeon; in one, the dungeon boost replaces that.
+            double starBonus = base.get(stat) * 0.02 * stars;
+            // What enchantments grant counts in the total, with no bracket of its own.
+            double shown = base.get(stat) + starBonus + potatoBooks + artOfWar + reforged + enchanted.get(stat);
+            if (shown == 0) continue;
+            String percent = stat.isPercent() ? "%" : "";
+            StringBuilder line = new StringBuilder("&7").append(stat.getDisplayName()).append(": &").append(stat.getLoreColor())
+                    .append(Text.signed(shown)).append(percent);
+            if (potatoBooks != 0) line.append(" &e(").append(Text.signed(potatoBooks)).append(")");
+            if (artOfWar != 0) line.append(" &6[").append(Text.signed(artOfWar)).append("]");
+            if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(percent).append(")");
+            if (item.dungeonItem() && shown > 0) {
+                double factor = NOT_SCALED.contains(stat) ? 1 : 1 + 0.1 * stars + (CATACOMBS_SCALED.contains(stat) ? catacombs : 0);
+                line.append(" &8(").append(Text.signed((shown - starBonus) * factor)).append(percent).append(")");
+            }
+            lines.add(line.toString());
+        }
+        if (item.shotCooldown() > 0) lines.add("&7Shot Cooldown: &a" + Text.number(item.shotCooldown()) + "s");
+        return lines;
+    }
+
+    /**
+     * The Catacombs stat boost (0.26.1, July 2026): 10% at level 0, +5% for each of levels 1-3, then
+     * +6, +7, +8 and +9% for levels 4-7 and +10% for each level from 8 up to 50.
+     */
+    static double catacombsBoost(int level) {
+        int[] early = {10, 15, 20, 25, 31, 38, 46, 55};
+        level = Math.max(0, Math.min(level, 50));
+        return (level < early.length ? early[level] : 55 + (level - 7) * 10) / 100.0;
+    }
+
+    /** The owner's; level 0's while there's no owner to go by. */
+    private static double catacombsBoost(Player owner) {
+        User user = owner == null ? null : User.ifLoaded(owner.getUniqueId());
+        Number experience = user == null ? null : user.get("dungeons.catacombsExp", Number.class);
+        return catacombsBoost(experience == null ? 0 : DungeonLevels.level(experience.doubleValue()));
+    }
+
+    /** "&7Gemstones: &8[✎] [⚔]": locked slots all dark gray, open ones with a gray symbol. */
+    private static String gemstoneLine(SkyBlockItem item, NBTTagCompound tag) {
+        if (item.gemstoneSlots() == null) return null;
+        List<GemstoneSlot> kinds = item.gemstoneSlots().getSlots();
+        NBTTagList slots = tag.getList("gemstone_slots", 10);
+        StringBuilder line = new StringBuilder("&7Gemstones:");
+        for (int i = 0; i < kinds.size(); i++) {
+            boolean locked = i < slots.size() ? slots.get(i).getBoolean("locked") : !kinds.get(i).getCosts().isEmpty();
+            char icon = kinds.get(i).getType().getIcon();
+            line.append(locked ? " &8[" + icon + "]" : " &8[&7" + icon + "&8]");
+        }
+        return line.toString();
+    }
+
+    /** The item's enchantments that this version knows, ultimate first, then by name. */
+    private static List<Enchantment> enchantments(NBTTagCompound tag) {
+        List<Enchantment> enchantments = new ArrayList<>();
+        NBTTagList list = tag.getList("enchantments", 10);
+        for (int i = 0; i < list.size(); i++) {
+            Enchantment enchantment = Enchantment.getByIdentifiable(list.get(i).getString("name") + "." + list.get(i).getInt("lvl"));
+            if (enchantment.getType() != null) enchantments.add(enchantment);
+        }
+        enchantments.sort(Comparator.comparing((Enchantment e) -> !e.getType().isUltimate()).thenComparing(e -> e.getType().getName()));
+        return enchantments;
+    }
+
+    /**
+     * Up to 5 on an item that isn't a dungeon item: each with its description. Up to 9: one a line.
+     * More, or any on a dungeon item (a lone one still gets its own line): three a line.
+     */
+    static List<String> enchantmentLines(SkyBlockItem item, NBTTagCompound tag) {
+        List<Enchantment> enchantments = enchantments(tag);
+        List<String> lines = new ArrayList<>();
+        int count = enchantments.size();
+        if (count == 0) return lines;
+        if (!item.dungeonItem() && count <= 5) {
+            for (Enchantment enchantment : enchantments) {
+                lines.add(enchantment.getDisplayName());
+                lines.addAll(enchantment.getDescription());
+            }
+        } else if ((!item.dungeonItem() && count <= 9) || count == 1) {
+            for (Enchantment enchantment : enchantments) lines.add(enchantment.getDisplayName());
+        } else {
+            for (int i = 0; i < count; i += 3) {
+                List<String> names = new ArrayList<>();
+                for (Enchantment enchantment : enchantments.subList(i, Math.min(i + 3, count))) names.add(enchantment.getDisplayName());
+                lines.add(String.join(", ", names));
+            }
+        }
+        return lines;
+    }
+
+    /**
+     * Attributes, as items showed them before Hypixel moved attributes off items: "&bVeteran I" and
+     * what it grants, in red with ✖ while the owner doesn't meet its requirement.
+     */
+    private static List<String> attributeLines(NBTTagCompound tag, Player owner) {
+        List<String> lines = new ArrayList<>();
+        for (String key : List.of("attribute_1", "attribute_2")) {
+            if (!tag.hasKey(key)) continue;
+            Attribute attribute = Attribute.of(tag.getString(key));
+            int level = tag.getInt(key + "_level");
+            boolean met = owner != null && attribute.requirement().test(owner);
+            lines.add((met ? "&b" : "&c") + attribute.getName() + " " + Utils.getRomanNumeral(level) + (met ? "" : " ✖"));
+            lines.addAll(attribute.getLore(level));
+        }
+        return lines;
+    }
+
+    private static List<String> runeLines(NBTTagCompound tag) {
+        if (tag.getString("rune").isEmpty()) return List.of();
+        Rune rune = Rune.valueOf(tag.getString("rune"));
+        return List.of(rune.getColor() + "◆ " + rune.getName() + " Rune " + Utils.getRomanNumeral(tag.getInt("rune_level")));
+    }
+
+    /**
+     * "&6Ability: Instant Transmission  &e&lRIGHT CLICK" (two spaces; a passive one ends in one), its
+     * description, then what it costs and its cooldown. A shortbow's is just "Shortbow: Instantly shoots!".
+     */
+    public static List<String> abilityLore(Ability ability, Rarity rarity) {
+        List<String> lines = new ArrayList<>();
+        switch (ability.getType()) {
+            case SHORTBOW -> {
+                lines.add(rarity.getColor() + "Shortbow: Instantly shoots!");
+                return lines;
+            }
+            case PIECE_BONUS -> lines.add("&6Piece Bonus: " + ability.getName());
+            case FULL_SET_BONUS -> lines.add("&6Full Set Bonus: " + ability.getName() + " &7(0/4)");
+            default -> lines.add("&6Ability: " + ability.getName() + (ability.getActivation() == AbilityActivation.PASSIVE ? " "
+                    : "  &e&l" + ability.getActivation().getDisplay()));
+        }
+        lines.addAll(ability.descriptionLines());
+        if (ability.getManaCost() > 0) lines.add("&8Mana Cost: &b" + ability.getManaCost() + "✎");
+        if (ability.getSoulflowCost() > 0) lines.add("&8Soulflow Cost: &3" + ability.getSoulflowCost() + "⸎");
+        if (ability.getCooldown() > 0) lines.add("&8Cooldown: &a" + ability.getCooldown() + "s");
+        return lines;
+    }
+
+    /** The requirements its owner doesn't meet (none while it has no owner). */
+    private static List<String> requirementLines(SkyBlockItem item, Player owner) {
+        List<String> lines = new ArrayList<>();
+        if (item.requirements() == null || owner == null) return lines;
+        for (Requirement requirement : item.requirements().getRequirements()) {
+            if (requirement.requirement() != null && requirement.requirement().test(owner)) continue;
+            lines.addAll(requirement.lore());
+        }
+        return lines;
+    }
+
+    /** "&6&lLEGENDARY DUNGEON SWORD", between obfuscated letters once recombobulated. */
+    static String rarityLine(SkyBlockItem item, NBTTagCompound tag, Rarity rarity) {
+        String bold = rarity.getBoldedColor();
+        SpecificItemType type = item.specificItemType();
+        String kind = type == SpecificItemType.NONE ? (item.dungeonItem() ? " DUNGEON ITEM" : "")
+                : (item.dungeonItem() ? " DUNGEON" : "") + " " + type.name().replace('_', ' ');
+        String line = bold + rarity.name().replace('_', ' ') + kind;
+        return tag.getBoolean("recombobulated") ? bold + "&ka&r " + line + " " + bold + "&ka" : line;
+    }
+
+    private static Rarity rarity(SkyBlockItem item, NBTTagCompound tag) {
+        String rarity = tag.getString("rarity");
+        return rarity.isEmpty() ? item.rarity() : Rarity.valueOf(rarity);
+    }
+
+    private static Reforge reforge(NBTTagCompound tag) {
+        String reforge = tag.getString("reforge");
+        return reforge.isEmpty() ? null : Reforge.valueOf(reforge);
+    }
+
+    /** The online player who owns it; null if it has no owner or they aren't here. */
+    private static Player owner(NBTTagCompound tag) {
+        String owner = tag.getString("owner");
+        if (owner.isEmpty()) return null;
+        try {
+            return Bukkit.getPlayer(UUID.fromString(owner));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

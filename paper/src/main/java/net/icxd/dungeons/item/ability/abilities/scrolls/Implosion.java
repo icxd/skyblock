@@ -8,7 +8,8 @@ import org.bukkit.entity.Player;
 
 public class Implosion extends Ability {
     public Implosion() {
-        super("Implosion", AbilityType.ABILITY, AbilityActivation.RIGHT_CLICK, "&7Deals &c13,961.2 &7damage to nearby enemies.", 10, 300, 0);
+        super("Implosion", AbilityType.ABILITY, AbilityActivation.RIGHT_CLICK,
+                "&7Deals &c13,961.2 &7damage to nearby\n&7enemies.", 10, 300, 0);
     }
 
     @Override

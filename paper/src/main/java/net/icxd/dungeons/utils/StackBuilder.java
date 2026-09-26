@@ -1,6 +1,5 @@
 package net.icxd.dungeons.utils;
 
-import com.google.common.collect.Lists;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,35 +18,32 @@ public class StackBuilder {
     }
 
     public StackBuilder(Material material) {
-        this.stack = new ItemStack(material);
-        this.meta = stack.getItemMeta();
+        this(new ItemStack(material));
     }
 
+    /** With {@code &} colours, not italic (see {@link Text#line}). */
     public StackBuilder setDisplayName(String name) {
-        meta.setDisplayName(Utils.color(name));
+        meta.displayName(Text.line(name));
         return this;
     }
 
     public StackBuilder setLore(String... lore) {
-        meta.setLore(Utils.colorList(Lists.newArrayList(lore)));
-        return this;
+        return setLore(List.of(lore));
     }
 
     public StackBuilder setLore(List<String> lore) {
-        meta.setLore(Utils.colorList(lore));
+        meta.lore(Text.lines(lore));
         return this;
     }
 
     public StackBuilder setSkullTexture(String skin) {
-        assert stack.getType() == Material.PLAYER_HEAD;
         this.skin = skin;
         return this;
     }
 
     public ItemStack build() {
         stack.setItemMeta(meta);
-        if (this.skin != null)
-            Utils.skull(stack, this.skin);
+        if (this.skin != null && stack.getType() == Material.PLAYER_HEAD) Utils.skull(stack, this.skin);
         return stack;
     }
 

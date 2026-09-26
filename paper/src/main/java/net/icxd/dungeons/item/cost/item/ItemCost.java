@@ -1,7 +1,7 @@
 package net.icxd.dungeons.item.cost.item;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.nbt.ItemNBT;
@@ -11,15 +11,29 @@ import org.bukkit.inventory.ItemStack;
 
 /** An amount of one SkyBlock item (matched by its id: any player head isn't a Heavy Pearl). */
 @Getter
-@AllArgsConstructor
 public class ItemCost extends Cost {
-    private final SkyBlockItem item;
+    /** By id, so definitions can name items that are registered after them. */
+    private final String itemId;
     private final int amount;
+
+    public ItemCost(String itemId, int amount) {
+        this.itemId = itemId;
+        this.amount = amount;
+    }
+
+    public ItemCost(SkyBlockItem item, int amount) {
+        this(item.id(), amount);
+    }
+
+    /** Null if there's no such item. */
+    public SkyBlockItem getItem() {
+        return ItemRegistry.get(itemId);
+    }
 
     private boolean matches(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
         ItemNBT data = ItemNBT.of(stack);
-        return data.hasTag() && item.id().equalsIgnoreCase(data.getTag().getString("id"));
+        return data.hasTag() && itemId.equalsIgnoreCase(data.getTag().getString("id"));
     }
 
     @Override

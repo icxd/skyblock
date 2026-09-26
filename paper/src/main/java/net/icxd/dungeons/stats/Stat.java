@@ -3,44 +3,45 @@ package net.icxd.dungeons.stats;
 import lombok.Getter;
 
 /**
- * A SkyBlock stat: its name, symbol and colour as Hypixel shows them (the symbols and colours are the
- * wiki's, Module:Statname/Data; where item lore colours a stat's value differently, as with vitality
- * and mending, {@link #loreColor} is the lore's). In the order item lore lists them.
+ * A SkyBlock stat: its name, symbol and colour as Hypixel shows them (the wiki's Module:Statname/Data;
+ * {@link #loreColor} is the colour item lore gives its value, where that differs). In the order
+ * Hypixel's item lore lists them (worked out from the live auction house's items; stats that never
+ * show up together are placed by their group).
  */
 @Getter
 public enum Stat {
-    DAMAGE("Damage", "❁", 'c'),
     HEALTH("Health", "❤", 'c'),
     DEFENSE("Defense", "❈", 'a'),
+    TRUE_DEFENSE("True Defense", "❂", 'f'),
+    DAMAGE("Damage", "❁", 'c'),
     STRENGTH("Strength", "❁", 'c'),
-    INTELLIGENCE("Intelligence", "✎", 'b'),
     CRIT_CHANCE("Crit Chance", "☣", '9', true),
     CRIT_DAMAGE("Crit Damage", "☠", '9', true),
     ATTACK_SPEED("Attack Speed", "⚔", 'e', true),
-    ABILITY_DAMAGE("Ability Damage", "๑", 'c', true),
     FEROCITY("Ferocity", "⫽", 'c'),
-    TRUE_DEFENSE("True Defense", "❂", 'f'),
-    HEALTH_REGEN("Health Regen", "❣", 'c'),
-    VITALITY("Vitality", "♨", '4', 'a', false),
-    MENDING("Mending", "☄", 'a'),
-    SPEED("Speed", "✦", 'f'),
     SWING_RANGE("Swing Range", "Ⓢ", 'e'),
-    MAGIC_FIND("Magic Find", "✯", 'b'),
-    PET_LUCK("Pet Luck", "♣", 'd'),
-    SEA_CREATURE_CHANCE("Sea Creature Chance", "α", '3', true),
+    INTELLIGENCE("Intelligence", "✎", 'b'),
+    ABILITY_DAMAGE("Ability Damage", "๑", 'c', true),
+    HEALTH_REGEN("Health Regen", "❣", 'c'),
+    VITALITY("Vitality", "♨", '4'),
+    MENDING("Mending", "☄", 'a'),
+    FARMING_FORTUNE("Farming Fortune", "☘", '6'),
     FISHING_SPEED("Fishing Speed", "☂", 'b'),
+    SEA_CREATURE_CHANCE("Sea Creature Chance", "α", '3', true),
+    FORAGING_FORTUNE("Foraging Fortune", "☘", '6'),
     MINING_SPEED("Mining Speed", "⸕", '6'),
     MINING_FORTUNE("Mining Fortune", "☘", '6'),
-    BREAKING_POWER("Breaking Power", "Ⓟ", '2'),
-    FARMING_FORTUNE("Farming Fortune", "☘", '6'),
-    FORAGING_FORTUNE("Foraging Fortune", "☘", '6'),
+    SPEED("Speed", "✦", 'f'),
+    MAGIC_FIND("Magic Find", "✯", 'b'),
+    PET_LUCK("Pet Luck", "♣", 'd'),
     COMBAT_WISDOM("Combat Wisdom", "☯", '3'),
     FARMING_WISDOM("Farming Wisdom", "☯", '3'),
-    FORAGING_WISDOM("Foraging Wisdom", "☯", '3'),
     FISHING_WISDOM("Fishing Wisdom", "☯", '3'),
+    FORAGING_WISDOM("Foraging Wisdom", "☯", '3'),
     RIFT_TIME("Rift Time", "ф", 'a'),
     RIFT_DAMAGE("Rift Damage", "❁", '5'),
     RIFT_INTELLIGENCE("Rift Intelligence", "✎", 'b'),
+    BREAKING_POWER("Breaking Power", "Ⓟ", '2'),
     /** A weapon's own ability damage (e.g. what Giant's Slam hits for), not a player stat. */
     WEAPON_ABILITY_DAMAGE("Weapon Ability Damage", "๑", 'c');
 

@@ -13,7 +13,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 public class InstantlyShoots extends Ability {
     private final int arrows;
     public InstantlyShoots(int arrowAmount) {
-        super("Instantly shoots!", AbilityType.SHORTBOW, AbilityActivation.LEFT_CLICK, "&7Shoots &b"+arrowAmount+" &7arrows at once. Can damage endermen.", 0, 0, 0);
+        super("Instantly shoots!", AbilityType.SHORTBOW, AbilityActivation.LEFT_CLICK, "", 0, 0, 0);
         this.arrows = arrowAmount;
         setShowManaCost(false);
     }

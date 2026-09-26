@@ -21,7 +21,7 @@ public class NBTCommand extends SCommand {
             player.sendMessage("§cHold a SkyBlock item first.");
             return;
         }
-        for (String key : nmsItem.getTag().c()) {
+        for (String key : nmsItem.getTag().keySet()) {
             player.sendMessage("§f" + key + ": §a" + nmsItem.getTag().get(key));
         }
     }

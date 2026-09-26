@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item.requirement.skill;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.icxd.dungeons.item.requirement.Requirement;
@@ -22,5 +23,10 @@ public class SkillRequirement extends Requirement {
             Integer xp = user == null ? null : user.get("skills." + skill.name().toLowerCase(), Integer.class);
             return xp != null && Skill.getLevelFromXP(xp) >= level;
         };
+    }
+
+    @Override
+    public List<String> lore() {
+        return List.of("&4❣ &cRequires &a" + skill.getName() + " Skill " + level + "&c.");
     }
 }

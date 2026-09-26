@@ -7,9 +7,9 @@ import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.utils.Text;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 @Getter
 public enum Attribute {
     // TODO: Arachno
-    ATTACK_SPEED("Attack Speed", List.of(GenericItemType.WEAPON), Arrays.asList("§7Grants §e%s⚔ Bonus Attack", "§eSpeed§7."), KuudraTier.HOT, level -> new Stats().set(Stat.ATTACK_SPEED, level)),
+    ATTACK_SPEED("Attack Speed", List.of(GenericItemType.WEAPON), List.of("§7Grants §e+%s⚔ Attack Speed§7."), KuudraTier.HOT, level -> new Stats().set(Stat.ATTACK_SPEED, level)),
     // TODO: Blazing
     // TODO: Combo
     // TODO: Elite
@@ -41,14 +41,14 @@ public enum Attribute {
     // TODO: Fortitude
     // TODO: Life Regeneration
     // TODO: Lifeline
-    MAGIC_FIND("Magic Find", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §b%s✯ Magic Find§7."), KuudraTier.INFERNAL, level -> new Stats().set(Stat.MAGIC_FIND, 0.5 * level)),
+    MAGIC_FIND("Magic Find", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §b+%s✯ Magic Find§7."), KuudraTier.INFERNAL, level -> new Stats().set(Stat.MAGIC_FIND, 0.5 * level)),
     MANA_POOL("Mana Pool", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §b+%s✎ Intelligence§7."), KuudraTier.NONE, level -> new Stats().set(Stat.INTELLIGENCE, 20* level)),
     // TODO: Mana Regeneration
-    MENDING("Mending", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §a%s☄ Mending§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.MENDING, 3 * level)),
-    VITALITY("Vitality", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §4%s♨ Vitality§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.VITALITY, 3 * level)),
-    SPEED("Speed", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §f%s✦ Speed§7."), KuudraTier.NONE, level -> new Stats().set(Stat.SPEED, 5 * level)),
+    MENDING("Mending", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §a+%s☄ Mending§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.MENDING, 3 * level)),
+    VITALITY("Vitality", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §4+%s♨ Vitality§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.VITALITY, 3 * level)),
+    SPEED("Speed", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §f+%s✦ Speed§7."), KuudraTier.NONE, level -> new Stats().set(Stat.SPEED, 5 * level)),
     // TODO: Undead Resistance
-    VETERAN("Veteran", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §3%s☯ Combat Wisdom§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.COMBAT_WISDOM, 0.75 * level)),
+    VETERAN("Veteran", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §3+%s☯ Combat Wisdom§7."), KuudraTier.BURNING, level -> new Stats().set(Stat.COMBAT_WISDOM, 0.75 * level)),
     // TODO: Blazing Fortune
     // TODO: Fishing Experience
     // TODO: Infection
@@ -76,20 +76,11 @@ public enum Attribute {
             return highest != null && highest >= requiredCompletion.getTier();
         };
     }
-    public ArrayList<String> getLore(int level) {
-        ArrayList<String> lore = new ArrayList<>();
-        for (String s : description) {
-            switch (this) {
-                case ATTACK_SPEED -> s = String.format(s, level);
-                case MAGIC_FIND -> s = String.format(s, 0.5 * level);
-                case MANA_POOL -> s = String.format(s, 20 * level);
-                case MENDING, VITALITY -> s = String.format(s, 3 * level);
-                case SPEED -> s = String.format(s, 5 * level);
-                case VETERAN -> s = String.format(s, 0.75 * level);
-            }
-            lore.add(s);
-        }
-        return lore;
+    /** Its description at a level, with the stat it grants filled in. */
+    public List<String> getLore(int level) {
+        Stats stats = statsFunction.apply(level);
+        double value = Arrays.stream(Stat.values()).mapToDouble(stats::get).filter(v -> v != 0).findFirst().orElse(0);
+        return description.stream().map(line -> String.format(line, Text.number(value))).toList();
     }
 
     /** One that can roll on this kind of item, other than {@code not} (null for any). */

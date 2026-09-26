@@ -34,5 +34,7 @@ public enum SpecificItemType {
     LONGSWORD,
     TRAVEL_SCROLL,
     ARROW_POISON,
-    FISHING_WEAPON
+    FISHING_WEAPON,
+    GEMSTONE,
+    DWARVEN_METAL
 }

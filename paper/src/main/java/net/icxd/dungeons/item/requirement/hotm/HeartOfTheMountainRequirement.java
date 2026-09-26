@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item.requirement.hotm;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.icxd.dungeons.item.requirement.Requirement;
@@ -15,5 +16,10 @@ public class HeartOfTheMountainRequirement extends Requirement {
     @Override
     public Predicate<Player> requirement() {
         return null;
+    }
+
+    @Override
+    public List<String> lore() {
+        return List.of("&4❣ &cRequires &5Heart of the Mountain Tier " + level + "&c.");
     }
 }

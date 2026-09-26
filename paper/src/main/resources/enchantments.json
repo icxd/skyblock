@@ -1,0 +1,837 @@
+{
+ "bane_of_arthropods": {
+  "name": "Bane of Arthropods",
+  "levels": {
+   "1": "&7Increases damage dealt to &4Ж Arthropod&7 mobs by &a5%&7.",
+   "2": "&7Increases damage dealt to &4Ж Arthropod&7 mobs by &a10%&7.",
+   "3": "&7Increases damage dealt to &4Ж Arthropod&7 mobs by &a15%&7.",
+   "4": "&7Increases damage dealt to &4Ж Arthropod&7 mobs by &20%&7.",
+   "5": "&7Increases damage dealt to &4Ж Arthropod&7 mobs by &a30%&7.",
+   "6": "&7Increases damage dealt to &4Ж Arthropod&7 mobs by &a40%&7.",
+   "7": "&7Increases damage dealt to &4Ж Arthropod&7 mobs by &a50%&7."
+  }
+ },
+ "champion": {
+  "name": "Champion",
+  "levels": {
+   "1": "&7Gain &a3% &7extra Combat XP. The 2nd hit on a mob grants &6+1.4 coins &7& &3+7 &7exp orbs.",
+   "2": "&7Gain &a3.78% &7extra Combat XP. The 2nd hit on a mob grants &6+1.8 coins &7& &3+9 &7exp orbs.",
+   "3": "&7Gain &a4.56% &7extra Combat XP. The 2nd hit on a mob grants &6+2.2 coins &7& &3+11 &7exp orbs.",
+   "4": "&7Gain &a5.33% &7extra Combat XP. The 2nd hit on a mob grants &6+2.6 coins &7& &3+13 &7exp orbs.",
+   "5": "&7Gain &a6.11% &7extra Combat XP. The 2nd hit on a mob grants &6+3 coins &7& &3+15 &7exp orbs.",
+   "6": "&7Gain &a6.89% &7extra Combat XP. The 2nd hit on a mob grants &6+3.4 coins &7& &3+17 &7exp orbs.",
+   "7": "&7Gain &a7.67% &7extra Combat XP. The 2nd hit on a mob grants &6+3.8 coins &7& &3+19 &7exp orbs.",
+   "8": "&7Gain &a8.44% &7extra Combat XP. The 2nd hit on a mob grants &6+4.2 coins &7& &3+21 &7exp orbs.",
+   "9": "&7Gain &a9.22% &7extra Combat XP. The 2nd hit on a mob grants &6+4.6 coins &7& &3+23 &7exp orbs.",
+   "10": "&7Gain &a10% &7extra Combat XP. The 2nd hit on a mob grants &6+5 coins &7& &3+25 &7exp orbs."
+  }
+ },
+ "cleave": {
+  "name": "Cleave",
+  "levels": {
+   "1": "&7Deals &a5% &7of your damage dealt to other monsters within &a3.3 &7blocks of the target.",
+   "2": "&7Deals &a10% &7of your damage dealt to other monsters within &a3.6 &7blocks of the target.",
+   "3": "&7Deals &a15% &7of your damage dealt to other monsters within &a3.9 &7blocks of the target.",
+   "4": "&7Deals &a20% &7of your damage dealt to other monsters within &a4.2 &7blocks of the target.",
+   "5": "&7Deals &a25% &7of your damage dealt to other monsters within &a4.5 &7blocks of the target.",
+   "6": "&7Deals &a30% &7of your damage dealt to other monsters within &a4.8 &7blocks of the target."
+  }
+ },
+ "critical": {
+  "name": "Critical",
+  "levels": {
+   "1": "&7Increases &9☠ Crit Damage &7by &a10%&7.",
+   "2": "&7Increases &9☠ Crit Damage &7by &a20%&7.",
+   "3": "&7Increases &9☠ Crit Damage &7by &a30%&7.",
+   "4": "&7Increases &9☠ Crit Damage &7by &a40%&7.",
+   "5": "&7Increases &9☠ Crit Damage &7by &a50%&7.",
+   "6": "&7Increases &9☠ Crit Damage &7by &a70%&7.",
+   "7": "&7Increases &9☠ Crit Damage &7by &a100%&7."
+  }
+ },
+ "cubism": {
+  "name": "Cubism",
+  "levels": {
+   "1": "&7Increases damage dealt to Magma Cubes, Slimes, and Creepers by &a5%&7.",
+   "2": "&7Increases damage dealt to Magma Cubes, Slimes, and Creepers by &a10%&7.",
+   "3": "&7Increases damage dealt to Magma Cubes, Slimes, and Creepers by &a15%&7.",
+   "4": "&7Increases damage dealt to Creepers, Slimes, and Magma Cubes by &a20%&7.",
+   "5": "&7Increases damage dealt to Slimes, Magma Cubes, and Creepers by &a30%&7.",
+   "6": "&7Increases damage dealt to Magma Cubes, Slimes, and Creepers by &a40%&7."
+  }
+ },
+ "dragon_hunter": {
+  "name": "Gravity",
+  "levels": {
+   "1": "&7Increases damage dealt to ✈ Airborne mobs by &a5%&7.",
+   "2": "&7Increases damage dealt to ✈ Airborne mobs by &a10%&7.",
+   "3": "&7Increases damage dealt to ✈ Airborne mobs by &a15%&7.",
+   "4": "&7Increases damage dealt to ✈ Airborne mobs by &a20%&7.",
+   "5": "&7Increases damage dealt to ✈ Airborne mobs by &a30%&7."
+  }
+ },
+ "ender_slayer": {
+  "name": "Ender Slayer",
+  "levels": {
+   "1": "&7Increases damage dealt to &5⊙ Ender &7mobs by &a5%&7.",
+   "2": "&7Increases damage dealt to &5⊙ Ender &7mobs by &a10%&7.",
+   "3": "&7Increases damage dealt to &5⊙ Ender &7mobs by &a15%&7.",
+   "4": "&7Increases damage dealt to &5⊙ Ender &7mobs by &a20%&7.",
+   "5": "&7Increases damage dealt to &5⊙ Ender &7mobs by &a30%&7.",
+   "6": "&7Increases damage dealt to &5⊙ Ender &7mobs by &a40%&7.",
+   "7": "&7Increases damage dealt to &5⊙ Ender &7mobs by &a50%&7."
+  }
+ },
+ "execute": {
+  "name": "Execute",
+  "levels": {
+   "1": "&7Increases damage dealt by &a0.2% &7for each percent of health missing on your target.",
+   "2": "&7Increases damage dealt by &a0.4% &7for each percent of health missing on your target.",
+   "3": "&7Increases damage dealt by &a0.6% &7for each percent of health missing on your target.",
+   "4": "&7Increases damage dealt by &a0.8% &7for each percent of health missing on your target.",
+   "5": "&7Increases damage dealt by &a1% &7for each percent of health missing on your target.",
+   "6": "&7Increases damage dealt by &a1.25% &7for each percent of health missing on your target."
+  }
+ },
+ "fire_aspect": {
+  "name": "Fire Aspect",
+  "levels": {
+   "1": "&7Ignites your enemies for &a3s&7, dealing &a3% &7of your damage per second.",
+   "2": "&7Ignites your enemies for &a4s&7, dealing &a6% &7of your damage per second.",
+   "3": "&7Ignites your enemies for &a4s&7, dealing &a9% &7of your damage per second."
+  }
+ },
+ "first_strike": {
+  "name": "First Strike",
+  "levels": {
+   "1": "&7Increases melee damage dealt by &a25% &7for the first hit on a mob.",
+   "2": "&7Increases melee damage dealt by &a50% &7for the first hit on a mob.",
+   "3": "&7Increases melee damage dealt by &a75% &7for the first hit on a mob.",
+   "4": "&7Increases melee damage dealt by &a100% &7for the first hit on a mob.",
+   "5": "&7Increases melee damage dealt by &a125% &7for the first hit on a mob."
+  }
+ },
+ "giant_killer": {
+  "name": "Giant Killer",
+  "levels": {
+   "1": "&7Increases damage dealt by &a0.1% &7for each percent of extra health that your target has above you up to &a5%&7.",
+   "2": "&7Increases damage dealt by &a0.2% &7for each percent of extra health that your target has above you up to &a10%&7.",
+   "3": "&7Increases damage dealt by &a0.3% &7for each percent of extra health that your target has above you up to &a15%&7.",
+   "4": "&7Increases damage dealt by &a0.4% &7for each percent of extra health that your target has above you up to &a20%&7.",
+   "5": "&7Increases damage dealt by &a0.6% &7for each percent of extra health that your target has above you up to &a30%&7.",
+   "6": "&7Increases damage dealt by &a0.9% &7for each percent of extra health that your target has above you up to &a45%&7.",
+   "7": "&7Increases damage dealt by &a1.2% &7for each percent of extra health that your target has above you up to &a65%&7."
+  }
+ },
+ "lethality": {
+  "name": "Lethality",
+  "levels": {
+   "1": "&7Reduces the &a❈ Defense &7of your target by &a1.2% &7for &64s &7each time you hit them with melee. Stacks up to &a4 &7times.",
+   "2": "&7Reduces the &a❈ Defense &7of your target by &a2.4% &7for &64s &7each time you hit them with melee. Stacks up to &a4 &7times.",
+   "3": "&7Reduces the &a❈ Defense &7of your target by &a3.6% &7for &64s &7each time you hit them with melee. Stacks up to &a4 &7times.",
+   "4": "&7Reduces the &a❈ Defense &7of your target by &a4.8% &7for &64s &7each time you hit them with melee. Stacks up to &a4 &7times.",
+   "5": "&7Reduces the &a❈ Defense &7of your target by &a6% &7for &64s &7each time you hit them with melee. Stacks up to &a4 &7times.",
+   "6": "&7Reduces the &a❈ Defense &7of your target by &a9% &7for &64s &7each time you hit them with melee. Stacks up to &a4 &7times."
+  }
+ },
+ "life_steal": {
+  "name": "Life Steal",
+  "levels": {
+   "1": "&7Heal &c2.4❤ &7every time you hit a mob.",
+   "2": "&7Heal &c4.8❤ &7every time you hit a mob.",
+   "3": "&7Heal &c7.2❤ &7every time you hit a mob.",
+   "4": "&7Heal &c9.6❤ &7every time you hit a mob.",
+   "5": "&7Heal &c12❤ &7every time you hit a mob."
+  }
+ },
+ "looting": {
+  "name": "Looting",
+  "levels": {
+   "1": "&7Increases the chance of a Monster dropping an item by &a15%&7.",
+   "2": "&7Increases the chance of a Monster dropping an item by &a30%&7.",
+   "3": "&7Increases the chance of a Monster dropping an item by &a45%&7.",
+   "4": "&7Increases the chance of a Monster dropping an item by &a60%&7.",
+   "5": "&7Increases the chance of a Monster dropping an item by &a75%&7."
+  }
+ },
+ "luck": {
+  "name": "Luck",
+  "levels": {
+   "1": "&7Increases the chance for Monsters to drop their armor by &a5%",
+   "2": "&7Increases the chance for Monsters to drop their armor by &a10%",
+   "3": "&7Increases the chance for Monsters to drop their armor by &a15%",
+   "4": "&7Increases the chance for Monsters to drop their armor by &a20%",
+   "5": "&7Increases the chance for Monsters to drop their armor by &a25%",
+   "6": "&7Increases the chance for Monsters to drop their armor by &a30%",
+   "7": "&7Increases the chance for Monsters to drop their armor by &a35%"
+  }
+ },
+ "mana_steal": {
+  "name": "Mana Steal",
+  "levels": {
+   "1": "&7Regain &b0.25% &7of your mana on hit.",
+   "2": "&7Regain &b0.5% &7of your mana on hit.",
+   "3": "&7Regain &b0.75% &7of your mana on hit."
+  }
+ },
+ "prosecute": {
+  "name": "Prosecute",
+  "levels": {
+   "1": "&7Increases damage dealt by &a0.1% &7for each percent of health your target has.",
+   "2": "&7Increases damage dealt by &a0.2% &7for each percent of health your target has.",
+   "3": "&7Increases damage dealt by &a0.3% &7for each percent of health your target has.",
+   "4": "&7Increases damage dealt by &a0.4% &7for each percent of health your target has.",
+   "5": "&7Increases damage dealt by &a0.7% &7for each percent of health your target has.",
+   "6": "&7Increases damage dealt by &a1% &7for each percent of health your target has."
+  }
+ },
+ "scavenger": {
+  "name": "Scavenger",
+  "levels": {
+   "1": "&7Scavenge &60.3 Coins &7per monster level on kill.",
+   "2": "&7Scavenge &60.6 Coins &7per monster level on kill.",
+   "3": "&7Scavenge &60.9 Coins &7per monster level on kill.",
+   "4": "&7Scavenge &61.2 Coins &7per monster level on kill.",
+   "5": "&7Scavenge &61.5 Coins &7per monster level on kill."
+  }
+ },
+ "sharpness": {
+  "name": "Sharpness",
+  "levels": {
+   "1": "&7Increases melee damage dealt by &a5%",
+   "2": "&7Increases melee damage dealt by &a10%",
+   "3": "&7Increases melee damage dealt by &a15%",
+   "4": "&7Increases melee damage dealt by &a20%",
+   "5": "&7Increases melee damage dealt by &a30%",
+   "6": "&7Increases melee damage dealt by &a45%",
+   "7": "&7Increases melee damage dealt by &a65%"
+  }
+ },
+ "smite": {
+  "name": "Smite",
+  "levels": {
+   "1": "&7Increases damage dealt to &8☠ Wither&7, &2༕ Undead &7and &f🦴 Skeletal&7 mobs by &a5%&7.",
+   "2": "&7Increases damage dealt to &8☠ Wither&7, &2༕ Undead &7and &f🦴 Skeletal&7 mobs by &a10%&7.",
+   "3": "&7Increases damage dealt to &8☠ Wither&7, &2༕ Undead &7and &f🦴 Skeletal&7 mobs by &a15%&7.",
+   "4": "&7Increases damage dealt to &8☠ Wither&7, &2༕ Undead &7and &f🦴 Skeletal&7 mobs by &a20%&7.",
+   "5": "&7Increases damage dealt to &8☠ Wither&7, &2༕ Undead &7and &f🦴 Skeletal&7 mobs by &a30%&7.",
+   "6": "&7Increases damage dealt to &8☠ Wither&7, &2༕ Undead &7and &f🦴 Skeletal&7 mobs by &a40%&7.",
+   "7": "&7Increases damage dealt to &8☠ Wither&7, &2༕ Undead &7and &f🦴 Skeletal&7 mobs by &a50%&7."
+  }
+ },
+ "smoldering": {
+  "name": "Smoldering",
+  "levels": {
+   "1": "&7Increases damage dealt to &4♨ Infernal&7 mobs by &a5%&7.",
+   "2": "&7Increases damage dealt to &4♨ Infernal&7 mobs by &a10%&7.",
+   "3": "&7Increases damage dealt to &4♨ Infernal&7 mobs by &a15%&7.",
+   "4": "&7Increases damage dealt to &4♨ Infernal&7 mobs by &a20%&7.",
+   "5": "&7Increases damage dealt to &4♨ Infernal&7 mobs by &a30%&7."
+  }
+ },
+ "syphon": {
+  "name": "Drain",
+  "levels": {
+   "1": "&7Regen &4+0.5♨ Vitality &7every time you hit a mob. &8(1s Cooldown).",
+   "2": "&7Regen &4+1♨ Vitality &7every time you hit a mob. &8(1s Cooldown).",
+   "3": "&7Regen &4+1.5♨ Vitality &7every time you hit a mob. &8(1s Cooldown).",
+   "4": "&7Regen &4+2♨ Vitality &7every time you hit a mob. &8(1s Cooldown).",
+   "5": "&7Regen &4+2.5♨ Vitality &7every time you hit a mob. &8(1s Cooldown)."
+  }
+ },
+ "thunderbolt": {
+  "name": "Thunderbolt",
+  "levels": {
+   "1": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a4% &7of the hit's damage to up to 10 monsters within 2 blocks.",
+   "2": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a8% &7of the hit's damage to up to 10 monsters within 2 blocks.",
+   "3": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a12% &7of the hit's damage to up to 10 monsters within 2 blocks.",
+   "4": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a16% &7of the hit's damage to up to 10 monsters within 2 blocks.",
+   "5": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a20% &7of the hit's damage to up to 10 monsters within 2 blocks.",
+   "6": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a25% &7of the hit's damage to up to 10 monsters within 2 blocks."
+  }
+ },
+ "thunderlord": {
+  "name": "Thunderlord",
+  "levels": {
+   "1": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a8% &7of the hit's damage.",
+   "2": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a16% &7of the hit's damage.",
+   "3": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a24% &7of the hit's damage.",
+   "4": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a32% &7of the hit's damage.",
+   "5": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a40% &7of the hit's damage.",
+   "6": "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a50% &7of the hit's damage."
+  }
+ },
+ "titan_killer": {
+  "name": "Titan Killer",
+  "levels": {
+   "1": "&7Increases damage dealt by &a2% &7for every 100 defense your target has up to &a6%&7.",
+   "2": "&7Increases damage dealt by &a4% &7for every 100 defense your target has up to &a12%&7.",
+   "3": "&7Increases damage dealt by &a6% &7for every 100 defense your target has up to &a18%&7.",
+   "4": "&7Increases damage dealt by &a8% &7for every 100 defense your target has up to &a24%&7.",
+   "5": "&7Increases damage dealt by &a12% &7for every 100 defense your target has up to &a40%&7.",
+   "6": "&7Increases damage dealt by &a16% &7for every 100 defense your target has up to &a60%&7.",
+   "7": "&7Increases damage dealt by &a20% &7for every 100 defense your target has up to &a80%&7."
+  }
+ },
+ "triple_strike": {
+  "name": "Triple-Strike",
+  "levels": {
+   "1": "&7Increases melee damage dealt by &a10% &7for the first three hits on a mob.",
+   "2": "&7Increases melee damage dealt by &a20% &7for the first three hits on a mob.",
+   "3": "&7Increases melee damage dealt by &a30% &7for the first three hits on a mob.",
+   "4": "&7Increases melee damage dealt by &a40% &7for the first three hits on a mob.",
+   "5": "&7Increases melee damage dealt by &a50% &7for the first three hits on a mob."
+  }
+ },
+ "vampirism": {
+  "name": "Vampirism",
+  "levels": {
+   "1": "&7Heal &c5❤ &7every time you kill a mob. &8(0.5s Cooldown).",
+   "2": "&7Heal &c10❤ &7every time you kill a mob. &8(0.5s Cooldown).",
+   "3": "&7Heal &c15❤ &7every time you kill a mob. &8(0.5s Cooldown).",
+   "4": "&7Heal &c20❤ &7every time you kill a mob. &8(0.5s Cooldown).",
+   "5": "&7Heal &c25❤ &7every time you kill a mob. &8(0.5s Cooldown).",
+   "6": "&7Heal &c30❤ &7every time you kill a mob. &8(0.5s Cooldown)."
+  }
+ },
+ "venomous": {
+  "name": "Venomous",
+  "levels": {
+   "1": "&7Reduces the target's walk speed by &a2% &7and deals &2+0.2% &7of your damage per second per hit, stacking globally up to &240 &7hits. Lasts &65s&7.",
+   "2": "&7Reduces the target's walk speed by &a4% &7and deals &2+0.4% &7of your damage per second per hit, stacking globally up to &240 &7hits. Lasts &65s&7.",
+   "3": "&7Reduces the target's walk speed by &a6% &7and deals &2+0.6% &7of your damage per second per hit, stacking globally up to &240 &7hits. Lasts &65s&7.",
+   "4": "&7Reduces the target's walk speed by &a8% &7and deals &2+0.8% &7of your damage per second per hit, stacking globally up to &240 &7hits. Lasts &65s&7.",
+   "5": "&7Reduces the target's walk speed by &a12% &7and deals &2+1.2% &7of your damage per second per hit, stacking globally up to &240 &7hits. Lasts &65s&7.",
+   "6": "&7Reduces the target's walk speed by &a15% &7and deals &2+1.6% &7of your damage per second per hit, stacking globally up to &240 &7hits. Lasts &65s&7."
+  }
+ },
+ "vicious": {
+  "name": "Vicious",
+  "levels": {
+   "1": "&7Grants &c+1⫽ Ferocity&7.",
+   "2": "&7Grants &c+2⫽ Ferocity&7.",
+   "3": "&7Grants &c+3⫽ Ferocity&7.",
+   "4": "&7Grants &c+4⫽ Ferocity&7.",
+   "5": "&7Grants &c+5⫽ Ferocity&7."
+  }
+ },
+ "fortune": {
+  "name": "Fortune",
+  "levels": {
+   "1": "&7Grants &a+10 &6☘ Mining Fortune&7, which increases your chance for multiple drops.",
+   "2": "&7Grants &a+20 &6☘ Mining Fortune&7, which increases your chance for multiple drops.",
+   "3": "&7Grants &a+30 &6☘ Mining Fortune&7, which increases your chance for multiple drops.",
+   "4": "&7Grants &a+45 &6☘ Mining Fortune&7, which increases your chance for multiple drops."
+  }
+ },
+ "pristine": {
+  "name": "Prismatic",
+  "levels": {
+   "1": "&7Grants &5+0.5 ✧ Pristine&7, which increases the chance to improve the quality of dropped &dGemstones&7.",
+   "2": "&7Grants &5+1 ✧ Pristine&7, which increases the chance to improve the quality of dropped &dGemstones&7.",
+   "3": "&7Grants &5+1.5 ✧ Pristine&7, which increases the chance to improve the quality of dropped &dGemstones&7.",
+   "4": "&7Grants &5+2 ✧ Pristine&7, which increases the chance to improve the quality of dropped &dGemstones&7.",
+   "5": "&7Grants &5+2.5 ✧ Pristine&7, which increases the chance to improve the quality of dropped &dGemstones&7."
+  }
+ },
+ "cultivating": {
+  "name": "Cultivating",
+  "levels": {
+   "1": "&7Gain &3+1☯ Farming Wisdom &7and &6+2☘ Farming Fortune&7.",
+   "2": "&7Gain &3+2☯ Farming Wisdom &7and &6+4☘ Farming Fortune&7.",
+   "3": "&7Gain &3+3☯ Farming Wisdom &7and &6+6☘ Farming Fortune&7.",
+   "4": "&7Gain &3+4☯ Farming Wisdom &7and &6+8☘ Farming Fortune&7.",
+   "5": "&7Gain &3+5☯ Farming Wisdom &7and &6+10☘ Farming Fortune&7.",
+   "6": "&7Gain &3+6☯ Farming Wisdom &7and &6+12☘ Farming Fortune&7.",
+   "7": "&7Gain &3+7☯ Farming Wisdom &7and &6+14☘ Farming Fortune&7.",
+   "8": "&7Gain &3+8☯ Farming Wisdom &7and &6+16☘ Farming Fortune&7.",
+   "9": "&7Gain &3+9☯ Farming Wisdom &7and &6+18☘ Farming Fortune&7.",
+   "10": "&7Gain &3+10☯ Farming Wisdom &7and &6+20☘ Farming Fortune&7."
+  }
+ },
+ "delicate": {
+  "name": "Delicate",
+  "levels": {
+   "1": "&7Avoids breaking stems and baby crops.",
+   "2": "&7Avoids breaking stems and baby crops.",
+   "3": "&7Avoids breaking stems and baby crops.",
+   "4": "&7Avoids breaking stems and baby crops.",
+   "5": "&7Avoids breaking stems and baby crops."
+  }
+ },
+ "harvesting": {
+  "name": "Harvesting",
+  "levels": {
+   "1": "&7Grants &a+12.5 &6☘ Farming Fortune&7, which increases your chance for multiple crops.",
+   "2": "&7Grants &a+25 &6☘ Farming Fortune&7, which increases your chance for multiple crops.",
+   "3": "&7Grants &a+50 &6☘ Farming Fortune&7, which increases your chance for multiple crops.",
+   "4": "&7Grants &a+37.5 &6☘ Farming Fortune&7, which increases your chance for multiple crops.",
+   "5": "&7Grants &a+62.5 &6☘ Farming Fortune&7, which increases your chance for multiple crops.",
+   "6": "&7Grants &a+75 &6☘ Farming Fortune&7, which increases your chance for multiple crops."
+  }
+ },
+ "replenish": {
+  "name": "Replenish",
+  "levels": {
+   "1": "&7Upon breaking crops, nether wart, cocoa, wild rose, or sunflower, automatically replant from materials in your inventory."
+  }
+ },
+ "chance": {
+  "name": "Chance",
+  "levels": {
+   "1": "&7Increases the chance of a Monster dropping an item by &a15%&7.",
+   "2": "&7Increases the chance of a Monster dropping an item by &a30%&7.",
+   "3": "&7Increases the chance of a Monster dropping an item by &a45%&7.",
+   "4": "&7Increases the chance of a Monster dropping an item by &a60%&7.",
+   "5": "&7Increases the chance of a Monster dropping an item by &a75%&7."
+  }
+ },
+ "infinite_quiver": {
+  "name": "Infinite Quiver",
+  "levels": {
+   "1": "&7Saves arrows &a3%&7 of the time when you fire your bow.",
+   "2": "&7Saves arrows &a6%&7 of the time when you fire your bow.",
+   "3": "&7Saves arrows &a9%&7 of the time when you fire your bow.",
+   "4": "&7Saves arrows &a12%&7 of the time when you fire your bow.",
+   "5": "&7Saves arrows &a15%&7 of the time when you fire your bow.",
+   "6": "&7Saves arrows &a18%&7 of the time when you fire your bow.",
+   "7": "&7Saves arrows &a21%&7 of the time when you fire your bow.",
+   "8": "&7Saves arrows &a24%&7 of the time when you fire your bow.",
+   "9": "&7Saves arrows &a27%&7 of the time when you fire your bow.",
+   "10": "&7Saves arrows &a30%&7 of the time when you fire your bow."
+  }
+ },
+ "overload": {
+  "name": "Overload",
+  "levels": {
+   "1": "&7Increases &9☠ Crit Damage &7by &a1%&7 and &9☣ Crit Chance &7by &a1%&7. Having a Critical chance above &9100% &7grants a chance to perform a Mega Critical Hit dealing &910% &7extra damage.",
+   "2": "&7Increases &9☠ Crit Damage &7by &a2%&7 and &9☣ Crit Chance &7by &a2%&7. Having a Critical chance above &9100% &7grants a chance to perform a Mega Critical Hit dealing &920% &7extra damage.",
+   "3": "&7Increases &9☠ Crit Damage &7by &a3%&7 and &9☣ Crit Chance &7by &a3%&7. Having a Critical chance above &9100% &7grants a chance to perform a Mega Critical Hit dealing &930% &7extra damage.",
+   "4": "&7Increases &9☠ Crit Damage &7by &a4%&7 and &9☣ Crit Chance &7by &a4%&7. Having a Critical chance above &9100% &7grants a chance to perform a Mega Critical Hit dealing &940% &7extra damage.",
+   "5": "&7Increases &9☠ Crit Damage &7by &a5%&7 and &9☣ Crit Chance &7by &a5%&7. Having a Critical chance above &9100% &7grants a chance to perform a Mega Critical Hit dealing &950% &7extra damage."
+  }
+ },
+ "power": {
+  "name": "Power",
+  "levels": {
+   "1": "&7Increases bow damage by &a8%&7.",
+   "2": "&7Increases bow damage by &a16%&7.",
+   "3": "&7Increases bow damage by &a24%&7.",
+   "4": "&7Increases bow damage by &a32%&7.",
+   "5": "&7Increases bow damage by &a40%&7.",
+   "6": "&7Increases bow damage by &a50%&7.",
+   "7": "&7Increases bow damage by &a65%&7."
+  }
+ },
+ "snipe": {
+  "name": "Snipe",
+  "levels": {
+   "1": "&7Arrows deal &a+1% &7damage for every &a10 &7blocks travelled.",
+   "2": "&7Arrows deal &a+2% &7damage for every &a10 &7blocks travelled.",
+   "3": "&7Arrows deal &a+3% &7damage for every &a10 &7blocks travelled.",
+   "4": "&7Arrows deal &a+4% &7damage for every &a10 &7blocks travelled."
+  }
+ },
+ "angler": {
+  "name": "Angler",
+  "levels": {
+   "1": "&7Grants &3+1α Sea Creature Chance&7.",
+   "2": "&7Grants &3+2α Sea Creature Chance&7.",
+   "3": "&7Grants &3+3α Sea Creature Chance&7.",
+   "4": "&7Grants &3+4α Sea Creature Chance&7.",
+   "5": "&7Grants &3+5α Sea Creature Chance&7.",
+   "6": "&7Grants &3+6α Sea Creature Chance&7."
+  }
+ },
+ "blessing": {
+  "name": "Blessing",
+  "levels": {
+   "1": "&7Increases the chance for &6Treasure &7catches to be &6&lGREAT &7or &d&lOUTSTANDING &7by &a2%&7.",
+   "2": "&7Increases the chance for &6Treasure &7catches to be &6&lGREAT &7or &d&lOUTSTANDING &7by &a4%&7.",
+   "3": "&7Increases the chance for &6Treasure &7catches to be &6&lGREAT &7or &d&lOUTSTANDING &7by &a6%&7.",
+   "4": "&7Increases the chance for &6Treasure &7catches to be &6&lGREAT &7or &d&lOUTSTANDING &7by &a8%&7.",
+   "5": "&7Increases the chance for &6Treasure &7catches to be &6&lGREAT &7or &d&lOUTSTANDING &7by &a10%&7.",
+   "6": "&7Increases the chance for &6Treasure &7catches to be &6&lGREAT &7or &d&lOUTSTANDING &7by &a12%&7."
+  }
+ },
+ "caster": {
+  "name": "Caster",
+  "levels": {
+   "1": "&a5%&7 chance to not consume bait.",
+   "2": "&a10%&7 chance to not consume bait.",
+   "3": "&a15%&7 chance to not consume bait.",
+   "4": "&a20%&7 chance to not consume bait.",
+   "5": "&a25%&7 chance to not consume bait.",
+   "6": "&a30%&7 chance to not consume bait."
+  }
+ },
+ "charm": {
+  "name": "Charm",
+  "levels": {
+   "1": "&7Increases the chance to catch higher-tiered &6Trophies &7by &a2%&7.",
+   "2": "&7Increases the chance to catch higher-tiered &6Trophies &7by &a4%&7.",
+   "3": "&7Increases the chance to catch higher-tiered &6Trophies &7by &a6%&7.",
+   "4": "&7Increases the chance to catch higher-tiered &6Trophies &7by &a8%&7.",
+   "5": "&7Increases the chance to catch higher-tiered &6Trophies &7by &a10%&7."
+  }
+ },
+ "corruption": {
+  "name": "Corruption",
+  "levels": {
+   "1": "&7Gain a &a1% &7chance to spawn a Corrupted Sea Creature.",
+   "2": "&7Gain a &a2% &7chance to spawn a Corrupted Sea Creature.",
+   "3": "&7Gain a &a3% &7chance to spawn a Corrupted Sea Creature.",
+   "4": "&7Gain a &a4% &7chance to spawn a Corrupted Sea Creature.",
+   "5": "&7Gain a &a5% &7chance to spawn a Corrupted Sea Creature."
+  }
+ },
+ "expertise": {
+  "name": "Expertise",
+  "levels": {
+   "1": "&7Grants &3+0.6α Sea Creature Chance &7and &3+2☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "2": "&7Grants &3+1.2α Sea Creature Chance &7and &3+4☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "3": "&7Grants &3+1.8α Sea Creature Chance &7and &3+6☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "4": "&7Grants &3+2.4α Sea Creature Chance &7and &3+8☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "5": "&7Grants &3+3α Sea Creature Chance &7and &3+10☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "6": "&7Grants &3+3.6α Sea Creature Chance &7and &3+12☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "7": "&7Grants &3+4.2α Sea Creature Chance &7and &3+14☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "8": "&7Grants &3+4.8α Sea Creature Chance &7and &3+16☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "9": "&7Grants &3+5.4α Sea Creature Chance &7and &3+18☯ Fishing Wisdom &7when killing Sea Creatures.",
+   "10": "&7Grants &3+6α Sea Creature Chance &7and &3+20☯ Fishing Wisdom &7when killing Sea Creatures."
+  }
+ },
+ "frail": {
+  "name": "Frail",
+  "levels": {
+   "1": "&7Sea creatures start with &a2.5% &7reduced health.",
+   "2": "&7Sea creatures start with &a5% &7reduced health.",
+   "3": "&7Sea creatures start with &a7.5% &7reduced health.",
+   "4": "&7Sea creatures start with &a10% &7reduced health.",
+   "5": "&7Sea creatures start with &a12.5% &7reduced health.",
+   "6": "&7Sea creatures start with &a15% &7reduced health."
+  }
+ },
+ "luck_of_the_sea": {
+  "name": "Luck of the Sea",
+  "levels": {
+   "1": "&7Grants &6+0.5⛃ Treasure Chance&7, which increases the chance of fishing treasure.",
+   "2": "&7Grants &6+1⛃ Treasure Chance&7, which increases the chance of fishing treasure.",
+   "3": "&7Grants &6+1.5⛃ Treasure Chance&7, which increases the chance of fishing treasure.",
+   "4": "&7Grants &6+2⛃ Treasure Chance&7, which increases the chance of fishing treasure.",
+   "5": "&7Grants &6+2.5⛃ Treasure Chance&7, which increases the chance of fishing treasure.",
+   "6": "&7Grants &6+3⛃ Treasure Chance&7, which increases the chance of fishing treasure."
+  }
+ },
+ "lure": {
+  "name": "Lure",
+  "levels": {
+   "1": "&7Shortens the maximum time it takes to catch something by &a5%&7.",
+   "2": "&7Shortens the maximum time it takes to catch something by &a10%&7.",
+   "3": "&7Shortens the maximum time it takes to catch something by &a15%&7.",
+   "4": "&7Shortens the maximum time it takes to catch something by &a20%&7.",
+   "5": "&7Shortens the maximum time it takes to catch something by &a25%&7.",
+   "6": "&7Shortens the maximum time it takes to catch something by &a30%&7."
+  }
+ },
+ "magnet": {
+  "name": "Magnet",
+  "levels": {
+   "1": "&7Grants &a1 &7additional experience orb every time you successfully catch a fish.",
+   "2": "&7Grants &a2 &7additional experience orb every time you successfully catch a fish.",
+   "3": "&7Grants &a3 &7additional experience orb every time you successfully catch a fish.",
+   "4": "&7Grants &a4 &7additional experience orbs every time you successfully catch a fish.",
+   "5": "&7Grants &a5 &7additional experience orbs every time you successfully catch a fish.",
+   "6": "&7Grants &a6 &7additional experience orbs every time you successfully catch a fish."
+  }
+ },
+ "piscary": {
+  "name": "Piscary",
+  "levels": {
+   "1": "&7Grants &b+1☂ Fishing Speed&7.",
+   "2": "&7Grants &b+2☂ Fishing Speed&7.",
+   "3": "&7Grants &b+3☂ Fishing Speed&7.",
+   "4": "&7Grants &b+4☂ Fishing Speed&7.",
+   "5": "&7Grants &b+5☂ Fishing Speed&7.",
+   "6": "&7Grants &b+6☂ Fishing Speed&7."
+  }
+ },
+ "spiked_hook": {
+  "name": "Spiked Hook",
+  "levels": {
+   "1": "&7Fishing rod deals &a5%&7 more damage to monsters.",
+   "2": "&7Fishing rod deals &a10%&7 more damage to monsters.",
+   "3": "&7Fishing rod deals &a15%&7 more damage to monsters.",
+   "4": "&7Fishing rod deals &a20%&7 more damage to monsters.",
+   "5": "&7Fishing rod deals &a25%&7 more damage to monsters.",
+   "6": "&7Fishing rod deals &a30%&7 more damage to monsters."
+  }
+ },
+ "big_brain": {
+  "name": "Big Brain",
+  "levels": {
+   "1": "&7Grants &b+5✎ Intelligence&7.",
+   "2": "&7Grants &b+10✎ Intelligence&7.",
+   "3": "&7Grants &b+15✎ Intelligence&7.",
+   "4": "&7Grants &b+20✎ Intelligence&7.",
+   "5": "&7Grants &b+25✎ Intelligence&7."
+  }
+ },
+ "hecatomb": {
+  "name": "Hecatomb",
+  "levels": {
+   "1": "&7Gain &a+0.28% &cCatacombs &7XP & &a+0.56% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+2.6❤ &7per 10 &cCatacombs &7levels.",
+   "2": "&7Gain &a+0.36% &cCatacombs &7XP & &a+0.72% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+3.2❤ &7per 10 &cCatacombs &7levels.",
+   "3": "&7Gain &a+0.44% &cCatacombs &7XP & &a+0.88% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+3.8❤ &7per 10 &cCatacombs &7levels.",
+   "4": "&7Gain &a+0.52% &cCatacombs &7XP & &a+1.04% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+4.4❤ &7per 10 &cCatacombs &7levels.",
+   "5": "&7Gain &a+0.6% &cCatacombs &7XP & &a+1.2% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+5❤ &7per 10 &cCatacombs &7levels.",
+   "6": "&7Gain &a+0.68% &cCatacombs &7XP & &a+1.36% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+5.6❤ &7per 10 &cCatacombs &7levels.",
+   "7": "&7Gain &a+0.76% &cCatacombs &7XP & &a+1.52% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+6.2❤ &7per 10 &cCatacombs &7levels.",
+   "8": "&7Gain &a+0.84% &cCatacombs &7XP & &a+1.68% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+6.8❤ &7per 10 &cCatacombs &7levels.",
+   "9": "&7Gain &a+0.92% &cCatacombs &7XP & &a+1.84% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+7.4❤ &7per 10 &cCatacombs &7levels.",
+   "10": "&7Gain &a+1% &cCatacombs &7XP & &a+2% &3Class &7XP, doubled on &b&lS+ &7runs. Grants &c+8❤ &7per 10 &cCatacombs &7levels."
+  }
+ },
+ "counter_strike": {
+  "name": "Counter-Strike",
+  "levels": {
+   "3": "&7Gain &a+6❈ Defense &7for &a7s &7on the first hit from an enemy.",
+   "4": "&7Gain &a+8❈ Defense &7for &a7s &7on the first hit from an enemy.",
+   "5": "&7Gain &a+10❈ Defense &7for &a7s &7on the first hit from an enemy."
+  }
+ },
+ "true_protection": {
+  "name": "True Protection",
+  "levels": {
+   "1": "&7Grants &f+5❂ True Defense&7."
+  }
+ },
+ "smarty_pants": {
+  "name": "Smarty Pants",
+  "levels": {
+   "1": "&7Grants &b+5✎ Intelligence&7.",
+   "2": "&7Grants &b+10✎ Intelligence&7.",
+   "3": "&7Grants &b+15✎ Intelligence&7.",
+   "4": "&7Grants &b+20✎ Intelligence&7.",
+   "5": "&7Grants &b+25✎ Intelligence&7."
+  }
+ },
+ "feather_falling": {
+  "name": "Feather Falling",
+  "levels": {
+   "1": "&7Increases how high you can fall before taking fall damage by &a1&7 and reduces fall damage by &a5%&7.",
+   "2": "&7Increases how high you can fall before taking fall damage by &a2&7 and reduces fall damage by &a10%&7.",
+   "3": "&7Increases how high you can fall before taking fall damage by &a3&7 and reduces fall damage by &a15%&7.",
+   "4": "&7Increases how high you can fall before taking fall damage by &a4&7 and reduces fall damage by &a20%&7.",
+   "5": "&7Increases how high you can fall before taking fall damage by &a5&7 and reduces fall damage by &a25%&7.",
+   "6": "&7Increases how high you can fall before taking fall damage by &a6&7 and reduces fall damage by &a30%&7.",
+   "7": "&7Increases how high you can fall before taking fall damage by &a7&7 and reduces fall damage by &a35%&7.",
+   "8": "&7Increases how high you can fall before taking fall damage by &a8&7 and reduces fall damage by &a40%&7.",
+   "9": "&7Increases how high you can fall before taking fall damage by &a9&7 and reduces fall damage by &a45%&7.",
+   "10": "&7Increases how high you can fall before taking fall damage by &a10&7 and reduces fall damage by &a50%&7."
+  }
+ },
+ "sugar_rush": {
+  "name": "Sugar Rush",
+  "levels": {
+   "1": "&7Grants &a+2 &f✦ Speed&7.",
+   "2": "&7Grants &a+4 &f✦ Speed&7.",
+   "3": "&7Grants &a+6 &f✦ Speed&7."
+  }
+ },
+ "blast_protection": {
+  "name": "Blast Protection",
+  "levels": {
+   "1": "&7Grants &a+30 ❈ Defense &7against explosions.",
+   "2": "&7Grants &a+60 ❈ Defense &7against explosions.",
+   "3": "&7Grants &a+90 ❈ Defense &7against explosions.",
+   "4": "&7Grants &a+120 ❈ Defense &7against explosions.",
+   "5": "&7Grants &a+150 ❈ Defense &7against explosions.",
+   "6": "&7Grants &a+180 ❈ Defense &7against explosions.",
+   "7": "&7Grants &a+210 ❈ Defense &7against explosions."
+  }
+ },
+ "ferocious_mana": {
+  "name": "Vivacious Vitality",
+  "levels": {
+   "1": "&7Convert &a1% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "2": "&7Convert &a2% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "3": "&7Convert &a3% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "4": "&7Convert &a4% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "5": "&7Convert &a5% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "6": "&7Convert &a6% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "7": "&7Convert &a7% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "8": "&7Convert &a8% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "9": "&7Convert &a9% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed).",
+   "10": "&7Convert &a10% &7of &4♨ Vitality &7used as &e⚔ Attack Speed &7for &a10s&7. &8(Max 5⚔ Attack Speed)."
+  }
+ },
+ "fire_protection": {
+  "name": "Fire Protection",
+  "levels": {
+   "1": "&7Grants &f+2❂ True Defense &7against fire and lava.",
+   "2": "&7Grants &f+4❂ True Defense &7against fire and lava.",
+   "3": "&7Grants &f+6❂ True Defense &7against fire and lava.",
+   "4": "&7Grants &f+8❂ True Defense &7against fire and lava.",
+   "5": "&7Grants &f+10❂ True Defense &7against fire and lava.",
+   "6": "&7Grants &f+12❂ True Defense &7against fire and lava.",
+   "7": "&7Grants &f+14❂ True Defense &7against &fire and lava."
+  }
+ },
+ "growth": {
+  "name": "Growth",
+  "levels": {
+   "1": "&7Grants &a+15 &c❤ Health&7.",
+   "2": "&7Grants &a+30 &c❤ Health&7.",
+   "3": "&7Grants &a+45 &c❤ Health&7.",
+   "4": "&7Grants &a+60 &c❤ Health&7.",
+   "5": "&7Grants &a+75 &c❤ Health&7.",
+   "6": "&7Grants &a+90 &c❤ Health&7.",
+   "7": "&7Grants &a+105 &c❤ Health&7."
+  }
+ },
+ "hardened_mana": {
+  "name": "Hardened Vitality",
+  "levels": {
+   "1": "&7Convert &a4% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "2": "&7Convert &a8% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "3": "&7Convert &a12% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "4": "&7Convert &a16% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "5": "&7Convert &a20% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "6": "&7Convert &a24% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "7": "&7Convert &a28% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "8": "&7Convert &a32% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "9": "&7Convert &a36% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense).",
+   "10": "&7Convert &a40% &7of &4♨ Vitality &7used as &a❈ Defense &7for &a10s&7. &8(Max 25❈ Defense)."
+  }
+ },
+ "mana_vampire": {
+  "name": "Vampiric Vitality",
+  "levels": {
+   "1": "&7Heal for &c0.6❤ &7per &4♨ Vitality &7used.",
+   "2": "&7Heal for &c0.6❤ &7per &4♨ Vitality &7used.",
+   "3": "&7Heal for &c0.7❤ &7per &4♨ Vitality &7used.",
+   "4": "&7Heal for &c0.7❤ &7per &4♨ Vitality &7used.",
+   "5": "&7Heal for &c0.8❤ &7per &4♨ Vitality &7used.",
+   "6": "&7Heal for &c0.8❤ &7per &4♨ Vitality &7used.",
+   "7": "&7Heal for &c0.9❤ &7per &4♨ Vitality &7used.",
+   "8": "&7Heal for &c0.9❤ &7per &4♨ Vitality &7used.",
+   "9": "&7Heal for &c0.9❤ &7per &4♨ Vitality &7used.",
+   "10": "&7Heal for &c1❤ &7per &4♨ Vitality &7used."
+  }
+ },
+ "projectile_protection": {
+  "name": "Projectile Protection",
+  "levels": {
+   "1": "&7Grants &a+7 ❈ Defense &7against projectiles.",
+   "2": "&7Grants &a+14 ❈ Defense &7against projectiles.",
+   "3": "&7Grants &a+21 ❈ Defense &7against projectiles.",
+   "4": "&7Grants &a+28 ❈ Defense &7against projectiles.",
+   "5": "&7Grants &a+35 ❈ Defense &7against projectiles.",
+   "6": "&7Grants &a+42 ❈ Defense &7against projectiles.",
+   "7": "&7Grants &a+49 ❈ Defense &7against projectiles."
+  }
+ },
+ "protection": {
+  "name": "Protection",
+  "levels": {
+   "1": "&7Grants &a+4 ❈ Defense&7.",
+   "2": "&7Grants &a+8 ❈ Defense&7.",
+   "3": "&7Grants &a+12 ❈ Defense&7.",
+   "4": "&7Grants &a+16 ❈ Defense&7.",
+   "5": "&7Grants &a+20 ❈ Defense&7.",
+   "6": "&7Grants &a+25 ❈ Defense&7.",
+   "7": "&7Grants &a+30 ❈ Defense&7."
+  }
+ },
+ "rejuvenate": {
+  "name": "Rejuvenate",
+  "levels": {
+   "1": "&7Grants &c+1❣ Health Regen&7.",
+   "2": "&7Grants &c+2❣ Health Regen&7.",
+   "3": "&7Grants &c+3❣ Health Regen&7.",
+   "4": "&7Grants &c+4❣ Health Regen&7.",
+   "5": "&7Grants &c+5❣ Health Regen&7."
+  }
+ },
+ "respite": {
+  "name": "Respite",
+  "levels": {
+   "1": "&7Grants &c+3❣ Health Regen &7while out of combat.",
+   "2": "&7Grants &c+6❣ Health Regen &7while out of combat.",
+   "3": "&7Grants &c+9❣ Health Regen &7while out of combat.",
+   "4": "&7Grants &c+12❣ Health Regen &7while out of combat.",
+   "5": "&7Grants &c+15❣ Health Regen &7while out of combat."
+  }
+ },
+ "strong_mana": {
+  "name": "Strong Vitality",
+  "levels": {
+   "1": "&7Convert &a2% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "2": "&7Convert &a4% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "3": "&7Convert &a6% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "4": "&7Convert &a8% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "5": "&7Convert &a10% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "6": "&7Convert &a12% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "7": "&7Convert &a14% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "8": "&7Convert &a16% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "9": "&7Convert &a18% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength).",
+   "10": "&7Convert &a20% &7of &4♨ Vitality &7used as &c❁ Strength &7for &a10s&7. &8(Max 30❁ Strength)."
+  }
+ },
+ "compact": {
+  "name": "Compact",
+  "levels": {
+   "1": "&7Gain &3+1☯ Mining Wisdom &7and a &a0.25% &7chance to drop an enchanted item.",
+   "2": "&7Gain &3+2☯ Mining Wisdom &7and a &a0.27% &7chance to drop an enchanted item.",
+   "3": "&7Gain &3+3☯ Mining Wisdom &7and a &a0.29% &7chance to drop an enchanted item.",
+   "4": "&7Gain &3+4☯ Mining Wisdom &7and a &a0.31% &7chance to drop an enchanted item.",
+   "5": "&7Gain &3+5☯ Mining Wisdom &7and a &a0.33% &7chance to drop an enchanted item.",
+   "6": "&7Gain &3+6☯ Mining Wisdom &7and a &a0.36% &7chance to drop an enchanted item.",
+   "7": "&7Gain &3+7☯ Mining Wisdom &7and a &a0.4% &7chance to drop an enchanted item.",
+   "8": "&7Gain &3+8☯ Mining Wisdom &7and a &a0.44% &7chance to drop an enchanted item.",
+   "9": "&7Gain &3+9☯ Mining Wisdom &7and a &a0.5% &7chance to drop an enchanted item.",
+   "10": "&7Gain &3+10☯ Mining Wisdom &7and a &a0.57% &7chance to drop an enchanted item."
+  }
+ },
+ "experience": {
+  "name": "Experience",
+  "levels": {
+   "1": "&7Grants a &a12.5% &7chance for mobs and ores to drop double experience.",
+   "2": "&7Grants a &a25% &7chance for mobs and ores to drop double experience.",
+   "3": "&7Grants a &a37.5% &7chance for mobs and ores to drop double experience.",
+   "4": "&7Grants a &a50% &7chance for mobs and ores to drop double experience.",
+   "5": "&7Grants a &a62.5% &7chance for mobs and ores to drop double experience."
+  }
+ },
+ "cayenne": {
+  "name": "Cayenne",
+  "levels": {
+   "4": "&7Grants &c+0.8❤ Health &7and &f+0.4❂ True Defense &7per digit in your &6Accessory Power&7.",
+   "5": "&7Grants &c+1❤ Health &7and &f+0.5❂ True Defense &7per digit in your &6Accessory Power&7."
+  }
+ },
+ "prosperity": {
+  "name": "Prosperity",
+  "levels": {
+   "1": "&7Grants &a+3 &c❤ Health&7.",
+   "2": "&7Grants &a+6 &c❤ Health&7.",
+   "3": "&7Grants &a+9 &c❤ Health&7.",
+   "4": "&7Grants &a+12 &c❤ Health&7.",
+   "5": "&7Grants &a+15 &c❤ Health&7."
+  }
+ },
+ "tabasco": {
+  "name": "Tabasco",
+  "levels": {
+   "1": "&7Grants &f+1 &7weapon damage if you don't have a &5Dragon &7pet equipped.",
+   "2": "&7Grants &f+2 &7weapon damage if you don't have a &5Dragon &7pet equipped.",
+   "3": "&7Grants &f+3 &7weapon damage if you don't have a &5Dragon &7pet equipped."
+  }
+ },
+ "one_for_all": {
+  "name": "One For All",
+  "levels": {
+   "1": "&7Removes all other enchants but increases your weapon damage by &a500%&7."
+  }
+ }
+}

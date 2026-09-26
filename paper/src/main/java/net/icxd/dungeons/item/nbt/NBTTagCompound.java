@@ -84,11 +84,6 @@ public final class NBTTagCompound extends NBTBase {
         map.remove(key);
     }
 
-    /** The keys (1.8's obfuscated name for {@code keySet}). */
-    public Set<String> c() {
-        return map.keySet();
-    }
-
     public Set<String> keySet() {
         return map.keySet();
     }

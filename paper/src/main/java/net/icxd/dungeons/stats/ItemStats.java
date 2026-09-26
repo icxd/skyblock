@@ -1,6 +1,7 @@
 package net.icxd.dungeons.stats;
 
 import net.icxd.dungeons.attributes.Attribute;
+import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
@@ -19,8 +20,8 @@ public final class ItemStats {
     }
 
     /**
-     * The item's own stats, its reforge, hot potato books, stat enchantments (Growth, Protection) and
-     * its attributes, which count for whoever wears or holds it if they meet the attribute's
+     * The item's own stats, its reforge, hot potato books, the stats its enchantments grant (Growth,
+     * Protection, ...) and its attributes, which count for whoever wears or holds it if they meet the attribute's
      * requirement. Not a SkyBlock item: nothing.
      */
     public static Stats of(ItemStack stack, Player wearer) {
@@ -31,7 +32,14 @@ public final class ItemStats {
         SkyBlockItem item = ItemRegistry.get(tag.getString("id"));
         if (item == null) return stats;
 
-        stats.add(item.stats());
+        Stats base = item.stats();
+        stats.add(base);
+        // Each star on a dungeon item adds 2% of its base stats (see ItemBuilder: what the lore shows is what counts).
+        if (item.dungeonItem()) {
+            int stars = Math.min(ItemBuilder.starCount(tag), 5);
+            for (Stat stat : Stat.values()) stats.add(stat, base.get(stat) * 0.02 * stars);
+        }
+        if (tag.getBoolean("art_of_war")) stats.add(Stat.STRENGTH, 5);
         String rarityName = tag.getString("rarity");
         Rarity rarity = rarityName.isEmpty() ? item.rarity() : Rarity.valueOf(rarityName);
         if (!tag.getString("reforge").isEmpty()) stats.add(Reforge.valueOf(tag.getString("reforge")).getStats().at(rarity));
@@ -42,15 +50,8 @@ public final class ItemStats {
 
         NBTTagList enchantments = tag.getList("enchantments", 10);
         for (int i = 0; i < enchantments.size(); i++) {
-            NBTTagCompound enchantment = enchantments.get(i);
-            int level = enchantment.getInt("lvl");
-            Enchantment enchant = Enchantment.getByIdentifiable(enchantment.getString("name") + "." + level);
-            if (enchant.getType() == null) continue;
-            switch (enchant.getType().getNamespace()) {
-                case "growth" -> stats.add(Stat.HEALTH, level * 15);
-                case "protection" -> stats.add(Stat.DEFENSE, level * 3);
-                default -> { }
-            }
+            Enchantment enchant = Enchantment.getByIdentifiable(enchantments.get(i).getString("name") + "." + enchantments.get(i).getInt("lvl"));
+            if (enchant.getType() != null) stats.add(enchant.getType().getStats(enchant.getLevel()));
         }
 
         if (wearer != null && tag.hasKey("attribute_1") && tag.hasKey("attribute_2")) {

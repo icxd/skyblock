@@ -15,17 +15,31 @@ import net.icxd.dungeons.item.requirement.slayer.SlayerRequirement;
 import net.icxd.dungeons.stats.Stats;
 import org.bukkit.Material;
 
-import static net.icxd.dungeons.stats.Stat.*;
+import java.util.List;
 
+import static net.icxd.dungeons.stats.Stat.ATTACK_SPEED;
+import static net.icxd.dungeons.stats.Stat.CRIT_DAMAGE;
+import static net.icxd.dungeons.stats.Stat.DAMAGE;
+import static net.icxd.dungeons.stats.Stat.STRENGTH;
+
+/** Hypixel's also has the Salvation ability (a beam after 3 hits), which isn't made yet, so it isn't listed. */
 public class Terminator implements SkyBlockItem {
-    @Override public Material material() { return Material.BOW; }
+    @Override public String id() { return "TERMINATOR"; }
     @Override public String name() { return "Terminator"; }
+    @Override public Material material() { return Material.BOW; }
+    @Override public Rarity rarity() { return Rarity.LEGENDARY; }
     @Override public boolean glowing() { return true; }
     @Override public SpecificItemType specificItemType() { return SpecificItemType.BOW; }
-    @Override public Rarity rarity() { return Rarity.LEGENDARY; }
     @Override public Stats stats() { return new Stats().set(DAMAGE, 310).set(STRENGTH, 50).set(CRIT_DAMAGE, 250).set(ATTACK_SPEED, 40); }
-    @Override public UpgradeCosts upgradeCosts() { return new UpgradeCosts(new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 100)), new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 200)), new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 300)), new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 500)), new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 750))); }
-    @Override public Requirements requirements() { return new Requirements(new SlayerRequirement(SlayerBossType.ENDERMAN, 7)); }
-    @Override public String id() { return "TERMINATOR"; }
+    @Override public double shotCooldown() { return 0.5; }
+    @Override public List<String> lore() {
+        return List.of("&7Shoots &b3 &7arrows at once.", "&7Can damage endermen.", "", "&cDivides your &9☣ Crit Chance &cby 4!");
+    }
     @Override public Ability ability() { return new InstantlyShoots(3); }
+    @Override public UpgradeCosts upgradeCosts() {
+        return new UpgradeCosts(new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 100)), new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 200)),
+                new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 300)), new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 500)),
+                new UpgradeCost(new EssenceCost(EssenceType.DRAGON, 750)));
+    }
+    @Override public Requirements requirements() { return new Requirements(new SlayerRequirement(SlayerBossType.ENDERMAN, 7)); }
 }

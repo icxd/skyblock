@@ -1,10 +1,12 @@
 package net.icxd.dungeons.item.enchanting;
 
 import lombok.Getter;
-import org.bukkit.ChatColor;
+import net.icxd.dungeons.utils.Text;
+import net.icxd.dungeons.utils.Utils;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -17,20 +19,21 @@ public class Enchantment implements ConfigurationSerializable {
         this.level = level;
     }
 
+    /** "Sharpness V". */
     @Override
-    public String toString() { return type.getName() + " " + level; }
-
-    public String getDisplayName() {
-        String color = "" + ChatColor.BLUE;
-        return (!type.isUltimate() ? color : "" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD) + this;
+    public String toString() {
+        return type.getName() + " " + Utils.getRomanNumeral(level);
     }
 
-    public String getDescription() {
-        return switch (type.getNamespace()) {
-            case "growth" -> type.getDescription(level * 15);
-            case "protection" -> type.getDescription(level * 3);
-            default -> type.getDescription(level);
-        };
+    /** "&9Sharpness V", or "&d&lUltimate Wise V" for an ultimate enchantment. */
+    public String getDisplayName() {
+        return (type.isUltimate() ? "&d&l" : "&9") + this;
+    }
+
+    /** Hypixel's description, wrapped as item lore; empty if there's none for this level. */
+    public List<String> getDescription() {
+        String text = type.getDescription(level);
+        return text == null ? List.of() : Text.wrap(text, Text.LORE_WIDTH);
     }
 
     public static Enchantment getByIdentifiable(String identifiable) {

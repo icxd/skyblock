@@ -1,25 +1,25 @@
 package net.icxd.dungeons.item.enums;
 
 import lombok.Getter;
-import org.bukkit.ChatColor;
 
 public enum Rarity {
-    COMMON(ChatColor.WHITE),
-    UNCOMMON(ChatColor.GREEN),
-    RARE(ChatColor.BLUE),
-    EPIC(ChatColor.DARK_PURPLE),
-    LEGENDARY(ChatColor.GOLD),
-    MYTHIC(ChatColor.LIGHT_PURPLE),
-    DIVINE(ChatColor.AQUA),
-    SPECIAL(ChatColor.RED),
-    VERY_SPECIAL(ChatColor.RED),
-    UNOBTAINABLE(ChatColor.DARK_RED);
+    COMMON('f'),
+    UNCOMMON('a'),
+    RARE('9'),
+    EPIC('5'),
+    LEGENDARY('6'),
+    MYTHIC('d'),
+    DIVINE('b'),
+    SPECIAL('c'),
+    VERY_SPECIAL('c'),
+    UNOBTAINABLE('4');
 
+    /** Its colour code (the character after '§'). */
     @Getter
-    private final ChatColor color;
+    private final char code;
 
-    Rarity(ChatColor color) {
-        this.color = color;
+    Rarity(char code) {
+        this.code = code;
     }
 
     public Rarity upgrade() {
@@ -32,12 +32,18 @@ public enum Rarity {
         return values()[this.ordinal() - 1];
     }
 
+    /** "§6". */
+    public String getColor() {
+        return "§" + code;
+    }
+
+    /** "§6§lLEGENDARY". */
     public String getDisplay() {
-        return "" + color + ChatColor.BOLD + name().replaceAll("_", " ");
+        return getBoldedColor() + name().replaceAll("_", " ");
     }
 
+    /** "§6§l". */
     public String getBoldedColor() {
-        return "" + color + ChatColor.BOLD;
+        return getColor() + "§l";
     }
-
 }

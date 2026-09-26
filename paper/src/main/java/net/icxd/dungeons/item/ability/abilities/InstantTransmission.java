@@ -15,7 +15,8 @@ public class InstantTransmission extends Ability {
     private static final double STEP = 0.25;
 
     public InstantTransmission() {
-        super("Instant Transmission", AbilityType.ABILITY, AbilityActivation.RIGHT_CLICK, "&7Teleport &a8 blocks&7 ahead of you and gain &a+50 &f✦ Speed &7for &a3 seconds&7.", 0, 45, 0);
+        super("Instant Transmission", AbilityType.ABILITY, AbilityActivation.RIGHT_CLICK,
+                "&7Teleport &a8 blocks&7 ahead of you and\n&7gain &a+50 &f✦ Speed&7 for &a3 seconds&7.", 0, 45, 0);
     }
 
     @Override
