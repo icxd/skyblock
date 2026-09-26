@@ -67,6 +67,19 @@ public interface SkyBlockItem {
                 || type == GenericItemType.EQUIPMENT;
     }
 
+    /**
+     * Whether its stats count while it's held in the main hand. Armor, equipment, accessories and arrows
+     * don't; the gauntlet, rods and untyped tools and staffs do, as on Hypixel.
+     */
+    default boolean statsWhenHeld() {
+        if (genericItemType() == GenericItemType.ARMOR) return false;
+        return switch (specificItemType()) {
+            case CLOAK, BELT, NECKLACE, GLOVES, BRACELET, ACCESSORY, ARROW, ARROW_POISON -> false;
+            // Masks are worn as helmets.
+            default -> !"CARNIVAL_MASK".equals(typeKey());
+        };
+    }
+
     default Soulbound soulbound() { return Soulbound.NONE; }
     default Requirements requirements() { return null; }
     default UpgradeCosts upgradeCosts() { return null; }

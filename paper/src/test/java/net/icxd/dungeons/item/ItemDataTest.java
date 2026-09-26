@@ -331,6 +331,33 @@ class ItemDataTest {
         assertEquals(List.of("&4☠ &cRequires &5Vampire Slayer 2&c."), vampire.lore());
     }
 
+    /** Held in the main hand, what's worn, equipped or shot adds nothing (see PlayerStats); what's used there does. */
+    @Test
+    void statsWhenHeld() throws IOException {
+        ItemData.Result result = load(
+                "\"TEST_BELT\":{\"material\":\"LEATHER\",\"name\":\"Test\",\"stats\":{\"HEALTH\":10},\"type\":\"BELT\"}",
+                "\"TEST_CLOAK\":{\"material\":\"LEATHER\",\"name\":\"Test\",\"stats\":{\"HEALTH\":10},\"type\":\"CLOAK\"}",
+                "\"TEST_TALISMAN\":{\"material\":\"STONE\",\"name\":\"Test\",\"stats\":{\"SPEED\":1},\"type\":\"ACCESSORY\"}",
+                "\"TEST_ARROW\":{\"material\":\"ARROW\",\"name\":\"Test\",\"stats\":{\"DAMAGE\":5},\"type\":\"ARROW\"}",
+                "\"TEST_HELMET\":{\"material\":\"IRON_HELMET\",\"name\":\"Test\",\"stats\":{\"DEFENSE\":5},\"type\":\"HELMET\"}",
+                "\"TEST_MASK\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test\",\"stats\":{\"HEALTH\":1},\"type\":\"CARNIVAL_MASK\"}",
+                "\"TEST_SWORD\":{\"material\":\"IRON_SWORD\",\"name\":\"Test\",\"stats\":{\"DAMAGE\":5},\"type\":\"SWORD\"}",
+                "\"TEST_GAUNTLET\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test\",\"stats\":{\"MINING_SPEED\":800},\"type\":\"GAUNTLET\"}",
+                "\"TEST_ROD\":{\"material\":\"FISHING_ROD\",\"name\":\"Test\",\"stats\":{\"DAMAGE\":5},\"type\":\"FISHING_ROD\"}",
+                "\"TEST_VACUUM\":{\"material\":\"STONE\",\"name\":\"Test\",\"stats\":{\"DAMAGE\":5},\"type\":\"VACUUM\"}",
+                "\"TEST_STAFF\":{\"material\":\"BLAZE_ROD\",\"name\":\"Test\",\"stats\":{\"DAMAGE\":20}}");
+        assertEquals(List.of(), result.errors());
+        Map<String, Boolean> held = new TreeMap<>();
+        result.items().forEach((id, item) -> held.put(id, item.statsWhenHeld()));
+        assertEquals(new TreeMap<>(Map.ofEntries(
+                Map.entry("TEST_BELT", false), Map.entry("TEST_CLOAK", false), Map.entry("TEST_TALISMAN", false),
+                Map.entry("TEST_ARROW", false), Map.entry("TEST_HELMET", false), Map.entry("TEST_MASK", false),
+                Map.entry("TEST_SWORD", true), Map.entry("TEST_GAUNTLET", true), Map.entry("TEST_ROD", true),
+                Map.entry("TEST_VACUUM", true), Map.entry("TEST_STAFF", true))), held);
+        assertTrue(ItemRegistry.get("HYPERION").statsWhenHeld());
+        assertFalse(ItemRegistry.get("SUBZERO_HELMET").statsWhenHeld());
+    }
+
     @Test
     void wholeFileFailures() {
         assertThrows(IOException.class, () -> ItemData.load(new StringReader("{\"format\":2,\"items\":{}}")));

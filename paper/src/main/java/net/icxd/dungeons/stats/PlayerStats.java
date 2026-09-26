@@ -3,7 +3,6 @@ package net.icxd.dungeons.stats;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
-import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.user.User;
@@ -17,14 +16,14 @@ public final class PlayerStats {
     }
 
     /**
-     * The base, the armor they wear, what they hold (unless it's armor: that counts when worn) and
-     * their Heart of the Mountain perks.
+     * The base, the armor they wear, what they hold (unless its stats only count when worn or
+     * equipped, see {@link SkyBlockItem#statsWhenHeld()}) and their Heart of the Mountain perks.
      */
     public static Stats of(Player player) {
         Stats stats = Stats.base();
         PlayerInventory inventory = player.getInventory();
         ItemStack hand = inventory.getItemInMainHand();
-        if (!isArmor(hand)) stats.add(ItemStats.of(hand, player));
+        if (countsInHand(hand)) stats.add(ItemStats.of(hand, player));
         for (ItemStack armor : inventory.getArmorContents()) stats.add(ItemStats.of(armor, player));
         User user = User.ifLoaded(player.getUniqueId());
         if (user != null) {
@@ -36,10 +35,10 @@ public final class PlayerStats {
         return stats;
     }
 
-    private static boolean isArmor(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return false;
+    private static boolean countsInHand(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return true;
         NBTTagCompound tag = ItemNBT.read(stack);
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
-        return item != null && item.genericItemType() == GenericItemType.ARMOR;
+        return item == null || item.statsWhenHeld();
     }
 }
