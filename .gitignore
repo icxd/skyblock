@@ -3,3 +3,4 @@ target/
 /network/
 /tools/servermgr/servermgr
 /tools/servermgr/servermgr.exe
+__pycache__/
