@@ -10,7 +10,6 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.Rarity;
-import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.utils.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -82,14 +81,8 @@ public final class ItemBrowserGUI extends GUI {
         ItemBrowser browser = SESSIONS.computeIfAbsent(player.getUniqueId(), id -> new ItemBrowser());
         List<ItemBrowser.Entry> entries = new ArrayList<>();
         for (SkyBlockItem item : ItemRegistry.getRegistry().values())
-            entries.add(new ItemBrowser.Entry(item.id(), item.name(), item.rarity(), typeKey(item)));
+            entries.add(new ItemBrowser.Entry(item.id(), item.name(), item.rarity(), item.typeKey()));
         new ItemBrowserGUI(player, browser, browser.view(entries), ItemBrowser.types(entries)).open(player);
-    }
-
-    /** The type the filter goes by: stands in for SkyBlockItem#typeKey until the item package has it. */
-    static String typeKey(SkyBlockItem item) {
-        SpecificItemType type = item.specificItemType();
-        return type == SpecificItemType.NONE ? "OTHER" : type.name();
     }
 
     private void items() {

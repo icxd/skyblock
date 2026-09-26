@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_items  # noqa: E402  (the materials come from the same jar reader)
 
 BLOCK_KINDS = {'ABILITY', 'FULL_SET', 'PIECE', 'TIERED', 'EXTRA', 'SHORTBOW'}
-BLOCK_NUMBERS = {'mana', 'mana_percent', 'cooldown', 'soulflow', 'health_cost'}
+BLOCK_NUMBERS = {'mana', 'mana_percent', 'cooldown', 'soulflow', 'health_cost', 'vitality'}
 FLAGS = {'glowing', 'unstackable', 'dungeon_item', 'can_have_attributes'}
 
 

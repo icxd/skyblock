@@ -105,7 +105,7 @@ public final class ItemData {
     }
 
     private record BlockJson(String kind, String name, String header, String activation, List<String> text, Double mana,
-                             Double manaPercent, Double cooldown, Double soulflow, Double healthCost, Integer pieces) {
+                             Double manaPercent, Double cooldown, Double soulflow, Double healthCost, Double vitality, Integer pieces) {
     }
 
     private static final Gson GSON = new GsonBuilder()
@@ -244,7 +244,7 @@ public final class ItemData {
                     activation = null;
                 }
                 blocks.add(new ItemBlock(block.kind(), block.name(), block.header(), activation, block.text(), number(block.mana()),
-                        number(block.manaPercent()), number(block.cooldown()), number(block.soulflow()), number(block.healthCost()),
+                        number(block.manaPercent()), number(block.cooldown()), number(block.soulflow()), number(block.healthCost()), number(block.vitality()),
                         block.pieces() == null ? 0 : block.pieces()));
             }
         }

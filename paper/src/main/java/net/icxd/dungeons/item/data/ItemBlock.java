@@ -13,7 +13,7 @@ import java.util.List;
  * @param pieces how many pieces a set bonus takes; 0 if it isn't one
  */
 public record ItemBlock(String kind, String name, String header, String activation, List<String> text, double mana,
-                        double manaPercent, double cooldown, double soulflow, double healthCost, int pieces) {
+                        double manaPercent, double cooldown, double soulflow, double healthCost, double vitality, int pieces) {
     public ItemBlock {
         text = text == null ? List.of() : List.copyOf(text);
     }

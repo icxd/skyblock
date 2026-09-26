@@ -436,7 +436,7 @@ public final class ItemBuilder {
                     : "  &e&l" + ability.getActivation().getDisplay()));
         }
         lines.addAll(ability.descriptionLines());
-        costLines(lines, ability.getManaCost(), 0, ability.getSoulflowCost(), 0, ability.getCooldown());
+        costLines(lines, ability.getManaCost(), 0, ability.getSoulflowCost(), 0, 0, ability.getCooldown());
         return lines;
     }
 
@@ -445,21 +445,30 @@ public final class ItemBuilder {
         List<String> lines = new ArrayList<>();
         if (block.header() != null) lines.add(block.header());
         lines.addAll(block.text());
-        costLines(lines, block.mana(), block.manaPercent(), block.soulflow(), block.healthCost(), block.cooldown());
+        costLines(lines, block.mana(), block.manaPercent(), block.soulflow(), block.healthCost(), block.vitality(), block.cooldown());
         return lines;
     }
 
     /**
      * "&8Mana Cost: &b45✎", "&8Health Cost: &c1,000❤", "&8Cooldown: &a30s" and the like, in the order
-     * Hypixel lists them (NEU's Staff of the Volcano: mana, health, cooldown); 0 for none. A share of
-     * max mana has no ✎ ("&b50% of max", the power orbs).
+     * Hypixel lists them (NEU's dumps: soulflow, mana, health, vitality, cooldown); 0 for none. A share
+     * of max mana has no ✎ ("&b50% of max", the power orbs).
      */
-    private static void costLines(List<String> lines, double mana, double manaPercent, double soulflow, double health, double cooldown) {
+    private static void costLines(List<String> lines, double mana, double manaPercent, double soulflow, double health,
+                                  double vitality, double cooldown) {
+        if (soulflow > 0) lines.add("&8Soulflow Cost: &3" + Text.number(soulflow) + "⸎");
         if (mana > 0) lines.add("&8Mana Cost: &b" + Text.number(mana) + "✎");
         if (manaPercent > 0) lines.add("&8Mana Cost: &b" + Text.number(manaPercent) + "% of max");
-        if (soulflow > 0) lines.add("&8Soulflow Cost: &3" + Text.number(soulflow) + "⸎");
         if (health > 0) lines.add("&8Health Cost: &c" + Text.number(health) + "❤");
-        if (cooldown > 0) lines.add("&8Cooldown: &a" + Text.number(cooldown) + "s");
+        if (vitality > 0) lines.add("&8Vitality Cost: &4" + Text.number(vitality) + "♨");
+        if (cooldown > 0) lines.add("&8Cooldown: &a" + cooldown(cooldown));
+    }
+
+    /** "30s", "1m", "2h": Hypixel writes whole minutes and hours as such. */
+    static String cooldown(double seconds) {
+        if (seconds >= 3600 && seconds % 3600 == 0) return Text.number(seconds / 3600) + "h";
+        if (seconds >= 60 && seconds % 60 == 0) return Text.number(seconds / 60) + "m";
+        return Text.number(seconds) + "s";
     }
 
     /** The requirements its owner doesn't meet (none while it has no owner). */
@@ -478,7 +487,9 @@ public final class ItemBuilder {
         String bold = rarity.getBoldedColor();
         SpecificItemType type = item.specificItemType();
         String words = item.typeLabel() != null ? item.typeLabel() : type == SpecificItemType.NONE ? null : type.name().replace('_', ' ');
-        String kind = words == null ? (item.dungeonItem() ? " DUNGEON ITEM" : "") : (item.dungeonItem() ? " DUNGEON" : "") + " " + words;
+        // An empty label means just the rarity, as on Hypixel's consumables and sacks.
+        String kind = words == null ? (item.dungeonItem() ? " DUNGEON ITEM" : "")
+                : words.isEmpty() ? "" : (item.dungeonItem() ? " DUNGEON" : "") + " " + words;
         String line = bold + rarity.name().replace('_', ' ') + kind;
         return tag.getBoolean("recombobulated") ? bold + "&ka&r " + line + " " + bold + "&ka" : line;
     }

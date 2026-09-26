@@ -162,8 +162,8 @@ class ItemDataTest {
 
         assertEquals(List.of(
                 new ItemBlock("ABILITY", "Test Strike", "&6Ability: Test Strike  &e&lRIGHT CLICK", "RIGHT_CLICK",
-                        List.of("&7Hits a test dummy."), 45, 0, 0.5, 0, 0, 0),
-                new ItemBlock("FULL_SET", "Testing", "&6Full Set Bonus: Testing &7(0/4)", null, List.of("&7Tests things."), 0, 0, 0, 0, 0, 4)),
+                        List.of("&7Hits a test dummy."), 45, 0, 0.5, 0, 0, 0, 0),
+                new ItemBlock("FULL_SET", "Testing", "&6Full Set Bonus: Testing &7(0/4)", null, List.of("&7Tests things."), 0, 0, 0, 0, 0, 0, 4)),
                 item.blocks());
     }
 
@@ -307,9 +307,9 @@ class ItemDataTest {
     void blocksShowWhereAbilitiesDo() throws IOException {
         DataItem staff = only("""
                 "TEST_STAFF":{"abilities":[{"activation":"RIGHT_CLICK","cooldown":30,"header":"&6Ability: Test Blast  &e&lRIGHT CLICK",\
-                "health_cost":15.6,"kind":"ABILITY","mana":1000,"name":"Test Blast","text":["&7Blasts a test."]},\
-                {"activation":"RIGHT_CLICK","header":"&6Ability: Test Orb  &e&lRIGHT CLICK","kind":"ABILITY","mana_percent":50,\
-                "name":"Test Orb","soulflow":2},{"header":"&9Shortbow: Instantly shoots!","kind":"SHORTBOW","name":"Instantly shoots!"}],\
+                "health_cost":15.6,"kind":"ABILITY","mana":1000,"name":"Test Blast","text":["&7Blasts a test."],"vitality":30},\
+                {"activation":"RIGHT_CLICK","cooldown":7200,"header":"&6Ability: Test Orb  &e&lRIGHT CLICK","kind":"ABILITY",\
+                "mana_percent":50,"name":"Test Orb","soulflow":2},{"header":"&9Shortbow: Instantly shoots!","kind":"SHORTBOW","name":"Instantly shoots!"}],\
                 "lore":["&7A staff for tests."],"material":"STICK","name":"Test Staff","rarity":"RARE","soulbound":"SOLO",\
                 "stats":{"DAMAGE":60},"type":"WAND"}""");
         NBTTagCompound tag = fresh(staff);
@@ -323,11 +323,13 @@ class ItemDataTest {
                 "&7Blasts a test.",
                 "&8Mana Cost: &b1,000✎",
                 "&8Health Cost: &c15.6❤",
+                "&8Vitality Cost: &430♨",
                 "&8Cooldown: &a30s",
                 "",
                 "&6Ability: Test Orb  &e&lRIGHT CLICK",
-                "&8Mana Cost: &b50% of max",
                 "&8Soulflow Cost: &32⸎",
+                "&8Mana Cost: &b50% of max",
+                "&8Cooldown: &a2h",
                 "",
                 "&9Shortbow: Instantly shoots!",
                 "",
@@ -342,11 +344,14 @@ class ItemDataTest {
                 "\"TEST_THING\":{\"material\":\"STONE\",\"name\":\"Test Thing\",\"type\":\"TEST_THING\"}",
                 "\"TEST_LABELLED\":{\"dungeon_item\":true,\"material\":\"IRON_SWORD\",\"name\":\"Test\",\"type\":\"SWORD\",\"type_label\":\"TEST WORDS\"}",
                 "\"TEST_DUNGEON_ITEM\":{\"dungeon_item\":true,\"material\":\"STONE\",\"name\":\"Test\",\"rarity\":\"RARE\",\"type_label\":\"ITEM\"}",
-                "\"TEST_COOP\":{\"material\":\"STONE\",\"name\":\"Test\",\"soulbound\":\"COOP\"}");
+                "\"TEST_COOP\":{\"material\":\"STONE\",\"name\":\"Test\",\"soulbound\":\"COOP\"}",
+                "\"TEST_SACK\":{\"material\":\"STONE\",\"name\":\"Test\",\"rarity\":\"RARE\",\"type\":\"TEST_SACK\",\"type_label\":\"\"}");
         Map<String, DataItem> items = result.items();
         assertEquals("§f§lCOMMON TEST THING", last(items.get("TEST_THING")));
         assertEquals("§f§lCOMMON DUNGEON TEST WORDS", last(items.get("TEST_LABELLED")));
         assertEquals("§9§lRARE DUNGEON ITEM", last(items.get("TEST_DUNGEON_ITEM")));
+        // An empty label: just the rarity.
+        assertEquals("§9§lRARE", last(items.get("TEST_SACK")));
         List<String> coop = ItemBuilder.lore(items.get("TEST_COOP"), fresh(items.get("TEST_COOP")));
         assertEquals("&8&l* &8Co-op Soulbound &8&l*", coop.get(coop.size() - 2));
 
@@ -354,6 +359,15 @@ class ItemDataTest {
         recombobulated.setBoolean("recombobulated", true);
         assertEquals("§a§l&ka&r §a§lUNCOMMON TEST THING §a§l&ka", ItemBuilder.rarityLine(items.get("TEST_THING"), recombobulated,
                 ItemBuilder.rarity(items.get("TEST_THING"), recombobulated)));
+    }
+
+    @Test
+    void cooldowns() {
+        assertEquals("0.5s", ItemBuilder.cooldown(0.5));
+        assertEquals("90s", ItemBuilder.cooldown(90));
+        assertEquals("1m", ItemBuilder.cooldown(60));
+        assertEquals("2h", ItemBuilder.cooldown(7200));
+        assertEquals("48h", ItemBuilder.cooldown(172800));
     }
 
     private static String last(SkyBlockItem item) {

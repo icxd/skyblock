@@ -325,7 +325,10 @@ BONUS_RE = re.compile(r'^§[68](Full Set Bonus|Piece Bonus|Tiered Bonus|Half Set
                       r'(?: (?:§7)?\((\d+)/(\d+)\))?\s*$')
 SHORTBOW_RE = re.compile(r'^§[0-9a-f]Shortbow: (Instantly shoots!)\s*$')
 COST_RE = re.compile(r'^§8(Mana Cost|Cooldown|Soulflow Cost|Health Cost|Vitality Cost|Coin Cost|Cost|Charges|Mana|Uses): (.+)$')
-COST_FIELD = {'Mana Cost': 'mana', 'Cooldown': 'cooldown', 'Soulflow Cost': 'soulflow', 'Health Cost': 'health_cost'}
+COST_FIELD = {'Mana Cost': 'mana', 'Cooldown': 'cooldown', 'Soulflow Cost': 'soulflow', 'Health Cost': 'health_cost',
+              'Vitality Cost': 'vitality'}
+# Rarities the API still calls by an old name (NEU's capture of CRUX_TALISMAN_7 shows DIVINE where the API says SUPREME).
+RARITY_ALIAS = {'SUPREME': 'DIVINE'}
 OTHER_HEADER_RE = re.compile(r'^(?:§[0-9a-fk-or])+([A-Z][A-Za-z ]{1,30}?(?: Buff| Bonus| Item| Ability| Bonuses)):')
 BONUS_KIND = {'Full Set Bonus': 'FULL_SET', 'Piece Bonus': 'PIECE', 'Tiered Bonus': 'TIERED', 'Extra Bonus': 'EXTRA',
               'Half Set Bonus': 'HALF_SET', 'Set Bonus': 'SET'}
@@ -410,6 +413,12 @@ def cost_value(field, raw):
     elif m.group(2):
         return None
     return field, number(n)
+
+
+def api_rarity(it):
+    """The API's rarity (a couple of items write it as \"rarity\"), under its current name."""
+    rarity = it.get('tier') or it.get('rarity') or 'COMMON'
+    return RARITY_ALIAS.get(rarity, rarity)
 
 
 def number(v):
@@ -674,7 +683,7 @@ class Builder:
             text.ampersands[i] += 1  # a literal & the plugin would read as a colour code
 
         # rarity: the API's (a couple of items write it as "rarity")
-        rarity = it.get('tier') or it.get('rarity') or 'COMMON'
+        rarity = api_rarity(it)
         if rarity not in self.enums['rarity']:
             self.note('rarity', rarity, i)
         if rarity != 'COMMON':
@@ -800,7 +809,7 @@ class Builder:
 
     def name(self, it, neu, parsed):
         i = it['id']
-        rarity = it.get('tier') or it.get('rarity') or 'COMMON'
+        rarity = api_rarity(it)
         api_name = without_rarity_color(self.text.tokens_to_codes(i, it['name'], '§'), RARITY_COLOR.get(rarity))
         if not (neu and neu.get('displayname')):
             return self.text(i, api_name)
@@ -908,9 +917,9 @@ class Builder:
             self.check_description(i, it['description'], parsed)
 
     def cross_check(self, i, it, rec, parsed):
-        api_rarity = it.get('tier') or it.get('rarity') or 'COMMON'
-        if parsed['rarity'] and parsed['rarity'] != api_rarity:
-            self.conflicts['rarity'].append((i, f'API {api_rarity}, NEU {parsed["rarity"]}'))
+        rarity = api_rarity(it)
+        if parsed['rarity'] and parsed['rarity'] != rarity:
+            self.conflicts['rarity'].append((i, f'API {rarity}, NEU {parsed["rarity"]}'))
         dungeon_line = (parsed['words'] or '').startswith('DUNGEON')
         if parsed['words'] is not None and dungeon_line != bool(it.get('dungeon_item')):
             self.conflicts['dungeon item'].append((i, f'API dungeon_item {bool(it.get("dungeon_item"))}, NEU "{parsed["words"]}"'))
