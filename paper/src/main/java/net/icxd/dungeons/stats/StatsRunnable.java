@@ -25,7 +25,7 @@ public class StatsRunnable implements Runnable {
             player.setWalkSpeed(Math.min((float) (stats.get(Stat.SPEED) / 5.0) / 100.0f, 1.0f));
 
             // 2% of the pool a second, and never more than the pool (it shrinks when gear comes off).
-            int manaPool = Utils.doubleToInt(100.0 + stats.get(Stat.INTELLIGENCE));
+            int manaPool = session.maxMana();
             int mana = session.getMana() < 0 ? manaPool : session.getMana();
             session.setMana(Math.min(manaPool, mana + (mana < manaPool ? manaPool / 50 : 0)));
 

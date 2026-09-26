@@ -4,8 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.stats.PlayerStats;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Replacement;
+import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -65,6 +67,11 @@ public final class PlayerSession {
             statsTick = tick;
         }
         return stats;
+    }
+
+    /** Their mana pool: 100, and 1 for each point of intelligence. */
+    public int maxMana() {
+        return Utils.doubleToInt(100.0 + stats().get(Stat.INTELLIGENCE));
     }
 
     /** Null once it has run out. */
