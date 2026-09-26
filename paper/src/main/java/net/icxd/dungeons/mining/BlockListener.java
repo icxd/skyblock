@@ -41,11 +41,7 @@ public class BlockListener implements Listener {
         MinableBlock minableBlock = BlockRegistry.getMinableBlock(block.getType());
         if (minableBlock == null) return;
 
-        ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        if (itemInHand == null) return;
-        ItemNBT nmsItem = ItemNBT.of(itemInHand);
-        if (nmsItem == null) return;
-        NBTTagCompound tag = nmsItem.getTag();
+        NBTTagCompound tag = ItemNBT.read(player.getInventory().getItemInMainHand());
         if (tag == null) return;
         String id = tag.getString("id");
         SkyBlockItem skyBlockItem = ItemRegistry.get(id);

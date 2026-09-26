@@ -4,7 +4,6 @@ import lombok.Getter;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.SpecificItemType;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -14,7 +13,7 @@ import java.util.List;
 
 @Getter
 public enum Rune {
-    GRAND_SEARING("Grand Searing", ChatColor.RED, Rarity.LEGENDARY, 0, List.of(SpecificItemType.CHESTPLATE), Arrays.asList("&7Special look on the Crimson", "&7Isle! Obtained from Fire Sales."), new RuneFunctionality() {
+    GRAND_SEARING("Grand Searing", "§c", Rarity.LEGENDARY, 0, List.of(SpecificItemType.CHESTPLATE), Arrays.asList("&7Special look on the Crimson", "&7Isle! Obtained from Fire Sales."), new RuneFunctionality() {
         @Override
         public void apply(Player player, int level, int ticks) {
             Location location = player.getLocation();
@@ -37,7 +36,7 @@ public enum Rune {
     ;
 
     private final String name;
-    private final ChatColor color;
+    private final String color;
     private final Rarity rarity;
     private final int requiredLevel;
     private final List<GenericItemType> genericItemTypes;
@@ -45,7 +44,7 @@ public enum Rune {
     private final List<String> description;
     private final RuneFunctionality runeFunctionality;
 
-    Rune(String name, ChatColor color, Rarity rarity, int requiredLevel, List<SpecificItemType> specificItemTypes, List<String> description, RuneFunctionality runeFunctionality) {
+    Rune(String name, String color, Rarity rarity, int requiredLevel, List<SpecificItemType> specificItemTypes, List<String> description, RuneFunctionality runeFunctionality) {
         this.name = name;
         this.color = color;
         this.rarity = rarity;

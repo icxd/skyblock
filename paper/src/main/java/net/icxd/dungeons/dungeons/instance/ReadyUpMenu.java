@@ -24,7 +24,7 @@ import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.RefreshingGUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.user.User;
-import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Text;
 
 /**
  * Mort's menu before a run starts, as on Hypixel: the party along the top (ready or not), the
@@ -161,8 +161,8 @@ final class ReadyUpMenu extends GUI implements RefreshingGUI {
     private static ItemStack item(Material material, String name, String... lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(Utils.color(name));
-        meta.setLore(Utils.colorList(List.of(lore)));
+        meta.displayName(Text.line(name));
+        meta.lore(Text.lines(List.of(lore)));
         item.setItemMeta(meta);
         return item;
     }

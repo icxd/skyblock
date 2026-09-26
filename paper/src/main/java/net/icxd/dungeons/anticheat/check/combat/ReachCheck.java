@@ -28,9 +28,4 @@ public class ReachCheck extends CombatCheck {
 
         return new CheckResult(this, true);
     }
-
-    @Override
-    public CheckResult checkTick(Player player) {
-        return null;
-    }
 }

@@ -21,6 +21,7 @@ import org.bukkit.util.Vector;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Text;
 
 /**
  * One of the Watcher's undeads: a player-shaped mob in random iron, chainmail, gold or leather
@@ -110,7 +111,7 @@ final class Undead implements DungeonMobs.Mob {
     /** "☠ Leech 20,000❤": green down to half health, then yellow. */
     private void updateTag() {
         String number = (health >= maxHealth / 2 ? "&a" : "&e") + Utils.getFormattedNumber((int) Math.ceil(health));
-        tag.setCustomName(Utils.color("&2" + ICON + " &6" + type.displayName + " " + number + "&c❤"));
+        tag.customName(Text.line("&2" + ICON + " &6" + type.displayName + " " + number + "&c❤"));
     }
 
     void tick() {
@@ -241,7 +242,7 @@ final class Undead implements DungeonMobs.Mob {
             this.body = at.getWorld().spawn(at, Silverfish.class, s -> {
                 s.setPersistent(false);
                 s.setRemoveWhenFarAway(false);
-                s.setCustomName(Utils.color("&6Parasite"));
+                s.customName(Text.line("&6Parasite"));
                 s.setCustomNameVisible(true);
             });
             DungeonMobs.add(body, this);

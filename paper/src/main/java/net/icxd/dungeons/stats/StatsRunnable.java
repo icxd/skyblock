@@ -4,6 +4,8 @@ import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 
 /** Every second: health, speed, mana regeneration and the action bar, from each player's stats. */
@@ -17,10 +19,13 @@ public class StatsRunnable implements Runnable {
             PlayerSession session = PlayerSession.of(player);
             Stats stats = session.stats();
 
-            player.setMaxHealth(stats.get(Stat.HEALTH));
+            // The server caps max health (1024 by default, spigot.yml's settings.attribute.maxHealth.max).
+            AttributeInstance maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
+            maxHealth.setBaseValue(stats.get(Stat.HEALTH));
+            double max = maxHealth.getValue();
             // Health regeneration: 1.5 + 1% of max health a second.
-            if (player.getHealth() <= player.getMaxHealth()) {
-                player.setHealth(Math.min(player.getMaxHealth(), player.getHealth() + 1.5 + ((int) player.getMaxHealth() * 0.01)));
+            if (player.getHealth() <= max) {
+                player.setHealth(Math.min(max, player.getHealth() + 1.5 + ((int) max * 0.01)));
             }
 
             player.setWalkSpeed(Math.min((float) (stats.get(Stat.SPEED) / 5.0) / 100.0f, 1.0f));

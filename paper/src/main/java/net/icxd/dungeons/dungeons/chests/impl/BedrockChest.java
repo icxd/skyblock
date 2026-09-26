@@ -1,13 +1,11 @@
 package net.icxd.dungeons.dungeons.chests.impl;
 
-import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.dungeons.chests.ChestType;
 import net.icxd.dungeons.dungeons.chests.RewardChest;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.EulerAngle;
 
 public class BedrockChest extends RewardChest {
@@ -68,7 +66,5 @@ public class BedrockChest extends RewardChest {
         c_bbl.setHeadPose(new EulerAngle(0, Math.PI, 0));
         c_btr.setHeadPose(new EulerAngle(0, Math.PI, 0));
         c_btl.setHeadPose(new EulerAngle(0, Math.PI, 0));
-
-        getArmorStands().forEach(as -> as.setMetadata("rewardchest", new FixedMetadataValue(Dungeons.getInstance(), true)));
     }
 }

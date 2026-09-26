@@ -11,9 +11,7 @@ import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.StackBuilder;
 import net.icxd.dungeons.utils.Tree;
 import net.icxd.dungeons.utils.Utils;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -130,13 +128,8 @@ public class HeartOfTheMountainGUI extends GUI {
         return new GUIClickableItem() {
             @Override
             public void run(InventoryClickEvent event) {
-                Player player = (Player)event.getWhoClicked();
-                player.sendMessage(
-                        ChatColor.stripColor(event.getClickedInventory().getItem(nodeSlot).getItemMeta().getDisplayName())
-                                .replace("'", "")
-                                .replace(" ", "_")
-                                .toUpperCase()
-                );
+                // Levelling perks up isn't made yet: for now, which perk this is.
+                event.getWhoClicked().sendMessage(perk.name());
             }
 
             @Override public int slot() { return nodeSlot; }

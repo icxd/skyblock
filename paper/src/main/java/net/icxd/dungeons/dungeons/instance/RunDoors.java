@@ -20,6 +20,7 @@ import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Position;
 import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Text;
 
 /**
  * A run's doors and keys, as on Hypixel. The entrance door opens when the run starts. Wither doors
@@ -145,7 +146,7 @@ final class RunDoors {
         });
         ArmorStand label = world.spawn(at.clone().subtract(0, NAME_BELOW, 0), ArmorStand.class, s -> {
             invisible(s);
-            s.setCustomName(Utils.color((blood ? "&c" : "&8") + name));
+            s.customName(Text.line((blood ? "&c" : "&8") + name));
             s.setCustomNameVisible(true);
         });
         waiting.add(new Key(blood, at, head, label));

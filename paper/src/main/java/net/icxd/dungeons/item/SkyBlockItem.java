@@ -2,7 +2,6 @@ package net.icxd.dungeons.item;
 
 import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.cost.UpgradeCosts;
-import net.icxd.dungeons.item.enchanting.Enchantment;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.Soulbound;
@@ -72,8 +71,6 @@ public interface SkyBlockItem {
 
     /** Data a new item of this kind starts with, besides what every item has. */
     default NBTTagCompound nbt() { return null; }
-
-    default List<Enchantment> enchantments() { return null; }
 
     default boolean isOwnable() { return requirements() != null; }
 }

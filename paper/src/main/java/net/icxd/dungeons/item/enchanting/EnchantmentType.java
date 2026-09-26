@@ -141,6 +141,10 @@ public class EnchantmentType {
         return ENCHANTMENT_TYPE_CACHE.get(namespace.toLowerCase());
     }
 
+    public static java.util.Collection<EnchantmentType> all() {
+        return java.util.Collections.unmodifiableCollection(ENCHANTMENT_TYPE_CACHE.values());
+    }
+
     /** Hypixel's description at a level, as one paragraph with & colours; null if there's none for it. */
     public String getDescription(int level) {
         EnchantmentTexts.Entry texts = EnchantmentTexts.get(namespace);

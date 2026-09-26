@@ -7,5 +7,4 @@ api-version: '26.2'
 softdepend: [WorldEdit, packetevents]
 # Downloaded from Maven Central by Paper when the plugin loads.
 libraries:
-  - org.mongodb:mongo-java-driver:3.12.11
-  - org.reflections:reflections:0.10.2
+  - org.mongodb:mongodb-driver-sync:5.13.0

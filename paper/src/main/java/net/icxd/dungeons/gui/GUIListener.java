@@ -26,8 +26,8 @@ public class GUIListener implements Listener {
         GUI gui = GUI.GUI_MAP.get(player.getUniqueId());
         if (gui == null) return;
 
-        if ((event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP) &&
-                (event.getHotbarButton() == 8 || GUI.GUI_MAP.containsKey(player.getUniqueId()) && !(gui.allowHotkeying())))
+        // Number keys: never with slot 9 (the SkyBlock menu), and only in menus that allow it.
+        if (event.getAction() == InventoryAction.HOTBAR_SWAP && (event.getHotbarButton() == 8 || !gui.allowHotkeying()))
             event.setCancelled(true);
 
         if (event.getClick() == ClickType.DOUBLE_CLICK)

@@ -1,6 +1,7 @@
 package net.icxd.dungeons.rune;
 
 import net.icxd.dungeons.item.nbt.ItemNBT;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -33,10 +34,9 @@ public class RuneRunnable implements Runnable {
     }
 
     private void apply(Player player, ItemStack item) {
-        if (item == null || item.isEmpty()) return;
-        ItemNBT data = ItemNBT.of(item);
-        if (!data.hasTag() || data.getTag().getString("rune").isEmpty()) return;
-        Rune rune = Rune.valueOf(data.getTag().getString("rune"));
-        rune.getRuneFunctionality().apply(player, data.getTag().getInt("rune_level"), ticks);
+        NBTTagCompound tag = ItemNBT.read(item);
+        if (tag == null || tag.getString("rune").isEmpty()) return;
+        Rune rune = Rune.valueOf(tag.getString("rune"));
+        rune.getRuneFunctionality().apply(player, tag.getInt("rune_level"), ticks);
     }
 }

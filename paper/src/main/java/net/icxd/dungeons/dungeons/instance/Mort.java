@@ -11,7 +11,7 @@ import org.bukkit.entity.Mannequin;
 import com.destroystokyo.paper.profile.ProfileProperty;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
-import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Text;
 
 /**
  * Mort, who stands in the entrance room: clicking him opens the Ready Up menu before the run
@@ -53,7 +53,7 @@ final class Mort {
             stand.setGravity(false);
             stand.setInvulnerable(true);
             stand.setPersistent(false);
-            stand.setCustomName(Utils.color(name));
+            stand.customName(Text.line(name));
             stand.setCustomNameVisible(true);
         });
     }

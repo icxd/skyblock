@@ -23,6 +23,7 @@ import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Text;
 
 /**
  * The Watcher's fight in the Blood Room, as recorded on Hypixel. When the Blood Door opens he
@@ -188,7 +189,7 @@ final class Watcher implements DungeonMobs.Mob {
             s.setGravity(false);
             s.setMarker(true);
             s.setPersistent(false);
-            s.setCustomName(Utils.color(text));
+            s.customName(Text.line(text));
             s.setCustomNameVisible(true);
         });
     }

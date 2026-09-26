@@ -121,7 +121,7 @@ public final class RoomLibrary {
     static RoomCapture read(Path json) throws IOException {
         JsonObject o;
         try (Reader reader = Files.newBufferedReader(json, StandardCharsets.UTF_8)) {
-            o = new JsonParser().parse(reader).getAsJsonObject();
+            o = JsonParser.parseReader(reader).getAsJsonObject();
         }
         String name = json.getFileName().toString();
         Path schematic = json.resolveSibling(name.substring(0, name.length() - ".json".length()) + ".schem");

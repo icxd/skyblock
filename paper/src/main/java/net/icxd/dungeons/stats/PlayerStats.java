@@ -38,7 +38,7 @@ public final class PlayerStats {
 
     private static boolean isArmor(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        NBTTagCompound tag = ItemNBT.of(stack).getTag();
+        NBTTagCompound tag = ItemNBT.read(stack);
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
         return item != null && item.genericItemType() == GenericItemType.ARMOR;
     }

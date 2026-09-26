@@ -27,7 +27,7 @@ public final class ItemStats {
     public static Stats of(ItemStack stack, Player wearer) {
         Stats stats = new Stats();
         if (stack == null || stack.isEmpty()) return stats;
-        NBTTagCompound tag = ItemNBT.of(stack).getTag();
+        NBTTagCompound tag = ItemNBT.read(stack);
         if (tag == null) return stats;
         SkyBlockItem item = ItemRegistry.get(tag.getString("id"));
         if (item == null) return stats;

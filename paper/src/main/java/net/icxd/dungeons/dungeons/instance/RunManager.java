@@ -74,7 +74,6 @@ import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
-import net.kyori.adventure.util.TriState;
 
 /**
  * The dungeon runs on this (DUNGEONS) server. The proxy writes a run to the {@code runs} collection
@@ -479,7 +478,6 @@ public final class RunManager {
         World world = new WorldCreator(name)
                 .generator(new VoidWorld())
                 .generateStructures(false)
-                .keepSpawnLoaded(TriState.FALSE)
                 // A spawn point of our own, so making the world doesn't search for one.
                 .forcedSpawnPosition(Position.block(PastePlan.HYPIXEL_BASE, waitingY, PastePlan.HYPIXEL_BASE), 0, 0)
                 .createWorld();

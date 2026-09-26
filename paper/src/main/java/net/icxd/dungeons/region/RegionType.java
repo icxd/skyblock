@@ -2,58 +2,57 @@ package net.icxd.dungeons.region;
 
 import lombok.Getter;
 import net.icxd.dungeons.Dungeons;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.util.BoundingBox;
 
 @Getter
 public enum RegionType {
-    PRIVATE_ISLAND_3("Your Island", ChatColor.GREEN),
+    PRIVATE_ISLAND_3("Your Island", "§a"),
     VILLAGE("Village", new BoundingBox(229, 3, -194, -276, 182, 201)),
     MOUNTAIN("Mountain"),
     FOREST("Forest"),
     FARM("Farm"),
     RUINS("Ruins"),
     COLOSSEUM("Colosseum"),
-    GRAVEYARD("Graveyard", ChatColor.RED),
+    GRAVEYARD("Graveyard", "§c"),
     COAL_MINE("Coal Mine"),
     COAL_MINE_CAVES("Coal Mine"),
-    WILDERNESS("Wilderness", ChatColor.DARK_GREEN),
-    SANDBOX_COVE("Sandbox Cove", ChatColor.GRAY),
-    HIGH_LEVEL("High Level", ChatColor.RED),
-    AUCTION_HOUSE("Auction House", ChatColor.GOLD),
-    AUCTION_HOUSE_LEFT_SIDE("Auction House", ChatColor.GOLD),
-    AUCTION_HOUSE_RIGHT_SIDE("Auction House", ChatColor.GOLD),
-    AUCTION_HOUSE_FRONT_SIDE("Auction House", ChatColor.GOLD),
-    BAZAAR_ALLEY("Bazaar Alley", ChatColor.YELLOW),
-    ARCHERY_RANGE("Archery Range", ChatColor.BLUE),
-    BANK("Bank", ChatColor.GOLD),
+    WILDERNESS("Wilderness", "§2"),
+    SANDBOX_COVE("Sandbox Cove", "§7"),
+    HIGH_LEVEL("High Level", "§c"),
+    AUCTION_HOUSE("Auction House", "§6"),
+    AUCTION_HOUSE_LEFT_SIDE("Auction House", "§6"),
+    AUCTION_HOUSE_RIGHT_SIDE("Auction House", "§6"),
+    AUCTION_HOUSE_FRONT_SIDE("Auction House", "§6"),
+    BAZAAR_ALLEY("Bazaar Alley", "§e"),
+    ARCHERY_RANGE("Archery Range", "§9"),
+    BANK("Bank", "§6"),
     BLACKSMITH("Blacksmith"),
     LIBRARY("Library"),
-    THE_BARN("The Barn", ChatColor.AQUA),
+    THE_BARN("The Barn", "§b"),
     MUSHROOM_DESERT("Mushroom Desert"),
-    GOLD_MINE("Gold Mine", ChatColor.GOLD),
-    DEEP_CAVERN("Deep Caverns", ChatColor.AQUA),
+    GOLD_MINE("Gold Mine", "§6"),
+    DEEP_CAVERN("Deep Caverns", "§b"),
     GUNPOWDER_MINES("Gunpowder Mines"),
     LAPIS_QUARRY("Lapis Quarry"),
     PIGMENS_DEN("Pigmen's Den"),
     SLIMEHILL("Slimehill"),
-    BIRCH_PARK("Birch Park", ChatColor.GREEN),
-    SPRUCE_WOODS("Spruce Woods", ChatColor.GREEN),
-    DARK_THICKET("Dark Thicket", ChatColor.GREEN),
-    SAVANNA_WOODLAND("Savanna Woodland", ChatColor.GREEN),
-    JUNGLE_ISLAND("Jungle Island", ChatColor.GREEN),
+    BIRCH_PARK("Birch Park", "§a"),
+    SPRUCE_WOODS("Spruce Woods", "§a"),
+    DARK_THICKET("Dark Thicket", "§a"),
+    SAVANNA_WOODLAND("Savanna Woodland", "§a"),
+    JUNGLE_ISLAND("Jungle Island", "§a"),
     HOWLING_CAVE("Howling Cave"),
     DIAMOND_RESERVE("Diamond Reserve"),
     OBSIDIAN_SANCTUARY("Obsidian Sanctuary"),
-    SPIDERS_DEN("Spider's Den", ChatColor.RED),
+    SPIDERS_DEN("Spider's Den", "§c"),
     COMMUNITY_CENTER("Community Center"),
-    SPIDERS_DEN_HIVE("Spider's Den", ChatColor.RED),
-    BLAZING_FORTRESS("Blazing Fortress", ChatColor.RED),
+    SPIDERS_DEN_HIVE("Spider's Den", "§c"),
+    BLAZING_FORTRESS("Blazing Fortress", "§c"),
     DWARVEN_VILLAGE("Dwarven Village"),
-    DWARVEN_MINES("Dwarven Mines", ChatColor.DARK_GREEN),
+    DWARVEN_MINES("Dwarven Mines", "§2"),
     GOBLIN_BURROWS("Goblin Burrows"),
-    THE_MIST("The Mist", ChatColor.DARK_GRAY),
+    THE_MIST("The Mist", "§8"),
     GREAT_ICE_WALL("Great Ice Wall"),
     GATES_TO_THE_MINES("Gates to the Mines"),
     RAMPARTS_QUARRY("Rampart's Quarry"),
@@ -63,41 +62,41 @@ public enum RegionType {
     ROYAL_MINES("Royal Mines"),
     DIVANS_GATEWAY("Divan's Gateway"),
     FAR_RESERVE("Far Reserve"),
-    THE_END("The End", ChatColor.LIGHT_PURPLE),
-    THE_END_NEST("The End", ChatColor.LIGHT_PURPLE),
-    DESERT_SETTLEMENT("Desert Settlement", ChatColor.YELLOW),
+    THE_END("The End", "§d"),
+    THE_END_NEST("The End", "§d"),
+    DESERT_SETTLEMENT("Desert Settlement", "§e"),
     OASIS("Oasis"),
-    ARCHAEOLOGICAL_SITE("Archaeological Site", ChatColor.GREEN),
+    ARCHAEOLOGICAL_SITE("Archaeological Site", "§a"),
     MUSHROOM_GORGE("Mushroom Gorge"),
-    OVERGROWN_MUSHROOM_CAVE("Overgrown Mushroom Cave", ChatColor.GREEN),
-    GLOWING_MUSHROOM_CAVE("Glowing Mushroom Cave", ChatColor.DARK_AQUA),
-    BURNING_BRIDGE("Burning Bridge", ChatColor.DARK_RED),
-    VOID_SEPULTURE("Void Sepulture", ChatColor.LIGHT_PURPLE),
-    DRAGONS_NEST("Dragon's Nest", ChatColor.DARK_PURPLE),
-    NONE("None", ChatColor.GRAY);
+    OVERGROWN_MUSHROOM_CAVE("Overgrown Mushroom Cave", "§a"),
+    GLOWING_MUSHROOM_CAVE("Glowing Mushroom Cave", "§3"),
+    BURNING_BRIDGE("Burning Bridge", "§4"),
+    VOID_SEPULTURE("Void Sepulture", "§d"),
+    DRAGONS_NEST("Dragon's Nest", "§5"),
+    NONE("None", "§7");
 
     private final String name;
     /** In the server's main world; null for regions without bounds yet. */
     private final BoundingBox bounds;
-    private final ChatColor color;
+    private final String color;
 
     RegionType() {
-        this(null, ChatColor.GRAY);
+        this(null, "§7");
     }
 
     RegionType(String name) {
-        this(name, ChatColor.AQUA);
+        this(name, "§b");
     }
 
-    RegionType(String name, ChatColor color) {
+    RegionType(String name, String color) {
         this(name, null, color);
     }
 
     RegionType(String name, BoundingBox bounds) {
-        this(name, bounds, ChatColor.AQUA);
+        this(name, bounds, "§b");
     }
 
-    RegionType(String name, BoundingBox bounds, ChatColor color) {
+    RegionType(String name, BoundingBox bounds, String color) {
         this.name = name;
         this.bounds = bounds;
         this.color = color;

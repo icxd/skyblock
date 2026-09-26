@@ -1,6 +1,5 @@
 package net.icxd.dungeons.command.commands.user;
 
-import org.bukkit.ChatColor;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.command.CommandParameters;
@@ -17,7 +16,7 @@ public class ShowExtraStatsCommand extends SCommand {
         RunManager runs = Dungeons.getRunManager();
         DungeonRun run = runs == null || source.getPlayer() == null ? null : runs.runOf(source.getPlayer());
         if (run == null) {
-            source.send(ChatColor.RED + "You're not in a dungeon!");
+            source.send("§cYou're not in a dungeon!");
             return;
         }
         run.showExtraStats(source.getPlayer());

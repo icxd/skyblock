@@ -8,15 +8,20 @@ import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.utils.SkyBlockTime;
+import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +31,9 @@ import java.util.UUID;
 
 /** The sidebar, updated every second. Each player has their own scoreboard. */
 public class ScoreboardRunnable implements Runnable {
+    /** The date is Hypixel's, in US Eastern time: "09/26/26". */
+    private static final ZoneId HYPIXEL_ZONE = ZoneId.of("America/New_York");
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MM/dd/yy");
     private final Map<UUID, Scoreboard> boards = new HashMap<>();
     private final HashMap<UUID, Integer> coinsCache = new HashMap<>();
     private final HashMap<UUID, Integer> bitsCache = new HashMap<>();
@@ -44,10 +52,15 @@ public class ScoreboardRunnable implements Runnable {
 
     private List<String> lines(Player player, User user) {
         SkyBlockServer server = Dungeons.getSkyBlockServer();
-        String dateLine = "&7" + Utils.getDateFormatted(new Date()) + " &8" + server.getName();
+        String dateLine = "&7" + DATE.format(ZonedDateTime.now(HYPIXEL_ZONE)) + " &8" + server.getName();
+        SkyBlockTime time = SkyBlockTime.now();
+        String season = "&f " + time.date();
+        String clock = " &7" + time.clock();
         RunManager runs = Dungeons.getRunManager();
         DungeonRun run = runs == null ? null : runs.runOf(player);
-        if (run != null) return run.sidebar(player, dateLine, "&fEarly Summer 23rd", "&e \u2600 &79:30am");
+        // Indoors, without the sun or moon.
+        if (run != null) return run.sidebar(player, dateLine, season, clock);
+        clock += time.isDay() ? " &e\u2600" : " &b\u263d";
 
         UUID id = player.getUniqueId();
         int coinsNow = user.getDocument().getInteger("coins");
@@ -71,12 +84,12 @@ public class ScoreboardRunnable implements Runnable {
         if (server.getServerType() == ServerType.DUNGEONS) {
             lines.add("&7 \u23e3 &c" + server.getServerType().getDisplayName());
         } else if (server.getServerType() == ServerType.DUNGEON_HUB) {
-            lines.add("&fEarly Summer 23rd");
-            lines.add("&e \u2600 &79:30am");
+            lines.add(season);
+            lines.add(clock);
             lines.add("&7 \u23e3 &c" + server.getServerType().getDisplayName());
         } else {
-            lines.add("&fEarly Summer 23rd");
-            lines.add("&e \u2600 &79:30am");
+            lines.add(season);
+            lines.add(clock);
             RegionType region = PlayerSession.of(player).getRegion();
             lines.add("&7 \u23e3 &7" + (region != null ? region : RegionType.getRegionType(player.getLocation())).displayName());
         }
@@ -92,9 +105,8 @@ public class ScoreboardRunnable implements Runnable {
         Scoreboard board = boards.computeIfAbsent(player.getUniqueId(), id -> {
             Scoreboard created = Bukkit.getScoreboardManager().getNewScoreboard();
             // TODO: add animation for the title.
-            Objective objective = created.registerNewObjective("sidebar", "dummy");
+            Objective objective = created.registerNewObjective("sidebar", Criteria.DUMMY, Text.line("&e&lSKYBLOCK"));
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-            objective.setDisplayName(Utils.color("&e&lSKYBLOCK"));
             return created;
         });
         Objective objective = board.getObjective("sidebar");

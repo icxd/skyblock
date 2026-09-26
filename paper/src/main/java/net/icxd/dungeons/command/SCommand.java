@@ -1,103 +1,82 @@
 package net.icxd.dungeons.command;
 
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-public abstract class SCommand implements CommandExecutor, TabCompleter {
-    public static final String COMMAND_SUFFIX = "Command";
+/**
+ * A command: its name is the class's without "Command" ("ItemCommand" is /item), the rest is in its
+ * {@link CommandParameters}. Registered with Paper's command registrar (see {@link #register}), so a
+ * player who may not use it (their rank is too low, or their data isn't loaded) doesn't see it at all:
+ * not in suggestions, not in the command list. The console can run anything.
+ */
+public abstract class SCommand {
     protected static final Dungeons instance = Dungeons.getInstance();
-    private CommandParameters params = this.getClass().getAnnotation(CommandParameters.class);
-    private String name = this.getClass().getSimpleName().replace("Command", "").toLowerCase();
-    private String description = this.params.description();
-    private String usage = this.params.usage();
-    private List<String> aliases = Arrays.asList(this.params.aliases().split(","));
-    private Rank permission = this.params.permission();
-    private SECommand command = new SECommand(this);
+    private final CommandParameters params = this.getClass().getAnnotation(CommandParameters.class);
+    private final String name = this.getClass().getSimpleName().replace("Command", "").toLowerCase();
+    private final Rank permission = this.params.permission();
     private CommandSource sender;
 
+    public abstract void run(CommandSource source, String[] args);
 
-    public abstract void run(CommandSource var1, String[] var2);
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        return false;
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        return null;
-    }
-
-    public void register() {
-        SCommand.instance.commandMap.register("", this.command);
-    }
-
+    /** Suggestions for the argument being typed (the last of {@code args}); null for none. */
     public List<String> tabCompleters(CommandSender sender, String alias, String[] args) {
         return null;
     }
 
-    public void send(String message, CommandSource sender) {
-        sender.send(ChatColor.GRAY + message.replace("&", "\u00a7"));
+    public void register(Commands commands) {
+        List<String> aliases = Arrays.stream(params.aliases().split(",")).map(String::trim).filter(a -> !a.isEmpty() && !a.equals(name)).toList();
+        commands.register(name, params.description(), aliases, new Command());
     }
 
+    /** With {@code &} colours, to whoever ran the command. */
     public void send(String message) {
-        this.send(message.replace("&", "\u00a7"), this.sender);
+        sender.send("§7" + message.replace("&", "§"));
     }
 
-    public void send(String message, Player player) {
-        player.sendMessage(ChatColor.GRAY + message.replace("&", "\u00a7"));
+    /** Players need the command's rank, and their data loaded. */
+    private boolean allowed(CommandSender sender) {
+        if (!(sender instanceof Player player)) return true;
+        User user = User.cached(player.getUniqueId());
+        return user != null && user.isLoaded() && user.getRank().isEqualOrStrongerThan(permission);
     }
 
-    private static class SECommand
-            extends Command {
-        private final SCommand sc;
-
-        public SECommand(SCommand xc) {
-            super(xc.name, xc.description, xc.usage, xc.aliases);
-            this.setPermissionMessage("\u00a7cYou must be " + xc.permission.name() + " to use this command.");
-            this.sc = xc;
-        }
-
-        /** The console can run anything; players need the command's rank (and their data loaded). */
-        private boolean allowed(CommandSender sender) {
-            if (!(sender instanceof Player player)) return true;
-            User user = User.cached(player.getUniqueId());
-            return user != null && user.isLoaded() && user.getRank().isEqualOrStrongerThan(this.sc.permission);
-        }
-
+    private final class Command implements BasicCommand {
         @Override
-        public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-            this.sc.sender = new CommandSource(sender);
+        public void execute(CommandSourceStack stack, String[] args) {
+            CommandSender from = stack.getSender();
+            if (!allowed(from)) {
+                from.sendMessage("§cYou need " + permission.name() + " or above to do this command");
+                return;
+            }
+            sender = new CommandSource(from);
             try {
-                if (!allowed(sender)) {
-                    sender.sendMessage("\u00a7cYou need " + this.sc.permission.name().toUpperCase() + " or above to do this command");
-                    return true;
-                }
-                this.sc.run(this.sc.sender, args);
-                return true;
-            } catch (Exception ex) {
-                sender.sendMessage(ChatColor.RED + "Error: " + ex.getMessage());
-                ex.printStackTrace();
-                return true;
+                run(sender, args);
+            } catch (RuntimeException e) {
+                from.sendMessage("§cError: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
         @Override
-        public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
-            // Suggestions can show other players' data (/pd): only for those who may run the command.
-            if (!allowed(sender)) return List.of();
-            List<String> suggestions = this.sc.tabCompleters(sender, alias, args);
+        public Collection<String> suggest(CommandSourceStack stack, String[] args) {
+            if (!allowed(stack.getSender())) return List.of();
+            List<String> suggestions = tabCompleters(stack.getSender(), name, args);
             return suggestions == null ? List.of() : suggestions;
+        }
+
+        @Override
+        public boolean canUse(CommandSender sender) {
+            return allowed(sender);
         }
     }
 }

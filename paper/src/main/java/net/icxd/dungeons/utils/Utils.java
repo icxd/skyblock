@@ -6,37 +6,27 @@ import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
 
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Utils {
-    private static final List<ChatColor> CRIT_SPECTRUM = Arrays.asList(ChatColor.WHITE, ChatColor.WHITE, ChatColor.YELLOW, ChatColor.GOLD,
-            ChatColor.RED, ChatColor.RED);
+    private static final List<String> CRIT_SPECTRUM = Arrays.asList("§f", "§f", "§e", "§6",
+            "§c", "§c");
 
     public static String color(String string) {
         return string.replace("&", "§");
@@ -64,21 +54,21 @@ public class Utils {
     }
 
     public static int random(int min, int max) {
-        return new Random().nextInt((max - min) + 1) + min;
+        return ThreadLocalRandom.current().nextInt(min, max + 1);
     }
 
     public static double random(double min, double max) {
         return Math.random() * (max - min) + min;
     }
 
-    public static String getDateFormatted(Date date) { return new SimpleDateFormat("dd/MM/yy").format(date); }
     /** A stat as SkyBlock shows it: whole numbers without decimals, the rest to one place. */
     public static String formatStat(double value) {
         return value == Math.rint(value) ? String.valueOf((long) value) : String.format(java.util.Locale.ROOT, "%.1f", value);
     }
 
+    /** "57,690,425", whatever the server's locale. */
     public static String getFormattedNumber(int n) {
-        return NumberFormat.getNumberInstance().format(n);
+        return NumberFormat.getNumberInstance(Locale.US).format(n);
     }
 
     public static String rainbowize(String string) {
@@ -115,7 +105,7 @@ public class Utils {
         return result;
     }
 
-    public static List<String> split(String s, int maxLength, ChatColor newLineStartColor) {
+    public static List<String> split(String s, int maxLength, String newLineStartColor) {
         String[] words = s.split(" ");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
@@ -131,7 +121,7 @@ public class Utils {
     }
 
     public static List<String> split(String s, int maxLength) {
-        return split(s, maxLength, ChatColor.GRAY);
+        return split(s, maxLength, "§7");
     }
 
     public static List<String> combineElements(List<String> list, String separator, int perElement) {
@@ -187,56 +177,17 @@ public class Utils {
     private static final String[] suffix = new String[]{"", "k", "M", "B", "T"};
     private static final int MAX_LENGTH = 4;
 
+    private static final ThreadLocal<DecimalFormat> ENGINEERING =
+            ThreadLocal.withInitial(() -> new DecimalFormat("##0E0", java.text.DecimalFormatSymbols.getInstance(Locale.ROOT)));
+
+    /** "1M", "998k", "50M": at most four characters, as mob name tags show health. */
     public static String formatNumber(double number) {
-        String r = new DecimalFormat("##0E0").format(number);
+        String r = ENGINEERING.get().format(number);
         r = r.replaceAll("E[0-9]", suffix[Character.getNumericValue(r.charAt(r.length() - 1)) / 3]);
         while (r.length() > MAX_LENGTH || r.matches("[0-9]+\\.[a-z]")) {
             r = r.substring(0, r.length() - 2) + r.substring(r.length() - 1);
         }
         return r;
-    }
-
-    public static ItemStack setSkullItem(ItemStack stack, String url) {
-        if (url.isEmpty())
-            return null;
-        SkullMeta headMeta = (SkullMeta) stack.getItemMeta();
-        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.nameUUIDFromBytes(url.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-        try {
-            profile.getTextures().setSkin(URI.create(url).toURL());
-        } catch (MalformedURLException | IllegalArgumentException e) {
-            e.printStackTrace();
-        }
-        headMeta.setOwnerProfile(profile);
-
-        stack.setItemMeta(headMeta);
-
-        return stack;
-    }
-
-    /**
-     * Scans this plugin's classes. Paper loads Reflections from plugin.yml's libraries in a separate
-     * class loader, so a plain {@code new Reflections()} can't see the plugin jar.
-     */
-    public static Reflections reflections() {
-        ClassLoader loader = Utils.class.getClassLoader();
-        return new Reflections(new ConfigurationBuilder()
-                .forPackage("net.icxd.dungeons", loader)
-                .addClassLoaders(loader)
-                .filterInputsBy(new FilterBuilder().includePackage("net.icxd.dungeons")));
-    }
-
-    /**
-     * This plugin's classes that extend or implement {@code type} and can be made with {@code new}:
-     * no interfaces, abstract classes, or anonymous and inner classes (like an entity's passenger).
-     */
-    public static <T> List<Class<? extends T>> instantiableSubTypesOf(Class<T> type) {
-        List<Class<? extends T>> out = new ArrayList<>();
-        for (Class<? extends T> c : reflections().getSubTypesOf(type)) {
-            if (c.isInterface() || Modifier.isAbstract(c.getModifiers()) || c.isAnonymousClass() || c.isLocalClass()) continue;
-            if (c.isMemberClass() && !Modifier.isStatic(c.getModifiers())) continue;
-            out.add(c);
-        }
-        return out;
     }
 
     public static String title(String s) {

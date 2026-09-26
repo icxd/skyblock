@@ -2,12 +2,11 @@ package net.icxd.dungeons.dwarven;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.bukkit.ChatColor;
 
 @AllArgsConstructor
 @Getter
 public enum PowderType {
-    MITHRIL(ChatColor.DARK_GREEN), GEMSTONE(ChatColor.LIGHT_PURPLE), GLACITE(ChatColor.AQUA);
+    MITHRIL("§2"), GEMSTONE("§d"), GLACITE("§b");
 
-    private final ChatColor color;
+    private final String color;
 }

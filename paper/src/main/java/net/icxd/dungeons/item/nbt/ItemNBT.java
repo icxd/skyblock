@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.papermc.paper.persistence.PersistentDataContainerView;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -47,14 +48,17 @@ public final class ItemNBT {
 
     public static ItemNBT of(ItemStack stack) {
         if (stack == null) return new ItemNBT(null, null);
-        ItemStack copy = stack.clone();
-        ItemMeta meta = copy.getItemMeta();
-        if (meta == null) return new ItemNBT(copy, null);
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        return new ItemNBT(stack.clone(), read(stack));
+    }
+
+    /** Just the item's data (null if it has none): read through its read-only view, so without copying its meta. */
+    public static NBTTagCompound read(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return null;
+        PersistentDataContainerView pdc = stack.getPersistentDataContainer();
         PersistentDataContainer data = pdc.get(KEY, PersistentDataType.TAG_CONTAINER);
-        if (data != null) return new ItemNBT(copy, read(data));
+        if (data != null) return read(data);
         String json = pdc.get(LEGACY_KEY, PersistentDataType.STRING);
-        return new ItemNBT(copy, json == null ? null : fromJson(json));
+        return json == null ? null : fromJson(json);
     }
 
     public boolean hasTag() {

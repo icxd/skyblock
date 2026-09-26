@@ -50,13 +50,15 @@ public abstract class RewardChest {
         return getArmorStand(location, visible, false);
     }
 
+    /** A head with the skin at this textures.minecraft.net URL. */
     public ArmorStand setHead(ArmorStand armorStand, String url) {
-        armorStand.setHelmet(Utils.setSkullItem(new ItemStack(Material.PLAYER_HEAD), url));
-        return armorStand;
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        Utils.skull(head, Utils.texture(url.substring(url.lastIndexOf('/') + 1)));
+        return setHead(armorStand, head);
     }
 
     public ArmorStand setHead(ArmorStand armorStand, ItemStack itemStack) {
-        armorStand.setHelmet(itemStack);
+        armorStand.getEquipment().setHelmet(itemStack);
         return armorStand;
     }
 }

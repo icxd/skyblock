@@ -1,37 +1,13 @@
 package net.icxd.dungeons.anticheat.check;
 
-import net.icxd.dungeons.utils.Utils;
-import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.anticheat.ACUser;
-import net.icxd.dungeons.anticheat.check.combat.CombatCheck;
-import org.bukkit.Bukkit;
+import net.icxd.dungeons.anticheat.check.combat.ReachCheck;
 
-import java.util.ArrayList;
+import java.util.List;
 
-public class CheckHandler implements Runnable {
-    public static final ArrayList<Check> checks = new ArrayList<>();
+/** The checks there are; {@link CheckListener} runs them on each hit. */
+public final class CheckHandler {
+    public static final List<Check> checks = List.of(new ReachCheck());
 
-    public CheckHandler() {
-        Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), this, 0, 1);
-        Utils.instantiableSubTypesOf(CombatCheck.class).forEach(check -> {
-            try {
-                checks.add(check.newInstance());
-            } catch (InstantiationException | IllegalAccessException e) { e.printStackTrace(); }
-        });
-    }
-
-    public static void handleCheck(ACUser user, Check check) {
-        if (!(check instanceof CombatCheck combatCheck) || !combatCheck.isEnabled()) return;
-        CheckResult result = combatCheck.checkTick(user.getPlayer());
-        if (result != null && !result.isPassed()) user.addViolation(result);
-    }
-
-    @Override
-    public void run() {
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            ACUser user = ACUser.getUser(player);
-            if (user == null) return;
-            checks.forEach(check -> handleCheck(user, check));
-        });
+    private CheckHandler() {
     }
 }

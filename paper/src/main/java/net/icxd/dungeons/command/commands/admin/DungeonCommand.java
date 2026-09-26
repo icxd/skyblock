@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameRules;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -80,9 +79,9 @@ public class DungeonCommand extends SCommand {
         log(floor, seed, layout, problems);
 
         renderPreview(layout, source.getPlayer().getWorld());
-        source.send(ChatColor.GREEN + floor.getName() + " seed " + seed + ": " + layout.getRooms().size() + " rooms"
-                + (problems.isEmpty() ? "" : ChatColor.RED + " (" + problems.size() + " problems, see console)"));
-        source.send(ChatColor.GRAY + "Preview at y=" + PREVIEW_Y + ": lime = critical path, gold = door, "
+        source.send("§a" + floor.getName() + " seed " + seed + ": " + layout.getRooms().size() + " rooms"
+                + (problems.isEmpty() ? "" : "§c (" + problems.size() + " problems, see console)"));
+        source.send("§7Preview at y=" + PREVIEW_Y + ": lime = critical path, gold = door, "
                 + "infested stone = entrance door, coal = wither door, pink wool = fairy door, redstone = blood door. "
                 + "Map printed to the console.");
     }
@@ -92,10 +91,10 @@ public class DungeonCommand extends SCommand {
         RunManager runs = Dungeons.getRunManager();
         DungeonRun run = player == null || runs == null ? null : runs.runOf(player);
         if (run == null) {
-            source.send(ChatColor.RED + "You're not in a dungeon run.");
+            source.send("§cYou're not in a dungeon run.");
             return;
         }
-        if (!run.end()) source.send(ChatColor.RED + "The run hasn't started yet.");
+        if (!run.end()) source.send("§cThe run hasn't started yet.");
     }
 
     private void paste(CommandSource source, String[] args) {
@@ -103,7 +102,7 @@ public class DungeonCommand extends SCommand {
         Player player = source.getPlayer();
         World world = player != null ? player.getWorld() : Bukkit.getWorlds().get(0);
         if (Bukkit.getPluginManager().getPlugin("WorldEdit") == null) {
-            source.send(ChatColor.RED + "Pasting needs WorldEdit 7.");
+            source.send("§cPasting needs WorldEdit 7.");
             return;
         }
         DungeonFloor floor = floor(source, args);
@@ -116,13 +115,13 @@ public class DungeonCommand extends SCommand {
         try {
             library = RoomLibrary.load(folder.toPath());
         } catch (IOException e) {
-            source.send(ChatColor.RED + "Couldn't read rooms from " + folder + ": " + e.getMessage());
-            source.send(ChatColor.GRAY + "Copy the scanner's rooms/ folder there.");
+            source.send("§cCouldn't read rooms from " + folder + ": " + e.getMessage());
+            source.send("§7Copy the scanner's rooms/ folder there.");
             return;
         }
         library.problems().forEach(p -> log.warning("Room library: " + p));
         if (library.templates().isEmpty()) {
-            source.send(ChatColor.RED + "No rooms in " + folder + ". Copy the scanner's rooms/ folder there.");
+            source.send("§cNo rooms in " + folder + ". Copy the scanner's rooms/ folder there.");
             return;
         }
 
@@ -130,7 +129,7 @@ public class DungeonCommand extends SCommand {
         try {
             layout = new DungeonGenerator(DungeonConfig.forFloor(floor), library.pool()).generate(seed);
         } catch (IllegalStateException e) {
-            source.send(ChatColor.RED + "Not enough captured rooms for " + floor.getName() + ": " + e.getMessage());
+            source.send("§cNot enough captured rooms for " + floor.getName() + ": " + e.getMessage());
             return;
         }
         List<String> problems = LayoutValidator.validate(layout);
@@ -139,17 +138,17 @@ public class DungeonCommand extends SCommand {
         PastePlan plan = PastePlan.create(layout, library, PastePlan.HYPIXEL_BASE, PastePlan.HYPIXEL_BASE, seed);
         plan.problems().forEach(p -> log.warning("Paste: " + p));
         int issues = problems.size() + plan.problems().size() + library.problems().size();
-        source.send(ChatColor.GRAY + "Pasting " + floor.getName() + " seed " + seed + " (" + plan.rooms().size() + " rooms)...");
+        source.send("§7Pasting " + floor.getName() + " seed " + seed + " (" + plan.rooms().size() + " rooms)...");
         Integer randomTicks = world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED);
         if (randomTicks != null && randomTicks > 0) {
             // Hypixel's dungeons don't random-tick; here the ice in rooms like Ice Path melts and floods them.
-            source.send(ChatColor.YELLOW + "This world random-ticks blocks, so ice in the rooms will melt. "
+            source.send("§eThis world random-ticks blocks, so ice in the rooms will melt. "
                     + "Hypixel's dungeons don't: use a world with /gamerule random_tick_speed 0.");
         }
         new WorldEditPaster(world).paste(instance, plan, result -> {
             if (result.error() != null) {
                 log.log(Level.SEVERE, "Paste failed", result.error());
-                source.send(ChatColor.RED + "Paste failed: " + result.error().getMessage());
+                source.send("§cPaste failed: " + result.error().getMessage());
                 return;
             }
             String summary = floor.getName() + " seed " + seed + ": pasted " + plan.rooms().size() + " rooms and " + plan.doors().size()
@@ -159,14 +158,14 @@ public class DungeonCommand extends SCommand {
                 PastePlan.Block entrance = plan.entrance();
                 player.teleport(RunManager.standingSpot(world, entrance.x(), entrance.y(), entrance.z()));
             }
-            source.send(ChatColor.GREEN + summary);
-            if (issues > 0) source.send(ChatColor.RED + "" + issues + " problems, see console.");
+            source.send("§a" + summary);
+            if (issues > 0) source.send("§c" + issues + " problems, see console.");
         });
     }
 
     private static DungeonFloor floor(CommandSource source, String[] args) {
         DungeonFloor floor = args.length > 0 ? DungeonFloor.parse(args[0]) : DungeonFloor.FLOOR_7;
-        if (floor == null) source.send(ChatColor.RED + "Unknown floor " + args[0] + ", use E, F1-F7 or M1-M7.");
+        if (floor == null) source.send("§cUnknown floor " + args[0] + ", use E, F1-F7 or M1-M7.");
         return floor;
     }
 
@@ -174,7 +173,7 @@ public class DungeonCommand extends SCommand {
         try {
             return args.length > 1 ? Long.parseLong(args[1]) : new java.util.Random().nextLong();
         } catch (NumberFormatException e) {
-            source.send(ChatColor.RED + "Seed must be a number.");
+            source.send("§cSeed must be a number.");
             return null;
         }
     }

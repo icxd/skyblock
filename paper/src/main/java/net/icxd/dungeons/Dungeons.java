@@ -1,10 +1,31 @@
 package net.icxd.dungeons;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
-import net.icxd.dungeons.anticheat.check.CheckHandler;
-import net.icxd.dungeons.command.CommandLoader;
+import net.icxd.dungeons.anticheat.check.CheckListener;
+import net.icxd.dungeons.command.commands.admin.AddEnchantmentCommand;
+import net.icxd.dungeons.command.commands.admin.DataCommand;
+import net.icxd.dungeons.command.commands.admin.DungeonCommand;
+import net.icxd.dungeons.command.commands.admin.ItemCommand;
+import net.icxd.dungeons.command.commands.admin.NBTCommand;
+import net.icxd.dungeons.command.commands.admin.PlayerDataCommand;
+import net.icxd.dungeons.command.commands.admin.RecombobulateCommand;
+import net.icxd.dungeons.command.commands.admin.SpawnEntityCommand;
+import net.icxd.dungeons.command.commands.admin.SpawnRewardChestCommand;
+import net.icxd.dungeons.command.commands.admin.UnlockCommand;
+import net.icxd.dungeons.command.commands.admin.UpgradeCommand;
+import net.icxd.dungeons.command.commands.user.HotmCommand;
+import net.icxd.dungeons.command.commands.user.ShowExtraStatsCommand;
+import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
+import net.icxd.dungeons.gui.GUIListener;
+import net.icxd.dungeons.listeners.CombatListener;
+import net.icxd.dungeons.listeners.InventorySyncListener;
+import net.icxd.dungeons.listeners.PlayerListener;
+import net.icxd.dungeons.listeners.WorldListener;
+import net.icxd.dungeons.mining.BlockListener;
+import net.icxd.dungeons.region.MovementListener;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.database.ICollection;
 import net.icxd.dungeons.database.collections.UserCollection;
@@ -20,12 +41,12 @@ import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.tablist.TabList;
 import net.icxd.dungeons.user.UserStore;
-import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandMap;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.List;
 
 
 public class Dungeons extends JavaPlugin {
@@ -38,17 +59,13 @@ public class Dungeons extends JavaPlugin {
     @Getter private static RunManager runManager;
 
     @Getter
-    public CommandMap commandMap;
-    public CommandLoader cl;
-
-    @Getter
     private static SkyBlockServer skyBlockServer;
 
     @Override
     public void onEnable() {
         instance = this;
 
-        mongoClient = new MongoClient(new MongoClientURI(Settings.URI));
+        mongoClient = MongoClients.create(Settings.URI);
         userCollection = new UserCollection();
 
         getConfig().options().copyDefaults(true);
@@ -65,29 +82,32 @@ public class Dungeons extends JavaPlugin {
             runManager.start();
         }
 
-        new CheckHandler();
         getLogger().info(ItemRegistry.getRegistry().size() + " SkyBlock items");
 
-        this.commandMap = Bukkit.getCommandMap();
-
-        cl = new CommandLoader();
-
         // Each on its own, so one that fails doesn't take the rest with it.
-        for (Class<?> listener : Utils.instantiableSubTypesOf(Listener.class)) {
-            if (!skyBlockServer.runs(listener)) continue;
-            try {
-                getServer().getPluginManager().registerEvents((Listener) listener.getDeclaredConstructor().newInstance(), this);
-            } catch (ReflectiveOperationException | RuntimeException e) {
-                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't register " + listener.getSimpleName(), e);
+        listen(PlayerListener.class, PlayerListener::new);
+        listen(CombatListener.class, CombatListener::new);
+        listen(InventorySyncListener.class, InventorySyncListener::new);
+        listen(WorldListener.class, WorldListener::new);
+        listen(GUIListener.class, GUIListener::new);
+        listen(BlockListener.class, BlockListener::new);
+        listen(MovementListener.class, MovementListener::new);
+        listen(CheckListener.class, CheckListener::new);
+        listen(Mobs.class, Mobs::new);
+
+        List<SCommand> commands = List.of(new AddEnchantmentCommand(), new DataCommand(), new DungeonCommand(), new ItemCommand(),
+                new NBTCommand(), new PlayerDataCommand(), new RecombobulateCommand(), new SpawnEntityCommand(),
+                new SpawnRewardChestCommand(), new UnlockCommand(), new UpgradeCommand(), new HotmCommand(),
+                new ShowExtraStatsCommand(), new ToggleReadyUpCommand());
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            for (SCommand command : commands) {
+                try {
+                    command.register(event.registrar());
+                } catch (RuntimeException e) {
+                    getLogger().log(java.util.logging.Level.SEVERE, "Couldn't register " + command.getClass().getSimpleName(), e);
+                }
             }
-        }
-        for (Class<?> command : Utils.instantiableSubTypesOf(SCommand.class)) {
-            try {
-                cl.register((SCommand) command.getDeclaredConstructor().newInstance());
-            } catch (ReflectiveOperationException | RuntimeException e) {
-                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't register " + command.getSimpleName(), e);
-            }
-        }
+        });
 
         Bukkit.getScheduler().runTaskTimer(this, new StatsRunnable(), 0, 20);
         Bukkit.getScheduler().runTaskTimer(this, new ScoreboardRunnable(), 0, 20);
@@ -107,6 +127,16 @@ public class Dungeons extends JavaPlugin {
                 getLogger().log(java.util.logging.Level.SEVERE, "Couldn't load " + player.getName() + "'s data", e);
                 player.kick(net.kyori.adventure.text.Component.text("Couldn't load your profile, please rejoin."));
             }
+        }
+    }
+
+    /** Registers a listener, if it runs on this kind of server (see {@link OnlyOn}). */
+    private <T extends Listener> void listen(Class<T> type, java.util.function.Supplier<T> listener) {
+        if (!skyBlockServer.runs(type)) return;
+        try {
+            getServer().getPluginManager().registerEvents(listener.get(), this);
+        } catch (RuntimeException e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Couldn't register " + type.getSimpleName(), e);
         }
     }
 

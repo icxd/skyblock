@@ -68,7 +68,7 @@ public abstract class GUI {
 
     public void open(final Player player) {
         this.beforeOpen(player);
-        final Inventory inventory = Bukkit.createInventory(player, this.size, this.title);
+        final Inventory inventory = Bukkit.createInventory(player, this.size, net.icxd.dungeons.utils.Text.line(this.title));
         GUIOpenEvent openEvent = new GUIOpenEvent(player, this, inventory);
         Dungeons.getInstance().getServer().getPluginManager().callEvent(openEvent);
         if (!openEvent.isCancelled()) {

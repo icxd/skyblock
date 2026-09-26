@@ -5,6 +5,7 @@ import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.nbt.ItemNBT;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.user.User;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -32,8 +33,8 @@ public class ItemCost extends Cost {
 
     private boolean matches(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        ItemNBT data = ItemNBT.of(stack);
-        return data.hasTag() && itemId.equalsIgnoreCase(data.getTag().getString("id"));
+        NBTTagCompound tag = ItemNBT.read(stack);
+        return tag != null && itemId.equalsIgnoreCase(tag.getString("id"));
     }
 
     @Override

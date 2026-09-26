@@ -17,11 +17,12 @@ import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
 import net.icxd.dungeons.utils.Replacement;
+import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
@@ -35,7 +36,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
@@ -80,7 +80,7 @@ public class PlayerListener implements Listener {
     /** First, so everything after it sees the player's stored inventory rather than this server's player file. */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
-        event.setJoinMessage(null);
+        event.joinMessage(null);
         Player player = event.getPlayer();
 
         User user = User.cached(player.getUniqueId());
@@ -107,7 +107,7 @@ public class PlayerListener implements Listener {
     /** Last, so every other quit handler still has the player's data. */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onLeave(PlayerQuitEvent event) {
-        event.setQuitMessage(null);
+        event.quitMessage(null);
         UUID id = event.getPlayer().getUniqueId();
         PlayerSession.end(id);
         User user = User.cached(id);
@@ -117,16 +117,22 @@ public class PlayerListener implements Listener {
         Dungeons.getUserStore().leave(user);
     }
 
-    /** Off the main thread. The player's own text is sent as typed: colour codes are for ranks. */
+    /**
+     * "[MVP+] name: text", in the rank's colours. Off the main thread. The player's own text is shown
+     * as typed: colour codes are for ranks.
+     */
     @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
+    public void onChat(AsyncChatEvent event) {
         Player player = event.getPlayer();
         User user = User.cached(player.getUniqueId());
-        event.setCancelled(true);
-        if (user == null || !user.isLoaded()) return;
+        if (user == null || !user.isLoaded()) {
+            event.setCancelled(true);
+            return;
+        }
         Rank rank = user.getRank();
-        String line = Utils.color(rank.getPrefix() + player.getName() + (rank == Rank.DEFAULT ? "&7" : "&f") + ": ") + event.getMessage();
-        event.getRecipients().forEach(recipient -> recipient.sendMessage(line));
+        Component name = Text.line(rank.getPrefix() + player.getName() + (rank == Rank.DEFAULT ? "&7" : "&f") + ": ");
+        NamedTextColor text = rank == Rank.DEFAULT ? NamedTextColor.GRAY : NamedTextColor.WHITE;
+        event.renderer((source, displayName, message, viewer) -> name.append(message.colorIfAbsent(text)));
     }
 
     /** SkyBlock items are rebuilt as they're picked up (for their owner); what doesn't fit stays on the ground. */
@@ -179,9 +185,9 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType() == Material.AIR) return;
-        ItemNBT craftItem = ItemNBT.of(item);
-        if (!craftItem.hasTag()) return;
-        SkyBlockItem sbItem = ItemRegistry.get(craftItem.getTag().getString("id"));
+        NBTTagCompound tag = ItemNBT.read(item);
+        if (tag == null) return;
+        SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
         Ability ability = sbItem.ability();
         if (ability == null) return;
@@ -199,7 +205,7 @@ public class PlayerListener implements Listener {
         PlayerSession session = PlayerSession.of(player);
         String cooldown = "ability:" + ability.getName();
         if (session.cooldownLeft(cooldown) > 0) {
-            player.sendMessage(ChatColor.RED + "You currently have a cooldown for this ability!");
+            player.sendMessage("§cYou currently have a cooldown for this ability!");
             return;
         }
 
@@ -207,7 +213,7 @@ public class PlayerListener implements Listener {
         int cost = ability.getManaCost();
         if (mana < cost) {
             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
-            session.setManaReplacement(Replacement.forMillis("" + ChatColor.RED + ChatColor.BOLD + "NOT ENOUGH MANA", 2000));
+            session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
             return;
         }
 
@@ -217,7 +223,7 @@ public class PlayerListener implements Listener {
 
         if (ability.isShowManaCost()) {
             session.setDefenseReplacement(Replacement.forMillis(
-                    ChatColor.AQUA + "-" + cost + " Mana (" + ChatColor.GOLD + ability.getName() + ChatColor.AQUA + ")", 400));
+                    "§b-" + cost + " Mana (§6" + ability.getName() + "§b)", 400));
         }
     }
 
@@ -235,9 +241,8 @@ public class PlayerListener implements Listener {
         if (!(event.getEntity() instanceof LivingEntity target) || player == null) return;
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType() == Material.AIR) return;
-        ItemNBT craftItem = ItemNBT.of(item);
-        if (!craftItem.hasTag()) return;
-        NBTTagCompound tag = craftItem.getTag();
+        NBTTagCompound tag = ItemNBT.read(item);
+        if (tag == null) return;
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
 

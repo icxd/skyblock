@@ -6,7 +6,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
@@ -21,6 +20,7 @@ import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Text;
 
 /**
  * Dungeon mobs (the Watcher and his undeads) and how they fight. Their health is SkyBlock health,
@@ -116,7 +116,7 @@ public final class DungeonMobs {
             s.setGravity(false);
             s.setMarker(true);
             s.setPersistent(false);
-            s.setCustomName(critical ? Utils.rainbowize("✧" + (int) damage + "✧") : ChatColor.GRAY.toString() + (int) damage);
+            s.customName(Text.line(critical ? Utils.rainbowize("✧" + (int) damage + "✧") : "&7" + (int) damage));
             s.setCustomNameVisible(true);
         });
         Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), stand::remove, 30);

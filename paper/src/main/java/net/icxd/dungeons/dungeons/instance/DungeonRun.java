@@ -37,6 +37,7 @@ import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -379,8 +380,8 @@ public final class DungeonRun {
         ItemStack item = new ItemStack(Material.FILLED_MAP);
         MapMeta meta = (MapMeta) item.getItemMeta();
         meta.setMapView(map);
-        meta.setDisplayName(Utils.color(name));
-        meta.setLore(Utils.colorList(lore));
+        meta.displayName(Text.line(name));
+        meta.lore(Text.lines(lore));
         item.setItemMeta(meta);
         StoredInventory.markNotSaved(item);
         PlayerInventory inventory = player.getInventory();
