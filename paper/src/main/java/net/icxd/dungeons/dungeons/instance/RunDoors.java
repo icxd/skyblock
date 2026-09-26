@@ -232,7 +232,7 @@ final class RunDoors {
 
     // Opening
 
-    /** A right-click on a block; true if it was a shut door. */
+    /** A click on a block (either button); true if it was a shut door. */
     boolean click(Player player, Block block) {
         Door door = layout.doorAt(block.getX(), block.getY(), block.getZ());
         if (door == null || !shut.contains(door) || door.type() == DoorType.ENTRANCE) return false;

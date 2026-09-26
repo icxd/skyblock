@@ -62,6 +62,7 @@ import org.bukkit.plugin.Plugin;
 
 import com.mongodb.client.MongoCollection;
 
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.math.Position;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.common.Runs;
@@ -581,14 +582,25 @@ public final class RunManager {
             arriving.remove(event.getPlayer().getUniqueId());
         }
 
-        /** Clicking Mort (or his name tags) before the start opens the Ready Up menu. */
+        /** Clicking Mort (or his name tags) before the start opens the Ready Up menu: a right click, or a left one. */
         @EventHandler
         public void onInteract(PlayerInteractEntityEvent event) {
             DungeonRun run = runIn(event.getRightClicked().getWorld());
             if (run == null || !run.isMort(event.getRightClicked())) return;
             event.setCancelled(true);
-            if (event.getHand() != EquipmentSlot.HAND) return;
-            Player player = event.getPlayer();
+            if (event.getHand() == EquipmentSlot.HAND) talkToMort(event.getPlayer(), run);
+        }
+
+        /** A left click on Mort. He's invulnerable, so it never gets as far as a damage event. */
+        @EventHandler
+        public void onHitMort(PrePlayerAttackEntityEvent event) {
+            DungeonRun run = runIn(event.getAttacked().getWorld());
+            if (run == null || !run.isMort(event.getAttacked())) return;
+            event.setCancelled(true);
+            talkToMort(event.getPlayer(), run);
+        }
+
+        private void talkToMort(Player player, DungeonRun run) {
             if (runOf(player) == run && (run.phase() == DungeonRun.Phase.WAITING || run.phase() == DungeonRun.Phase.STARTING)) {
                 new ReadyUpMenu(run, player).open(player);
             }
@@ -600,10 +612,11 @@ public final class RunManager {
             if (run != null && (run.isMort(event.getRightClicked()) || run.isKey(event.getRightClicked()))) event.setCancelled(true);
         }
 
-        /** Right-clicking a wither door or the Blood Door, with the key or without. */
+        /** Clicking a wither door or the Blood Door (right or left, as on Hypixel), with the key or without. */
         @EventHandler
         public void onClickBlock(PlayerInteractEvent event) {
-            if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null || event.getHand() != EquipmentSlot.HAND) return;
+            boolean click = event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK;
+            if (!click || event.getClickedBlock() == null || event.getHand() != EquipmentSlot.HAND) return;
             DungeonRun run = runOf(event.getPlayer());
             if (run != null && run.clickBlock(event.getPlayer(), event.getClickedBlock())) event.setCancelled(true);
         }
