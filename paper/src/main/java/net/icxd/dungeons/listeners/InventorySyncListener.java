@@ -55,7 +55,8 @@ public class InventorySyncListener implements Listener {
     // for the moment between taking their data back (they didn't go after all) and putting its
     // inventory on them.
 
-    private static boolean frozen(HumanEntity player) {
+    /** Also for anything that gives items outside these events (the item browser, /item). */
+    public static boolean frozen(HumanEntity player) {
         User user = User.cached(player.getUniqueId());
         return user == null || user.isReleased() || !user.isInventoryRestored();
     }

@@ -10,6 +10,7 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.Rarity;
+import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.utils.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -152,6 +153,10 @@ public final class ItemBrowserGUI extends GUI {
 
     /** A stack is what a slot holds of it: 64 of most things, 16 pearls, 1 sword. */
     private void give(SkyBlockItem item, boolean stack) {
+        if (InventorySyncListener.frozen(viewer)) {
+            viewer.sendMessage(Text.line("&cYou can't take items right now."));
+            return;
+        }
         ItemStack given = ItemBuilder.build(item);
         if (stack) given.setAmount(item.unstackable() ? 1 : Math.min(64, given.getMaxStackSize()));
         if (!viewer.getInventory().addItem(given).isEmpty()) viewer.sendMessage(Text.line("&cYour inventory is full!"));

@@ -8,6 +8,7 @@ import net.icxd.dungeons.gui.guis.ItemBrowserGUI;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.common.Rank;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -36,6 +37,11 @@ public class ItemCommand extends SCommand {
             return;
         }
 
+        // Not into an inventory that's frozen for a hand-off: it wouldn't be saved.
+        if (InventorySyncListener.frozen(player)) {
+            send("&cYou can't take items right now.");
+            return;
+        }
         player.getInventory().addItem(ItemBuilder.build(sbItem));
     }
 

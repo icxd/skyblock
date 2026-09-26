@@ -20,7 +20,11 @@ import java.util.UUID;
 public class GUIListener implements Listener {
     private static final Map<UUID, Long> GUI_COOLDOWN = new HashMap<>();
 
-    @EventHandler
+    /**
+     * Not a click that's already cancelled (InventorySyncListener's, for a player whose items are
+     * frozen): its menu slots are safe as it is, and its button mustn't run, as one may give items.
+     */
+    @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         GUI gui = GUI.GUI_MAP.get(player.getUniqueId());
