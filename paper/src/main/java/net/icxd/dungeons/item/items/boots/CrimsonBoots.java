@@ -7,7 +7,6 @@ import net.icxd.dungeons.item.cost.essence.*;
 import net.icxd.dungeons.item.cost.item.*;
 import net.icxd.dungeons.item.enums.*;
 import net.icxd.dungeons.item.gemstone.*;
-import net.icxd.dungeons.item.prestige.*;
 import net.icxd.dungeons.item.requirement.*;
 import net.icxd.dungeons.item.requirement.skill.*;
 import net.icxd.dungeons.skill.Skill;
@@ -27,7 +26,6 @@ public class CrimsonBoots implements SkyBlockItem {
     @Override public Requirements requirements() { return new Requirements(new SkillRequirement(Skill.COMBAT, 24)); }
     @Override public boolean canHaveAttributes() { return true; }
     @Override public UpgradeCosts upgradeCosts() { return new UpgradeCosts(new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 30)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 35)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 40)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 45)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 50)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 55)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 60)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 70), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 2)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 80), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 3)), new UpgradeCost(new EssenceCost(EssenceType.CRIMSON, 90), new ItemCost(ItemRegistry.get("HEAVY_PEARL"), 4))); }
-    @Override public Prestige prestige() { return new Prestige(ItemRegistry.get("HOT_CRIMSON_BOOTS"), new EssenceCost(EssenceType.CRIMSON, 150), new ItemCost(ItemRegistry.get("KUUDRA_TEETH"), 10)); }
     @Override public GemstoneSlots gemstoneSlots() { return new GemstoneSlots(new GemstoneSlot(GemstoneType.COMBAT, new CoinCost(250000), new ItemCost(ItemRegistry.get("FLAWLESS_JASPER_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_SAPPHIRE_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_RUBY_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_AMETHYST_GEM"), 1)), new GemstoneSlot(GemstoneType.COMBAT, new CoinCost(250000), new ItemCost(ItemRegistry.get("FLAWLESS_JASPER_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_SAPPHIRE_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_RUBY_GEM"), 1), new ItemCost(ItemRegistry.get("FLAWLESS_AMETHYST_GEM"), 1))); }
     @Override public String id() { return "CRIMSON_BOOTS"; }
 }

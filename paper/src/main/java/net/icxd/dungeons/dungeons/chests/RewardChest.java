@@ -1,13 +1,11 @@
 package net.icxd.dungeons.dungeons.chests;
 
 import lombok.Getter;
-import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.EulerAngle;
 
 import java.util.ArrayList;
@@ -32,8 +30,16 @@ public abstract class RewardChest {
         armorStand.setGravity(false);
         armorStand.setSmall(mini);
         armorStand.setBodyPose(new EulerAngle(0, Math.toRadians(location.getYaw()),0));
+        // Scenery: gone with the chunk rather than saved into the world forever.
+        armorStand.setPersistent(false);
         armorStands.add(armorStand);
         return armorStand;
+    }
+
+    /** Takes the chest's stands away. */
+    public void remove() {
+        armorStands.forEach(ArmorStand::remove);
+        armorStands.clear();
     }
 
     public ArmorStand getArmorStand(Location location) {

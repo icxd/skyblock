@@ -20,7 +20,6 @@ import net.icxd.dungeons.rune.RuneRunnable;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.tablist.TabList;
-import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
@@ -28,7 +27,6 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.reflections.Reflections;
 
 
 public class Dungeons extends JavaPlugin {
@@ -70,7 +68,6 @@ public class Dungeons extends JavaPlugin {
 
         new CheckHandler();
         new ItemRegistry();
-        // new GUIRegistry();
         new EntityRegistry();
 
         this.commandMap = Bukkit.getCommandMap();

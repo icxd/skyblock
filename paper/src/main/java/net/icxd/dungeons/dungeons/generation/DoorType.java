@@ -7,14 +7,14 @@ package net.icxd.dungeons.dungeons.generation;
  * ({@code DungeonMap.setupTree}), and Odin tells the fairy door apart by its colour.
  */
 public enum DoorType {
-  /** Brown on the map, just an opening. */
-  NORMAL,
-  /** The door out of the entrance room (infested stone bricks). */
-  ENTRANCE,
-  /** Black, needs a Wither Key (coal blocks). */
-  WITHER,
-  /** The door into the fairy room, pink on the map. Opens without a key. */
-  FAIRY,
-  /** Red, needs the Blood Key from the room before it (stained clay). */
-  BLOOD,
+    /** Brown on the map, just an opening. */
+    NORMAL,
+    /** The door out of the entrance room (infested stone bricks). */
+    ENTRANCE,
+    /** Black, needs a Wither Key (coal blocks). */
+    WITHER,
+    /** The door into the fairy room, pink on the map. Opens without a key. */
+    FAIRY,
+    /** Red, needs the Blood Key from the room before it (stained clay). */
+    BLOOD,
 }

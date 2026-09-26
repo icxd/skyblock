@@ -7,8 +7,15 @@ import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
 import net.icxd.dungeons.item.enchanting.Enchantment;
-import net.icxd.dungeons.item.enums.*;
+import net.icxd.dungeons.item.enums.DungeonStar;
+import net.icxd.dungeons.item.enums.GenericItemType;
+import net.icxd.dungeons.item.enums.Rarity;
+import net.icxd.dungeons.item.enums.Soulbound;
+import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.item.gemstone.GemstoneSlot;
+import net.icxd.dungeons.item.nbt.ItemNBT;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.item.requirement.Requirement;
 import net.icxd.dungeons.item.requirement.dungeontier.DungeonTierRequirement;
 import net.icxd.dungeons.item.requirement.hotm.HeartOfTheMountainRequirement;
@@ -19,20 +26,20 @@ import net.icxd.dungeons.reforge.ReforgeStat;
 import net.icxd.dungeons.rune.Rune;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Utils;
-import net.icxd.dungeons.item.nbt.NBTTagCompound;
-import net.icxd.dungeons.item.nbt.NBTTagList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
-import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 public class ItemBuilder {
 
@@ -281,7 +288,7 @@ public class ItemBuilder {
         }
 
         if (tag.hasKey("attribute_1")) {
-            Attribute attribute = Attribute.valueOf(tag.getString("attribute_1"));
+            Attribute attribute = Attribute.of(tag.getString("attribute_1"));
             int level = tag.getInt("attribute_1_level");
             if (tag.hasKey("owner") && !tag.getString("owner").isEmpty()) {
                 Player player = Bukkit.getPlayer(UUID.fromString(tag.getString("owner")));
@@ -298,7 +305,7 @@ public class ItemBuilder {
                 lore.add("");
         }
         if (tag.hasKey("attribute_2")) {
-            Attribute attribute = Attribute.valueOf(tag.getString("attribute_2"));
+            Attribute attribute = Attribute.of(tag.getString("attribute_2"));
             int level = tag.getInt("attribute_2_level");
             if (tag.hasKey("owner") && !tag.getString("owner").isEmpty()) {
                 Player player = Bukkit.getPlayer(UUID.fromString(tag.getString("owner")));
@@ -447,17 +454,6 @@ public class ItemBuilder {
 
     private static String stat(String name, ChatColor color, double value, NBTTagCompound tag) {
         return stat(name, color, value, ' ', tag, 0, false);
-    }
-
-    public static NBTTagCompound serializeEnchantments(List<Enchantment> enchantments) {
-        NBTTagCompound tag = new NBTTagCompound();
-        for (Enchantment enchantment : enchantments) {
-            NBTTagCompound enchantmentTag = new NBTTagCompound();
-            enchantmentTag.setString("name", enchantment.getType().getNamespace());
-            enchantmentTag.setInt("level", enchantment.getLevel());
-            tag.set(enchantment.getType().getNamespace(), enchantmentTag);
-        }
-        return tag;
     }
 
 }

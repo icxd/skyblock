@@ -8,17 +8,14 @@ import net.icxd.dungeons.item.cost.essence.*;
 import net.icxd.dungeons.item.cost.item.*;
 import net.icxd.dungeons.item.enums.*;
 import net.icxd.dungeons.item.gemstone.*;
-import net.icxd.dungeons.item.prestige.*;
 import net.icxd.dungeons.item.requirement.*;
 import net.icxd.dungeons.item.requirement.skill.*;
-import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Material;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 public class AttributeShard implements SkyBlockItem {
     @Override public Material material() { return Material.PRISMARINE_SHARD; }

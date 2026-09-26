@@ -1,19 +1,20 @@
 package net.icxd.dungeons.stats;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import net.icxd.dungeons.attributes.Attribute;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
-import net.icxd.dungeons.item.enums.DungeonStar;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
+import net.icxd.dungeons.item.nbt.ItemNBT;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.reforge.Reforge;
 import net.icxd.dungeons.reforge.ReforgeStat;
 import net.icxd.dungeons.reforge.ReforgeStats;
-import net.icxd.dungeons.item.nbt.NBTTagCompound;
-import org.bukkit.Bukkit;
-import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -217,9 +218,9 @@ public class Stats {
                 }
 
                 if (nmsItem.getTag().hasKey("attribute_1") && nmsItem.getTag().hasKey("attribute_2")) {
-                    Attribute attribute1 = Attribute.valueOf(nmsItem.getTag().getString("attribute_1"));
+                    Attribute attribute1 = Attribute.of(nmsItem.getTag().getString("attribute_1"));
                     int attribute1Level = nmsItem.getTag().getInt("attribute_1_level");
-                    Attribute attribute2 = Attribute.valueOf(nmsItem.getTag().getString("attribute_2"));
+                    Attribute attribute2 = Attribute.of(nmsItem.getTag().getString("attribute_2"));
                     int attribute2Level = nmsItem.getTag().getInt("attribute_2_level");
                     Stats stats = new Stats();
                     Player player = wearer;

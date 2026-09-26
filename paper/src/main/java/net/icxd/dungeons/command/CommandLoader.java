@@ -11,8 +11,5 @@ public class CommandLoader {
         command.register();
     }
 
-    public int getCommandAmount() {
-        return this.commands.size();
-    }
 }
 

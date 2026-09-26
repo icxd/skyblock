@@ -5,7 +5,6 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.anticheat.ACUser;
 import net.icxd.dungeons.anticheat.check.combat.CombatCheck;
 import org.bukkit.Bukkit;
-import org.reflections.Reflections;
 
 import java.util.ArrayList;
 

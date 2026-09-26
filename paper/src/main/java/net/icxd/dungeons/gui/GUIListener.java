@@ -18,71 +18,71 @@ import java.util.Map;
 import java.util.UUID;
 
 public class GUIListener implements Listener {
-  private static final Map<UUID, Long> GUI_COOLDOWN = new HashMap<>();
+    private static final Map<UUID, Long> GUI_COOLDOWN = new HashMap<>();
 
-  @EventHandler
-  public void onInventoryClick(InventoryClickEvent event) {
-    Player player = (Player) event.getWhoClicked();
-    GUI gui = GUI.GUI_MAP.get(player.getUniqueId());
-    if (gui == null) return;
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        GUI gui = GUI.GUI_MAP.get(player.getUniqueId());
+        if (gui == null) return;
 
-    if ((event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP) &&
-        (event.getHotbarButton() == 8 || GUI.GUI_MAP.containsKey(player.getUniqueId()) && !(gui.allowHotkeying())))
-      event.setCancelled(true);
+        if ((event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP) &&
+                (event.getHotbarButton() == 8 || GUI.GUI_MAP.containsKey(player.getUniqueId()) && !(gui.allowHotkeying())))
+            event.setCancelled(true);
 
-    if (event.getClick() == ClickType.DOUBLE_CLICK)
-      event.setCancelled(true);
+        if (event.getClick() == ClickType.DOUBLE_CLICK)
+            event.setCancelled(true);
 
-    // Shift-clicking from their own inventory would put the item in a menu slot.
-    if (event.getClickedInventory() != event.getView().getTopInventory() && event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-      event.setCancelled(true);
-      return;
+        // Shift-clicking from their own inventory would put the item in a menu slot.
+        if (event.getClickedInventory() != event.getView().getTopInventory() && event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (GUI_COOLDOWN.containsKey(player.getUniqueId()) && System.currentTimeMillis() - GUI_COOLDOWN.get(player.getUniqueId()) < 100L) {
+            event.setCancelled(true);
+            player.sendMessage(Utils.color("&cYou must wait a bit before doing this!"));
+            return;
+        }
+
+        GUI_COOLDOWN.remove(player.getUniqueId());
+        GUI_COOLDOWN.put(player.getUniqueId(), System.currentTimeMillis());
+        if (event.getClickedInventory() == event.getView().getTopInventory()) {
+            int slot = event.getSlot();
+            GUIItem item = gui.get(slot);
+            if (item != null) {
+                if (!item.pickup())
+                    event.setCancelled(true);
+
+                if (item instanceof GUIClickableItem clickable)
+                    clickable.run(event);
+            }
+        }
+
+        gui.update(event.getView().getTopInventory());
     }
 
-    if (GUI_COOLDOWN.containsKey(player.getUniqueId()) && System.currentTimeMillis() - GUI_COOLDOWN.get(player.getUniqueId()) < 100L) {
-      event.setCancelled(true);
-      player.sendMessage(Utils.color("&cYou must wait a bit before doing this!"));
-      return;
+    /** Dragging across a menu's slots would drop items into them. */
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!GUI.GUI_MAP.containsKey(event.getWhoClicked().getUniqueId())) return;
+        int top = event.getView().getTopInventory().getSize();
+        if (event.getRawSlots().stream().anyMatch(slot -> slot < top)) event.setCancelled(true);
     }
 
-    GUI_COOLDOWN.remove(player.getUniqueId());
-    GUI_COOLDOWN.put(player.getUniqueId(), System.currentTimeMillis());
-    if (event.getClickedInventory() == event.getView().getTopInventory()) {
-      int slot = event.getSlot();
-      GUIItem item = gui.get(slot);
-      if (item != null) {
-        if (!item.pickup())
-          event.setCancelled(true);
-
-        if (item instanceof GUIClickableItem clickable)
-          clickable.run(event);
-      }
+    @EventHandler
+    public void onGUIOpen(GUIOpenEvent event) {
+        event.getOpened().onOpen(event);
     }
 
-    gui.update(event.getView().getTopInventory());
-  }
-
-  /** Dragging across a menu's slots would drop items into them. */
-  @EventHandler
-  public void onInventoryDrag(InventoryDragEvent event) {
-    if (!GUI.GUI_MAP.containsKey(event.getWhoClicked().getUniqueId())) return;
-    int top = event.getView().getTopInventory().getSize();
-    if (event.getRawSlots().stream().anyMatch(slot -> slot < top)) event.setCancelled(true);
-  }
-
-  @EventHandler
-  public void onGUIOpen(GUIOpenEvent event) {
-    event.getOpened().onOpen(event);
-  }
-
-  @EventHandler
-  public void onInventoryClose(InventoryCloseEvent event) {
-    Player player = (Player)event.getPlayer();
-    GUI gui = GUI.GUI_MAP.get(player.getUniqueId());
-    if (gui == null) return;
-    gui.onClose(event);
-    GUI.GUI_MAP.remove(player.getUniqueId());
-    GUI_COOLDOWN.remove(player.getUniqueId());
-    Utils.delay(player::updateInventory, 1L);
-  }
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        Player player = (Player)event.getPlayer();
+        GUI gui = GUI.GUI_MAP.get(player.getUniqueId());
+        if (gui == null) return;
+        gui.onClose(event);
+        GUI.GUI_MAP.remove(player.getUniqueId());
+        GUI_COOLDOWN.remove(player.getUniqueId());
+        Utils.delay(player::updateInventory, 1L);
+    }
 }

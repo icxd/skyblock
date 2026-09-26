@@ -1,10 +1,8 @@
 package net.icxd.dungeons.stats;
 
-import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,13 +65,6 @@ public class StatsRunnable implements Runnable {
                             defenseReplacement.getReplacement() + "     ") +
                     (manaReplacement == null ? ("&b" + MANA_MAP.get(player.getUniqueId()) + "/" + manaPool + "✎ Mana") :
                             manaReplacement.getReplacement()));
-
-            /*Utils.sendActionBar(player, color + "" + Math.round(player.getHealth() + absorption)
-                    + "/" + SUtil.blackMagic(statistics.getMaxHealth().addAll()) + "❤     " +
-                    (replacement == null ? (defense != 0 ? "" + ChatColor.GREEN + defense + "❈ Defense     " : "") :
-                            replacement.getReplacement() + "     ") +
-                    (mreplacement == null ? "" + ChatColor.AQUA + MANA_MAP.get(player.getUniqueId()) + "/" + manaPool + "✎ Mana" :
-                            mreplacement.getReplacement() + "     "));*/
         });
     }
 }

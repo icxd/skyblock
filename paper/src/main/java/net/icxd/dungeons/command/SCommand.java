@@ -1,10 +1,6 @@
 package net.icxd.dungeons.command;
 
 import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.command.exceptions.CommandArgumentException;
-import net.icxd.dungeons.command.exceptions.CommandFailException;
-import net.icxd.dungeons.command.exceptions.CommandPermissionException;
-import net.icxd.dungeons.command.exceptions.PlayerNotFoundException;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import org.bukkit.ChatColor;
@@ -89,11 +85,6 @@ public abstract class SCommand implements CommandExecutor, TabCompleter {
                 }
                 this.sc.run(this.sc.sender, args);
                 return true;
-            } catch (CommandFailException | CommandPermissionException | PlayerNotFoundException ex) {
-                sender.sendMessage(ex.getMessage());
-                return true;
-            } catch (CommandArgumentException ex) {
-                return false;
             } catch (Exception ex) {
                 sender.sendMessage(ChatColor.RED + "Error: " + ex.getMessage());
                 ex.printStackTrace();

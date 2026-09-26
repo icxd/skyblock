@@ -12,8 +12,6 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 
 @CommandParameters(permission = Rank.STAFF)
 public class DataCommand extends SCommand {

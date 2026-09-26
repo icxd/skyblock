@@ -25,8 +25,6 @@ public class Enchantment implements ConfigurationSerializable {
         return (!type.isUltimate() ? color : "" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD) + this;
     }
 
-    public String toIdentifiableString() { return type.getNamespace() + "." + level; }
-
     public String getDescription() {
         return switch (type.getNamespace()) {
             case "growth" -> type.getDescription(level * 15);
@@ -38,10 +36,6 @@ public class Enchantment implements ConfigurationSerializable {
     public static Enchantment getByIdentifiable(String identifiable) {
         String[] spl = identifiable.split("\\.");  // split on period
         return new Enchantment(EnchantmentType.getByNamespace(spl[0]), Integer.parseInt(spl[1]));
-    }
-
-    public boolean equalsType(Enchantment enchantment) {
-        return enchantment.type == type;
     }
 
     @Override

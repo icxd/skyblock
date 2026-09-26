@@ -1,6 +1,5 @@
 package net.icxd.dungeons.utils;
 
-import lombok.Getter;
 
 public record Tuple<T, U>(T first, U second) {
 

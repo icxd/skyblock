@@ -9,7 +9,7 @@ import net.icxd.dungeons.dungeons.generation.utils.Position;
  */
 public record DoorSlot(Position cell, Direction side) {
 
-  public static DoorSlot of(int x, int y, Direction side) {
-    return new DoorSlot(new Position(x, y), side);
-  }
+    public static DoorSlot of(int x, int y, Direction side) {
+        return new DoorSlot(new Position(x, y), side);
+    }
 }

@@ -1,6 +1,8 @@
 package net.icxd.dungeons.utils;
 
-import java.util.*;
+import java.util.NavigableMap;
+import java.util.Random;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 
 public class RandomCollection<E> {

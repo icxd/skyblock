@@ -34,7 +34,7 @@ public class EnchantmentType {
     public static final EnchantmentType SCAVENGER = new EnchantmentType("Scavenger", "scavenger", "&7Scavenge &6%s Coins &7per monster level on kill.", 5, SpecificItemType.SWORD);
     public static final EnchantmentType SHARPNESS = new EnchantmentType("Sharpness", "sharpness", "&7Increases melee damage dealt by &a%s%&7.", 7, SpecificItemType.SWORD);
     public static final EnchantmentType SMITE = new EnchantmentType("Smite", "smite", "&7Increases damage dealt to Zombies, Zombie Pigmen, Withers, and Skeletons by &a%s%&7.", 7, SpecificItemType.SWORD);
-    public static final EnchantmentType SMLODERING = new EnchantmentType("Smoldering", "smoldering", "&7Increases damage dealt to Blazes by &a%s%&7.", 5, SpecificItemType.SWORD);
+    public static final EnchantmentType SMOLDERING = new EnchantmentType("Smoldering", "smoldering", "&7Increases damage dealt to Blazes by &a%s%&7.", 5, SpecificItemType.SWORD);
     public static final EnchantmentType SYPHON = new EnchantmentType("Syphon", "syphon", "&7Heals for &a%s%&7 of your max health per &9100 ☠ Crit Damage&7 you deal per hit, up to &9100 ☠ Crit Damage&7.", 5, SpecificItemType.SWORD);
     public static final EnchantmentType THUNDERBOLT = new EnchantmentType("Thunderbolt", "thunderbolt", "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a%s%&7 of the hit's damage to up to 10 monsters within 2 blocks.", 6, SpecificItemType.SWORD);
     public static final EnchantmentType THUNDERLORD = new EnchantmentType("Thunderlord", "thunderlord", "&7Every &c3 &7hits on a monster, strike &elightning&7, dealing &a%s%&7 of the hit's damage.", 6, SpecificItemType.SWORD);
@@ -144,24 +144,11 @@ public class EnchantmentType {
         return ENCHANTMENT_TYPE_CACHE.get(namespace.toLowerCase());
     }
 
-    public static List<EnchantmentType> getEnchantmentsByType(SpecificItemType type) {
-        List<EnchantmentType> enchantments = new ArrayList<>();
-        for (EnchantmentType enchantment : ENCHANTMENT_TYPE_CACHE.values())
-            for (SpecificItemType enchantmentType : enchantment.getCompatibleTypes())
-                if (enchantmentType == type)
-                    enchantments.add(enchantment);
-        return enchantments;
-    }
-
     public String getDescription(Object... objects) {
         String description = this.description;
         for (Object object : objects)
             description = description.replaceFirst("%s", String.valueOf(object));
         return description;
-    }
-
-    public boolean isCompatible(SpecificItemType type) {
-        return compatibleTypes.contains(type);
     }
 
     @Override

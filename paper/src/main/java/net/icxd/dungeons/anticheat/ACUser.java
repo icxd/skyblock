@@ -41,7 +41,4 @@ public class ACUser {
         users.remove(player);
     }
 
-    public int getViolations(Check check) {
-        return violations.getOrDefault(check, 0);
-    }
 }

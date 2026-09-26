@@ -85,14 +85,4 @@ public class Bladesoul implements CustomEntity {
         }
     }
 
-    private Vector rotateAroundY(Vector vector, double degrees) {
-        double radians = Math.toRadians(degrees);
-        double currentX = vector.getX();
-        double currentZ = vector.getZ();
-        double cosine = Math.cos(radians);
-        double sine = Math.sin(radians);
-        vector.setX(currentX * cosine - currentZ * sine);
-        vector.setZ(currentX * sine + currentZ * cosine);
-        return vector;
-    }
 }

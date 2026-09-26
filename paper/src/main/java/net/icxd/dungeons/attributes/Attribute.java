@@ -2,13 +2,10 @@ package net.icxd.dungeons.attributes;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import net.icxd.dungeons.crimsonisle.kuudra.KuudraTier;
-import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.User;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -19,7 +16,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 @AllArgsConstructor
-@RequiredArgsConstructor
 @Getter
 public enum Attribute {
     // TODO: Arachno
@@ -51,7 +47,7 @@ public enum Attribute {
     VITALITY("Vitality", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §4%s♨ Vitality§7."), KuudraTier.BURNING, level -> new Stats().setVitality(3 * level)),
     SPEED("Speed", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §f%s✦ Speed§7."), KuudraTier.NONE, level -> new Stats().setWalkSpeed(5 * level)),
     // TODO: Undead Resistance
-    Veteran("Veteran", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §3%s☯ Combat Wisdom§7."), KuudraTier.BURNING, level -> new Stats().setCombatWisdom(0.75 * level)),
+    VETERAN("Veteran", Arrays.asList(GenericItemType.ARMOR, GenericItemType.EQUIPMENT), List.of("§7Grants §3%s☯ Combat Wisdom§7."), KuudraTier.BURNING, level -> new Stats().setCombatWisdom(0.75 * level)),
     // TODO: Blazing Fortune
     // TODO: Fishing Experience
     // TODO: Infection
@@ -66,7 +62,11 @@ public enum Attribute {
     private final List<String> description;
     private final KuudraTier requiredCompletion;
     private final Function<Integer, Stats> statsFunction;
-    private AttributeFunctionality attributeFunctionality = null;
+
+    /** By stored name; items made before the rename say "Veteran". */
+    public static Attribute of(String name) {
+        return "Veteran".equals(name) ? VETERAN : valueOf(name);
+    }
 
     public Predicate<Player> requirement() {
         return player -> {
@@ -84,7 +84,7 @@ public enum Attribute {
                 case MANA_POOL -> s = String.format(s, 20 * level);
                 case MENDING, VITALITY -> s = String.format(s, 3 * level);
                 case SPEED -> s = String.format(s, 5 * level);
-                case Veteran -> s = String.format(s, 0.75 * level);
+                case VETERAN -> s = String.format(s, 0.75 * level);
             }
             lore.add(s);
         }
@@ -100,10 +100,4 @@ public enum Attribute {
         return fitting.get(ThreadLocalRandom.current().nextInt(fitting.size()));
     }
 
-    static interface AttributeFunctionality {
-        default void onEquip(Player player, SkyBlockItem skyBlockItem) {}
-        default void onUnequip(Player player, SkyBlockItem skyBlockItem) {}
-        default void onAttack(Player player, SkyBlockItem skyBlockItem, LivingEntity entity) {}
-        default void onKill(Player player, SkyBlockItem skyBlockItem, LivingEntity entity) {}
-    }
 }

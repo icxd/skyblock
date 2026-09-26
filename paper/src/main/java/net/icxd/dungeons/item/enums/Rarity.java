@@ -32,10 +32,6 @@ public enum Rarity {
         return values()[this.ordinal() - 1];
     }
 
-    public boolean isAtLeast(Rarity rarity) {
-        return ordinal() >= rarity.ordinal();
-    }
-
     public String getDisplay() {
         return "" + color + ChatColor.BOLD + name().replaceAll("_", " ");
     }
@@ -44,11 +40,4 @@ public enum Rarity {
         return "" + color + ChatColor.BOLD;
     }
 
-    public static Rarity getRarity(String string) {
-        try {
-            return Rarity.valueOf(string.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            return null;
-        }
-    }
 }

@@ -103,14 +103,6 @@ public enum RegionType {
         this.color = color;
     }
 
-    public static RegionType getByID(int id) {
-        return RegionType.values()[id];
-    }
-
-    public boolean isForagingRegion() {
-        return this == BIRCH_PARK || this == SPRUCE_WOODS || this == DARK_THICKET || this == SAVANNA_WOODLAND || this == JUNGLE_ISLAND || this == FOREST;
-    }
-
     public static RegionType getType(String string) {
         try {
             return valueOf(string);

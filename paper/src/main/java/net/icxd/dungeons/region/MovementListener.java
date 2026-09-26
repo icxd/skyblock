@@ -4,7 +4,6 @@ import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.OnlyOn;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.utils.Replacement;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

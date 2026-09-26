@@ -7,10 +7,8 @@ import net.icxd.dungeons.item.cost.essence.*;
 import net.icxd.dungeons.item.cost.item.*;
 import net.icxd.dungeons.item.enums.*;
 import net.icxd.dungeons.item.gemstone.*;
-import net.icxd.dungeons.item.prestige.*;
 import net.icxd.dungeons.item.requirement.*;
 import net.icxd.dungeons.item.requirement.skill.*;
-import net.icxd.dungeons.stats.Stats;
 import org.bukkit.Material;
 
 import java.awt.*;

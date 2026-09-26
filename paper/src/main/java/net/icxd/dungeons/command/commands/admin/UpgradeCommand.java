@@ -32,7 +32,6 @@ public class UpgradeCommand extends SCommand {
             return;
         }
         if (tag.getInt("upgrade_count") >= skyBlockItem.upgradeCosts().getCosts().size()) {
-            // TODO: prestige the item
             player.sendMessage("§cThis item is already fully upgraded");
             return;
         }

@@ -1,16 +1,12 @@
 package net.icxd.dungeons.item.items.longsword;
 
 import net.icxd.dungeons.item.*;
-import net.icxd.dungeons.item.ability.Ability;
-import net.icxd.dungeons.item.ability.abilities.CoolThing;
-import net.icxd.dungeons.item.ability.abilities.Testing;
 import net.icxd.dungeons.item.cost.*;
 import net.icxd.dungeons.item.cost.coins.*;
 import net.icxd.dungeons.item.cost.essence.*;
 import net.icxd.dungeons.item.cost.item.*;
 import net.icxd.dungeons.item.enums.*;
 import net.icxd.dungeons.item.gemstone.*;
-import net.icxd.dungeons.item.prestige.*;
 import net.icxd.dungeons.item.requirement.*;
 import net.icxd.dungeons.item.requirement.dungeontier.DungeonTierRequirement;
 import net.icxd.dungeons.item.requirement.dungeontier.DungeonType;
@@ -35,5 +31,4 @@ public class DarkClaymore implements SkyBlockItem {
     @Override public boolean dungeonItem() { return true; }
     @Override public GemstoneSlots gemstoneSlots() { return new GemstoneSlots(new GemstoneSlot(GemstoneType.JASPER, new CoinCost(50000), new ItemCost(ItemRegistry.get("FINE_JASPER_GEM"), 20)), new GemstoneSlot(GemstoneType.JASPER, new CoinCost(100000), new ItemCost(ItemRegistry.get("FINE_JASPER_GEM"), 40))); }
     @Override public String id() { return "DARK_CLAYMORE"; }
-    @Override public Ability ability() { return new CoolThing(); }
 }

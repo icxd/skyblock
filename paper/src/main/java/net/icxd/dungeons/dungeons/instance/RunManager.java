@@ -65,8 +65,6 @@ import com.mongodb.client.MongoCollection;
 import io.papermc.paper.math.Position;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.common.Runs;
-import net.icxd.dungeons.dungeons.Dungeon;
-import net.icxd.dungeons.dungeons.DungeonRegistry;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
 import net.icxd.dungeons.dungeons.generation.DungeonGenerator;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
@@ -101,7 +99,6 @@ public final class RunManager {
         final String id;
         final DungeonFloor floor;
         final List<UUID> members;
-        final Dungeon dungeon;
         /** How long each step of setting it up took, for the log. */
         final StringBuilder timings = new StringBuilder();
         long stepStart = System.currentTimeMillis();
@@ -117,11 +114,10 @@ public final class RunManager {
         /** When the last member left (or it was set up, until someone arrives); 0 while someone's here. */
         long emptySince = System.currentTimeMillis();
 
-        Run(String id, DungeonFloor floor, UUID leader, List<UUID> members) {
+        Run(String id, DungeonFloor floor, List<UUID> members) {
             this.id = id;
             this.floor = floor;
             this.members = members;
-            this.dungeon = new Dungeon(UUID.fromString(id), leader, members, floor);
         }
     }
 
@@ -243,10 +239,9 @@ public final class RunManager {
             return null;
         }
         List<UUID> members = doc.getList(Runs.MEMBERS, String.class).stream().map(UUID::fromString).toList();
-        run = new Run(id, floor, UUID.fromString(doc.getString(Runs.LEADER)), members);
+        run = new Run(id, floor, members);
         byId.put(id, run);
         for (UUID member : members) byMember.put(member, run);
-        DungeonRegistry.registerDungeon(run.dungeon);
         build(run);
         return run;
     }
@@ -368,7 +363,6 @@ public final class RunManager {
         run.ended = true;
         byId.remove(run.id);
         for (UUID member : run.members) byMember.remove(member, run);
-        DungeonRegistry.unregisterDungeon(run.dungeon);
         if (run.lifecycle != null) run.lifecycle.dispose();
         if (run.map != null) spareMaps.add(run.map);
         Runnable ended = () -> {

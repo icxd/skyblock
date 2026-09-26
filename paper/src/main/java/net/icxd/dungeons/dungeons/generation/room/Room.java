@@ -29,29 +29,29 @@ import net.icxd.dungeons.dungeons.generation.secrets.Secret;
 @Builder
 @Getter
 public class Room {
-  private final String id;
-  private final RoomType type;
-  private final RoomShape shape;
-  @Builder.Default
-  private final Set<DoorSlot> doorSlots = Set.of();
-  @Builder.Default
-  private final boolean exactDoors = false;
-  @Builder.Default
-  private final int maxDoors = Integer.MAX_VALUE;
-  @Builder.Default
-  private final Set<Integer> rotations = Set.of(0, 1, 2, 3);
-  @Builder.Default
-  private final DungeonFloor minimumFloor = DungeonFloor.ENTRANCE;
-  @Builder.Default
-  private final List<Secret> secrets = new ArrayList<>();
+    private final String id;
+    private final RoomType type;
+    private final RoomShape shape;
+    @Builder.Default
+    private final Set<DoorSlot> doorSlots = Set.of();
+    @Builder.Default
+    private final boolean exactDoors = false;
+    @Builder.Default
+    private final int maxDoors = Integer.MAX_VALUE;
+    @Builder.Default
+    private final Set<Integer> rotations = Set.of(0, 1, 2, 3);
+    @Builder.Default
+    private final DungeonFloor minimumFloor = DungeonFloor.ENTRANCE;
+    @Builder.Default
+    private final List<Secret> secrets = new ArrayList<>();
 
-  /** Most doors this template can ever have. */
-  public int doorLimit() {
-    return exactDoors ? doorSlots.size() : maxDoors;
-  }
+    /** Most doors this template can ever have. */
+    public int doorLimit() {
+        return exactDoors ? doorSlots.size() : maxDoors;
+    }
 
-  @Override
-  public String toString() {
-    return id;
-  }
+    @Override
+    public String toString() {
+        return id;
+    }
 }

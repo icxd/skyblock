@@ -8,13 +8,12 @@ import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.Soulbound;
 import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.item.gemstone.GemstoneSlots;
-import net.icxd.dungeons.item.prestige.Prestige;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.requirement.Requirements;
 import net.icxd.dungeons.stats.Stats;
-import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Material;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.List;
 
 public interface SkyBlockItem {
@@ -41,7 +40,6 @@ public interface SkyBlockItem {
     default Soulbound soulbound() { return Soulbound.NONE; }
     default Requirements requirements() { return null; }
     default UpgradeCosts upgradeCosts() { return null; }
-    default Prestige prestige() { return null; }
     default GemstoneSlots gemstoneSlots() { return null; }
 
     default boolean canHaveAttributes() { return false; }

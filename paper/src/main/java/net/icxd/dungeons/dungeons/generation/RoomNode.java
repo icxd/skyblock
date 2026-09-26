@@ -17,61 +17,61 @@ import net.icxd.dungeons.dungeons.generation.utils.Position;
  * a wall that at least one remaining option allows, and adding it drops the options that don't.
  */
 final class RoomNode {
-  int id;
-  RoomType type;
-  RoomShape shape;
-  List<Position> cells;
+    int id;
+    RoomType type;
+    RoomShape shape;
+    List<Position> cells;
 
-  /** Every placement of every template for this footprint, before any door was decided. */
-  List<Placement> allOptions;
-  List<Placement> options;
-  final List<Edge> doors = new ArrayList<>();
-  int parent = -1;
-  int depth;
+    /** Every placement of every template for this footprint, before any door was decided. */
+    List<Placement> allOptions;
+    List<Placement> options;
+    final List<Edge> doors = new ArrayList<>();
+    int parent = -1;
+    int depth;
 
-  RoomNode(int id, RoomType type, RoomShape shape, List<Position> cells) {
-    this.id = id;
-    this.type = type;
-    this.shape = shape;
-    this.cells = List.copyOf(cells);
-  }
-
-  /** Could a door go through {@code edge} without leaving this room with no legal template? */
-  boolean accepts(Edge edge) {
-    for (Placement p : options) {
-      if (p.doorLimit() > doors.size() && p.allows(edge)) return true;
+    RoomNode(int id, RoomType type, RoomShape shape, List<Position> cells) {
+        this.id = id;
+        this.type = type;
+        this.shape = shape;
+        this.cells = List.copyOf(cells);
     }
-    return false;
-  }
 
-  boolean canTakeMoreDoors() {
-    for (Placement p : options) {
-      if (p.doorLimit() > doors.size()) return true;
+    /** Could a door go through {@code edge} without leaving this room with no legal template? */
+    boolean accepts(Edge edge) {
+        for (Placement p : options) {
+            if (p.doorLimit() > doors.size() && p.allows(edge)) return true;
+        }
+        return false;
     }
-    return false;
-  }
 
-  /** Some option is complete with the doors this room has right now. */
-  boolean satisfied() {
-    for (Placement p : options) {
-      if (p.fits(doors)) return true;
+    boolean canTakeMoreDoors() {
+        for (Placement p : options) {
+            if (p.doorLimit() > doors.size()) return true;
+        }
+        return false;
     }
-    return false;
-  }
 
-  /** Some placement from {@link #allOptions} would be happy with exactly {@code doors}. */
-  boolean couldHave(List<Edge> doors) {
-    for (Placement p : allOptions) {
-      if (p.fits(doors)) return true;
+    /** Some option is complete with the doors this room has right now. */
+    boolean satisfied() {
+        for (Placement p : options) {
+            if (p.fits(doors)) return true;
+        }
+        return false;
     }
-    return false;
-  }
 
-  List<Placement> optionsAfter(Edge edge) {
-    List<Placement> next = new ArrayList<>(options.size());
-    for (Placement p : options) {
-      if (p.doorLimit() > doors.size() && p.allows(edge)) next.add(p);
+    /** Some placement from {@link #allOptions} would be happy with exactly {@code doors}. */
+    boolean couldHave(List<Edge> doors) {
+        for (Placement p : allOptions) {
+            if (p.fits(doors)) return true;
+        }
+        return false;
     }
-    return next;
-  }
+
+    List<Placement> optionsAfter(Edge edge) {
+        List<Placement> next = new ArrayList<>(options.size());
+        for (Placement p : options) {
+            if (p.doorLimit() > doors.size() && p.allows(edge)) next.add(p);
+        }
+        return next;
+    }
 }
