@@ -17,7 +17,9 @@ import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashMap;
@@ -86,12 +88,28 @@ public final class SignInput implements Listener {
     public void onSignChange(UncheckedSignChangeEvent event) {
         Player player = event.getPlayer();
         Prompt prompt = PROMPTS.get(player.getUniqueId());
-        if (prompt == null || !at(event.getEditedBlockPosition(), prompt.location())) return;
+        if (prompt == null) return;
+        // Left behind in another world: whatever this edits, it isn't that sign.
+        if (!player.getWorld().equals(prompt.location().getWorld())) {
+            PROMPTS.remove(player.getUniqueId());
+            return;
+        }
+        if (!at(event.getEditedBlockPosition(), prompt.location())) return;
         PROMPTS.remove(player.getUniqueId());
         // Nothing to change on the server: there's no sign there.
         event.setCancelled(true);
         restore(player, prompt.location());
         prompt.done().accept(event.lines().stream().map(PlainTextComponentSerializer.plainText()::serialize).toList());
+    }
+
+    /**
+     * The death screen closes the sign, but the server drops an edit from a dead player, so it never
+     * comes back; left pending, the prompt would take over a real sign they edit there later.
+     * Respawning sends their chunks again, the real block with them.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDeath(PlayerDeathEvent event) {
+        PROMPTS.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
