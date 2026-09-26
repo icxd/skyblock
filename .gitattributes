@@ -1,0 +1,12 @@
+# LF in the repository and in checkouts, on every OS; Windows scripts keep CRLF.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.jar binary
+*.schem binary
+*.schematic binary
+*.nbt binary
+*.mcpr binary
+*.tmcpr binary
