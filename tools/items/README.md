@@ -98,19 +98,14 @@ codes.
 Hypixel's resource pack draws icons with private-use glyphs; the plugin sends no resource pack, so it
 uses each glyph's classic symbol instead (✎ for the mana icon, ❁ for strength, and so on).
 
-## The other scripts
+## Enchantments: `gen_enchantments.py`
 
 ```
 git clone --depth 1 https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO /tmp/neu
 python3 tools/items/gen_enchantments.py /tmp/neu/items   # paper/src/main/resources/enchantments.json
-python3 tools/items/gen_tables.py /tmp/neu/items         # item/items/CrimsonArmor.java, Gemstones.java
 ```
 
-- `gen_enchantments.py`: each enchantment in `EnchantmentType` gets its name and its description at
-  each level from the enchanted books. Where Hypixel has no book for a level, that level's values are
-  put into the nearest level's text; where the values aren't known either, the level has no description.
-- `gen_tables.py`: the Crimson armor (stats and tier bonus text by tier and piece) and the gemstones
-  (text by type and quality) from the item dumps, filled into `templates/`. `data/` holds what the
-  plugin had before and Hypixel's dumps don't: the Crimson star costs and the head textures.
-
-Both write their output in place; `git diff` shows what changed.
+Each enchantment in `EnchantmentType` gets its name and its description at each level from the
+enchanted books. Where Hypixel has no book for a level, that level's values are put into the nearest
+level's text; where the values aren't known either, the level has no description. It writes its output
+in place; `git diff` shows what changed.
