@@ -35,7 +35,8 @@ type Network struct {
 	Java string `json:"java"`
 	// Repo is a checkout of the skyblock repository, for building and deploying the plugins.
 	Repo string `json:"repo"`
-	// DungeonData is a checkout of the dungeon data repository (its rooms/ folder is linked into dungeon servers).
+	// DungeonData is a checkout of the private data repository: its items/ folder is linked into every
+	// server, its rooms/ folder into dungeon servers.
 	DungeonData   string `json:"dungeonData"`
 	MongoURI      string `json:"mongoUri"`
 	MongoDatabase string `json:"mongoDatabase"`

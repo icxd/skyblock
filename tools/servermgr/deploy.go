@@ -96,6 +96,8 @@ func (n *Network) deploy(o DeployOptions, output func(string)) error {
 				output(fmt.Sprintf("! %s: %v", s.Name, err))
 				continue
 			}
+			// Servers made before a data folder was linked in get it now.
+			n.linkData(s, output)
 			if n.state(s.Name).Alive {
 				restart = append(restart, s.Name)
 			}

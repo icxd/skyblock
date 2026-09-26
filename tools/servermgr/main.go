@@ -170,7 +170,7 @@ func cmdInit(dir string, args []string) error {
 	o := InitOptions{Dir: dir}
 	fs.StringVar(&o.Java, "java", defaultJava(), "java executable (JDK 25+)")
 	fs.StringVar(&o.Repo, "repo", findRepo("."), "skyblock repository checkout")
-	fs.StringVar(&o.DungeonData, "data", "", "dungeon data checkout (its rooms/ folder)")
+	fs.StringVar(&o.DungeonData, "data", "", "private data checkout (skyblock-dungeon-data: items/ and rooms/)")
 	fs.StringVar(&o.MongoURI, "mongo", "mongodb://localhost:27017", "MongoDB connection string")
 	fs.StringVar(&o.MongoDatabase, "database", "dungeons", "MongoDB database")
 	fs.IntVar(&o.ProxyPort, "port", defaultProxyPort, "port players connect to")

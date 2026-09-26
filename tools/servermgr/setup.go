@@ -266,9 +266,7 @@ func (n *Network) createServer(o CreateOptions, progress func(string)) (*Server,
 		return nil, err
 	}
 	n.installPaperPlugins(s, progress)
-	if s.Type == "DUNGEONS" || s.Type == "NONE" {
-		n.linkDungeonData(s, progress)
-	}
+	n.linkData(s, progress)
 
 	n.Servers = append(n.Servers, s)
 	if err := n.save(); err != nil {
@@ -498,21 +496,48 @@ func (n *Network) installProxyPlugin(progress func(string)) {
 	}
 }
 
-// linkDungeonData makes the captured rooms available to a dungeon server.
-func (n *Network) linkDungeonData(s *Server, progress func(string)) {
+// linkData links the private data checkout into a server: the item definitions (items/) into
+// every server, and the captured rooms (rooms/) into dungeon servers. Hypixel's data stays in that
+// checkout, out of the plugin and this repository. Links that are already there are left alone, so
+// it runs on every deploy.
+func (n *Network) linkData(s *Server, progress func(string)) {
 	if n.DungeonData == "" {
-		progress("! No dungeon data folder configured; /dungeon paste needs plugins/dungeons/dungeon-rooms/rooms")
+		progress("! No data folder configured; items come only from the plugin, and /dungeon paste needs plugins/dungeons/dungeon-rooms/rooms")
 		return
 	}
-	target := filepath.Join(n.DungeonData, "rooms")
-	link := filepath.Join(n.serverDir(s), "plugins", "dungeons", "dungeon-rooms", "rooms")
+	plugin := filepath.Join(n.serverDir(s), "plugins", "dungeons")
+	n.linkDataDir(s, "items", filepath.Join(plugin, "items"), progress)
+	if s.Type == "DUNGEONS" || s.Type == "NONE" {
+		n.linkDataDir(s, "rooms", filepath.Join(plugin, "dungeon-rooms", "rooms"), progress)
+	}
+}
+
+func (n *Network) linkDataDir(s *Server, name, link string, progress func(string)) {
+	target := filepath.Join(n.DungeonData, name)
+	if _, err := os.Stat(target); err != nil {
+		progress(fmt.Sprintf("! %s: the data folder has no %s/ yet", s.Name, name))
+		return
+	}
+	if _, err := os.Lstat(link); err == nil {
+		if resolved, err := filepath.EvalSymlinks(link); err != nil || !samePath(resolved, target) {
+			progress(fmt.Sprintf("! %s: %s is there already and isn't a link to %s; left as it is", s.Name, link, target))
+		}
+		return
+	}
 	if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
 		progress("! " + err.Error())
 		return
 	}
 	if err := linkDir(target, link); err != nil {
-		progress("! Couldn't link the dungeon rooms: " + err.Error())
+		progress(fmt.Sprintf("! %s: couldn't link %s/: %v", s.Name, name, err))
 	}
+}
+
+// samePath: whether two paths are the same folder, whatever links lead to them.
+func samePath(a, b string) bool {
+	ra, errA := filepath.EvalSymlinks(a)
+	rb, errB := filepath.EvalSymlinks(b)
+	return errA == nil && errB == nil && filepath.Clean(ra) == filepath.Clean(rb)
 }
 
 // removeServer takes a stopped server off the network, and deletes its folder unless keep.

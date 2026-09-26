@@ -44,9 +44,14 @@ The network lives in `./network` unless you pass `--dir FOLDER` or set `SKYBLOCK
   password, and a flat world. Plugins: the SkyBlock plugin from the repository build, WorldEdit and
   PacketEvents (newest releases for this Minecraft version, from Modrinth). The plugin's config gets
   the server's name and type and the MongoDB settings.
-- **Per type**: dungeon servers get the captured rooms linked in (`plugins/dungeons/dungeon-rooms/rooms`
-  → the data repository's `rooms/`) and random ticks and mob spawning turned off on first start.
-  Every server gets fixed time and weather and no advancement messages.
+- **Private data** (`--data`, the skyblock-dungeon-data checkout): every server gets its item
+  definitions linked in (`plugins/dungeons/items` → the data repository's `items/`, made by
+  `tools/items/build_items.py`), and dungeon servers its captured rooms
+  (`plugins/dungeons/dungeon-rooms/rooms` → `rooms/`). They come from Hypixel, so they stay in that
+  private repository rather than in this one or the plugin. `deploy` adds links that are missing, so
+  older servers get them too.
+- **Per type**: dungeon servers get random ticks and mob spawning turned off on first start. Every
+  server gets fixed time and weather and no advancement messages.
 - Downloads are checked against their published checksums and cached in `network/cache`.
 
 ## Commands

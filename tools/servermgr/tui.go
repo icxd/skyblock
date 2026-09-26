@@ -500,7 +500,7 @@ func (m *model) startInitForm() {
 				return nil
 			}),
 			huh.NewInput().Title("SkyBlock repository").Description("For building and deploying the plugins").Value(&o.Repo),
-			huh.NewInput().Title("Dungeon data").Description("skyblock-dungeon-data checkout (optional; its rooms/ go to dungeon servers)").Value(&o.DungeonData),
+			huh.NewInput().Title("Dungeon data").Description("skyblock-dungeon-data checkout (optional; its items/ go to every server, rooms/ to dungeon servers)").Value(&o.DungeonData),
 		),
 		huh.NewGroup(
 			huh.NewInput().Title("MongoDB").Value(&o.MongoURI),
