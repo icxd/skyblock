@@ -3,6 +3,70 @@
 The plugin's items show their text the way Hypixel's do today. That text comes from Hypixel's own
 items, and the scripts here turn it into the plugin's data.
 
+## Every item: `build_items.py`
+
+```
+git clone --depth 1 https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO /tmp/neu
+python3 tools/items/build_items.py --neu /tmp/neu                          # fetches the items API
+python3 tools/items/build_items.py --api items.json --neu /tmp/neu --out DIR   # a saved response, elsewhere
+python3 tools/items/check_items.py [DIR/items.json]                        # checks the file against format 1
+```
+
+It turns every item Hypixel has (about 5,650) into one `items.json`, and writes `report.md` next to it.
+
+- **Where it goes, and why not here.** By default into `items/` of the private data repository's
+  checkout, `skyblock-dungeon-data/`, next to this repository's. servermgr links that `items/` folder
+  into every server as `plugins/dungeons/items`, and the plugin reads `items/items.json` from its data
+  folder when it starts (without it, only the Java items are there). The file is Hypixel's item text
+  and numbers, and this repository is public, so only the code and tables that make it are here.
+  Commit `items.json` and `report.md` in the private repository after reading the report.
+- **Sources.** [Hypixel's items API](https://api.hypixel.net/v2/resources/skyblock/items) (no key)
+  wins for the numbers: stats, costs, requirements, sell price, rarity, flags and material. NEU's
+  in-game dumps give the text: the name, the dark gray lines under it, the item's own lines, and its
+  ability and bonus blocks, in the order Hypixel shows them. NEU also gives what the API doesn't have:
+  the Gear Score and Shot Cooldown shown, the rarity line's words, and whether the item says "This item
+  can be reforged!". An item NEU has no dump of gets the API's description, wrapped the way `Text.wrap`
+  does it. `source` in the file records the API's `lastUpdated` and the NEU commit.
+- **What the plugin writes itself is left out**: stat lines, the gemstone line, cost lines under a
+  block, the reforge note, requirements, soulbound and the rarity line. So are lines that change with
+  the item or its owner; the report lists which items have them.
+- **Tables** (`data/`): `materials.tsv` turns Hypixel's 1.8 material and data value into the 26.2
+  material (rows marked `vanilla` come from vanilla's own ItemIdFix and ItemStackTheFlatteningFix, the
+  rest were done by hand and checked against the item ids Hypixel sends today, in NEU's
+  `itemsOverlay/`; an item whose pair isn't there is skipped, and the report says so). Every material
+  is checked against `Material` and `ItemType` in the paper-api jar the plugin builds with (from
+  `~/.m2`, or `--paper-api`); items Hypixel draws with its resource pack stay `PAPER`. `glyphs.tsv`
+  gives each private-use glyph its classic symbol and says how that was found; a glyph with no symbol
+  is dropped, and the report says where.
+- **The report** lists the counts, the items whose text needs a person or code, dropped glyphs, the
+  names the plugin doesn't model yet (read from its own enums in `paper/src`), what the format has no
+  place for, and where the API and NEU disagree.
+- It needs python3 (standard library only), git (for the NEU commit) and the paper-api jar (any build
+  of the plugin downloads it). On the same inputs it writes the same bytes.
+
+### Format 1
+
+One JSON object: `{"format":1,"source":{...},"items":{` then one item a line, `"ID":{...}`, sorted by
+id, keys sorted, and every default left out, so a changed item is a one-line diff. Only `name` and
+`material` are always there.
+
+| field | |
+|---|---|
+| `name` | without the rarity colour (codes only where Hypixel's name changes colour) |
+| `material` | a 26.2 `Material` name |
+| `rarity`, `type`, `type_label` | `Rarity` name (COMMON left out); Hypixel's category; the rarity line's words when they aren't `type`'s (the plugin adds DUNGEON) |
+| `categories`, `lore` | the dark gray lines under the name; the item's own lines (`""` a blank line) |
+| `texture`, `skin`, `color` | a head's texture hash (for `Utils.texture`), or a whole skin value; leather's `#rrggbb` |
+| `glowing`, `unstackable`, `dungeon_item`, `can_have_attributes` | only when true |
+| `reforgeable` | whether NEU's dump says it can be reforged (only items NEU has) |
+| `soulbound`, `gear_score`, `npc_sell_price`, `shot_cooldown` | `COOP`/`SOLO`; the Gear Score shown; coins; seconds |
+| `stats` | `{STAT: number}` in the plugin's `Stat` names (a name it doesn't have is kept) |
+| `gemstone_slots`, `upgrade_costs`, `requirements` | `[{type, costs}]`; a list of costs per star; the API's requirement objects |
+| `abilities` | the blocks in order: `kind` (ABILITY, FULL_SET, PIECE, TIERED, EXTRA, SHORTBOW), `name`, `header` (the line as Hypixel shows it), `activation`, `text`, and `mana`, `mana_percent`, `cooldown` (seconds), `soulflow`, `health_cost`, `pieces` |
+
+A cost is `{"coins":N}`, `{"item":"ID","amount":N}` or `{"essence":"WITHER","amount":N}`. Text uses `&`
+codes.
+
 ## Sources
 
 - **NotEnoughUpdates-REPO** (`items/<ID>.json`, https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO):
@@ -22,7 +86,7 @@ items, and the scripts here turn it into the plugin's data.
 Hypixel's resource pack draws icons with private-use glyphs; the plugin sends no resource pack, so it
 uses each glyph's classic symbol instead (✎ for the mana icon, ❁ for strength, and so on).
 
-## Scripts
+## The other scripts
 
 ```
 git clone --depth 1 https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO /tmp/neu
