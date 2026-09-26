@@ -11,6 +11,7 @@ import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
+import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.gemstone.GemstoneSlot;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -50,7 +51,7 @@ class GoldenItemsTest {
 
     @Test
     void itemsAreUnchanged() throws IOException {
-        assertEquals(71, ItemRegistry.getRegistry().size());
+        assertEquals(71, javaItems().size());
         String actual = golden();
         if (Boolean.getBoolean("golden.update")) {
             Files.createDirectories(GOLDEN.getParent());
@@ -69,7 +70,7 @@ class GoldenItemsTest {
     }
 
     static String golden() {
-        Map<String, SkyBlockItem> byId = new TreeMap<>(ItemRegistry.getRegistry());
+        Map<String, SkyBlockItem> byId = javaItems();
         JsonObject all = new JsonObject();
         for (SkyBlockItem item : byId.values()) {
             JsonObject entry = new JsonObject();
@@ -100,6 +101,13 @@ class GoldenItemsTest {
             all.add(item.id(), entry);
         }
         return new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeNulls().create().toJson(all) + "\n";
+    }
+
+    /** By id; without any items from data another test loaded. */
+    private static Map<String, SkyBlockItem> javaItems() {
+        Map<String, SkyBlockItem> items = new TreeMap<>(ItemRegistry.getRegistry());
+        items.values().removeIf(item -> item instanceof DataItem);
+        return items;
     }
 
     private static NBTTagCompound fresh(SkyBlockItem item) {

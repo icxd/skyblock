@@ -2,6 +2,7 @@ package net.icxd.dungeons.item;
 
 import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.cost.UpgradeCosts;
+import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.Soulbound;
@@ -37,6 +38,10 @@ public interface SkyBlockItem {
     /** What the rarity line calls it ("SWORD", "GEMSTONE"); NONE for just the rarity. */
     default SpecificItemType specificItemType() { return SpecificItemType.NONE; }
     default GenericItemType genericItemType() { return GenericItemType.get(specificItemType()); }
+    /** The rarity line's words after the rarity ("ORE") when they aren't the type's name; null for the type's name. */
+    default String typeLabel() { return null; }
+    /** Its Hypixel type, for grouping and filtering ("SWORD", "SACK"); "OTHER" if it has none. */
+    default String typeKey() { return specificItemType() == SpecificItemType.NONE ? "OTHER" : specificItemType().name(); }
 
     /** Dark gray lines right under the name, such as "Collection Item" or "Drill Part". */
     default List<String> categories() { return List.of(); }
@@ -50,6 +55,8 @@ public interface SkyBlockItem {
     /** The item's own text, between its enchantments and abilities: a line each, "" for a blank line. */
     default List<String> lore() { return List.of(); }
     default Ability ability() { return null; }
+    /** Abilities and bonuses from data, shown where {@link #ability()} is; Java items use ability(). */
+    default List<ItemBlock> blocks() { return List.of(); }
     /** More text that depends on the item's data (drill parts, scroll abilities); null for none. */
     default List<String> nbtLore(NBTTagCompound tag) { return null; }
 

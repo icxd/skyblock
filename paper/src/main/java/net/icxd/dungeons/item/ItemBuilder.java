@@ -13,6 +13,7 @@ import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
+import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enchanting.Enchantment;
 import net.icxd.dungeons.item.enums.DungeonStar;
 import net.icxd.dungeons.item.enums.GenericItemType;
@@ -55,7 +56,8 @@ import java.util.UUID;
  *   <li>gemstone slots</li>
  *   <li>enchantments: with descriptions when there are up to 5 (and it isn't a dungeon item), one
  *       a line up to 9, else three a line</li>
- *   <li>attributes, the item's own text, rune, ability, then text from the item's data</li>
+ *   <li>attributes, the item's own text, rune, ability (or a data item's abilities and bonuses), then text
+ *       from the item's data</li>
  *   <li>"This item can be reforged!", requirements the owner doesn't meet, soulbound, rarity line</li>
  * </ol>
  * Every line is one {@code &}-coded string turned into a component (see {@link Text#line}).
@@ -259,6 +261,7 @@ public final class ItemBuilder {
         sections.add(item.lore());
         sections.add(runeLines(tag));
         if (item.ability() != null) sections.add(abilityLore(item.ability(), rarity));
+        for (ItemBlock block : item.blocks()) sections.add(blockLore(block));
         List<String> fromData = item.nbtLore(tag);
         if (fromData != null) sections.add(fromData);
 
@@ -433,10 +436,30 @@ public final class ItemBuilder {
                     : "  &e&l" + ability.getActivation().getDisplay()));
         }
         lines.addAll(ability.descriptionLines());
-        if (ability.getManaCost() > 0) lines.add("&8Mana Cost: &b" + ability.getManaCost() + "✎");
-        if (ability.getSoulflowCost() > 0) lines.add("&8Soulflow Cost: &3" + ability.getSoulflowCost() + "⸎");
-        if (ability.getCooldown() > 0) lines.add("&8Cooldown: &a" + ability.getCooldown() + "s");
+        costLines(lines, ability.getManaCost(), 0, ability.getSoulflowCost(), 0, ability.getCooldown());
         return lines;
+    }
+
+    /** A data item's ability or bonus: its header as Hypixel shows it, its text, then its costs as above. */
+    public static List<String> blockLore(ItemBlock block) {
+        List<String> lines = new ArrayList<>();
+        if (block.header() != null) lines.add(block.header());
+        lines.addAll(block.text());
+        costLines(lines, block.mana(), block.manaPercent(), block.soulflow(), block.healthCost(), block.cooldown());
+        return lines;
+    }
+
+    /**
+     * "&8Mana Cost: &b45✎", "&8Health Cost: &c1,000❤", "&8Cooldown: &a30s" and the like, in the order
+     * Hypixel lists them (NEU's Staff of the Volcano: mana, health, cooldown); 0 for none. A share of
+     * max mana has no ✎ ("&b50% of max", the power orbs).
+     */
+    private static void costLines(List<String> lines, double mana, double manaPercent, double soulflow, double health, double cooldown) {
+        if (mana > 0) lines.add("&8Mana Cost: &b" + Text.number(mana) + "✎");
+        if (manaPercent > 0) lines.add("&8Mana Cost: &b" + Text.number(manaPercent) + "% of max");
+        if (soulflow > 0) lines.add("&8Soulflow Cost: &3" + Text.number(soulflow) + "⸎");
+        if (health > 0) lines.add("&8Health Cost: &c" + Text.number(health) + "❤");
+        if (cooldown > 0) lines.add("&8Cooldown: &a" + Text.number(cooldown) + "s");
     }
 
     /** The requirements its owner doesn't meet (none while it has no owner). */
@@ -454,8 +477,8 @@ public final class ItemBuilder {
     static String rarityLine(SkyBlockItem item, NBTTagCompound tag, Rarity rarity) {
         String bold = rarity.getBoldedColor();
         SpecificItemType type = item.specificItemType();
-        String kind = type == SpecificItemType.NONE ? (item.dungeonItem() ? " DUNGEON ITEM" : "")
-                : (item.dungeonItem() ? " DUNGEON" : "") + " " + type.name().replace('_', ' ');
+        String words = item.typeLabel() != null ? item.typeLabel() : type == SpecificItemType.NONE ? null : type.name().replace('_', ' ');
+        String kind = words == null ? (item.dungeonItem() ? " DUNGEON ITEM" : "") : (item.dungeonItem() ? " DUNGEON" : "") + " " + words;
         String line = bold + rarity.name().replace('_', ' ') + kind;
         return tag.getBoolean("recombobulated") ? bold + "&ka&r " + line + " " + bold + "&ka" : line;
     }

@@ -72,6 +72,9 @@ public class Dungeons extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
+        // Hypixel's items, as data kept out of this repository (servermgr links it in); without it, just the Java items.
+        ItemRegistry.loadData(getDataFolder().toPath().resolve("items/items.json"));
+
         skyBlockServer = new SkyBlockServer(getConfig());
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
                 mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection::defaultDocument);
