@@ -346,6 +346,7 @@ class ItemDataTest {
         assertEquals(List.of("&4☠ &cRequires &5Vampire Slayer 2&c."), vampire.lore());
     }
 
+    /**
      * A star or gemstone slot missing a cost this plugin can't charge would come cheaper, or free: the
      * item can't be upgraded, and the slot is left out. The essence is still a warning.
      */

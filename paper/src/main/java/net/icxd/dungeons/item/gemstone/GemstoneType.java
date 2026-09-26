@@ -20,9 +20,11 @@ public enum GemstoneType {
     CITRINE("Citrine", '☘', '4'),
     PERIDOT("Peridot", '☘', '2'),
 
-    COMBAT("Combat", '⚔', '4', Arrays.asList(GemstoneType.RUBY, GemstoneType.AMETHYST, GemstoneType.SAPPHIRE, GemstoneType.JASPER, GemstoneType.ONYX)),
+    // What each special slot takes, as the wiki's Gemstone Slot page lists them.
+    COMBAT("Combat", '⚔', '4', Arrays.asList(GemstoneType.RUBY, GemstoneType.AMETHYST, GemstoneType.SAPPHIRE, GemstoneType.JASPER, GemstoneType.ONYX,
+            GemstoneType.OPAL)),
     OFFENSIVE("Offensive", '☠', '9', Arrays.asList(GemstoneType.SAPPHIRE, GemstoneType.JASPER)),
-    DEFENSIVE("Defensive", '☤', 'a', Arrays.asList(GemstoneType.RUBY, GemstoneType.AMETHYST)),
+    DEFENSIVE("Defensive", '☤', 'a', Arrays.asList(GemstoneType.RUBY, GemstoneType.AMETHYST, GemstoneType.OPAL)),
     MINING("Mining", '✦', '7', Arrays.asList(GemstoneType.JADE, GemstoneType.AMBER, GemstoneType.TOPAZ)),
     /** The Fossil Excavator's chisels: the gems that give a chisel bonus. */
     CHISEL("Chisel", '❥', '6', Arrays.asList(GemstoneType.ONYX, GemstoneType.AQUAMARINE, GemstoneType.CITRINE, GemstoneType.PERIDOT)),
