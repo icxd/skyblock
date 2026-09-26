@@ -2,11 +2,14 @@ package net.icxd.dungeons.dungeons.paste;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import net.icxd.dungeons.dungeons.generation.DoorType;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout;
@@ -18,41 +21,42 @@ import net.icxd.dungeons.dungeons.generation.room.RoomType;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.generation.utils.Edge;
 import net.icxd.dungeons.dungeons.generation.utils.Position;
+import net.icxd.dungeons.dungeons.paste.RoomLibrary.Doorway;
 
 /**
  * Where every schematic of a generated dungeon goes, worked out without touching a world so it can
  * be tested. {@link WorldEditPaster} carries it out in this order: {@link #clears}, {@link #rooms},
- * {@link #doors}, {@link #closings}, {@link #carves}.
+ * {@link #doors}, {@link #fillers}, {@link #closings}.
  *
  * <p>World layout is Hypixel's: cells are 31x31 blocks with a 1 block gap, so cell {@code (x, y)}
  * starts at {@code base + 32 * (x, y)}. With the default base of -200 the cell centres are at
  * -185 + 32i like on Hypixel. Between two different rooms the gap is air, a door fills it.
  *
- * <p>Doors: a door schematic is 5 blocks along the wall, 3 across (the gap plus the outermost
- * layer of both rooms), from y=67 up. Pasting one therefore also cuts the doorway into both rooms'
- * walls, so a room can get a door where its capture had a wall. The reverse, a doorway that was
- * open in the capture but has no door now, is walled up by copying the wall next to it
- * ({@link #closings}). Behind a doorway that was walled up in the capture there can be more wall;
- * {@link #carves} lists the blocks to clear so the door isn't blocked.
+ * <p>Doorways: every outer wall of a cell has one in the middle, 5 blocks along the wall (13-17),
+ * 3 deep (the outer wall and two layers inside) and 7 high (67-73). On Hypixel it holds either the
+ * door's frame, the same on both sides and in the gap between, or, without a door, something
+ * built for that wall of that room (often a fireplace). The captures show what each doorway held
+ * then. A door is copied from a captured open doorway, preferably one of its own two rooms, into
+ * both rooms and the gap ({@link #doors}). A doorway that was open in the capture but has no door
+ * now gets what another capture of the room shows there ({@link #fillers}), or, if no capture has
+ * it walled up, copies of the wall next to it ({@link #closings}).
  */
 public final class PastePlan {
   public static final int CELL = 31;
   public static final int PITCH = CELL + 1;
   /** Hypixel's first cell starts here on both axes. */
   public static final int HYPIXEL_BASE = -200;
-  /** Lowest block of a door (bedrock), and how many layers of the door schematic are pasted. */
+  /** Lowest block of a doorway (bedrock), and its height. */
   public static final int DOOR_Y = 67;
   public static final int DOOR_HEIGHT = 7;
-  /** Along the wall, measured from the cell's corner: a door covers 13-17, you walk through 14-16. */
+  /** Along the wall, measured from the cell's corner: a doorway covers 13-17, you walk through 14-16. */
   static final int DOOR_FROM = 13;
   static final int DOOR_TO = 17;
-  static final int OPENING_FROM = 14;
-  static final int OPENING_TO = 16;
-  /** Walkable height of a doorway: floor at 68, frame top at 73. */
+  static final int DOOR_MIDDLE = 15;
+  /** Blocks from the outer wall inwards that belong to a doorway. */
+  static final int DOORWAY_DEPTH = 3;
+  /** Lowest walkable block of a doorway (its floor is at 68). */
   static final int OPENING_BOTTOM = 69;
-  static final int OPENING_TOP = 72;
-  /** How far behind a new doorway walls are cleared. */
-  static final int CARVE_DEPTH = 2;
 
   public record Block(int x, int y, int z) {
   }
@@ -70,24 +74,32 @@ public final class PastePlan {
   public record RoomPaste(PlacedRoom room, RoomCapture capture, int turns, Block center, List<Box> parts) {
   }
 
-  /** @param center world position of the door schematic's centre block (in the gap) at {@link #DOOR_Y} */
-  public record DoorPaste(Door door, Path schematic, int turns, Block center) {
+  /**
+   * Blocks copied out of a schematic: {@code box} (schematic coordinates) turned {@code turns}
+   * times clockwise around {@code from}, which lands on {@code to} in the world.
+   */
+  public record Piece(Path schematic, Box box, Block from, int turns, Block to) {
+  }
+
+  /**
+   * @param donor  the captured doorway the door is copied from
+   * @param pieces the doorway in each room, and the donor's outer wall layer in the gap
+   */
+  public record DoorPaste(Door door, Doorway donor, List<Piece> pieces) {
   }
 
   /** Copy the block at {@code from} to {@code to}. */
   public record Copy(Block from, Block to) {
   }
 
-  /** Layers of blocks behind a new doorway, outermost first: clear the solid ones, stop at the first layer without any. */
-  public record Carve(List<List<Block>> layers) {
-  }
-
   private final DungeonLayout layout;
   private final List<Box> clears = new ArrayList<>();
   private final List<RoomPaste> rooms = new ArrayList<>();
   private final List<DoorPaste> doors = new ArrayList<>();
+  private final List<Piece> fillers = new ArrayList<>();
   private final List<Copy> closings = new ArrayList<>();
-  private final List<Carve> carves = new ArrayList<>();
+  /** By {@link PlacedRoom#id()}. */
+  private final Map<Integer, RoomPaste> pasted = new HashMap<>();
   private final List<String> problems = new ArrayList<>();
   private final int baseX;
   private final int baseZ;
@@ -104,7 +116,7 @@ public final class PastePlan {
   }
 
   /**
-   * @param seed picks between captured variants of rooms and doors
+   * @param seed picks between captured variants of rooms and doorways
    */
   public static PastePlan create(DungeonLayout layout, RoomLibrary library, int baseX, int baseZ, long seed) {
     PastePlan plan = new PastePlan(layout, baseX, baseZ, library.minY(), library.maxY());
@@ -127,12 +139,14 @@ public final class PastePlan {
     return doors;
   }
 
-  public List<Copy> closings() {
-    return closings;
+  /** Doorways walled up the way another capture of the room shows them. */
+  public List<Piece> fillers() {
+    return fillers;
   }
 
-  public List<Carve> carves() {
-    return carves;
+  /** Doorways no capture shows walled up: the outer wall next to them, copied across. */
+  public List<Copy> closings() {
+    return closings;
   }
 
   /** Rooms or doors that couldn't be planned; they're left out. */
@@ -205,9 +219,8 @@ public final class PastePlan {
     Set<Edge> wanted = new LinkedHashSet<>();
     for (Door d : room.doors()) wanted.add(d.edge());
 
-    // The variant needing the fewest doorways walled up or cut open; ties at random.
+    // The variant needing the fewest doorways walled up or opened; ties at random.
     RoomCapture best = null;
-    Set<Edge> bestOpen = null;
     int bestScore = Integer.MAX_VALUE;
     int ties = 0;
     for (RoomCapture capture : variants) {
@@ -217,12 +230,10 @@ public final class PastePlan {
       for (Edge e : wanted) if (!open.contains(e)) score++;
       if (score < bestScore) {
         best = capture;
-        bestOpen = open;
         bestScore = score;
         ties = 1;
       } else if (score == bestScore && random.nextInt(++ties) == 0) {
         best = capture;
-        bestOpen = open;
       }
     }
 
@@ -232,17 +243,36 @@ public final class PastePlan {
     for (Position c : room.cells()) max = new Position(Math.max(max.x(), c.x()), Math.max(max.y(), c.y()));
     int sizeX = turns % 2 == 0 ? best.size()[0] : best.size()[2];
     int sizeZ = turns % 2 == 0 ? best.size()[2] : best.size()[0];
-    rooms.add(new RoomPaste(room, best, turns,
-        new Block(cellMinX(min) + (sizeX - 1) / 2, best.originY(), cellMinZ(min) + (sizeZ - 1) / 2), parts(best)));
+    RoomPaste paste = new RoomPaste(room, best, turns,
+        new Block(cellMinX(min) + (sizeX - 1) / 2, best.originY(), cellMinZ(min) + (sizeZ - 1) / 2), parts(best));
+    rooms.add(paste);
+    pasted.put(room.id(), paste);
 
     if (best.originY() > minY) clears.add(cellBox(min, max, minY, best.originY() - 1));
     if (best.topY() < maxY) clears.add(cellBox(min, max, best.topY() + 1, maxY));
 
-    for (Edge e : bestOpen) {
-      if (!wanted.contains(e)) closings.addAll(closing(room, e));
+    // Doorways that need a door are done by planDoor.
+    for (DoorSlot slot : best.doors().keySet()) {
+      if (!wanted.contains(worldEdge(room, best, slot))) close(paste, slot, library, random);
     }
-    for (Edge e : wanted) {
-      if (!bestOpen.contains(e)) carves.add(carve(room, e));
+  }
+
+  /** Walls up a doorway that was open in the room's capture. */
+  private void close(RoomPaste paste, DoorSlot slot, RoomLibrary library, Random random) {
+    RoomCapture capture = paste.capture();
+    Position cell = worldCell(paste.room(), capture, slot.cell(), paste.turns());
+    Direction side = slot.side().rotateClockwise(paste.turns());
+    List<RoomCapture> walledUp = new ArrayList<>();
+    for (RoomCapture other : library.captures(capture.templateId())) {
+      if (other.id().equals(capture.id()) && other.cells().equals(capture.cells()) && !other.doors().containsKey(slot)
+          && RoomLibrary.hasDoorways(other)) {
+        walledUp.add(other);
+      }
+    }
+    if (walledUp.isEmpty()) {
+      closings.addAll(closing(cell, side));
+    } else {
+      fillers.add(piece(walledUp.get(random.nextInt(walledUp.size())), slot, DOORWAY_DEPTH, cell, side, 0));
     }
   }
 
@@ -316,10 +346,11 @@ public final class PastePlan {
     return new int[]{x, z};
   }
 
-  /** Block of {@code cell}'s outer wall on {@code side}: {@code along} blocks from the corner, {@code depth} blocks in. */
-  private Block wall(Position cell, Direction side, int along, int depth, int y) {
-    int minX = cellMinX(cell);
-    int minZ = cellMinZ(cell);
+  /**
+   * Block of the outer wall on {@code side} of the cell starting at {@code minX, minZ}:
+   * {@code along} blocks from the corner, {@code depth} blocks in (-1 is the gap outside).
+   */
+  static Block wall(int minX, int minZ, Direction side, int along, int depth, int y) {
     return switch (side) {
       case NORTH -> new Block(minX + along, y, minZ + depth);
       case SOUTH -> new Block(minX + along, y, minZ + CELL - 1 - depth);
@@ -328,10 +359,28 @@ public final class PastePlan {
     };
   }
 
-  /** Walls up a doorway: the door part of the outer wall becomes copies of the wall on either side. */
-  private List<Copy> closing(PlacedRoom room, Edge edge) {
-    Position cell = room.cells().contains(edge.a()) ? edge.a() : edge.b();
-    Direction side = edge.sideOf(cell);
+  private Block wall(Position cell, Direction side, int along, int depth, int y) {
+    return wall(cellMinX(cell), cellMinZ(cell), side, along, depth, y);
+  }
+
+  /**
+   * The first {@code depths} layers of a captured doorway, from its outer wall inwards, copied to
+   * the doorway on {@code side} of a world cell with the outer wall {@code depth} blocks in.
+   */
+  Piece piece(RoomCapture source, DoorSlot slot, int depths, Position cell, Direction side, int depth) {
+    int minX = PITCH * slot.cell().x();
+    int minZ = PITCH * slot.cell().y();
+    int y = DOOR_Y - source.originY();
+    Block a = wall(minX, minZ, slot.side(), DOOR_FROM, 0, y);
+    Block b = wall(minX, minZ, slot.side(), DOOR_TO, depths - 1, y + DOOR_HEIGHT - 1);
+    Box box = new Box(new Block(Math.min(a.x(), b.x()), y, Math.min(a.z(), b.z())),
+        new Block(Math.max(a.x(), b.x()), b.y(), Math.max(a.z(), b.z())));
+    return new Piece(source.schematic(), box, wall(minX, minZ, slot.side(), DOOR_MIDDLE, 0, y),
+        Math.floorMod(side.ordinal() - slot.side().ordinal(), 4), wall(cell, side, DOOR_MIDDLE, depth, DOOR_Y));
+  }
+
+  /** Walls up a doorway: its outer wall becomes copies of the wall on either side. */
+  private List<Copy> closing(Position cell, Direction side) {
     List<Copy> out = new ArrayList<>();
     for (int y = DOOR_Y + 1; y < DOOR_Y + DOOR_HEIGHT; y++) {
       for (int along = DOOR_FROM; along <= DOOR_TO; along++) {
@@ -342,35 +391,58 @@ public final class PastePlan {
     return out;
   }
 
-  private Carve carve(PlacedRoom room, Edge edge) {
-    Position cell = room.cells().contains(edge.a()) ? edge.a() : edge.b();
-    Direction side = edge.sideOf(cell);
-    List<List<Block>> layers = new ArrayList<>();
-    for (int depth = 1; depth <= CARVE_DEPTH; depth++) {
-      List<Block> layer = new ArrayList<>();
-      for (int y = OPENING_BOTTOM; y <= OPENING_TOP; y++) {
-        for (int along = OPENING_FROM; along <= OPENING_TO; along++) layer.add(wall(cell, side, along, depth, y));
-      }
-      layers.add(layer);
-    }
-    return new Carve(layers);
+  /** The door's look: entrance and fairy doors are normal ones. */
+  static DoorType look(DoorType type) {
+    return type == DoorType.WITHER || type == DoorType.BLOOD ? type : DoorType.NORMAL;
   }
 
   private void planDoor(Door door, RoomLibrary library, Random random) {
-    // No key needed for the fairy room, its door is a normal one.
-    DoorType type = door.type() == DoorType.FAIRY ? DoorType.NORMAL : door.type();
-    List<Path> variants = library.doors(type);
-    if (variants.isEmpty()) {
-      problems.add("no " + type.name().toLowerCase() + " door captured, using a normal one at " + door.edge());
-      variants = library.doors(DoorType.NORMAL);
-      if (variants.isEmpty()) return;
+    DoorType type = door.type();
+    List<Position> cells = new ArrayList<>();
+    List<Doorway> own = new ArrayList<>();
+    for (Position cell : List.of(door.edge().a(), door.edge().b())) {
+      PlacedRoom room = layout.roomAt(cell);
+      RoomPaste paste = room == null ? null : pasted.get(room.id());
+      if (paste == null) continue;
+      cells.add(cell);
+      DoorSlot slot = slotAt(paste, cell, door.edge().sideOf(cell));
+      DoorType captured = paste.capture().doors().get(slot);
+      if (captured != null && RoomLibrary.hasDoorways(paste.capture())) own.add(new Doorway(paste.capture(), slot, captured));
     }
+
+    // The doorway as one of the two rooms was captured with it, else any captured one.
+    Doorway donor = choose(own, t -> t == type, random);
+    if (donor == null) donor = choose(own, t -> look(t) == look(type), random);
+    if (donor == null) donor = choose(library.doorways(), t -> t == type, random);
+    if (donor == null) donor = choose(library.doorways(), t -> look(t) == look(type), random);
+    if (donor == null) {
+      donor = choose(library.doorways(), t -> look(t) == DoorType.NORMAL, random);
+      if (donor == null) {
+        problems.add("no doorway captured for the door at " + door.edge());
+        return;
+      }
+      problems.add("no " + type.name().toLowerCase() + " doorway captured, using a normal one at " + door.edge());
+    }
+
+    List<Piece> pieces = new ArrayList<>();
+    for (Position cell : cells) pieces.add(piece(donor.capture(), donor.slot(), DOORWAY_DEPTH, cell, door.edge().sideOf(cell), 0));
     Position a = door.edge().a();
-    boolean sideBySide = door.edge().a().y() == door.edge().b().y();
-    // Saved with the rooms north and south of the door; side by side rooms need it turned.
-    Block center = sideBySide
-        ? new Block(cellMinX(a) + CELL, DOOR_Y, cellMinZ(a) + CELL / 2)
-        : new Block(cellMinX(a) + CELL / 2, DOOR_Y, cellMinZ(a) + CELL);
-    doors.add(new DoorPaste(door, variants.get(random.nextInt(variants.size())), sideBySide ? 3 : 0, center));
+    pieces.add(piece(donor.capture(), donor.slot(), 1, a, door.edge().sideOf(a), -1));
+    doors.add(new DoorPaste(door, donor, pieces));
+  }
+
+  private static Doorway choose(List<Doorway> doorways, Predicate<DoorType> fits, Random random) {
+    List<Doorway> matching = doorways.stream().filter(d -> fits.test(d.type())).toList();
+    return matching.isEmpty() ? null : matching.get(random.nextInt(matching.size()));
+  }
+
+  /** The capture's doorway that ends up on {@code side} of world cell {@code cell}. */
+  DoorSlot slotAt(RoomPaste paste, Position cell, Direction side) {
+    for (Position local : paste.capture().cells()) {
+      if (worldCell(paste.room(), paste.capture(), local, paste.turns()).equals(cell)) {
+        return new DoorSlot(local, side.rotateClockwise(-paste.turns()));
+      }
+    }
+    throw new IllegalArgumentException(cell + " is not part of room #" + paste.room().id());
   }
 }

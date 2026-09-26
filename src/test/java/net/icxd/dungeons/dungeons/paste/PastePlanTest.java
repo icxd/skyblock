@@ -39,11 +39,14 @@ import net.icxd.dungeons.dungeons.generation.utils.Edge;
 import net.icxd.dungeons.dungeons.generation.utils.Position;
 import net.icxd.dungeons.dungeons.paste.PastePlan.Block;
 import net.icxd.dungeons.dungeons.paste.PastePlan.Box;
+import net.icxd.dungeons.dungeons.paste.PastePlan.DoorPaste;
+import net.icxd.dungeons.dungeons.paste.PastePlan.Piece;
 import net.icxd.dungeons.dungeons.paste.PastePlan.RoomPaste;
+import net.icxd.dungeons.dungeons.paste.RoomLibrary.Doorway;
 
 /**
- * Uses a made-up capture folder with one capture per Hypixel room (empty schematic files; the
- * plan never reads them), laid out like the scanner's output.
+ * Uses a made-up capture folder with a capture per Hypixel room, two for rooms bigger than 1x1
+ * (empty schematic files; the plan never reads them), laid out like the scanner's output.
  */
 class PastePlanTest {
   @TempDir
@@ -54,32 +57,35 @@ class PastePlanTest {
   static void writeFixtures() throws IOException {
     for (Room r : HypixelRooms.ALL) {
       if (r.getId().equals("blaze")) continue; // captured as lower/higher blaze below
-      writeRoom(r.getId(), r, "aaaa");
+      writeRoom(r.getId(), r, "aaaa", Direction.NORTH, Direction.EAST);
+      if (r.getShape() != RoomShape.ONE_BY_ONE) writeRoom(r.getId(), r, "bbbb", Direction.SOUTH, Direction.WEST);
     }
     Room blaze = HypixelRooms.ALL.stream().filter(r -> r.getId().equals("blaze")).findFirst().orElseThrow();
-    writeRoom("lower_blaze", blaze, "bbbb");
-    writeRoom("higher_blaze", blaze, "cccc");
-    for (String type : new String[]{"normal", "wither", "entrance", "blood"}) {
-      Path dir = Files.createDirectories(root.resolve("doors").resolve(type));
-      Files.createFile(dir.resolve(type + "_0000.schem"));
-    }
+    writeRoom("lower_blaze", blaze, "bbbb", Direction.NORTH, Direction.EAST);
+    writeRoom("higher_blaze", blaze, "cccc", Direction.NORTH, Direction.EAST);
     library = RoomLibrary.load(root);
   }
 
   /** L rooms are captured with the north-east cell missing (canonical frame = template turned 3 times). */
   private static final List<Position> L_CAPTURED = List.of(new Position(0, 0), new Position(0, 1), new Position(1, 1));
 
-  private static void writeRoom(String id, Room r, String hash) throws IOException {
+  /** @param open for rooms without fixed doorways: the outer walls of the first and last cell with one */
+  private static void writeRoom(String id, Room r, String hash, Direction... open) throws IOException {
     List<Position> cells = r.getShape() == RoomShape.L_SHAPE ? L_CAPTURED : r.getShape().cells();
     Map<DoorSlot, String> doors = new HashMap<>();
     if (r.isExactDoors()) {
-      for (DoorSlot s : r.getDoorSlots()) doors.put(s, "NORMAL");
+      String type = switch (r.getType()) {
+        case BLOOD -> "BLOOD";
+        case START -> "ENTRANCE";
+        default -> "NORMAL";
+      };
+      for (DoorSlot s : r.getDoorSlots()) doors.put(s, type);
     } else {
-      // Some outer walls of the first and last cell, so there is something to close and to cut open.
+      // Some, so there is something to wall up and to open.
       Set<Position> own = new HashSet<>(cells);
       for (Position c : List.of(cells.get(0), cells.get(cells.size() - 1))) {
-        for (Direction d : new Direction[]{Direction.NORTH, Direction.EAST}) {
-          if (!own.contains(c.offset(d))) doors.put(new DoorSlot(c, d), "WITHER");
+        for (Direction d : open) {
+          if (!own.contains(c.offset(d))) doors.put(new DoorSlot(c, d), d == Direction.NORTH ? "WITHER" : "NORMAL");
         }
       }
     }
@@ -219,8 +225,8 @@ class PastePlanTest {
       assertEquals(layout.getRooms().size(), plan.rooms().size(), where);
       assertEquals(layout.getDoors().size(), plan.doors().size(), where);
 
-      int closedDoorways = 0;
-      int newDoorways = 0;
+      Set<Block> filled = new HashSet<>();
+      int walledUp = 0;
       for (RoomPaste paste : plan.rooms()) {
         PlacedRoom room = paste.room();
         assertEquals(room.template().getId(), paste.capture().templateId(), where);
@@ -240,29 +246,117 @@ class PastePlanTest {
         if (paste.capture().shape() == RoomShape.ONE_BY_ONE && paste.capture().type() != RoomType.FAIRY) {
           assertEquals(wanted, open, room.template().getId() + " " + where);
         }
-        for (Edge e : open) if (!wanted.contains(e)) closedDoorways++;
-        for (Edge e : wanted) if (!open.contains(e)) newDoorways++;
+        // Doorways open in the capture without a door now: walled up the way another capture shows them.
+        for (DoorSlot slot : paste.capture().doors().keySet()) {
+          Edge e = plan.worldEdge(room, paste.capture(), slot);
+          if (wanted.contains(e)) continue;
+          Position cell = room.cells().contains(e.a()) ? e.a() : e.b();
+          boolean shownWalledUp = library.captures(paste.capture().templateId()).stream()
+              .anyMatch(c -> c.id().equals(paste.capture().id()) && !c.doors().containsKey(slot) && RoomLibrary.hasDoorways(c));
+          if (shownWalledUp) {
+            filled.addAll(doorway(-200 + 32 * cell.x(), -200 + 32 * cell.y(), 67, e.sideOf(cell), 0, 2));
+          } else {
+            walledUp++;
+          }
+        }
       }
-      // 5 blocks along the wall x 6 high per walled up doorway, one carve per new doorway.
-      assertEquals(closedDoorways * 30, plan.closings().size(), where);
-      assertEquals(newDoorways, plan.carves().size(), where);
+      Set<Block> fillerBlocks = new HashSet<>();
+      for (Piece piece : plan.fillers()) fillerBlocks.addAll(landing(piece));
+      assertEquals(filled, fillerBlocks, where);
+      // 5 blocks along the wall x 6 high per doorway walled up with the wall next to it.
+      assertEquals(walledUp * 30, plan.closings().size(), where);
 
-      for (PastePlan.DoorPaste door : plan.doors()) {
-        Edge e = door.door().edge();
-        boolean sideBySide = e.a().y() == e.b().y();
-        assertEquals(sideBySide ? 3 : 0, door.turns());
-        Block c = door.center();
-        // In the gap between the two cells, in the middle of the wall.
-        int ax = -200 + 32 * e.a().x();
-        int az = -200 + 32 * e.a().y();
-        assertEquals(sideBySide ? ax + 31 : ax + 15, c.x(), where);
-        assertEquals(sideBySide ? az + 15 : az + 31, c.z(), where);
-        assertEquals(PastePlan.DOOR_Y, c.y());
-        String folder = door.schematic().getParent().getFileName().toString();
-        DoorType expected = door.door().type() == DoorType.FAIRY ? DoorType.NORMAL : door.door().type();
-        assertEquals(expected.name().toLowerCase(), folder, where);
+      for (DoorPaste door : plan.doors()) checkDoor(plan, door, where);
+    }
+  }
+
+  /** The door fills both rooms' doorways and the gap between them, from a doorway of the right kind. */
+  private static void checkDoor(PastePlan plan, DoorPaste door, String where) {
+    Edge e = door.door().edge();
+    Doorway donor = door.donor();
+    assertEquals(PastePlan.look(door.door().type()), PastePlan.look(donor.type()), where);
+    assertTrue(donor.capture().doors().containsKey(donor.slot()), where);
+
+    // One of the two rooms' own doorway if either was captured with this kind of door there.
+    List<Doorway> own = new ArrayList<>();
+    for (Position cell : List.of(e.a(), e.b())) {
+      RoomPaste paste = plan.rooms().stream().filter(r -> r.room().cells().contains(cell)).findFirst().orElseThrow();
+      DoorSlot slot = plan.slotAt(paste, cell, e.sideOf(cell));
+      assertEquals(e, plan.worldEdge(paste.room(), paste.capture(), slot), where);
+      DoorType captured = paste.capture().doors().get(slot);
+      if (captured == door.door().type() && RoomLibrary.hasDoorways(paste.capture())) own.add(new Doorway(paste.capture(), slot, captured));
+    }
+    if (!own.isEmpty()) assertTrue(own.contains(donor), donor + " instead of " + own + " " + where);
+
+    int y = 67 - donor.capture().originY();
+    Position s = donor.slot().cell();
+    Set<Block> source = doorway(32 * s.x(), 32 * s.y(), y, donor.slot().side(), 0, 2);
+    Set<Block> outerWall = doorway(32 * s.x(), 32 * s.y(), y, donor.slot().side(), 0, 0);
+    assertEquals(3, door.pieces().size(), where);
+    List<Position> cells = List.of(e.a(), e.b());
+    for (int i = 0; i < 2; i++) {
+      Piece piece = door.pieces().get(i);
+      Position cell = cells.get(i);
+      assertEquals(source, blocks(piece.box()), where);
+      assertEquals(doorway(-200 + 32 * cell.x(), -200 + 32 * cell.y(), 67, e.sideOf(cell), 0, 2), landing(piece), where);
+      // Outer wall to outer wall, not turned inside out.
+      Set<Block> wall = new HashSet<>();
+      for (Block b : outerWall) wall.add(land(piece, b));
+      assertEquals(doorway(-200 + 32 * cell.x(), -200 + 32 * cell.y(), 67, e.sideOf(cell), 0, 0), wall, where);
+    }
+    Piece gap = door.pieces().get(2);
+    assertEquals(outerWall, blocks(gap.box()), where);
+    assertEquals(doorway(-200 + 32 * e.a().x(), -200 + 32 * e.a().y(), 67, e.sideOf(e.a()), -1, -1), landing(gap), where);
+  }
+
+  /**
+   * Blocks of the doorway on {@code side} of the cell starting at {@code x0, z0}: 13-17 along the
+   * wall, {@code fromDepth..toDepth} in from the outer wall (-1 is the gap), 7 high from {@code y0}.
+   */
+  private static Set<Block> doorway(int x0, int z0, int y0, Direction side, int fromDepth, int toDepth) {
+    Set<Block> out = new HashSet<>();
+    for (int y = y0; y < y0 + 7; y++) {
+      for (int along = 13; along <= 17; along++) {
+        for (int d = fromDepth; d <= toDepth; d++) {
+          out.add(switch (side) {
+            case NORTH -> new Block(x0 + along, y, z0 + d);
+            case SOUTH -> new Block(x0 + along, y, z0 + 30 - d);
+            case WEST -> new Block(x0 + d, y, z0 + along);
+            case EAST -> new Block(x0 + 30 - d, y, z0 + along);
+          });
+        }
       }
     }
+    return out;
+  }
+
+  private static Set<Block> blocks(Box box) {
+    Set<Block> out = new HashSet<>();
+    for (int x = box.min().x(); x <= box.max().x(); x++) {
+      for (int y = box.min().y(); y <= box.max().y(); y++) {
+        for (int z = box.min().z(); z <= box.max().z(); z++) out.add(new Block(x, y, z));
+      }
+    }
+    return out;
+  }
+
+  /** Where the blocks of a piece end up in the world. */
+  private static Set<Block> landing(Piece piece) {
+    Set<Block> out = new HashSet<>();
+    for (Block b : blocks(piece.box())) out.add(land(piece, b));
+    return out;
+  }
+
+  /** Turned clockwise around {@code from} like WorldEdit does: (dx, dz) -> (-dz, dx). */
+  private static Block land(Piece piece, Block b) {
+    int dx = b.x() - piece.from().x();
+    int dz = b.z() - piece.from().z();
+    for (int i = 0; i < piece.turns(); i++) {
+      int t = dx;
+      dx = -dz;
+      dz = t;
+    }
+    return new Block(piece.to().x() + dx, piece.to().y() + b.y() - piece.from().y(), piece.to().z() + dz);
   }
 
   @Test

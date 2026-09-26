@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -54,9 +53,9 @@ import org.enginehub.linbus.tree.LinCompoundTag;
 
 import net.icxd.dungeons.dungeons.paste.PastePlan.Block;
 import net.icxd.dungeons.dungeons.paste.PastePlan.Box;
-import net.icxd.dungeons.dungeons.paste.PastePlan.Carve;
 import net.icxd.dungeons.dungeons.paste.PastePlan.Copy;
 import net.icxd.dungeons.dungeons.paste.PastePlan.DoorPaste;
+import net.icxd.dungeons.dungeons.paste.PastePlan.Piece;
 import net.icxd.dungeons.dungeons.paste.PastePlan.RoomPaste;
 
 /**
@@ -71,8 +70,6 @@ public final class WorldEditPaster {
   /** Layers per step, so no single step takes long even for the biggest rooms. */
   private static final int SLICE = 4;
 
-  /** The part of a door schematic that is pasted: all of it up to the top of the frame. */
-  private static final Box DOOR_PART = new Box(new Block(0, 0, 0), new Block(4, PastePlan.DOOR_HEIGHT - 1, 2));
   /** Lighting on; no block updates, so sand doesn't fall and water doesn't flow while pasting. */
   private static final SideEffectSet SIDE_EFFECTS = SideEffectSet.defaults()
       .with(SideEffect.NEIGHBORS, SideEffect.State.OFF)
@@ -98,7 +95,8 @@ public final class WorldEditPaster {
     long start = System.currentTimeMillis();
     Set<Path> files = new LinkedHashSet<>();
     for (RoomPaste room : plan.rooms()) files.add(room.capture().schematic());
-    for (DoorPaste door : plan.doors()) files.add(door.schematic());
+    for (DoorPaste door : plan.doors()) for (Piece piece : door.pieces()) files.add(piece.schematic());
+    for (Piece piece : plan.fillers()) files.add(piece.schematic());
     // Reading schematics is slow and doesn't touch the world, so it happens off the main thread.
     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
       try {
@@ -135,8 +133,9 @@ public final class WorldEditPaster {
       }
     }
     for (DoorPaste door : plan.doors()) {
-      steps.add(session -> paste(session, load(door.schematic()), door.turns(), door.center(), List.of(DOOR_PART)));
+      for (Piece piece : door.pieces()) steps.add(session -> paste(session, load(piece.schematic()), piece));
     }
+    for (Piece piece : plan.fillers()) steps.add(session -> paste(session, load(piece.schematic()), piece));
 
     new BukkitRunnable() {
       /**
@@ -182,19 +181,6 @@ public final class WorldEditPaster {
     for (Copy copy : plan.closings()) {
       block(copy.to()).setBlockData(block(copy.from()).getBlockData(), false);
     }
-    for (Carve carve : plan.carves()) {
-      for (List<Block> layer : carve.layers()) {
-        boolean solid = false;
-        for (Block b : layer) {
-          org.bukkit.block.Block block = block(b);
-          if (block.getType().isOccluding()) {
-            block.setType(Material.AIR, false);
-            solid = true;
-          }
-        }
-        if (!solid) break;
-      }
-    }
   }
 
   /**
@@ -217,6 +203,19 @@ public final class WorldEditPaster {
       copy.setCopyingBiomes(false);
       Operations.complete(copy);
     }
+  }
+
+  /** Pastes a piece of a schematic. Its entities stay behind; the room they're in brought its own. */
+  private static void paste(EditSession session, Clipboard clipboard, Piece piece) throws WorldEditException {
+    BlockVector3 min = clipboard.getRegion().getMinimumPoint();
+    AffineTransform transform = new AffineTransform().rotateY(-90 * piece.turns());
+    CuboidRegion region = new CuboidRegion(min.add(vector(piece.box().min())), min.add(vector(piece.box().max())));
+    ForwardExtentCopy copy = new ForwardExtentCopy(new BlockTransformExtent(clipboard, transform), region,
+        min.add(vector(piece.from())), new KeepStill(session), vector(piece.to()));
+    copy.setTransform(transform);
+    copy.setCopyingBiomes(false);
+    copy.setCopyingEntities(false);
+    Operations.complete(copy);
   }
 
   /**

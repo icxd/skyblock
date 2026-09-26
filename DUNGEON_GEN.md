@@ -265,9 +265,20 @@ them from its data folder at runtime.
 
 `/dungeon paste [floor] [seed]` generates a dungeon out of the captured rooms only and pastes it
 with WorldEdit 7 at Hypixel's coordinates (cell centres at -185 + 32i), then teleports you into
-the entrance. From the console it pastes into the main world. Put the scanner's `rooms/` and
-`doors/` folders (copies or symlinks) in `plugins/dungeons/dungeon-rooms/`; it reads the modern
-`.schem` files, so block states and armor stands come through as captured.
+the entrance. From the console it pastes into the main world. Put the scanner's `rooms/` folder
+(a copy or a symlink) in `plugins/dungeons/dungeon-rooms/`; it reads the modern `.schem` files,
+so block states and armor stands come through as captured. The scanner's `doors/` folder isn't
+used: the doors come out of the room captures (see below).
+
+**Doorways.** Each outer wall of a cell has a doorway in its middle: 5 blocks along the wall
+(13–17), 3 deep (the outer wall and two layers inside) and 7 high (y 67–73, bedrock at the
+bottom). Comparing captures of the same room with a doorway open and walled up, exactly that
+5x7x3 box differs. Open, it holds the door's frame, one of 13 styles (stone bricks, cobblestone,
+spruce, acacia with skulls, wither coal, blood clay, ...); the frame is the same on both sides and
+in the gap, which is why every captured door schematic's three layers match. Walled up, it holds
+something built for that wall of that room, often a fireplace (194 of the 245 walled-up doorways
+captured are unique to their room). So a door is 7 blocks deep: the gap plus the doorway on each
+side.
 
 Use a world with `/gamerule random_tick_speed 0`. Hypixel's dungeons don't random-tick; with it
 on, the ice in rooms like Ice Path melts and floods them (the command warns about this).
@@ -281,7 +292,13 @@ on, the ice in rooms like Ice Path melts and floods them (the command warns abou
 - **`PastePlan`** works out every paste without a world, so it's tested. A capture's frame is
   the template frame turned `frameTurns` times (0, except 3 for L rooms), so a room with
   rotation `r` is pasted turned `r - frameTurns` times. If a room has several captures, it uses the
-  one whose open doorways best match the doors it needs.
+  one whose open doorways best match the doors it needs. Each door is copied from a captured open
+  doorway with the same kind of door (wither, blood, or normal, which includes entrance and
+  fairy doors), preferably one of its own two rooms' (about 80% of doors), into both rooms and the
+  gap. That also replaces whatever a walled-up doorway held, like the fireplace that used to sit
+  in front of some doors. A doorway open in the capture that has no door now gets what another
+  capture of the room shows there; if no capture has it walled up, the outer wall next to it is
+  copied across (of the three fallbacks tried, that one matched the real fillers best).
 - **`WorldEditPaster`** carries it out over several ticks (4-layer slices, about 25 ms per tick
   including WorldEdit's lighting pass, no undo history), so the server keeps running. Schematics
   are read off the main thread first. In this order:
@@ -289,11 +306,9 @@ on, the ice in rooms like Ice Path melts and floods them (the command warns abou
      aren't air already);
   2. paste the rooms (only their own blocks: an L room's schematic box also holds the missing
      cell);
-  3. paste the doors: 5 wide, 3 deep (the gap plus both rooms' outer wall), y 67–73. That also
-     cuts the doorway into a wall that was solid in the capture;
-  4. wall up doorways that were open in the capture but aren't doors now, by copying the wall
-     beside them;
-  5. clear solid blocks up to 2 deep behind new doorways.
+  3. paste the doors: both rooms' doorways and the gap, 5 wide, 7 deep, y 67–73;
+  4. paste the captured fillers of doorways that aren't doors now;
+  5. wall up the rest of them by copying the wall beside them.
 
 Pasted leaves are made persistent and armor stands get no gravity: on Hypixel neither changes
 (no random ticks; the stands are only sent to clients), on a normal server leaves would decay
@@ -303,6 +318,7 @@ Checked on a real Paper 26.2 server with WorldEdit 7.4.5: an F7 dungeon pastes i
 ~20 TPS. 25,000 random positions matched a simulation of the plan (block types and turned
 `facing`/`axis`/`rotation` states), also after pasting a different dungeon over it, and all
 56 armor stands were where they belong. A test player was teleported into the entrance.
+With the 7-deep doors, all 5,635 door blocks of an F7 dungeon matched the simulation.
 
 ## Sources
 - IllegalMap (`utils/rooms.json`, `components/DungeonMap.js`): https://github.com/UnclaimedBloom6/IllegalMap

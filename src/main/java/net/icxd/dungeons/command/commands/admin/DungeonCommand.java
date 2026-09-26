@@ -45,9 +45,9 @@ import net.icxd.dungeons.user.Rank;
  * block preview at y=100 around 0,0. Floor is e.g. {@code E}, {@code F7}, {@code M3}.
  *
  * <p>{@code /dungeon paste [floor] [seed]}: generates a layout from the captured rooms in
- * {@code plugins/<plugin>/dungeon-rooms} (the scanner's {@code rooms/} and {@code doors/}
- * folders) and pastes it with WorldEdit where Hypixel has it, from -200,-200, in your world (the
- * main world from the console).
+ * {@code plugins/<plugin>/dungeon-rooms} (the scanner's {@code rooms/} folder) and pastes it
+ * with WorldEdit where Hypixel has it, from -200,-200, in your world (the main world from the
+ * console).
  */
 @CommandParameters(aliases = "dungeon", permission = Rank.STAFF)
 public class DungeonCommand extends SCommand {
@@ -98,12 +98,12 @@ public class DungeonCommand extends SCommand {
       library = RoomLibrary.load(folder.toPath());
     } catch (IOException e) {
       source.send(ChatColor.RED + "Couldn't read rooms from " + folder + ": " + e.getMessage());
-      source.send(ChatColor.GRAY + "Copy the scanner's rooms/ and doors/ folders there.");
+      source.send(ChatColor.GRAY + "Copy the scanner's rooms/ folder there.");
       return;
     }
     library.problems().forEach(p -> log.warning("Room library: " + p));
     if (library.templates().isEmpty()) {
-      source.send(ChatColor.RED + "No rooms in " + folder + ". Copy the scanner's rooms/ and doors/ folders there.");
+      source.send(ChatColor.RED + "No rooms in " + folder + ". Copy the scanner's rooms/ folder there.");
       return;
     }
 

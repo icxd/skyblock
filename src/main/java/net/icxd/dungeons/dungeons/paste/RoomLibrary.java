@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,14 +34,15 @@ import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.generation.utils.Position;
 
 /**
- * The rooms and doors captured by the dungeon scanner, read from a folder laid out the way the
- * scanner saves them:
+ * The rooms captured by the dungeon scanner, read from a folder laid out the way the scanner saves
+ * them:
  * <pre>
  *   rooms/&lt;id&gt;/&lt;id&gt;_&lt;hash&gt;.json + .schem   one file pair per captured variant
- *   doors/&lt;type&gt;/&lt;type&gt;_&lt;hash&gt;.schem      normal, wither, entrance, blood
  * </pre>
  * Every room id becomes one generator template; its captures are variants of it (e.g. the same
  * room captured with different doorways open, or Lower and Higher Blaze for the blaze puzzle).
+ * Doors come out of the captures too (see {@link PastePlan}), so the scanner's {@code doors/}
+ * folder isn't needed.
  */
 public final class RoomLibrary {
   /** Scanner names (from Odin's room list) that differ from the generator's (IllegalMap's). */
@@ -54,15 +54,19 @@ public final class RoomLibrary {
       "rail_track", "mini_rail_track"
   );
 
+  /** A doorway that was open in a capture, and the door that was in it. */
+  public record Doorway(RoomCapture capture, DoorSlot slot, DoorType type) {
+  }
+
   private final Map<String, List<RoomCapture>> rooms;
-  private final Map<DoorType, List<Path>> doors;
+  private final List<Doorway> doorways;
   private final List<Room> templates;
   private final List<String> problems;
 
-  private RoomLibrary(Map<String, List<RoomCapture>> rooms, Map<DoorType, List<Path>> doors, List<Room> templates,
+  private RoomLibrary(Map<String, List<RoomCapture>> rooms, List<Doorway> doorways, List<Room> templates,
                       List<String> problems) {
     this.rooms = rooms;
-    this.doors = doors;
+    this.doorways = doorways;
     this.templates = templates;
     this.problems = problems;
   }
@@ -95,18 +99,22 @@ public final class RoomLibrary {
       templates.add(template(e.getKey(), usable));
     }
 
-    Map<DoorType, List<Path>> doors = new EnumMap<>(DoorType.class);
-    Path doorDir = root.resolve("doors");
-    for (DoorType type : DoorType.values()) {
-      Path dir = doorDir.resolve(type.name().toLowerCase());
-      if (!Files.isDirectory(dir)) continue;
-      try (Stream<Path> files = Files.list(dir)) {
-        List<Path> list = files.filter(p -> p.toString().endsWith(".schem")).sorted().collect(Collectors.toList());
-        if (!list.isEmpty()) doors.put(type, List.copyOf(list));
+    List<Doorway> doorways = new ArrayList<>();
+    for (List<RoomCapture> list : rooms.values()) {
+      for (RoomCapture c : list) {
+        if (!hasDoorways(c)) continue;
+        for (Map.Entry<DoorSlot, DoorType> d : c.doors().entrySet()) doorways.add(new Doorway(c, d.getKey(), d.getValue()));
       }
     }
-    if (!doors.containsKey(DoorType.NORMAL)) problems.add("No normal doors in " + doorDir);
-    return new RoomLibrary(rooms, doors, List.copyOf(templates), List.copyOf(problems));
+    if (doorways.stream().noneMatch(d -> PastePlan.look(d.type()) == DoorType.NORMAL)) {
+      problems.add("No capture has a normal door in it");
+    }
+    return new RoomLibrary(rooms, List.copyOf(doorways), List.copyOf(templates), List.copyOf(problems));
+  }
+
+  /** The capture reaches from the bottom to the top of the doorways. */
+  static boolean hasDoorways(RoomCapture capture) {
+    return capture.originY() <= PastePlan.DOOR_Y && capture.topY() >= PastePlan.DOOR_Y + PastePlan.DOOR_HEIGHT - 1;
   }
 
   /** Reads one capture's JSON; null (and no error) for types the generator has no use for. */
@@ -251,9 +259,9 @@ public final class RoomLibrary {
     return rooms.getOrDefault(templateId, List.of());
   }
 
-  /** Door schematics of a type, empty if none were captured. */
-  public List<Path> doors(DoorType type) {
-    return doors.getOrDefault(type, List.of());
+  /** Every doorway that was open in a capture. */
+  public List<Doorway> doorways() {
+    return doorways;
   }
 
   /** Lowest block of any room. */
@@ -275,12 +283,10 @@ public final class RoomLibrary {
     return problems;
   }
 
-  /** e.g. "51 rooms (75 captures), 73 doors". */
+  /** e.g. "51 rooms (75 captures), 141 doorways". */
   public String summary() {
     int captures = 0;
     for (List<RoomCapture> list : rooms.values()) captures += list.size();
-    int doorCount = 0;
-    for (List<Path> list : doors.values()) doorCount += list.size();
-    return rooms.size() + " rooms (" + captures + " captures), " + doorCount + " doors";
+    return rooms.size() + " rooms (" + captures + " captures), " + doorways.size() + " doorways";
   }
 }
