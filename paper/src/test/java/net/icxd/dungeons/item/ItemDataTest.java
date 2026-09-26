@@ -327,7 +327,7 @@ class ItemDataTest {
                 "&8Cooldown: &a30s",
                 "",
                 "&6Ability: Test Orb  &e&lRIGHT CLICK",
-                "&8Soulflow Cost: &32⸎",
+                "&8Soulflow Cost: &32",
                 "&8Mana Cost: &b50% of max",
                 "&8Cooldown: &a2h",
                 "",

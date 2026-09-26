@@ -20,7 +20,7 @@ public enum GemstoneType {
     OFFENSIVE("Offensive", '☠', '9', Arrays.asList(GemstoneType.SAPPHIRE, GemstoneType.JASPER)),
     DEFENSIVE("Defensive", '☤', 'a', Arrays.asList(GemstoneType.RUBY, GemstoneType.AMETHYST)),
     MINING("Mining", '✦', '7', Arrays.asList(GemstoneType.JADE, GemstoneType.AMBER, GemstoneType.TOPAZ)),
-    UNIVERSAL("Universal", '✪', 'f', Arrays.asList(GemstoneType.RUBY, GemstoneType.AMETHYST, GemstoneType.JADE, GemstoneType.SAPPHIRE, GemstoneType.AMBER, GemstoneType.TOPAZ, GemstoneType.JASPER, GemstoneType.OPAL));
+    UNIVERSAL("Universal", '\u2742', 'f', Arrays.asList(GemstoneType.RUBY, GemstoneType.AMETHYST, GemstoneType.JADE, GemstoneType.SAPPHIRE, GemstoneType.AMBER, GemstoneType.TOPAZ, GemstoneType.JASPER, GemstoneType.OPAL));
     ;
 
     private final List<GemstoneType> types;

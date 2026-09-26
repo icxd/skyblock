@@ -456,7 +456,8 @@ public final class ItemBuilder {
      */
     private static void costLines(List<String> lines, double mana, double manaPercent, double soulflow, double health,
                                   double vitality, double cooldown) {
-        if (soulflow > 0) lines.add("&8Soulflow Cost: &3" + Text.number(soulflow) + "⸎");
+        // No symbol after soulflow (7 of NEU's 8 captures).
+        if (soulflow > 0) lines.add("&8Soulflow Cost: &3" + Text.number(soulflow));
         if (mana > 0) lines.add("&8Mana Cost: &b" + Text.number(mana) + "✎");
         if (manaPercent > 0) lines.add("&8Mana Cost: &b" + Text.number(manaPercent) + "% of max");
         if (health > 0) lines.add("&8Health Cost: &c" + Text.number(health) + "❤");
