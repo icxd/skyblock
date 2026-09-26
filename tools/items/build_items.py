@@ -600,7 +600,7 @@ STAT_ALIAS = {'WALK_SPEED': 'SPEED', 'CRITICAL_DAMAGE': 'CRIT_DAMAGE', 'CRITICAL
 LORE_STAT = {
     'CRITICAL_CHANCE': 'Crit Chance', 'CRITICAL_DAMAGE': 'Crit Damage', 'ABILITY_DAMAGE_PERCENT': 'Ability Damage',
     'HEALTH_REGENERATION': 'Health Regen', 'WALK_SPEED': 'Speed', 'RIFT_INTELLIGENCE': 'Intelligence',
-    'RIFT_WALK_SPEED': 'Speed', 'RIFT_HEALTH': 'Hearts', 'TROPHY_FISH_CHANCE': 'Trophy Chance',
+    'RIFT_WALK_SPEED': 'Speed', 'RIFT_HEALTH': 'Hearts', 'RIFT_MANA_REGEN': 'Mana Regen', 'TROPHY_FISH_CHANCE': 'Trophy Chance',
     'MELON_FORTUNE': 'Melon Slice Fortune', 'NETHER_STALK_FORTUNE': 'Nether Wart Fortune'}
 NOT_SHOWN_AS_LINE = {'WEAPON_ABILITY_DAMAGE'}  # the plugin skips it too: it's in the ability's text
 # Stat-block lines the plugin writes from other data (gear score, shot cooldown) or doesn't write yet.
