@@ -26,9 +26,10 @@ import net.icxd.dungeons.utils.Utils;
 
 /**
  * The Watcher's fight in the Blood Room, as recorded on Hypixel. When the Blood Door opens he
- * speaks, then summons his undeads: four close together, a pause, then five more. He flies between
- * the display cases on the walls while summoning. He can't be hurt; hitting him gets you zapped.
- * Once every undead is dead he lets you pass, and (with no bosses yet) the run ends.
+ * speaks, then summons his undeads: four close together, a pause, then five more. For each he flies
+ * to one of the {@link DisplayCases}, hovers a moment, and sends its head spinning to the middle of
+ * the room, where the undead appears and drops to the floor. He can't be hurt; hitting him gets
+ * you zapped. Once every undead is dead he lets you pass, and (with no bosses yet) the run ends.
  *
  * <p>Times are in ticks after the Blood Door opened, from two recordings of Entrance runs.
  */
@@ -47,30 +48,39 @@ final class Watcher implements DungeonMobs.Mob {
     private static final int UNDEADS = 9;
     private static final int FIRST_WAVE = 4;
     private static final int[] INTRO_AT = {4, 66, 128, 210, 292};
-    private static final int FIRST_SUMMON = 476;
-    /** Between the first four summons. */
-    private static final int WAVE_GAP_MIN = 20;
-    private static final int WAVE_GAP_MAX = 50;
-    /** After the fourth. The same 11.7 seconds in both recordings. */
-    private static final int PAUSE = 234;
-    /** Between the last five: a while, or soon after the last one alive dies. */
+    /**
+     * When heads leave their cases. The first at 19.8 s, and the next three as soon as he's been to
+     * their cases; the fifth 13.7 s after the fourth (so their undeads are 11.7 s apart, as in both
+     * recordings); the rest 4.5 to 7 s apart, or 1 to 3 s once there's nobody left to fight.
+     */
+    private static final int FIRST_RELEASE = 396;
+    private static final int WAVE_PAUSE = 274;
     private static final int LATER_GAP_MIN = 90;
     private static final int LATER_GAP_MAX = 140;
     private static final int CLEARED_GAP_MIN = 20;
     private static final int CLEARED_GAP_MAX = 60;
+    /**
+     * A head flies straight at the middle for a set time, turning 30 degrees a tick: the first
+     * wave's at 0.2 blocks a tick for 78 ticks, the second's at 0.3 for 40 (so some fall a little
+     * short or overshoot, as on Hypixel). Its undead appears where it ends, 1.78 higher (where the
+     * head was on the armor stand).
+     */
+    private static final double FIRST_WAVE_SPEED = 0.2;
+    private static final int FIRST_WAVE_FLIGHT = 78;
+    private static final double SECOND_WAVE_SPEED = 0.3;
+    private static final int SECOND_WAVE_FLIGHT = 40;
+    private static final float HEAD_SPIN = 30;
+    private static final double HEAD_TO_FEET = 1.78;
     /** His line comes this long before the undead appears. */
     private static final int LINE_BEFORE_SUMMON = 8;
     private static final int ENOUGH_AFTER = 14;
     private static final int PASS_AFTER = 20;
     /** "You may pass." to the end of the run (Hypixel's 4.5 to 5.5 seconds). */
     private static final int END_AFTER = 100;
-    /** Flying between the display cases: speed, how long he hovers at each, how far out they are. */
+    /** Flying to the cases: speed, and how long he hovers at one before its head leaves. He stops a block in front of it. */
     private static final double FLY = 0.7;
     private static final int HOVER = 12;
-    private static final double CASES_OUT = 11;
-    /** Starts flying this long before the first summon of each wave. */
-    private static final int FLY_BEFORE = 110;
-    private static final int FLY_BEFORE_SECOND = 66;
+    private static final double HOVER_ABOVE_HEAD = 0.75;
     private static final int ZAP_LASTS = 20;
 
     private static final List<String> SUMMON_LINES = List.of("Go, fight!", "Go and live again!", "Let's see how you can handle this.",
@@ -91,25 +101,43 @@ final class Watcher implements DungeonMobs.Mob {
     private ArmorStand speech;
     private int speechUntil;
     private final BossBar bar;
+    private final DisplayCases cases;
     private final List<Undead> undeads = new ArrayList<>();
     private final List<Undead.Parasite> parasites = new ArrayList<>();
+    private final List<Flight> flights = new ArrayList<>();
     private int age;
     private int lastLine = -SPEECH_GAP;
+    /** Heads sent off, and undeads that have appeared. */
+    private int released;
     private int summoned;
     private int killed;
-    /** The next summon, or -1 while none is due. */
-    private int nextSummon = FIRST_SUMMON;
-    private boolean flying;
-    private int stopFlyingAfter = FIRST_WAVE - 1;
-    private int flyFrom = -1;
-    private Location flyTo;
-    private int hoverUntil;
+    /** The case he's going to, the earliest tick its head may leave (-1: none planned), and until when he hovers there. */
+    private DisplayCases.Case fetching;
+    private int nextRelease = FIRST_RELEASE;
+    private int hoverUntil = -1;
+    private int lastWall = -1;
     private boolean won;
 
-    Watcher(DungeonRun run, RunLayout layout, PlacedRoom room) {
+    /** A head on its way to the middle. */
+    private static final class Flight {
+        final DisplayCases.Case from;
+        final ArmorStand head;
+        final Vector step;
+        int left;
+
+        Flight(DisplayCases.Case from, ArmorStand head, Vector step, int left) {
+            this.from = from;
+            this.head = head;
+            this.step = step;
+            this.left = left;
+        }
+    }
+
+    Watcher(DungeonRun run, RunLayout layout, PlacedRoom room, DisplayCases cases) {
         this.run = run;
         this.layout = layout;
         this.room = room;
+        this.cases = cases;
         this.floor = run.floor;
         this.intro = intro(floor);
         Location center = layout.center(run.world, RunLayout.firstCell(room));
@@ -176,15 +204,12 @@ final class Watcher implements DungeonMobs.Mob {
         for (int i = 0; i < intro.size(); i++) {
             if (age == INTRO_AT[i]) say(intro.get(i));
         }
-        if (nextSummon >= 0 && age == nextSummon - LINE_BEFORE_SUMMON && age - lastLine >= SPEECH_GAP) say(any(SUMMON_LINES));
-        if (nextSummon >= 0 && age >= nextSummon) summon();
-        // He flies between the display cases while summoning each wave.
-        if (!flying && nextSummon >= 0 && (summoned == 0 || summoned == FIRST_WAVE)
-                && age >= nextSummon - (summoned == 0 ? FLY_BEFORE : FLY_BEFORE_SECOND)) {
-            flying = true;
+        if (fetching == null && nextRelease >= 0) {
+            fetching = cases.take(lastWall);
+            if (fetching == null) fetching = emptyCase();
         }
-
         fly();
+        for (Flight flight : List.copyOf(flights)) flyHead(flight);
         if (speech != null && age >= speechUntil) {
             speech.remove();
             speech = null;
@@ -212,26 +237,57 @@ final class Watcher implements DungeonMobs.Mob {
 
     // Summoning
 
-    private void summon() {
+    /** Sends the head he's hovering at off to the middle, and plans the next. */
+    private void release(DisplayCases.Case from) {
+        boolean firstWave = released < FIRST_WAVE;
+        ArmorStand head = from.spawnHead();
+        Vector step = home.toVector().subtract(head.getLocation().toVector()).normalize()
+                .multiply(firstWave ? FIRST_WAVE_SPEED : SECOND_WAVE_SPEED);
+        flights.add(new Flight(from, head, step, firstWave ? FIRST_WAVE_FLIGHT : SECOND_WAVE_FLIGHT));
+        released++;
+        lastWall = from.wall;
+        fetching = null;
+        hoverUntil = -1;
+        if (released >= UNDEADS) nextRelease = -1;
+        else if (released < FIRST_WAVE) nextRelease = age;
+        else if (released == FIRST_WAVE) nextRelease = age + WAVE_PAUSE;
+        else nextRelease = age + between(LATER_GAP_MIN, LATER_GAP_MAX);
+    }
+
+    private void flyHead(Flight flight) {
+        Location at = flight.head.getLocation().add(flight.step);
+        at.setYaw((at.getYaw() + HEAD_SPIN) % 360);
+        flight.head.teleport(at);
+        flight.left--;
+        if (flight.left == LINE_BEFORE_SUMMON && age - lastLine >= SPEECH_GAP) say(any(SUMMON_LINES));
+        if (flight.left > 0) return;
+        flights.remove(flight);
+        flight.head.remove();
+        summon(flight.from.type, at.clone().add(0, HEAD_TO_FEET, 0));
+    }
+
+    private void summon(UndeadType type, Location at) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        Location at = home.clone().add(random.nextDouble(-2, 2), random.nextDouble(1, 2.5), random.nextDouble(-2, 2));
         Location rest = home.clone().subtract(0, ABOVE_FLOOR, 0).add(random.nextDouble(-3, 3), 0, random.nextDouble(-3, 3));
-        undeads.add(new Undead(this, UndeadType.random(), floor, at, rest));
+        undeads.add(new Undead(this, type, floor, at, rest));
         summoned++;
-        if (summoned == stopFlyingAfter) flying = false;
         if (summoned >= UNDEADS) {
-            nextSummon = -1;
             run.later(ENOUGH_AFTER, () -> {
                 if (undeads.stream().anyMatch(u -> !u.isDead()) && !won) say("That will be enough for now.");
             });
-        } else if (summoned < FIRST_WAVE) {
-            nextSummon = age + between(WAVE_GAP_MIN, WAVE_GAP_MAX);
-        } else if (summoned == FIRST_WAVE) {
-            nextSummon = age + PAUSE;
-            stopFlyingAfter = UNDEADS - 1;
-        } else {
-            nextSummon = age + between(LATER_GAP_MIN, LATER_GAP_MAX);
         }
+    }
+
+    /** With no heads left in the cases (a room without them), one comes from somewhere along a wall. */
+    private DisplayCases.Case emptyCase() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        int wall = random.nextInt(4);
+        double along = random.nextDouble(-9, 9);
+        double dx = wall == 0 ? 11 : wall == 1 ? -11 : along;
+        double dz = wall == 2 ? 11 : wall == 3 ? -11 : along;
+        Location at = home.clone().add(dx, random.nextDouble(-1.25, 6.75), dz);
+        at.setDirection(home.toVector().subtract(at.toVector()).setY(0));
+        return new DisplayCases.Case(at, wall, UndeadType.random());
     }
 
     void undeadDied(Undead undead) {
@@ -245,8 +301,8 @@ final class Watcher implements DungeonMobs.Mob {
         }
         if (age - lastLine >= SPEECH_GAP) say(any(KILL_LINES));
         // The later ones come sooner once there's nobody left to fight.
-        if (summoned > FIRST_WAVE && nextSummon >= 0 && undeads.isEmpty()) {
-            nextSummon = Math.min(nextSummon, age + between(CLEARED_GAP_MIN, CLEARED_GAP_MAX));
+        if (released > FIRST_WAVE && nextRelease >= 0 && undeads.isEmpty() && flights.isEmpty()) {
+            nextRelease = Math.min(nextRelease, age + between(CLEARED_GAP_MIN, CLEARED_GAP_MAX));
         }
     }
 
@@ -266,27 +322,24 @@ final class Watcher implements DungeonMobs.Mob {
 
     // Flying
 
+    /**
+     * To the case he's fetching from, leaving in time to get there and hover before its head is
+     * due to leave; otherwise back to the middle.
+     */
     private void fly() {
         Location at = body.getLocation();
-        Location target;
-        if (flying) {
-            if (flyTo == null || (at.distanceSquared(flyTo) < 0.01 && age >= hoverUntil)) {
-                flyTo = displayCase();
-                hoverUntil = -1;
-            }
-            target = flyTo;
-        } else {
-            flyTo = null;
-            target = home;
+        Location target = home;
+        if (fetching != null) {
+            Location spot = hoverSpot(fetching);
+            int travel = (int) Math.ceil(at.distance(spot) / FLY);
+            if (age + travel + HOVER >= nextRelease) target = spot;
         }
         Vector step = target.toVector().subtract(at.toVector());
         double length = step.length();
-        Location next;
-        if (length <= FLY) {
-            next = target.clone();
-            if (flying && hoverUntil < 0) hoverUntil = age + HOVER;
-        } else {
-            next = at.clone().add(step.multiply(FLY / length));
+        Location next = length <= FLY ? target.clone() : at.clone().add(step.multiply(FLY / length));
+        if (fetching != null && target != home && length <= FLY) {
+            if (hoverUntil < 0) hoverUntil = age + HOVER;
+            if (age >= hoverUntil && age >= nextRelease) release(fetching);
         }
         Player look = nearestInRoom(next);
         if (look != null) {
@@ -303,24 +356,11 @@ final class Watcher implements DungeonMobs.Mob {
         }
     }
 
-    /** Somewhere along one of the walls, a different one from where he is, as high as the cases go. */
-    private Location displayCase() {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        int wall = random.nextInt(4);
-        if (flyFrom == wall) wall = (wall + 1 + random.nextInt(3)) % 4;
-        flyFrom = wall;
-        double along = random.nextDouble(-CASES_OUT, CASES_OUT);
-        double dx = switch (wall) {
-            case 0 -> CASES_OUT;
-            case 1 -> -CASES_OUT;
-            default -> along;
-        };
-        double dz = switch (wall) {
-            case 2 -> CASES_OUT;
-            case 3 -> -CASES_OUT;
-            default -> along;
-        };
-        return home.clone().add(dx, random.nextDouble(0, 7), dz);
+    /** A block in front of a case, his head level with the one in it. */
+    private Location hoverSpot(DisplayCases.Case c) {
+        Vector in = home.toVector().subtract(c.at.toVector()).setY(0);
+        if (in.lengthSquared() > 0) in.normalize();
+        return c.at.clone().add(in).add(0, HOVER_ABOVE_HEAD, 0);
     }
 
     // Who's in the fight
@@ -419,5 +459,8 @@ final class Watcher implements DungeonMobs.Mob {
         undeads.clear();
         for (Undead.Parasite parasite : parasites) parasite.remove();
         parasites.clear();
+        for (Flight flight : flights) flight.head.remove();
+        flights.clear();
+        if (fetching != null && fetching.head != null) fetching.head.remove();
     }
 }

@@ -126,6 +126,7 @@ public final class DungeonRun {
     private final RunLayout layout;
     private final RunDoors doors;
     private final RunMap runMap;
+    private final DisplayCases cases;
     private Watcher watcher;
     private int ticks;
     private final MapView map;
@@ -160,6 +161,8 @@ public final class DungeonRun {
                 yaw(-door.dx, -door.dy), 0));
         this.doors = new RunDoors(this, plugin, world, layout);
         this.runMap = new RunMap(this, layout);
+        PlacedRoom blood = layout.bloodRoom();
+        this.cases = blood == null ? null : DisplayCases.place(world, layout.center(world, RunLayout.firstCell(blood)));
         PlacedRoom start = layout.roomAt(entrance);
         if (start != null) runMap.find(start);
     }
@@ -298,7 +301,7 @@ public final class DungeonRun {
     /** The Watcher's fight starts. */
     void bloodDoorOpened() {
         PlacedRoom blood = layout.bloodRoom();
-        if (blood != null && watcher == null) watcher = new Watcher(this, layout, blood);
+        if (blood != null && watcher == null) watcher = new Watcher(this, layout, blood, cases);
     }
 
     /** "You have proven yourself. You may pass.": the Blood Room is done. */
@@ -498,6 +501,7 @@ public final class DungeonRun {
         mort.remove();
         doors.dispose();
         if (watcher != null) watcher.dispose();
+        if (cases != null) cases.dispose();
         for (Player player : players()) takeRunItems(player);
         ScoreCard.blank(map);
     }

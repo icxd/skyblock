@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -34,8 +35,54 @@ final class RunDoors {
     private static final double HEAD_BELOW = 0.71875;
     private static final double NAME_BELOW = 0.46875;
     private static final double PICKUP_REACH = 1.5;
+    /** The head turns this much a tick, and bobs this much a tick between these two heights (from recordings). */
+    private static final float SPIN = 2;
+    private static final double BOB_STEP = 0.01;
+    private static final double BOB_TOP = 0.22;
+    private static final double BOB_BOTTOM = -0.18;
 
-    private record Key(boolean blood, Location at, List<Entity> display) {
+    /** A key waiting to be picked up: its head spins and bobs, its name stays put. */
+    private static final class Key {
+        final boolean blood;
+        final Location at;
+        final ArmorStand head;
+        final ArmorStand label;
+        private final Location headAt;
+        private double bob;
+        private boolean rising = true;
+        /** A tick's pause at the top and bottom of each bob. */
+        private boolean holding;
+
+        Key(boolean blood, Location at, ArmorStand head, ArmorStand label) {
+            this.blood = blood;
+            this.at = at;
+            this.head = head;
+            this.label = label;
+            this.headAt = head.getLocation();
+        }
+
+        void animate() {
+            if (holding) {
+                holding = false;
+            } else {
+                bob += rising ? BOB_STEP : -BOB_STEP;
+                if (rising ? bob >= BOB_TOP - 1e-9 : bob <= BOB_BOTTOM + 1e-9) {
+                    rising = !rising;
+                    holding = true;
+                }
+            }
+            headAt.setYaw((headAt.getYaw() + SPIN) % 360);
+            head.teleport(headAt.clone().add(0, bob, 0));
+        }
+
+        boolean shows(Entity entity) {
+            return head.equals(entity) || label.equals(entity);
+        }
+
+        void remove() {
+            head.remove();
+            label.remove();
+        }
     }
 
     private final DungeonRun run;
@@ -90,16 +137,18 @@ final class RunDoors {
         Location at = keySpot(RunLayout.firstCell(room));
         boolean blood = door.type() == DoorType.BLOOD;
         String name = blood ? "Blood Key" : "Wither Key";
-        ArmorStand head = world.spawn(at.clone().subtract(0, HEAD_BELOW, 0), ArmorStand.class, s -> {
+        Location headAt = at.clone().subtract(0, HEAD_BELOW, 0);
+        headAt.setYaw(ThreadLocalRandom.current().nextFloat() * 360);
+        ArmorStand head = world.spawn(headAt, ArmorStand.class, s -> {
             invisible(s);
             s.getEquipment().setHelmet(DungeonTextures.head(name));
         });
         ArmorStand label = world.spawn(at.clone().subtract(0, NAME_BELOW, 0), ArmorStand.class, s -> {
             invisible(s);
-            s.setCustomName(name);
+            s.setCustomName(Utils.color((blood ? "&c" : "&8") + name));
             s.setCustomNameVisible(true);
         });
-        waiting.add(new Key(blood, at, List.of(head, label)));
+        waiting.add(new Key(blood, at, head, label));
     }
 
     private static void invisible(ArmorStand stand) {
@@ -146,17 +195,18 @@ final class RunDoors {
     }
 
     boolean isKey(Entity entity) {
-        return waiting.stream().anyMatch(k -> k.display().contains(entity));
+        return waiting.stream().anyMatch(k -> k.shows(entity));
     }
 
-    /** Every tick: anyone standing on a key picks it up. */
+    /** Every tick: the keys turn, and anyone standing on one picks it up. */
     void tick(List<Player> players) {
         for (Key key : List.copyOf(waiting)) {
+            key.animate();
             for (Player player : players) {
                 Location p = player.getLocation();
-                double dx = p.getX() - key.at().getX();
-                double dz = p.getZ() - key.at().getZ();
-                if (dx * dx + dz * dz > PICKUP_REACH * PICKUP_REACH || Math.abs(p.getY() - key.at().getY()) > 2) continue;
+                double dx = p.getX() - key.at.getX();
+                double dz = p.getZ() - key.at.getZ();
+                if (dx * dx + dz * dz > PICKUP_REACH * PICKUP_REACH || Math.abs(p.getY() - key.at.getY()) > 2) continue;
                 pickUp(key, player);
                 break;
             }
@@ -165,10 +215,10 @@ final class RunDoors {
 
     private void pickUp(Key key, Player player) {
         waiting.remove(key);
-        key.display().forEach(Entity::remove);
+        key.remove();
         DungeonRun.Member member = run.member(player.getUniqueId());
         String who = (member != null ? member.display() : player.getName()) + "&f &ehas obtained ";
-        if (key.blood()) {
+        if (key.blood) {
             bloodKey = true;
             run.tell(who + "&cBlood Key&e!");
             run.tell("&e&lRIGHT CLICK &7on the &cBLOOD DOOR&7 to open it. This key can only be used to open &a1&7 door!");
@@ -217,7 +267,7 @@ final class RunDoors {
     }
 
     void dispose() {
-        for (Key key : waiting) key.display().forEach(Entity::remove);
+        for (Key key : waiting) key.remove();
         waiting.clear();
     }
 }

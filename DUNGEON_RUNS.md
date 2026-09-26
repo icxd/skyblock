@@ -56,9 +56,11 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
 - On Hypixel a key drops from the last starred mob (or the miniboss) of the room before its door.
   With no mobs yet, it waits in that room from the start (the fairy room is skipped, going back
   one more room), on the floor near the middle of its first cell at about doorway height: a
-  floating head with "Wither Key" or "Blood Key", on two invisible armor stands 0.71875 and
-  0.46875 below the floor. Walking into it picks it up for the team: "Name has obtained
-  Wither Key!" and the RIGHT CLICK hint, to everyone.
+  floating head with "Wither Key" (dark grey) or "Blood Key" (red), on two invisible armor stands
+  0.71875 and 0.46875 below the floor. The head turns 2 degrees a tick and bobs 0.01 a tick
+  between 0.18 below and 0.22 above where it started, pausing a tick at each end; the name stays
+  still. Walking into it picks it up for the team: "Name has obtained Wither Key!" and the RIGHT
+  CLICK hint, to everyone.
 - Right-clicking a shut door with the key opens it: "Name opened a WITHER door!", or "The BLOOD
   DOOR has been opened!" and "A shiver runs down your spine...". Without: "You do not have the key
   for this door!". Each key opens one door.
@@ -78,15 +80,26 @@ Room when the Watcher is done. You're a green arrow, the others blue.
   wiki's.
 - The boss bar "The Watcher" (red) shows 2 seconds after the door opens, to whoever is in the
   Blood Room, and goes down a ninth per undead killed.
-- He summons 9 undeads: the first 23.8 s after the door opens, three more 1 to 2.5 s apart, then
-  11.7 s later five more, 4.5 to 7 s apart (1 to 3 s once none are left alive). Each summon has a
-  line ("Go, fight!", "Go and live again!", ...) and each kill may get one ("Not bad.", ...). After
-  the last summon, if any are still alive: "That will be enough for now.". While summoning he flies
-  between the display cases on the walls at 14 blocks a second.
-- Undeads appear over him and drop to the floor: player-shaped (the named skins we have, the
-  generic Undead one otherwise), in random chainmail, iron or leather armour with a gold or iron
-  axe, "☠ Leech 20,000❤" over them (green, yellow under half). They run at the nearest player in
-  the Blood Room and hit every second; with nobody in the room they go back to him.
+- The display cases (`DisplayCases`): undead heads in niches 12 blocks out from the middle, in
+  front of stained glass with fire behind it, at three heights. Along two walls at -4, 0 and 4,
+  along the other two near the corners at -9 and 9 (30 cases in every capture of the room; found
+  from the glass, so any rotation works). As in the recordings, every case along the walls has a
+  head and about a third of the corner ones do.
+- He summons 9 undeads, fetching each from a case: he flies there (14 blocks a second), hovers
+  0.6 s, and its head flies straight at the middle of the room, turning 30 degrees a tick. The
+  first four heads leave from 19.8 s after the door opens, one after the other; they fly at 0.2
+  blocks a tick for 78 ticks. The next five fly at 0.3 a tick for 40 ticks; the fifth leaves
+  13.7 s after the fourth, the rest 4.5 to 7 s apart (1 to 3 s once nobody's left to fight). So
+  the undeads appear 23.7 s after the door opens, then 1 to 2.5 s apart, then 11.7 s later the
+  last five, as recorded.
+- An undead appears where its head ends (1.78 higher, where the head sat on the stand) and drops
+  to the floor. Each summon has a line ("Go, fight!", "Go and live again!", ...) just before, and
+  each kill may get one ("Not bad.", ...). After the last summon, if any are still alive: "That
+  will be enough for now.".
+- Undeads have their head's skin (the named skins we have, the generic Undead one otherwise),
+  random chainmail, iron or leather armour with a gold or iron axe, and "☠ Leech 20,000❤" over
+  them (green, yellow under half). They run at the nearest player in the Blood Room and hit every
+  second; with nobody in the room they go back to him.
 - Health: 12k to 20k on the Entrance (as recorded), and the same spread around the wiki's number on
   other floors. Damage per floor from the wiki. Their perks (healing, teleporting behind you,
   exploding, more health or damage, Parasite's silverfish, going for a class first) only from
