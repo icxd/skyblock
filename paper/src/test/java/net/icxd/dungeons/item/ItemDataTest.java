@@ -394,11 +394,14 @@ class ItemDataTest {
                 "&8Mana Cost: &b50% of max",
                 "&8Cooldown: &a2h",
                 "",
-                "&9Shortbow: Instantly shoots!",
+                "§9Shortbow: Instantly shoots!",
                 "",
                 "&8This item can be reforged!",
                 "&8&l* &8Soulbound &8&l*",
                 "§9§lRARE WAND"), ItemBuilder.lore(staff, tag));
+        // The shortbow line is in the rarity's colour, as the Java Terminator's is, so recombobulating changes it.
+        tag.setBoolean("recombobulated", true);
+        assertTrue(ItemBuilder.lore(staff, tag).contains("§5Shortbow: Instantly shoots!"));
     }
 
     @Test

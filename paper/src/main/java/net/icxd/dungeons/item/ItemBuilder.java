@@ -261,7 +261,7 @@ public final class ItemBuilder {
         sections.add(item.lore());
         sections.add(runeLines(tag));
         if (item.ability() != null) sections.add(abilityLore(item.ability(), rarity));
-        for (ItemBlock block : item.blocks()) sections.add(blockLore(block));
+        for (ItemBlock block : item.blocks()) sections.add(blockLore(block, rarity));
         List<String> fromData = item.nbtLore(tag);
         if (fromData != null) sections.add(fromData);
 
@@ -440,8 +440,14 @@ public final class ItemBuilder {
         return lines;
     }
 
-    /** A data item's ability or bonus: its header as Hypixel shows it, its text, then its costs as above. */
-    public static List<String> blockLore(ItemBlock block) {
+    /**
+     * A data item's ability or bonus: its header as Hypixel shows it, its text, then its costs as above. A
+     * shortbow's line is written here, as abilityLore's: it's in the rarity's colour, which recombobulating changes.
+     */
+    public static List<String> blockLore(ItemBlock block, Rarity rarity) {
+        if ("SHORTBOW".equals(block.kind())) {
+            return List.of(rarity.getColor() + "Shortbow: " + (block.name() != null ? block.name() : "Instantly shoots!"));
+        }
         List<String> lines = new ArrayList<>();
         if (block.header() != null) lines.add(block.header());
         lines.addAll(block.text());
