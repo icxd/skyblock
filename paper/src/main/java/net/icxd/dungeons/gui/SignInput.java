@@ -10,6 +10,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.TileState;
@@ -25,6 +27,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -37,6 +40,12 @@ import java.util.function.Consumer;
  */
 public final class SignInput implements Listener {
     private static final Map<UUID, Prompt> PROMPTS = new HashMap<>();
+    /** The client closes a sign that's further than this past the player's block reach. */
+    private static final double EDIT_REACH = 4;
+    /** Kept short of that: they may drift a little while they type. */
+    private static final double MARGIN = 1;
+    /** Survival's block reach, if the attribute is missing. */
+    private static final double DEFAULT_RANGE = 4.5;
     private static boolean listening;
 
     private record Prompt(Location location, Consumer<List<String>> done) {
@@ -45,8 +54,11 @@ public final class SignInput implements Listener {
     private SignInput() {
     }
 
-    /** Opens the sign with these four lines (& colours); {@code done} gets the four lines as typed, on the main thread. */
-    public static void open(Player player, List<String> lines, Consumer<List<String>> done) {
+    /**
+     * Opens the sign with these four lines (& colours); {@code done} gets the four lines as typed, on
+     * the main thread. False, with a message, where there's no block they could edit it at.
+     */
+    public static boolean open(Player player, List<String> lines, Consumer<List<String>> done) {
         if (!listening) {
             // From the first sign on; nothing else needs these events.
             Bukkit.getPluginManager().registerEvents(new SignInput(), Dungeons.getInstance());
@@ -56,6 +68,10 @@ public final class SignInput implements Listener {
         if (old != null) restore(player, old.location());
 
         Location location = place(player);
+        if (location == null) {
+            player.sendMessage(Text.line("&cYou can't type on a sign here!"));
+            return false;
+        }
         Sign sign = (Sign) Material.OAK_SIGN.createBlockData().createBlockState();
         SignSide front = sign.getSide(Side.FRONT);
         for (int i = 0; i < 4; i++) front.line(i, Text.line(i < lines.size() ? lines.get(i) : ""));
@@ -63,17 +79,31 @@ public final class SignInput implements Listener {
         player.sendBlockUpdate(location, sign);
         player.openVirtualSign(Position.block(location), Side.FRONT);
         PROMPTS.put(player.getUniqueId(), new Prompt(location, done));
+        return true;
     }
 
     /**
      * The block above the player's head: close enough for the client to let them edit it (block
-     * reach plus 4), out of sight, and not one they could be standing on.
+     * reach plus 4), out of sight, and not one they could be standing on. Null well above or below
+     * the world, where the nearest block in it is out of that reach.
      */
     private static Location place(Player player) {
         World world = player.getWorld();
-        Block head = player.getEyeLocation().getBlock();
-        int y = Math.clamp(head.getY() + 1L, world.getMinHeight(), world.getMaxHeight() - 1);
-        return new Location(world, head.getX(), y, head.getZ());
+        Location eye = player.getEyeLocation();
+        AttributeInstance range = player.getAttribute(Attribute.BLOCK_INTERACTION_RANGE);
+        OptionalInt y = signY(eye.getY(), world.getMinHeight(), world.getMaxHeight(), range == null ? DEFAULT_RANGE : range.getValue());
+        return y.isEmpty() ? null : new Location(world, eye.getBlockX(), y.getAsInt(), eye.getBlockZ());
+    }
+
+    /**
+     * The sign's height for an eye at {@code eyeY}: the block above the eye's, kept inside the world,
+     * or none if that leaves it out of edit reach (the client would close it at once). It's in the
+     * eye's column, so the height is all the distance there is.
+     */
+    static OptionalInt signY(double eyeY, int minHeight, int maxHeight, double range) {
+        int y = Math.clamp((long) Math.floor(eyeY) + 1, minHeight, maxHeight - 1);
+        double gap = eyeY > y + 1 ? eyeY - (y + 1) : eyeY < y ? y - eyeY : 0;
+        return gap < range + EDIT_REACH - MARGIN ? OptionalInt.of(y) : OptionalInt.empty();
     }
 
     /** What's really there, again. */

@@ -192,10 +192,12 @@ public final class ItemBrowserGUI extends GUI {
                 Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
                     if (!viewer.isOnline()) return;
                     viewer.closeInventory();
-                    SignInput.open(viewer, SEARCH_SIGN, lines -> {
+                    boolean opened = SignInput.open(viewer, SEARCH_SIGN, lines -> {
                         browser.search(lines.isEmpty() ? "" : lines.getFirst());
                         if (viewer.isOnline()) show(viewer);
                     });
+                    // Nowhere to put the sign (far above the world): back to the menu as it was.
+                    if (!opened) show(viewer);
                 });
             }
 
