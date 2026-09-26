@@ -77,9 +77,11 @@ public class UserCollection implements ICollection {
         .append("bank", new Document()
             .append("balance", 0)
             .append("transactions", new ArrayList<Document>()))
+        // See StoredInventory.
         .append("storage", new Document()
             .append("inventory", null)
-            .append("armor", null))
+            .append("armor", null)
+            .append("offhand", null))
         .append("minions", new Document()
             .append("craftedMinions", new ArrayList<Document>())
             .append("minions", new ArrayList<Document>()))

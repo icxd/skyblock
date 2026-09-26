@@ -52,7 +52,7 @@ public class Dungeons extends JavaPlugin {
 
         skyBlockServer = new SkyBlockServer(getConfig());
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
-                mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection.defaultDocument());
+                mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection::defaultDocument);
         userStore.start();
 
         new CheckHandler();
@@ -88,7 +88,7 @@ public class Dungeons extends JavaPlugin {
         // Players already online when the plugin (re)loads.
         for (Player player : Bukkit.getOnlinePlayers()) {
             try {
-                userStore.claim(player.getUniqueId(), player.getName(), player.getAddress().getAddress().getHostAddress());
+                userStore.claimOnline(player);
             } catch (UserStore.HeldElsewhereException | InterruptedException | RuntimeException e) {
                 getLogger().log(java.util.logging.Level.SEVERE, "Couldn't load " + player.getName() + "'s data", e);
                 player.kick(net.kyori.adventure.text.Component.text("Couldn't load your profile, please rejoin."));

@@ -15,9 +15,15 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import com.mongodb.client.model.Updates;
 
@@ -26,6 +32,7 @@ import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
 import net.kyori.adventure.text.Component;
@@ -44,15 +51,16 @@ import net.kyori.adventure.text.format.TextDecoration;
  *   <li>{@code /pd <player> get <path>}: one field, e.g. {@code dungeons.floors.highest}</li>
  *   <li>{@code /pd <player> set <path> <value>}: keeps the field's type. For a player on no server
  *       it changes the database directly; if another server holds them, run it there.</li>
+ *   <li>{@code /pd <player> inv}: their items, read-only (live if they're here, else as stored)</li>
  *   <li>{@code /pd <player> save} and {@code /pd <player> handoff}</li>
  *   <li>{@code /pd servers}: every server's type, players and heartbeat</li>
  * </ul>
  * Fields are clickable: documents open, values fill in a set command.
  */
-@CommandParameters(description = "View and edit player data", usage = "/playerdata <player> [get|set|save|handoff] | servers",
+@CommandParameters(description = "View and edit player data", usage = "/playerdata <player> [get|set|inv|save|handoff] | servers",
     aliases = "pd", permission = Rank.STAFF)
 public class PlayerDataCommand extends SCommand {
-  private static final List<String> ACTIONS = List.of("get", "set", "save", "handoff");
+  private static final List<String> ACTIONS = List.of("get", "set", "inv", "save", "handoff");
   private static final Component RULE = Component.text("━".repeat(34), NamedTextColor.DARK_GRAY);
   private static final TextColor LABEL = NamedTextColor.GRAY;
 
@@ -95,6 +103,11 @@ public class PlayerDataCommand extends SCommand {
       case "view" -> overview(sender, name, doc,
           user.isReleased() ? "nobody (handed off from " + store.server() + ")" : store.server() + " (this server)",
           user.isReleased() ? -1 : user.getLoadMillis());
+      case "inv" -> {
+        PlayerInventory inventory = player.getInventory();
+        showItems(sender, name, "live", inventory.getStorageContents(), inventory.getArmorContents(), inventory.getItemInOffHand(),
+            StoredInventory.stored(doc, "overflow", 4));
+      }
       case "get" -> show(sender, name, doc, path(args));
       case "set" -> {
         if (args.length < 4) {
@@ -147,6 +160,18 @@ public class PlayerDataCommand extends SCommand {
     switch (action) {
       case "view" -> overview(sender, name, doc, holder, -1);
       case "get" -> show(sender, name, doc, path(args));
+      case "inv" -> {
+        String who = name;
+        // Items are read on the main thread.
+        Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
+          if (StoredInventory.isEmpty(doc)) {
+            error(sender, "No items stored for " + who + " yet.");
+            return;
+          }
+          showItems(sender, who, holder == null ? "stored" : "stored, " + holder + " has newer", StoredInventory.stored(doc, "inventory", 36),
+              StoredInventory.stored(doc, "armor", 4), StoredInventory.stored(doc, "offhand", 1)[0], StoredInventory.stored(doc, "overflow", 4));
+        });
+      }
       case "set" -> {
         if (holder != null) {
           error(sender, holder + " holds " + name + "'s data; change it there.");
@@ -209,7 +234,8 @@ public class PlayerDataCommand extends SCommand {
         .append(stat("Bits", doc.get("bits"))).append(stat("Gems", doc.get("gems"))));
     sender.sendMessage(fields.build());
     if (loadMillis >= 0) {
-      sender.sendMessage(Component.text(" ").append(button("Save", "/pd " + name + " save", "Save their data now", NamedTextColor.GREEN))
+      sender.sendMessage(Component.text(" ").append(button("Items", "/pd " + name + " inv", "Look at their inventory", NamedTextColor.GOLD))
+          .append(Component.space()).append(button("Save", "/pd " + name + " save", "Save their data now", NamedTextColor.GREEN))
           .append(Component.space()).append(button("Hand off", "/pd " + name + " handoff",
               "Save and release their data, as before sending them to another server", NamedTextColor.RED))
           .append(Component.space()).append(button("Refresh", "/pd " + name, "Show this again", NamedTextColor.AQUA)));
@@ -278,6 +304,7 @@ public class PlayerDataCommand extends SCommand {
         {"<player>", "their data at a glance"},
         {"<player> get <path>", "one field, e.g. dungeons.floors.highest"},
         {"<player> set <path> <value>", "change a field, keeping its type"},
+        {"<player> inv", "their items, read-only"},
         {"<player> save", "save now"},
         {"<player> handoff", "save and release, as for a server switch"},
         {"servers", "the servers sharing player data"}}) {
@@ -323,6 +350,8 @@ public class PlayerDataCommand extends SCommand {
 
   private static Component value(Object value) {
     if (value == null) return Component.text("null", NamedTextColor.DARK_GRAY);
+    if (value instanceof Binary b) return Component.text("<" + b.length() + " bytes>", NamedTextColor.DARK_AQUA);
+    if (value instanceof byte[] b) return Component.text("<" + b.length + " bytes>", NamedTextColor.DARK_AQUA);
     if (value instanceof String s) return Component.text("\"" + s + "\"", NamedTextColor.GREEN);
     if (value instanceof Boolean b) return Component.text(b.toString(), b ? NamedTextColor.GREEN : NamedTextColor.RED);
     if (value instanceof Number n) return Component.text(NumberFormat.getInstance(Locale.US).format(n), NamedTextColor.GOLD);
@@ -414,6 +443,47 @@ public class PlayerDataCommand extends SCommand {
     } catch (NumberFormatException ignored) {
     }
     return raw;
+  }
+
+  /** Holder of the read-only item views; InventorySyncListener cancels clicks in them. */
+  public static final class ItemsView implements InventoryHolder {
+    private Inventory inventory;
+
+    @Override
+    public Inventory getInventory() {
+      return inventory;
+    }
+  }
+
+  /**
+   * A chest laid out like the player's inventory: the main rows, then the hotbar, then labels over
+   * helmet, chestplate, leggings, boots, off-hand and anything waiting in overflow. Main thread.
+   *
+   * @param armor boots first, as Bukkit orders it
+   */
+  private static void showItems(CommandSender sender, String name, String what, ItemStack[] main, ItemStack[] armor, ItemStack offhand,
+                                ItemStack[] overflow) {
+    if (!(sender instanceof Player viewer)) {
+      error(sender, "Only players can look at inventories.");
+      return;
+    }
+    ItemsView holder = new ItemsView();
+    Inventory view = Bukkit.createInventory(holder, 54, Component.text(name + "'s items (" + what + ")"));
+    holder.inventory = view;
+    for (int i = 9; i < 36; i++) view.setItem(i - 9, main[i]);
+    for (int i = 0; i < 9; i++) view.setItem(27 + i, main[i]);
+    String[] labels = {"Helmet", "Chestplate", "Leggings", "Boots", "Off-hand", "Overflow", "Overflow", "Overflow", "Overflow"};
+    for (int i = 0; i < labels.length; i++) view.setItem(36 + i, pane(labels[i]));
+    for (int i = 0; i < 4; i++) view.setItem(45 + i, armor[3 - i]);
+    view.setItem(49, offhand);
+    for (int i = 0; i < 4; i++) view.setItem(50 + i, overflow[i]);
+    viewer.openInventory(view);
+  }
+
+  private static ItemStack pane(String label) {
+    ItemStack pane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+    pane.editMeta(meta -> meta.displayName(Component.text(label + " \u2193", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
+    return pane;
   }
 
   private static void error(CommandSender sender, String message) {

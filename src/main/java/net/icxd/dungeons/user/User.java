@@ -30,6 +30,10 @@ public class User {
   private long loadMillis;
   /** Handed off: still readable while the player is here, but no longer saved from this server. */
   private volatile boolean released;
+  /** This server has put the stored inventory on the player (or adopted theirs), so saving it is safe. */
+  private boolean inventoryRestored;
+  /** Main thread. */
+  private long lastSavedAt;
   private int skyBlockXp;
 
   @Setter
@@ -68,6 +72,14 @@ public class User {
 
   void markReleased() {
     released = true;
+  }
+
+  void markInventoryRestored() {
+    inventoryRestored = true;
+  }
+
+  void markSaved() {
+    lastSavedAt = System.currentTimeMillis();
   }
 
   public boolean isLoaded() {

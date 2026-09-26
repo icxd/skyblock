@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,7 +55,8 @@ public final class UserStore {
   /** A server whose heartbeat hasn't moved for this long has stopped. */
   private static final long STOPPED_AFTER_MILLIS = 12_000;
   private static final long HEARTBEAT_TICKS = 3 * 20;
-  private static final long AUTOSAVE_TICKS = 60 * 20;
+  /** Each player is saved this long after their last save, so saves spread out instead of all landing in one tick. */
+  private static final long AUTOSAVE_MILLIS = 60_000;
   /** Data claimed for a login that never joined (refused later, or the connection dropped) is released after this. */
   private static final long ABANDONED_AFTER_MILLIS = 30_000;
   private static final FindOneAndUpdateOptions AFTER = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
@@ -70,14 +72,15 @@ public final class UserStore {
   private final Logger log;
   private final String server;
   private final String type;
-  private final Document defaults;
+  /** A fresh default document each time: nested documents must not be shared between players. */
+  private final Supplier<Document> defaults;
   private final MongoCollection<Document> users;
   private final MongoCollection<Document> servers;
   private final ExecutorService writer = Executors.newSingleThreadExecutor(r -> new Thread(r, "user-saves"));
 
   /** @param server this server's name; every server on the network needs its own */
   public UserStore(Plugin plugin, String server, String type, MongoCollection<Document> users, MongoCollection<Document> servers,
-                   Document defaults) {
+                   Supplier<Document> defaults) {
     this.plugin = plugin;
     this.log = plugin.getLogger();
     this.server = server;
@@ -113,17 +116,25 @@ public final class UserStore {
     if (stale > 0) log.warning("Released " + stale + " players' data this server still held from before it stopped");
 
     Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 0, HEARTBEAT_TICKS);
-    Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-      for (Player player : Bukkit.getOnlinePlayers()) {
-        User user = User.cached(player.getUniqueId());
-        if (user != null && user.isLoaded()) save(user);
-      }
-    }, AUTOSAVE_TICKS, AUTOSAVE_TICKS);
   }
 
-  /** Saves and releases everyone. Call when the plugin disables. */
+  /**
+   * Saves and releases everyone. Call when the plugin disables: players are still connected then,
+   * but this plugin won't see them quit.
+   */
   public void stop() {
-    for (User user : User.all()) leave(user);
+    for (User user : User.all()) {
+      try {
+        Player player = user.getPlayer();
+        if (player != null && user.isInventoryRestored() && !user.isReleased()) {
+          StoredInventory.rescueLooseItems(player, user.getDocument());
+          player.closeInventory();
+        }
+        leave(user);
+      } catch (RuntimeException e) {
+        log.log(Level.SEVERE, "Couldn't save " + user.getUuid() + " while stopping", e);
+      }
+    }
     writer.shutdown();
     try {
       if (!writer.awaitTermination(10, TimeUnit.SECONDS)) log.severe("Gave up waiting for player data to save");
@@ -138,14 +149,22 @@ public final class UserStore {
     }
   }
 
-  /** Heartbeat, and releasing data claimed for logins that never joined. Main thread. */
+  /** Heartbeat, autosaves, and releasing data claimed for logins that never joined. Main thread. */
   private void tick() {
     int players = Bukkit.getOnlinePlayers().size();
     long now = System.currentTimeMillis();
     for (User user : User.all()) {
-      if (user.getPlayer() == null && now - user.getClaimedAt() > ABANDONED_AFTER_MILLIS) {
-        if (user.isLoaded() && !user.isReleased()) log.info("Releasing " + user.getUuid() + ": claimed for a login that never joined");
-        leave(user);
+      try {
+        if (user.getPlayer() == null) {
+          if (now - user.getClaimedAt() > ABANDONED_AFTER_MILLIS) {
+            if (user.isLoaded() && !user.isReleased()) log.info("Releasing " + user.getUuid() + ": claimed for a login that never joined");
+            leave(user);
+          }
+        } else if (user.isLoaded() && now - Math.max(user.getLastSavedAt(), user.getClaimedAt()) >= AUTOSAVE_MILLIS) {
+          save(user);
+        }
+      } catch (RuntimeException e) {
+        log.log(Level.SEVERE, "Couldn't save " + user.getUuid(), e);
       }
     }
     writer.execute(() -> {
@@ -212,7 +231,7 @@ public final class UserStore {
   }
 
   private Document insert(String id, String name, String ip) {
-    Document doc = new Document(defaults).append("uuid", id).append("username", name).append("ip", ip).append("session", session());
+    Document doc = defaults.get().append("uuid", id).append("username", name).append("ip", ip).append("session", session());
     try {
       users.insertOne(doc);
       return doc;
@@ -224,8 +243,9 @@ public final class UserStore {
 
   /** Top-level fields added to the defaults since the document was made. */
   private Document withDefaults(Document doc) {
-    for (String key : defaults.keySet()) {
-      if (!doc.containsKey(key)) doc.append(key, defaults.get(key));
+    Document fresh = defaults.get();
+    for (String key : fresh.keySet()) {
+      if (!doc.containsKey(key)) doc.append(key, fresh.get(key));
     }
     return doc;
   }
@@ -254,11 +274,39 @@ public final class UserStore {
   /**
    * Saves and releases a player's data before they're sent to another server; send them once this
    * completes. It stays readable here until they leave, but nothing more is saved from this
-   * server. If they don't go after all, {@link #claim} it back. Main thread.
+   * server, and their items are frozen (see InventorySyncListener) so nothing is lost or
+   * duplicated in between. If they don't go after all, {@link #claim} it back. Main thread.
    */
   public CompletableFuture<Void> handOff(Player player) {
     User user = User.cached(player.getUniqueId());
-    return user == null || user.isReleased() ? CompletableFuture.completedFuture(null) : release(user);
+    if (user == null || user.isReleased()) return CompletableFuture.completedFuture(null);
+    if (user.isInventoryRestored()) {
+      StoredInventory.rescueLooseItems(player, user.getDocument());
+      player.closeInventory();
+    }
+    return release(user);
+  }
+
+  /**
+   * Puts the stored inventory on a player who just joined. Until this has run, their inventory
+   * isn't saved. Main thread.
+   */
+  public void restoreInventory(Player player, User user) throws StoredInventory.NewerDataException {
+    StoredInventory.restore(player, user.getDocument(), log);
+    user.markInventoryRestored();
+  }
+
+  /** The player is disconnecting: see {@link StoredInventory#rescueLooseItems}. Main thread. */
+  public void rescueLooseItems(Player player, User user) {
+    if (user.isLoaded() && user.isInventoryRestored() && !user.isReleased()) StoredInventory.rescueLooseItems(player, user.getDocument());
+  }
+
+  /**
+   * Claims a player who is already online, when the plugin (re)loads. Their inventory is the live
+   * one, so it counts as restored. Main thread.
+   */
+  public void claimOnline(Player player) throws HeldElsewhereException, InterruptedException {
+    claim(player.getUniqueId(), player.getName(), player.getAddress().getAddress().getHostAddress()).markInventoryRestored();
   }
 
   private CompletableFuture<Void> release(User user) {
@@ -269,7 +317,23 @@ public final class UserStore {
   private CompletableFuture<Void> write(User user, boolean release) {
     Document doc = user.getDocument();
     if (doc == null) return CompletableFuture.completedFuture(null);
-    BsonDocument copy = doc.toBsonDocument(Document.class, users.getCodecRegistry());
+    Player player = user.getPlayer();
+    if (player != null && user.isInventoryRestored()) {
+      try {
+        StoredInventory.capture(player, doc);
+      } catch (RuntimeException e) {
+        // The rest still saves; the stored inventory stays as it was.
+        log.log(Level.SEVERE, "Couldn't save " + player.getName() + "'s inventory", e);
+      }
+    }
+    user.markSaved();
+    BsonDocument copy;
+    try {
+      copy = doc.toBsonDocument(Document.class, users.getCodecRegistry());
+    } catch (RuntimeException e) {
+      log.log(Level.SEVERE, "Couldn't save " + user.getUuid(), e);
+      return CompletableFuture.failedFuture(e);
+    }
     if (release) copy.put("session", BsonNull.VALUE);
     return CompletableFuture.runAsync(() -> {
       // Only while this server still holds it: after a takeover the other server's data is newer.

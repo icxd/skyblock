@@ -13,6 +13,7 @@ import net.icxd.dungeons.item.enums.DungeonStar;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
 import net.icxd.dungeons.utils.Replacement;
@@ -76,6 +77,18 @@ public class PlayerListener implements Listener {
             player.kick(Component.text("Couldn't load your profile, please rejoin.", NamedTextColor.RED));
             return;
         }
+        // Here, before anything else can see the inventory this server's own player file had.
+        try {
+            Dungeons.getUserStore().restoreInventory(player, user);
+        } catch (StoredInventory.NewerDataException e) {
+            Dungeons.getInstance().getLogger().severe("Not restoring " + player.getName() + "'s inventory: " + e.getMessage());
+            player.kick(Component.text("Your items were saved by a newer version of Minecraft than this server runs.", NamedTextColor.RED));
+            return;
+        } catch (RuntimeException e) {
+            Dungeons.getInstance().getLogger().log(java.util.logging.Level.SEVERE, "Couldn't restore " + player.getName() + "'s inventory", e);
+            player.kick(Component.text("Couldn't load your inventory, please rejoin.", NamedTextColor.RED));
+            return;
+        }
         player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
 
 //        player.teleport(new Location(Bukkit.getWorld("world"), 0, 100, 0));
@@ -87,7 +100,10 @@ public class PlayerListener implements Listener {
     public void onLeave(PlayerQuitEvent event) {
         event.setQuitMessage(null);
         User user = User.cached(event.getPlayer().getUniqueId());
-        if (user != null) Dungeons.getUserStore().leave(user);
+        if (user == null) return;
+        // Vanilla drops the cursor and crafting grid after this event; they're saved with the rest instead.
+        Dungeons.getUserStore().rescueLooseItems(event.getPlayer(), user);
+        Dungeons.getUserStore().leave(user);
     }
 
     @EventHandler
@@ -101,7 +117,7 @@ public class PlayerListener implements Listener {
         event.getRecipients().forEach(recipient -> recipient.sendMessage(Utils.color(rank.getPrefix() + player.getName() + (rank == Rank.DEFAULT ? "&7" : "&f") + ": " + event.getMessage())));
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onItemPickup(PlayerPickupItemEvent event) {
         Player player = event.getPlayer();
         User user = User.getUser(player.getUniqueId());
