@@ -232,6 +232,9 @@ class ItemDataTest {
                 "\"STRING_STAT\":{\"material\":\"STONE\",\"name\":\"Test\",\"stats\":{\"DAMAGE\":\"a lot\"}}",
                 "\"BAD_COLOR\":{\"color\":\"orange\",\"material\":\"LEATHER_BOOTS\",\"name\":\"Test\"}",
                 "\"EMPTY_COST\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[{}]]}",
+                "\"NULL_COST\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[null]]}",
+                "\"NULL_STAR\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[null]}",
+                "\"EMPTY_STAR\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[{\"coins\":100}],[]]}",
                 "\"NO_AMOUNT\":{\"material\":\"STONE\",\"name\":\"Test\",\"upgrade_costs\":[[{\"item\":\"TEST_ROCK\"}]]}",
                 "\"NO_LEVEL\":{\"material\":\"STONE\",\"name\":\"Test\",\"requirements\":[{\"skill\":\"COMBAT\",\"type\":\"SKILL\"}]}",
                 "\"LIST_FOR_TEXT\":{\"lore\":\"one line\",\"material\":\"STONE\",\"name\":\"Test\"}",
@@ -251,6 +254,7 @@ class ItemDataTest {
                 Map.entry("TEST_ROCK", "duplicate"), Map.entry("test_rock", "duplicate"),
                 Map.entry("STRING_NUMBER", "value"), Map.entry("FRACTION", "value"), Map.entry("STRING_FLAG", "value"),
                 Map.entry("STRING_STAT", "value"), Map.entry("BAD_COLOR", "value"), Map.entry("EMPTY_COST", "value"),
+                Map.entry("NULL_COST", "value"), Map.entry("NULL_STAR", "value"), Map.entry("EMPTY_STAR", "value"),
                 Map.entry("NO_AMOUNT", "value"), Map.entry("NO_LEVEL", "value"), Map.entry("LIST_FOR_TEXT", "value"),
                 Map.entry("NOT_AN_OBJECT", "value"))), kinds);
         assertEquals(List.of(), result.warnings());
@@ -283,9 +287,8 @@ class ItemDataTest {
         assertEquals(new Stats().set(Stat.DAMAGE, 10), wand.stats());
         assertEquals(List.of(GemstoneType.RUBY), wand.gemstoneSlots().getSlots().stream().map(GemstoneSlot::getType).toList());
         assertNull(wand.requirements());
-        List<Cost> star = wand.upgradeCosts().getCosts().get(0).getCosts();
-        assertEquals(1, star.size());
-        assertInstanceOf(CoinCost.class, star.get(0));
+        // Without the essence its star would cost only the coins, so it can't be upgraded (see costsItCantCharge).
+        assertNull(wand.upgradeCosts());
         assertNull(wand.blocks().get(0).activation());
         assertEquals("&6Ability: Test  &e&lTEST CLICK", wand.blocks().get(0).header());
 
@@ -329,6 +332,35 @@ class ItemDataTest {
         assertEquals(EssenceType.FOREST, assertInstanceOf(EssenceCost.class, slots.get(1).getCosts().get(0)).getEssenceType());
         SlayerRequirement vampire = assertInstanceOf(SlayerRequirement.class, charm.requirements().getRequirements().get(0));
         assertEquals(List.of("&4☠ &cRequires &5Vampire Slayer 2&c."), vampire.lore());
+    }
+
+     * A star or gemstone slot missing a cost this plugin can't charge would come cheaper, or free: the
+     * item can't be upgraded, and the slot is left out. The essence is still a warning.
+     */
+    @Test
+    void costsItCantCharge() throws IOException {
+        ItemData.Result result = load(
+                "\"TEST_AXE\":{\"material\":\"IRON_AXE\",\"name\":\"Test Axe\",\"upgrade_costs\":[[{\"amount\":100,\"essence\":\"TEST_ESSENCE\"}]]}",
+                "\"TEST_SHORT\":{\"material\":\"IRON_AXE\",\"name\":\"Test Axe\",\"upgrade_costs\":[[{\"amount\":10,\"essence\":\"WITHER\"}],"
+                        + "[{\"coins\":100},{\"amount\":5,\"essence\":\"TEST_ESSENCE\"}]]}",
+                "\"TEST_SLOTS\":{\"gemstone_slots\":[{\"costs\":[{\"amount\":5,\"essence\":\"TEST_ESSENCE\"}],\"type\":\"RUBY\"},"
+                        + "{\"costs\":[{\"coins\":100},{\"amount\":5,\"essence\":\"TEST_ESSENCE\"}],\"type\":\"JADE\"},"
+                        + "{\"costs\":[{\"coins\":100}],\"type\":\"SAPPHIRE\"},{\"type\":\"COMBAT\"}],\"material\":\"STONE\",\"name\":\"Test\"}",
+                "\"TEST_NO_SLOTS\":{\"gemstone_slots\":[{\"costs\":[{\"amount\":5,\"essence\":\"TEST_ESSENCE\"}],\"type\":\"RUBY\"}],"
+                        + "\"material\":\"STONE\",\"name\":\"Test\"}");
+        assertEquals(List.of(), result.errors());
+        assertEquals(List.of("TEST_AXE: essence TEST_ESSENCE", "TEST_SHORT: essence TEST_ESSENCE", "TEST_SLOTS: essence TEST_ESSENCE",
+                        "TEST_SLOTS: essence TEST_ESSENCE", "TEST_NO_SLOTS: essence TEST_ESSENCE"),
+                result.warnings().stream().map(ItemData.Problem::toString).toList());
+        Map<String, DataItem> items = result.items();
+        assertNull(items.get("TEST_AXE").upgradeCosts());
+        // Its first star is known, but the second would cost only the coins.
+        assertNull(items.get("TEST_SHORT").upgradeCosts());
+        List<GemstoneSlot> slots = items.get("TEST_SLOTS").gemstoneSlots().getSlots();
+        assertEquals(List.of(GemstoneType.SAPPHIRE, GemstoneType.COMBAT), slots.stream().map(GemstoneSlot::getType).toList());
+        assertEquals(1, slots.get(0).getCosts().size());
+        assertEquals(List.of(), slots.get(1).getCosts());
+        assertNull(items.get("TEST_NO_SLOTS").gemstoneSlots());
     }
 
     /** Held in the main hand, what's worn, equipped or shot adds nothing (see PlayerStats); what's used there does. */

@@ -60,11 +60,14 @@ import java.util.regex.Pattern;
  *   <li>Errors, the item is skipped: no name ("name"); no material, or one that isn't a current,
  *       non-legacy Material ("material"); an unknown rarity ("rarity") or soulbound ("soulbound"); an
  *       id that came before ("duplicate"); a value of the wrong kind, such as a string where a number
- *       goes, a fraction for a whole number, a colour that isn't "#rrggbb" or a cost of nothing ("value").</li>
+ *       goes, a fraction for a whole number, a colour that isn't "#rrggbb", a cost of nothing or an
+ *       upgrade star with no costs ("value").</li>
  *   <li>Warnings, the item loads without the name this plugin doesn't have (yet): a stat ("stat"),
  *       gemstone slot type ("gemstone slot"), essence ("essence"), requirement, or its skill, slayer
  *       boss, dungeon or Kuudra tier ("requirement"), or activation ("activation"). A type that isn't a
- *       SpecificItemType ("type") is kept as the rarity line's words and the item's type key.</li>
+ *       SpecificItemType ("type") is kept as the rarity line's words and the item's type key. An essence
+ *       it can't charge takes the gemstone slot with it, or, in a star, the item's upgrades: they'd
+ *       come cheaper, or free.</li>
  * </ul>
  * The whole file fails (an IOException) only if it isn't JSON, or isn't format 1.
  */
@@ -211,8 +214,13 @@ public final class ItemData {
             List<GemstoneSlot> slots = new ArrayList<>();
             for (SlotJson slot : json.gemstoneSlots()) {
                 GemstoneType slotType = named(GemstoneType.class, need(slot.type(), "gemstone slot type"));
-                if (slotType == null) warnings.add("gemstone slot", slot.type());
-                else slots.add(new GemstoneSlot(slotType, costs(slot.costs(), warnings)));
+                if (slotType == null) {
+                    warnings.add("gemstone slot", slot.type());
+                    continue;
+                }
+                Cost[] costs = costs(slot.costs(), warnings);
+                // Missing a cost it can't charge, the slot would unlock cheaper, or start unlocked: it's left out.
+                if (costs.length == size(slot.costs())) slots.add(new GemstoneSlot(slotType, costs));
             }
             // With none this plugin has, no "Gemstones:" line.
             if (!slots.isEmpty()) gemstoneSlots = new GemstoneSlots(slots.toArray(GemstoneSlot[]::new));
@@ -221,8 +229,15 @@ public final class ItemData {
         UpgradeCosts upgradeCosts = null;
         if (json.upgradeCosts() != null && !json.upgradeCosts().isEmpty()) {
             List<UpgradeCost> stars = new ArrayList<>();
-            for (List<CostJson> star : json.upgradeCosts()) stars.add(new UpgradeCost(costs(star, warnings)));
-            upgradeCosts = new UpgradeCosts(stars.toArray(UpgradeCost[]::new));
+            boolean charged = true;
+            for (List<CostJson> star : json.upgradeCosts()) {
+                if (star == null || star.isEmpty()) throw new Skip("value", "an upgrade star with no costs");
+                Cost[] costs = costs(star, warnings);
+                charged &= costs.length == star.size();
+                stars.add(new UpgradeCost(costs));
+            }
+            // Missing a cost it can't charge, a star would come cheaper or free, so then the item can't be upgraded.
+            if (charged) upgradeCosts = new UpgradeCosts(stars.toArray(UpgradeCost[]::new));
         }
 
         Requirements requirements = null;
@@ -255,12 +270,14 @@ public final class ItemData {
                 number(json.shotCooldown()), gemstoneSlots, upgradeCosts, requirements, list(json.lore()), blocks);
     }
 
-    /** The costs this plugin has: coins, an item or an essence. */
+    /** The costs this plugin has: coins, an item or an essence (fewer than given if it lacks one). */
     private static Cost[] costs(List<CostJson> costs, Warnings warnings) throws Skip {
         if (costs == null) return new Cost[0];
         List<Cost> known = new ArrayList<>();
         for (CostJson cost : costs) {
-            if (cost.coins() != null) {
+            if (cost == null) {
+                throw new Skip("value", "a cost of nothing");
+            } else if (cost.coins() != null) {
                 known.add(new CoinCost(cost.coins()));
             } else if (cost.item() != null) {
                 known.add(new ItemCost(cost.item(), need(cost.amount(), "amount of " + cost.item())));
@@ -335,6 +352,10 @@ public final class ItemData {
 
     private static List<String> list(List<String> value) {
         return value == null ? List.of() : value;
+    }
+
+    private static int size(List<?> value) {
+        return value == null ? 0 : value.size();
     }
 
     private static Integer wholeNumber(JsonReader in) throws IOException {
