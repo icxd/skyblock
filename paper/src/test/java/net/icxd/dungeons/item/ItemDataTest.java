@@ -399,8 +399,6 @@ class ItemDataTest {
                 Map.entry("TEST_ARROW", false), Map.entry("TEST_HELMET", false), Map.entry("TEST_MASK", false),
                 Map.entry("TEST_SWORD", true), Map.entry("TEST_GAUNTLET", true), Map.entry("TEST_ROD", true),
                 Map.entry("TEST_VACUUM", true), Map.entry("TEST_STAFF", true))), held);
-        assertTrue(ItemRegistry.get("HYPERION").statsWhenHeld());
-        assertFalse(ItemRegistry.get("SUBZERO_HELMET").statsWhenHeld());
     }
 
     @Test

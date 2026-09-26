@@ -1,29 +1,58 @@
 package net.icxd.dungeons.item;
 
+import net.icxd.dungeons.item.data.DataItem;
+import net.icxd.dungeons.item.data.ItemData;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Item names and lore against Hypixel's (the NEU item repository's dumps, with the resource pack's
- * icons as their classic symbols). Items have no owner here, so no requirement lines.
+ * How item names and lore are laid out, as Hypixel lays them out, on made-up items (Hypixel's text stays
+ * out of this repository). Items have no owner here, so no requirement lines.
  */
 class ItemLoreTest {
-    private static NBTTagCompound data(String id) {
-        NBTTagCompound tag = ItemBuilder.newData(ItemRegistry.get(id));
+    private static final String STAR = "[{\"amount\":10,\"essence\":\"WITHER\"}]";
+    private static final DataItem SWORD = item("""
+            "TEST_BLINK_SWORD":{"abilities":[{"activation":"RIGHT_CLICK","header":"&6Ability: Test Blink  &e&lRIGHT CLICK",\
+            "kind":"ABILITY","mana":45,"name":"Test Blink","text":["&7Moves you &a5 test blocks&7 ahead.","&7Then stops."]}],\
+            "gemstone_slots":[{"type":"SAPPHIRE"}],"material":"DIAMOND_SHOVEL","name":"Test Blink Sword","rarity":"EPIC",\
+            "reforgeable":true,"stats":{"DAMAGE":120,"STRENGTH":100},"type":"SWORD"}""");
+    private static final DataItem GEM = item("""
+            "TEST_FINE_GEM":{"categories":["Test Category"],"lore":["&7A gem for tests.","","&7It gives &c❤ Health&7."],\
+            "material":"PLAYER_HEAD","name":"❤ Fine Test Gemstone","rarity":"RARE",\
+            "texture":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","type":"GEMSTONE"}""");
+    private static final DataItem DUNGEON_SWORD = item("""
+            "TEST_DUNGEON_SWORD":{"dungeon_item":true,"gear_score":500,"gemstone_slots":[{"type":"SAPPHIRE"},{"costs":[{"coins":100}],\
+            "type":"COMBAT"}],"lore":["&7A dungeon sword for tests."],"material":"IRON_SWORD","name":"Test Dungeon Sword",\
+            "rarity":"LEGENDARY","reforgeable":true,"stats":{"DAMAGE":200,"FEROCITY":20,"INTELLIGENCE":300,"STRENGTH":100},\
+            "type":"SWORD","upgrade_costs":[@,@,@,@,@]}""".replace("@", STAR));
+    private static final DataItem HELMET = item("""
+            "TEST_HELMET":{"material":"IRON_HELMET","name":"Test Helmet","rarity":"LEGENDARY","stats":{"DEFENSE":100},\
+            "type":"HELMET","upgrade_costs":[@,@,@,@,@,@,@,@,@,@]}""".replace("@", STAR));
+
+    private static DataItem item(String json) {
+        try {
+            ItemData.Result result = ItemData.load(new StringReader("{\"format\":1,\"items\":{" + json + "}}"));
+            assertEquals(List.of(), result.errors());
+            return result.items().values().iterator().next();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static NBTTagCompound data(SkyBlockItem item) {
+        NBTTagCompound tag = ItemBuilder.newData(item);
         // Attributes are random; these tests leave them out.
         tag.remove("attribute_1");
         tag.remove("attribute_2");
         return tag;
-    }
-
-    private static List<String> lore(String id, NBTTagCompound tag) {
-        return ItemBuilder.lore(ItemRegistry.get(id), tag);
     }
 
     private static void enchant(NBTTagCompound tag, String name, int level) {
@@ -35,102 +64,99 @@ class ItemLoreTest {
         tag.set("enchantments", list);
     }
 
+    /** Stats, the gemstone line, the ability with its cost, then the reforge note and the rarity line. */
     @Test
-    void aspectOfTheVoid() {
-        NBTTagCompound tag = data("ASPECT_OF_THE_VOID");
-        assertEquals("§5Aspect of the Void", ItemBuilder.name(ItemRegistry.get("ASPECT_OF_THE_VOID"), tag));
+    void swordWithAnAbility() {
+        NBTTagCompound tag = data(SWORD);
+        assertEquals("§5Test Blink Sword", ItemBuilder.name(SWORD, tag));
         assertEquals(List.of(
                 "&7Damage: &c+120",
                 "&7Strength: &c+100",
                 "&7Gemstones: &8[&7✎&8]",
                 "",
-                "&6Ability: Instant Transmission  &e&lRIGHT CLICK",
-                "&7Teleport &a8 blocks&7 ahead of you and",
-                "&7gain &a+50 &f✦ Speed&7 for &a3 seconds&7.",
+                "&6Ability: Test Blink  &e&lRIGHT CLICK",
+                "&7Moves you &a5 test blocks&7 ahead.",
+                "&7Then stops.",
                 "&8Mana Cost: &b45✎",
                 "",
                 "&8This item can be reforged!",
-                "§5§lEPIC SWORD"), lore("ASPECT_OF_THE_VOID", tag));
+                "§5§lEPIC SWORD"), ItemBuilder.lore(SWORD, tag));
     }
 
+    /** The dark gray lines under the name, the item's own text, and its type on the rarity line. */
     @Test
     void gemstone() {
-        NBTTagCompound tag = data("FINE_RUBY_GEM");
-        assertEquals("§9❤ Fine Ruby Gemstone", ItemBuilder.name(ItemRegistry.get("FINE_RUBY_GEM"), tag));
+        NBTTagCompound tag = data(GEM);
+        assertEquals("§9❤ Fine Test Gemstone", ItemBuilder.name(GEM, tag));
         assertEquals(List.of(
-                "&8Collection Item",
+                "&8Test Category",
                 "",
-                "&7A type of &cRuby &7that has clearly",
-                "&7been treated with care.",
+                "&7A gem for tests.",
                 "",
-                "&7Some say that when &eharnessed",
-                "&eproperly&7, it can give its owner extra",
-                "&c❤ Health&7.",
+                "&7It gives &c❤ Health&7.",
                 "",
-                "§9§lRARE GEMSTONE"), lore("FINE_RUBY_GEM", tag));
+                "§9§lRARE GEMSTONE"), ItemBuilder.lore(GEM, tag));
     }
 
     /** Hypixel's dungeon items show what each stat comes to in a dungeon: +10% at Catacombs 0. */
     @Test
     void dungeonItemStats() {
-        List<String> lore = lore("HYPERION", data("HYPERION"));
-        assertEquals("&7Gear Score: &d615", lore.get(0));
-        assertEquals("&7Damage: &c+260 &8(+286)", lore.get(1));
-        assertEquals("&7Ferocity: &c+30 &8(+30)", lore.get(3));
+        List<String> lore = ItemBuilder.lore(DUNGEON_SWORD, data(DUNGEON_SWORD));
+        assertEquals("&7Gear Score: &d500", lore.get(0));
+        assertEquals("&7Damage: &c+200 &8(+220)", lore.get(1));
+        assertEquals("&7Ferocity: &c+20 &8(+20)", lore.get(3));
         assertEquals("§6§lLEGENDARY DUNGEON SWORD", lore.get(lore.size() - 1));
     }
 
     @Test
     void oneEnchantWithItsDescription() {
-        NBTTagCompound tag = data("ASPECT_OF_THE_VOID");
+        NBTTagCompound tag = data(SWORD);
         enchant(tag, "sharpness", 5);
-        List<String> lore = lore("ASPECT_OF_THE_VOID", tag);
+        List<String> lore = ItemBuilder.lore(SWORD, tag);
         assertEquals(List.of("", "&9Sharpness V", "&7Increases melee damage dealt by &a30%", ""), lore.subList(3, 7));
     }
 
     /** On a dungeon item even two enchantments share a line, without descriptions. */
     @Test
     void dungeonItemEnchantsAreCompact() {
-        NBTTagCompound tag = data("HYPERION");
+        NBTTagCompound tag = data(DUNGEON_SWORD);
         enchant(tag, "smite", 7);
         enchant(tag, "critical", 6);
-        List<String> lore = lore("HYPERION", tag);
+        List<String> lore = ItemBuilder.lore(DUNGEON_SWORD, tag);
         assertEquals("&9Critical VI, &9Smite VII", lore.get(7));
     }
 
     @Test
     void stars() {
-        NBTTagCompound tag = data("HYPERION");
+        NBTTagCompound tag = data(DUNGEON_SWORD);
         tag.setInt("upgrade_count", 7);
-        assertEquals(" &6✪✪✪✪✪&c➋", ItemBuilder.stars(ItemRegistry.get("HYPERION"), tag));
-        NBTTagCompound crimson = data("INFERNAL_CRIMSON_HELMET");
-        crimson.setInt("upgrade_count", 6);
-        assertEquals(" &d✪&6✪✪✪✪", ItemBuilder.stars(ItemRegistry.get("INFERNAL_CRIMSON_HELMET"), crimson));
+        assertEquals(" &6✪✪✪✪✪&c➋", ItemBuilder.stars(DUNGEON_SWORD, tag));
+        NBTTagCompound helmet = data(HELMET);
+        helmet.setInt("upgrade_count", 6);
+        assertEquals(" &d✪&6✪✪✪✪", ItemBuilder.stars(HELMET, helmet));
     }
 
     /** One rarity up, in the name and the rarity line, from the item's own rarity and the flag. */
     @Test
     void recombobulated() {
-        SkyBlockItem hyperion = ItemRegistry.get("HYPERION");
-        NBTTagCompound tag = data("HYPERION");
+        NBTTagCompound tag = data(DUNGEON_SWORD);
         tag.setBoolean("recombobulated", true);
-        assertEquals(Rarity.MYTHIC, ItemBuilder.rarity(hyperion, tag));
-        assertEquals("§dHyperion", ItemBuilder.name(hyperion, tag));
-        List<String> lore = lore("HYPERION", tag);
+        assertEquals(Rarity.MYTHIC, ItemBuilder.rarity(DUNGEON_SWORD, tag));
+        assertEquals("§dTest Dungeon Sword", ItemBuilder.name(DUNGEON_SWORD, tag));
+        List<String> lore = ItemBuilder.lore(DUNGEON_SWORD, tag);
         assertEquals("§d§l&ka&r §d§lMYTHIC DUNGEON SWORD §d§l&ka", lore.get(lore.size() - 1));
     }
 
     /** Items used to keep their rarity in their data too; what they show now is the item's. */
     @Test
     void storedRarityIsIgnored() {
-        SkyBlockItem hyperion = ItemRegistry.get("HYPERION");
-        NBTTagCompound tag = data("HYPERION");
+        NBTTagCompound tag = data(DUNGEON_SWORD);
         tag.setString("rarity", "COMMON");
-        assertEquals(Rarity.LEGENDARY, ItemBuilder.rarity(hyperion, tag));
+        assertEquals(Rarity.LEGENDARY, ItemBuilder.rarity(DUNGEON_SWORD, tag));
         // As /recombobulate left them: the upgraded rarity stored as well as the flag.
         tag.setString("rarity", "MYTHIC");
         tag.setBoolean("recombobulated", true);
-        assertEquals(Rarity.MYTHIC, ItemBuilder.rarity(hyperion, tag));
+        assertEquals(Rarity.MYTHIC, ItemBuilder.rarity(DUNGEON_SWORD, tag));
     }
 
     @Test
