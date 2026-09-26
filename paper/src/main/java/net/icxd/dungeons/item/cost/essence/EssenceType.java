@@ -8,5 +8,6 @@ public enum EssenceType {
     GOLD,
     DIAMOND,
     ICE,
-    CRIMSON;
+    CRIMSON,
+    FOREST;
 }

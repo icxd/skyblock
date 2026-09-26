@@ -17,15 +17,16 @@ public class EssenceCost extends Cost {
         return user.getDocument().get("dungeons", Document.class).get("essence", Document.class);
     }
 
+    // An essence added since the player's data was made (Forest) isn't in it yet: they have none of it.
     @Override
     public boolean canPay(Player player, User user) {
-        return essence(user).getInteger(essenceType.name().toLowerCase()) >= amount;
+        return essence(user).getInteger(essenceType.name().toLowerCase(), 0) >= amount;
     }
 
     @Override
     public void pay(Player player, User user) {
         Document essence = essence(user);
         String key = essenceType.name().toLowerCase();
-        essence.append(key, essence.getInteger(key) - amount);
+        essence.append(key, essence.getInteger(key, 0) - amount);
     }
 }

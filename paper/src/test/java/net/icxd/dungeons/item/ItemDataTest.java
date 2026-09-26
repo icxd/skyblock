@@ -295,6 +295,42 @@ class ItemDataTest {
         assertNull(bag.gemstoneSlots());
     }
 
+    /**
+     * The Rift's stats read as its items write them (Rift Time in seconds, "Hearts", and the ordinary stats'
+     * names), in Hypixel's order with the rest; and the gemstones, essence and slayer boss added with them.
+     */
+    @Test
+    void riftStatsAndLaterNames() throws IOException {
+        ItemData.Result result = load("""
+                "TEST_CHARM":{"gemstone_slots":[{"type":"AQUAMARINE"},{"costs":[{"amount":5,"essence":"FOREST"}],"type":"CHISEL"}],\
+                "material":"STONE","name":"Test Charm","requirements":[{"level":2,"slayer_boss_type":"vampire","type":"SLAYER"}],\
+                "stats":{"BONUS_PEST_CHANCE":2.5,"HEALTH":10,"RIFT_HEALTH":1,"RIFT_INTELLIGENCE":20,"RIFT_MANA_REGEN":5,"RIFT_TIME":55,\
+                "RIFT_WALK_SPEED":-4,"SWEEP":3}}""");
+        assertEquals(List.of(), result.errors());
+        assertEquals(List.of(), result.warnings());
+        DataItem charm = result.items().get("TEST_CHARM");
+        assertEquals(List.of(
+                "&7Health: &c+10",
+                "&7Bonus Pest Chance: &2+2.5%",
+                "&7Sweep: &2+3",
+                "&7Rift Time: &a+55s",
+                "&7Hearts: &c+1",
+                "&7Intelligence: &b+20",
+                "&7Speed: &f-4",
+                "&7Mana Regen: &b+5%",
+                "&7Gemstones: &8[&7☂&8] &8[❥]",
+                "",
+                "§f§lCOMMON"), ItemBuilder.lore(charm, fresh(charm)));
+        // The Rift's own stats, not the ordinary ones named the same.
+        assertEquals(0, charm.stats().get(Stat.INTELLIGENCE));
+        assertEquals(0, charm.stats().get(Stat.SPEED));
+        List<GemstoneSlot> slots = charm.gemstoneSlots().getSlots();
+        assertEquals(List.of(GemstoneType.AQUAMARINE, GemstoneType.CHISEL), slots.stream().map(GemstoneSlot::getType).toList());
+        assertEquals(EssenceType.FOREST, assertInstanceOf(EssenceCost.class, slots.get(1).getCosts().get(0)).getEssenceType());
+        SlayerRequirement vampire = assertInstanceOf(SlayerRequirement.class, charm.requirements().getRequirements().get(0));
+        assertEquals(List.of("&4☠ &cRequires &5Vampire Slayer 2&c."), vampire.lore());
+    }
+
     @Test
     void wholeFileFailures() {
         assertThrows(IOException.class, () -> ItemData.load(new StringReader("{\"format\":2,\"items\":{}}")));

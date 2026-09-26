@@ -1,7 +1,7 @@
 package net.icxd.dungeons.item.requirement.slayer;
 
 public enum SlayerBossType {
-    ZOMBIE, SPIDER, WOLF, ENDERMAN, BLAZE;
+    ZOMBIE, SPIDER, WOLF, ENDERMAN, BLAZE, VAMPIRE;
 
     public String getName() {
         StringBuilder name = new StringBuilder();

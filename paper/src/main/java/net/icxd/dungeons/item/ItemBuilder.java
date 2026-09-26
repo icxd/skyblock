@@ -285,8 +285,8 @@ public final class ItemBuilder {
     }
 
     /**
-     * Each stat the item has, in Hypixel's order: the total (with {@code %} for percentage stats), then
-     * what the upgrades and reforge add, then (on dungeon items) what it comes to in a dungeon.
+     * Each stat the item has, in Hypixel's order: the total (with its unit, {@code %} or Rift Time's {@code s}),
+     * then what the upgrades and reforge add, then (on dungeon items) what it comes to in a dungeon.
      */
     static List<String> statLines(SkyBlockItem item, NBTTagCompound tag, Rarity rarity, Player owner) {
         List<String> lines = new ArrayList<>();
@@ -311,15 +311,15 @@ public final class ItemBuilder {
             // What enchantments grant counts in the total, with no bracket of its own.
             double shown = base.get(stat) + starBonus + potatoBooks + artOfWar + reforged + enchanted.get(stat);
             if (shown == 0) continue;
-            String percent = stat.isPercent() ? "%" : "";
+            String unit = stat.getUnit();
             StringBuilder line = new StringBuilder("&7").append(stat.getDisplayName()).append(": &").append(stat.getLoreColor())
-                    .append(Text.signed(shown)).append(percent);
+                    .append(Text.signed(shown)).append(unit);
             if (potatoBooks != 0) line.append(" &e(").append(Text.signed(potatoBooks)).append(")");
             if (artOfWar != 0) line.append(" &6[").append(Text.signed(artOfWar)).append("]");
-            if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(percent).append(")");
+            if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(unit).append(")");
             if (item.dungeonItem() && shown > 0) {
                 double factor = NOT_SCALED.contains(stat) ? 1 : 1 + 0.1 * stars + (CATACOMBS_SCALED.contains(stat) ? catacombs : 0);
-                line.append(" &8(").append(Text.signed((shown - starBonus) * factor)).append(percent).append(")");
+                line.append(" &8(").append(Text.signed((shown - starBonus) * factor)).append(unit).append(")");
             }
             lines.add(line.toString());
         }
