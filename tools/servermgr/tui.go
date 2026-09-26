@@ -28,8 +28,11 @@ const (
 )
 
 type (
-	statusMsg   []Status
-	logMsg      struct{ name string; lines []string }
+	statusMsg []Status
+	logMsg    struct {
+		name  string
+		lines []string
+	}
 	mongoMsg    bool
 	javaMsg     string
 	progressMsg struct {
@@ -107,8 +110,10 @@ func (m *model) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func tick() tea.Cmd    { return tea.Tick(2*time.Second, func(t time.Time) tea.Msg { return tickMsg(t) }) }
-func logTick() tea.Cmd { return tea.Tick(500*time.Millisecond, func(t time.Time) tea.Msg { return logTickMsg(t) }) }
+func tick() tea.Cmd { return tea.Tick(2*time.Second, func(t time.Time) tea.Msg { return tickMsg(t) }) }
+func logTick() tea.Cmd {
+	return tea.Tick(500*time.Millisecond, func(t time.Time) tea.Msg { return logTickMsg(t) })
+}
 
 func (m *model) refresh() tea.Cmd {
 	n := m.net
@@ -815,4 +820,3 @@ func truncate(s string, width int) string {
 	}
 	return string(r) + "…"
 }
-

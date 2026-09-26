@@ -360,7 +360,7 @@ func cmdConsole(n *Network, name string) error {
 	fmt.Println(dimStyle.Render("Console for " + name + ". Commands run on the server; Ctrl+D or \"exit\" leaves."))
 	in := bufio.NewScanner(os.Stdin)
 	for {
-		fmt.Print(okStyle.Render(name+"> "))
+		fmt.Print(okStyle.Render(name + "> "))
 		if !in.Scan() {
 			fmt.Println()
 			return nil
