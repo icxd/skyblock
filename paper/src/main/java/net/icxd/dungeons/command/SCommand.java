@@ -5,7 +5,7 @@ import net.icxd.dungeons.command.exceptions.CommandArgumentException;
 import net.icxd.dungeons.command.exceptions.CommandFailException;
 import net.icxd.dungeons.command.exceptions.CommandPermissionException;
 import net.icxd.dungeons.command.exceptions.PlayerNotFoundException;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

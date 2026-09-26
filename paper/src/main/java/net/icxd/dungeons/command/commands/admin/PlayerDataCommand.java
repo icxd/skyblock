@@ -31,7 +31,7 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;

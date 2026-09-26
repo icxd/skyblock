@@ -140,6 +140,12 @@ func (n *Network) start(name string) error {
 	if _, err := os.Stat(filepath.Join(t.dir, t.jar)); err != nil {
 		return fmt.Errorf("%s has no %s", name, t.jar)
 	}
+	if name == proxyDirName {
+		// Networks made before the proxy plugin had settings of its own.
+		if err := n.ensureProxyConfig(); err != nil {
+			return err
+		}
+	}
 	log, err := os.Create(filepath.Join(t.dir, consoleFileName))
 	if err != nil {
 		return err

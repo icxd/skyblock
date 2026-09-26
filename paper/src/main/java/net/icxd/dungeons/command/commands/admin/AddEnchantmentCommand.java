@@ -8,7 +8,7 @@ import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
 import net.icxd.dungeons.item.enchanting.EnchantmentType;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.item.nbt.ItemNBT;

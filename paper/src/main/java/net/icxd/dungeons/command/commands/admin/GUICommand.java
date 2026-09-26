@@ -3,7 +3,7 @@ package net.icxd.dungeons.command.commands.admin;
 import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 
 @CommandParameters(permission = Rank.STAFF, usage = "/<command>", description = "Opens the GUI.", aliases = "gui")
 public class GUICommand extends SCommand {

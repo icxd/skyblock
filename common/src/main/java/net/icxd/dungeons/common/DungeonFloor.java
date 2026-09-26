@@ -1,6 +1,6 @@
-package net.icxd.dungeons.dungeons;
+package net.icxd.dungeons.common;
 
-import lombok.Getter;
+import java.util.Locale;
 
 /**
  * Map sizes are what the map mods hard-code (Odin, Skytils), in rooms including the special
@@ -14,7 +14,6 @@ import lombok.Getter;
  * on the small floors, 3-4 on F4-F6 (captured F6 runs had 3, 4 and 3), 4-5 on F7 (from play
  * experience, no captures yet).
  */
-@Getter
 public enum DungeonFloor {
     ENTRANCE("Entrance", false, 0, 4, 4, 2, 3, 0, false),
     FLOOR_1("Floor 1", false, 1, 4, 5, 2, 3, 0, false),
@@ -54,5 +53,40 @@ public enum DungeonFloor {
         this.maxPuzzles = maxPuzzles;
         this.traps = traps;
         this.specialColumn = specialColumn;
+    }
+
+    public String getName() { return name; }
+    public boolean isMasterMode() { return masterMode; }
+    public int getNumber() { return number; }
+    public int getMaxXSize() { return maxXSize; }
+    public int getMaxZSize() { return maxZSize; }
+    public int getMinPuzzles() { return minPuzzles; }
+    public int getMaxPuzzles() { return maxPuzzles; }
+    public int getTraps() { return traps; }
+    public int getMinibosses() { return minibosses; }
+    public boolean isSpecialColumn() { return specialColumn; }
+
+    private static final String[] NUMBERS = {"ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN"};
+
+    /** E, F1-F7 or M1-M7. */
+    public String getShortName() {
+        return number == 0 ? "E" : (masterMode ? "M" : "F") + number;
+    }
+
+    /** Hypixel's name for it in {@code /joininstance}: CATACOMBS_ENTRANCE, CATACOMBS_FLOOR_SEVEN, MASTER_CATACOMBS_FLOOR_ONE, ... */
+    public String getInstanceName() {
+        if (number == 0) return "CATACOMBS_ENTRANCE";
+        return (masterMode ? "MASTER_" : "") + "CATACOMBS_FLOOR_" + NUMBERS[number - 1];
+    }
+
+    /** From E, F7, M3, 7, ENTRANCE, FLOOR_7 or an instance name; null if it's none of those. */
+    public static DungeonFloor parse(String text) {
+        String a = text.toUpperCase(Locale.ROOT);
+        if (a.equals("E") || a.equals("ENTRANCE") || a.equals("0")) return ENTRANCE;
+        for (DungeonFloor f : values()) {
+            if (f.name().equals(a) || f.getInstanceName().equals(a) || f.getShortName().equals(a)) return f;
+            if (!f.masterMode && f.number > 0 && a.equals(String.valueOf(f.number))) return f;
+        }
+        return null;
     }
 }

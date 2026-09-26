@@ -1,6 +1,6 @@
 package net.icxd.dungeons.command;
 
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

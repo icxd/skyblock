@@ -36,6 +36,9 @@ The network lives in `./network` unless you pass `--dir FOLDER` or set `SKYBLOCK
 - **Proxy** (`network/proxy`): Velocity with modern forwarding and a random forwarding secret,
   online mode on. `velocity.toml` is yours to edit, except `[servers]`, which servermgr rewrites
   when servers are added or removed (and tells a running proxy to reload).
+  The SkyBlock proxy plugin (parties, dungeon queue, safe server switches; see `proxy/README.md`)
+  gets `plugins/skyblock/config.properties` with the network's MongoDB; `dungeons.runs-per-server`
+  and `party.max-size` in there are yours to tune.
 - **Paper servers** (`network/servers/NAME`): Paper 26.2, bound to 127.0.0.1 so they're only reachable
   through the proxy, offline mode with the proxy's secret, RCON on a local port with a random
   password, and a flat world. Plugins: the SkyBlock plugin from the repository build, WorldEdit and

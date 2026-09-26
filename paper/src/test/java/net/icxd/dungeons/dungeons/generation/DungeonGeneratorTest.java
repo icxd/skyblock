@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.room.DoorSlot;
 import net.icxd.dungeons.dungeons.generation.room.HypixelRooms;

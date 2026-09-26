@@ -7,7 +7,7 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.Rarity;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;

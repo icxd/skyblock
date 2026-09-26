@@ -11,6 +11,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.DoorType;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
@@ -152,6 +153,18 @@ public final class PastePlan {
   /** Rooms or doors that couldn't be planned; they're left out. */
   public List<String> problems() {
     return problems;
+  }
+
+  /** Everything any floor can take up at this base, from the lowest to the highest block any room has. */
+  public static Box largestArea(RoomLibrary library, int baseX, int baseZ) {
+    int width = 0;
+    int height = 0;
+    for (DungeonFloor floor : DungeonFloor.values()) {
+      width = Math.max(width, floor.getMaxXSize());
+      height = Math.max(height, floor.getMaxZSize());
+    }
+    return new Box(new Block(baseX, library.minY(), baseZ),
+        new Block(baseX + PITCH * width - 2, library.maxY(), baseZ + PITCH * height - 2));
   }
 
   /** The whole map, from the lowest to the highest block any room has. */

@@ -51,11 +51,13 @@ public class InventorySyncListener implements Listener {
     }
 
     // A player whose data has been handed off is on their way to another server: what happens to
-    // their items here isn't saved, so nothing may leave or enter their inventory.
+    // their items here isn't saved, so nothing may leave or enter their inventory. The same goes
+    // for the moment between taking their data back (they didn't go after all) and putting its
+    // inventory on them.
 
     private static boolean frozen(HumanEntity player) {
         User user = User.cached(player.getUniqueId());
-        return user != null && user.isReleased();
+        return user == null || user.isReleased() || !user.isInventoryRestored();
     }
 
     private static void freeze(HumanEntity player, Cancellable event) {

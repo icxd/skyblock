@@ -3,7 +3,7 @@ package net.icxd.dungeons.database.collections;
 import net.icxd.dungeons.database.ICollection;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import org.bson.Document;
 
 import java.util.ArrayList;

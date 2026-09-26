@@ -8,6 +8,8 @@ import static com.mongodb.client.model.Updates.inc;
 import static com.mongodb.client.model.Updates.set;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +36,9 @@ import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
 /**
  * Keeps each player's data held by one server at a time, so it can move between servers behind a
  * proxy without one server overwriting what another saved.
@@ -59,6 +64,9 @@ public final class UserStore {
   private static final long AUTOSAVE_MILLIS = 60_000;
   /** Data claimed for a login that never joined (refused later, or the connection dropped) is released after this. */
   private static final long ABANDONED_AFTER_MILLIS = 30_000;
+  /** Taking back a handed-off player's data is tried this often, this far apart, before they're sent to rejoin. */
+  private static final int RECLAIM_ATTEMPTS = 8;
+  private static final long RECLAIM_RETRY_TICKS = 5 * 20;
   private static final FindOneAndUpdateOptions AFTER = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
 
   /** Why a login can't have its data yet. */
@@ -77,6 +85,8 @@ public final class UserStore {
   private final MongoCollection<Document> users;
   private final MongoCollection<Document> servers;
   private final ExecutorService writer = Executors.newSingleThreadExecutor(r -> new Thread(r, "user-saves"));
+  /** Players whose data is being taken back right now. Main thread. */
+  private final Set<UUID> reclaiming = new HashSet<>();
 
   /** @param server this server's name; every server on the network needs its own */
   public UserStore(Plugin plugin, String server, String type, MongoCollection<Document> users, MongoCollection<Document> servers,
@@ -275,7 +285,7 @@ public final class UserStore {
    * Saves and releases a player's data before they're sent to another server; send them once this
    * completes. It stays readable here until they leave, but nothing more is saved from this
    * server, and their items are frozen (see InventorySyncListener) so nothing is lost or
-   * duplicated in between. If they don't go after all, {@link #claim} it back. Main thread.
+   * duplicated in between. If they don't go after all, {@link #reclaim} it. Main thread.
    */
   public CompletableFuture<Void> handOff(Player player) {
     User user = User.cached(player.getUniqueId());
@@ -285,6 +295,60 @@ public final class UserStore {
       player.closeInventory();
     }
     return release(user);
+  }
+
+  /**
+   * Takes back the data of a handed-off player who is still here: the move didn't happen. If the
+   * server they were going to holds it for now (a login there that never finished), this keeps
+   * trying for a while, then asks them to rejoin. Their items stay frozen until it's back. Main
+   * thread.
+   */
+  public void reclaim(Player player) {
+    reclaim(player, 0);
+  }
+
+  private void reclaim(Player player, int attempt) {
+    UUID uuid = player.getUniqueId();
+    User user = User.cached(uuid);
+    if (!player.isOnline() || user == null || !user.isReleased() || !reclaiming.add(uuid)) return;
+    String name = player.getName();
+    String ip = player.getAddress().getAddress().getHostAddress();
+    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+      User claimed = null;
+      try {
+        claimed = claim(uuid, name, ip);
+      } catch (HeldElsewhereException e) {
+        // Still held over there; try again below.
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (RuntimeException e) {
+        log.log(Level.SEVERE, "Couldn't take back " + name + "'s data", e);
+      }
+      User result = claimed;
+      Bukkit.getScheduler().runTask(plugin, () -> {
+        reclaiming.remove(uuid);
+        if (result == null) {
+          if (!player.isOnline()) return;
+          if (attempt + 1 < RECLAIM_ATTEMPTS) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> reclaim(player, attempt + 1), RECLAIM_RETRY_TICKS);
+          } else {
+            player.kick(Component.text("Couldn't load your profile, please rejoin.", NamedTextColor.RED));
+          }
+          return;
+        }
+        if (!player.isOnline()) {
+          if (User.cached(uuid) == result) leave(result);
+          return;
+        }
+        try {
+          restoreInventory(player, result);
+          log.info("Took back " + name + "'s data: they stayed on this server");
+        } catch (StoredInventory.NewerDataException | RuntimeException e) {
+          log.log(Level.SEVERE, "Couldn't restore " + name + "'s inventory after taking their data back", e);
+          player.kick(Component.text("Couldn't load your profile, please rejoin.", NamedTextColor.RED));
+        }
+      });
+    });
   }
 
   /**

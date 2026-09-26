@@ -5,7 +5,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.room.Room;
 import net.icxd.dungeons.dungeons.generation.room.RoomShape;
 import net.icxd.dungeons.dungeons.generation.room.RoomType;

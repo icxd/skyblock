@@ -6,7 +6,7 @@ import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import org.bukkit.entity.Player;
 
 @CommandParameters(permission = Rank.STAFF)

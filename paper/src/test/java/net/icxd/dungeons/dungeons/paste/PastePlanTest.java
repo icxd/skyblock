@@ -21,7 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.DoorType;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
 import net.icxd.dungeons.dungeons.generation.DungeonGenerator;

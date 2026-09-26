@@ -12,7 +12,7 @@ import net.icxd.dungeons.item.ability.Ability;
 import net.icxd.dungeons.item.enums.DungeonStar;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.stats.StatsRunnable;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;

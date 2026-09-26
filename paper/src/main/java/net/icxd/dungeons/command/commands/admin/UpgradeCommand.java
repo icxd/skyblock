@@ -11,7 +11,7 @@ import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bson.Document;

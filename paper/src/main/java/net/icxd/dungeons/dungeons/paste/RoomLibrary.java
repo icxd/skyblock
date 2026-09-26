@@ -22,7 +22,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.DoorType;
 import net.icxd.dungeons.dungeons.generation.RoomPool;
 import net.icxd.dungeons.dungeons.generation.room.DoorSlot;

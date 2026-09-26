@@ -6,7 +6,7 @@ import java.util.Set;
 
 import lombok.Builder;
 import lombok.Getter;
-import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.secrets.Secret;
 
 /**

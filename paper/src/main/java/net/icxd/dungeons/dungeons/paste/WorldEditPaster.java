@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -76,10 +77,22 @@ public final class WorldEditPaster {
       .with(SideEffect.UPDATE, SideEffect.State.OFF);
 
   private final World world;
+  /** Emptied before pasting instead of the plan's own clears; null for the plan's. */
+  private final List<Box> clearFirst;
   private final Map<Path, Clipboard> clipboards = new ConcurrentHashMap<>();
 
   public WorldEditPaster(World world) {
+    this(world, null);
+  }
+
+  /**
+   * @param clearFirst what to empty before pasting, instead of the spots the plan clears (which
+   *     assume the same size of floor was there before): nothing for a new world, or the whole area
+   *     any floor can take up when reusing one
+   */
+  public WorldEditPaster(World world, List<Box> clearFirst) {
     this.world = world;
+    this.clearFirst = clearFirst;
   }
 
   /** @param error why it stopped early, or null */
@@ -111,14 +124,17 @@ public final class WorldEditPaster {
 
   private void pasteLoaded(Plugin plugin, PastePlan plan, Consumer<Result> done, long start) {
     // Armor stands and the like from an earlier paste would otherwise be doubled.
-    Box area = plan.area();
-    BoundingBox box = new BoundingBox(area.min().x(), area.min().y(), area.min().z(), area.max().x() + 1, area.max().y() + 1, area.max().z() + 1);
-    for (Entity entity : world.getNearbyEntities(box)) {
-      if (!(entity instanceof Player)) entity.remove();
+    List<Box> areas = new ArrayList<>(List.of(plan.area()));
+    if (clearFirst != null) areas.addAll(clearFirst);
+    for (Box area : areas) {
+      BoundingBox box = new BoundingBox(area.min().x(), area.min().y(), area.min().z(), area.max().x() + 1, area.max().y() + 1, area.max().z() + 1);
+      for (Entity entity : world.getNearbyEntities(box)) {
+        if (!(entity instanceof Player)) entity.remove();
+      }
     }
 
     Deque<Step> steps = new ArrayDeque<>();
-    for (Box clear : plan.clears()) {
+    for (Box clear : clearFirst != null ? clearFirst : plan.clears()) {
       for (Box slice : slices(clear)) {
         // Only blocks that aren't air already; most of a fresh world is.
         CuboidRegion region = new CuboidRegion(vector(slice.min()), vector(slice.max()));

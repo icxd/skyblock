@@ -25,8 +25,9 @@ import net.kyori.adventure.text.Component;
 import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
-import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.dungeons.generation.DungeonGenerator;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
@@ -38,7 +39,7 @@ import net.icxd.dungeons.dungeons.generation.utils.Position;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.dungeons.paste.RoomLibrary;
 import net.icxd.dungeons.dungeons.paste.WorldEditPaster;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 
 /**
  * {@code /dungeon [floor] [seed]}: generates a layout, prints it to the console and builds a
@@ -138,7 +139,7 @@ public class DungeonCommand extends SCommand {
       log.info(summary);
       if (player != null && player.isOnline()) {
         PastePlan.Block entrance = plan.entrance();
-        player.teleport(standingSpot(world, entrance.x(), entrance.y(), entrance.z()));
+        player.teleport(RunManager.standingSpot(world, entrance.x(), entrance.y(), entrance.z()));
       }
       source.send(ChatColor.GREEN + summary);
       if (issues > 0) source.send(ChatColor.RED + "" + issues + " problems, see console.");
@@ -146,7 +147,7 @@ public class DungeonCommand extends SCommand {
   }
 
   private static DungeonFloor floor(CommandSource source, String[] args) {
-    DungeonFloor floor = args.length > 0 ? parseFloor(args[0]) : DungeonFloor.FLOOR_7;
+    DungeonFloor floor = args.length > 0 ? DungeonFloor.parse(args[0]) : DungeonFloor.FLOOR_7;
     if (floor == null) source.send(ChatColor.RED + "Unknown floor " + args[0] + ", use E, F1-F7 or M1-M7.");
     return floor;
   }
@@ -171,26 +172,7 @@ public class DungeonCommand extends SCommand {
     problems.forEach(p -> log.warning("INVALID: " + p));
   }
 
-  /** First spot at or above y with two free blocks over something to stand on. */
-  private static Location standingSpot(World world, int x, int y, int z) {
-    for (int top = Math.min(y + 60, 254); y < top; y++) {
-      if (world.getBlockAt(x, y - 1, z).getType().isSolid() && !world.getBlockAt(x, y, z).getType().isSolid()
-          && !world.getBlockAt(x, y + 1, z).getType().isSolid()) {
-        break;
-      }
-    }
-    return new Location(world, x + 0.5, y, z + 0.5);
-  }
 
-  private static DungeonFloor parseFloor(String arg) {
-    String a = arg.toUpperCase();
-    if (a.equals("E") || a.equals("ENTRANCE")) return DungeonFloor.ENTRANCE;
-    for (DungeonFloor f : DungeonFloor.values()) {
-      if (f.name().equals(a)) return f;
-      if (f.getNumber() > 0 && a.equals((f.isMasterMode() ? "M" : "F") + f.getNumber())) return f;
-    }
-    return null;
-  }
 
   private static void renderPreview(DungeonLayout layout, World world) {
     Set<Integer> path = new HashSet<>(layout.getCriticalPath());

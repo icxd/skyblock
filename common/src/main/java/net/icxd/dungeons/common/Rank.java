@@ -1,6 +1,6 @@
-package net.icxd.dungeons.user;
+package net.icxd.dungeons.common;
 
-import net.icxd.dungeons.utils.Utils;
+/** Chat ranks, with their prefix and colour in section-sign codes. */
 
 public enum Rank {
     DEFAULT("&7", "&7", 0, 'Z'),
@@ -10,14 +10,14 @@ public enum Rank {
     YOUTUBE("&c[&fYOUTUBE&c] ", "&c", 4, 'E'),
     STAFF("&c[&6ዞ&c] ", "&c", 5, 'A');
 
-    private String prefix;
-    private String color;
+    private final String prefix;
+    private final String color;
     private final int priority;
     private final char character;
 
     Rank(String prefix, String color, int priority, char c) {
-        this.prefix = Utils.color(prefix);
-        this.color = Utils.color(color);
+        this.prefix = prefix.replace('&', '\u00a7');
+        this.color = color.replace('&', '\u00a7');
         this.priority = priority;
         this.character = c;
     }
@@ -38,16 +38,8 @@ public enum Rank {
         return this.prefix;
     }
 
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
     public String getColor() {
         return this.color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
     }
 
     public int getPriority() {

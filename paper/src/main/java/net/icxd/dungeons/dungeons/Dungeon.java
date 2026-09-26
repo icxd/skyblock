@@ -1,11 +1,14 @@
 package net.icxd.dungeons.dungeons;
 
 import lombok.Getter;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,9 +29,14 @@ public class Dungeon {
     private long endTime;
 
     public Dungeon(Player owner, DungeonFloor floor) {
-        this.id = UUID.randomUUID();
-        this.owner = owner.getUniqueId();
-        this.players = new LinkedHashSet<>();
+        this(UUID.randomUUID(), owner.getUniqueId(), List.of(), floor);
+    }
+
+    /** A run the proxy sent a party to (see RunManager): its id and members come from there. */
+    public Dungeon(UUID id, UUID owner, Collection<UUID> members, DungeonFloor floor) {
+        this.id = id;
+        this.owner = owner;
+        this.players = new LinkedHashSet<>(members);
         this.deadPlayers = new LinkedHashSet<>();
         this.floor = floor;
         this.state = DungeonState.NONE;

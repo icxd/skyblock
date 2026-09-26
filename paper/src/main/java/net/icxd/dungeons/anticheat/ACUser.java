@@ -3,7 +3,7 @@ package net.icxd.dungeons.anticheat;
 import lombok.Getter;
 import net.icxd.dungeons.anticheat.check.Check;
 import net.icxd.dungeons.anticheat.check.CheckResult;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.entity.Player;

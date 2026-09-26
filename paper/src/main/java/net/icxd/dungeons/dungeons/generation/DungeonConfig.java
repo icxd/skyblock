@@ -2,7 +2,7 @@ package net.icxd.dungeons.dungeons.generation;
 
 import java.util.Map;
 
-import net.icxd.dungeons.dungeons.DungeonFloor;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.room.RoomShape;
 
 /**

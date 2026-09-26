@@ -78,7 +78,7 @@ func initNetwork(o InitOptions, progress func(string)) (*Network, error) {
 }
 
 // writeProxyFiles writes velocity.toml (all of it only when fresh; otherwise just [servers]), the
-// forwarding secret and the remote console settings.
+// forwarding secret, the remote console settings and the proxy plugin's config.
 func (n *Network) writeProxyFiles(fresh bool) error {
 	dir := n.proxyDir()
 	if err := os.MkdirAll(filepath.Join(dir, "plugins", "skyblock"), 0o755); err != nil {
@@ -90,6 +90,9 @@ func (n *Network) writeProxyFiles(fresh bool) error {
 	console := fmt.Sprintf("# Written by servermgr: the remote console it uses to run proxy commands.\nport=%d\npassword=%s\n",
 		n.Proxy.RconPort, n.Proxy.RconPassword)
 	if err := os.WriteFile(filepath.Join(dir, "plugins", "skyblock", "remote-console.properties"), []byte(console), 0o600); err != nil {
+		return err
+	}
+	if err := n.ensureProxyConfig(); err != nil {
 		return err
 	}
 	path := filepath.Join(dir, "velocity.toml")
@@ -203,6 +206,27 @@ type CreateOptions struct {
 	Name   string
 	Type   string
 	Memory string
+}
+
+// ensureProxyConfig writes the proxy plugin's config.properties with the network's MongoDB, unless
+// it's there already (it's the user's to tune after that).
+func (n *Network) ensureProxyConfig() error {
+	path := filepath.Join(n.proxyDir(), "plugins", "skyblock", "config.properties")
+	if _, err := os.Stat(path); err == nil {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	config := fmt.Sprintf(`# SkyBlock proxy plugin settings (written by servermgr; yours to change).
+# The same MongoDB as the Paper servers: server types and load, ranks, and dungeon runs come from it.
+mongodb.uri=%s
+mongodb.database=%s
+# How many dungeon runs share one dungeon server before parties go to another (or wait in line).
+dungeons.runs-per-server=4
+party.max-size=10
+`, n.MongoURI, n.MongoDatabase)
+	return os.WriteFile(path, []byte(config), 0o600)
 }
 
 // createServer adds a Paper server, set up to sit behind the proxy.

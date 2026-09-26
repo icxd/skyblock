@@ -1,6 +1,7 @@
 package net.icxd.dungeons.user;
 
 import lombok.Getter;
+import net.icxd.dungeons.common.Rank;
 import lombok.Setter;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.bank.BankTransaction;

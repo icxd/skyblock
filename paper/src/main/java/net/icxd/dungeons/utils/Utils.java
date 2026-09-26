@@ -2,7 +2,7 @@ package net.icxd.dungeons.utils;
 
 import com.destroystokyo.paper.profile.ProfileProperty;
 import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.user.Rank;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;

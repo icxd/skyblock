@@ -9,9 +9,13 @@ import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.database.ICollection;
 import net.icxd.dungeons.database.collections.UserCollection;
 import net.icxd.dungeons.database.mongo.Settings;
+import net.icxd.dungeons.common.Runs;
+import net.icxd.dungeons.common.ServerType;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.entity.EntityRegistry;
 import net.icxd.dungeons.entity.EntityRunnable;
 import net.icxd.dungeons.item.ItemRegistry;
+import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.rune.RuneRunnable;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.stats.StatsRunnable;
@@ -32,6 +36,8 @@ public class Dungeons extends JavaPlugin {
     @Getter private static MongoClient mongoClient;
     @Getter private static ICollection userCollection;
     @Getter private static UserStore userStore;
+    @Getter private static ProxyLink proxyLink;
+    private RunManager runManager;
 
     @Getter
     public CommandMap commandMap;
@@ -54,6 +60,12 @@ public class Dungeons extends JavaPlugin {
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
                 mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection::defaultDocument);
         userStore.start();
+        proxyLink = new ProxyLink(this, userStore);
+        if (skyBlockServer.getServerType() == ServerType.DUNGEONS) {
+            runManager = new RunManager(this, skyBlockServer.getName(),
+                    mongoClient.getDatabase(Settings.DATABASE).getCollection(Runs.COLLECTION), proxyLink);
+            runManager.start();
+        }
 
         new CheckHandler();
         new ItemRegistry();
@@ -99,6 +111,7 @@ public class Dungeons extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (runManager != null) runManager.stop();
         if (userStore != null) userStore.stop();
         if (mongoClient != null) mongoClient.close();
         instance = null;
