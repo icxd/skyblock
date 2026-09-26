@@ -91,17 +91,20 @@ func (n *Network) deploy(o DeployOptions, output func(string)) error {
 	}
 	var restart []string
 	if paper != "" {
+		var installed []*Server
 		for _, s := range n.Servers {
 			if err := installJar(paper, filepath.Join(n.serverDir(s), "plugins"), "skyblock-dungeons-"); err != nil {
 				output(fmt.Sprintf("! %s: %v", s.Name, err))
 				continue
 			}
-			// Servers made before a data folder was linked in get it now.
-			n.linkData(s, output)
+			installed = append(installed, s)
 			if n.state(s.Name).Alive {
 				restart = append(restart, s.Name)
 			}
 		}
+		// Servers made before a data folder was linked in get it now. All at once, so what the data
+		// folder lacks is said once, not once per server.
+		n.linkData(installed, output)
 		output(fmt.Sprintf("Installed %s on %d servers", filepath.Base(paper), len(n.Servers)))
 	}
 	if proxy != "" {

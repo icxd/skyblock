@@ -22,8 +22,7 @@ func TestLinkData(t *testing.T) {
 	progress := func(m string) { messages = append(messages, m) }
 
 	for i := 0; i < 2; i++ { // the second time finds its links already there
-		n.linkData(hub, progress)
-		n.linkData(dungeon, progress)
+		n.linkData([]*Server{hub, dungeon}, progress)
 	}
 	if len(messages) > 0 {
 		t.Fatalf("unexpected messages: %v", messages)
@@ -48,7 +47,7 @@ func TestLinkData(t *testing.T) {
 		t.Fatal(err)
 	}
 	messages = nil
-	n.linkData(other, progress)
+	n.linkData([]*Server{other}, progress)
 	if len(messages) != 1 || !strings.Contains(messages[0], "isn't a link") {
 		t.Errorf("want one warning about hub02's own items folder, got %v", messages)
 	}
@@ -57,12 +56,72 @@ func TestLinkData(t *testing.T) {
 	n.DungeonData = filepath.Join(root, "empty")
 	messages = nil
 	fresh := &Server{Name: "hub03", Type: "LOBBY"}
-	n.linkData(fresh, progress)
+	n.linkData([]*Server{fresh}, progress)
 	if len(messages) != 1 || !strings.Contains(messages[0], "no items/") {
 		t.Errorf("want one message about the missing items/, got %v", messages)
 	}
 	if _, err := os.Lstat(filepath.Join(plugin(fresh), "items")); err == nil {
 		t.Error("hub03 got a link to nothing")
+	}
+}
+
+// What's missing from the data checkout is the same for every server, so deploy says it once.
+func TestDeploySaysOnceWhatDataIsMissing(t *testing.T) {
+	root := t.TempDir()
+	repo := filepath.Join(root, "skyblock")
+	jar := filepath.Join(repo, "paper", "target", "skyblock-dungeons-1.0.jar")
+	if err := os.MkdirAll(filepath.Dir(jar), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(jar, []byte("jar"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := &Network{Dir: filepath.Join(root, "network"), Repo: repo, Servers: []*Server{
+		{Name: "hub01", Type: "LOBBY"}, {Name: "hub02", Type: "LOBBY"},
+		{Name: "dungeon01", Type: "DUNGEONS"}, {Name: "dungeon02", Type: "DUNGEONS"},
+	}}
+	count := func(dungeonData, text string) int {
+		n.DungeonData = dungeonData
+		var messages []string
+		if err := n.deploy(DeployOptions{}, func(m string) { messages = append(messages, m) }); err != nil {
+			t.Fatal(err)
+		}
+		times := 0
+		for _, m := range messages {
+			if strings.Contains(m, text) {
+				times++
+			}
+		}
+		return times
+	}
+
+	if got := count("", "No data folder configured"); got != 1 {
+		t.Errorf("with no data folder, want the notice once per deploy, got it %d times", got)
+	}
+	empty := filepath.Join(root, "empty")
+	if err := os.MkdirAll(empty, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if got := count(empty, "no items/"); got != 1 {
+		t.Errorf("with no items/ in the data folder, want that said once per deploy, got it %d times", got)
+	}
+	if got := count(empty, "no rooms/"); got != 1 {
+		t.Errorf("with no rooms/ in the data folder, want that said once per deploy, got it %d times", got)
+	}
+
+	// Once the checkout has them, the same deploy links them into every server.
+	for _, d := range []string{"items", "rooms"} {
+		if err := os.MkdirAll(filepath.Join(empty, d), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := count(empty, "has no"); got != 0 {
+		t.Errorf("the data folder has everything now, but deploy still said it lacks something %d times", got)
+	}
+	for _, s := range n.Servers {
+		if !samePath(filepath.Join(n.serverDir(s), "plugins", "dungeons", "items"), filepath.Join(empty, "items")) {
+			t.Errorf("%s: deploy didn't link items", s.Name)
+		}
 	}
 }
 
@@ -93,12 +152,12 @@ func TestLinkDataJunction(t *testing.T) {
 	progress := func(m string) { messages = append(messages, m) }
 
 	for i := 0; i < 2; i++ {
-		n.linkData(hub, progress)
+		n.linkData([]*Server{hub}, progress)
 	}
 	if len(messages) > 0 {
 		t.Fatalf("hub01's junction to the data isn't taken as a link to it: %v", messages)
 	}
-	n.linkData(old, progress)
+	n.linkData([]*Server{old}, progress)
 	if len(messages) != 1 || !strings.Contains(messages[0], "relinked") {
 		t.Errorf("want one message about relinking hub02, got %v", messages)
 	}
@@ -135,7 +194,7 @@ func TestLinkDataRelativePath(t *testing.T) {
 	}
 
 	hub := &Server{Name: "hub01", Type: "LOBBY"}
-	n.linkData(hub, progress)
+	n.linkData([]*Server{hub}, progress)
 	if !reachable(hub) {
 		t.Errorf("hub01: items.json isn't there through the link (messages %v)", messages)
 	}
@@ -154,7 +213,7 @@ func TestLinkDataRelativePath(t *testing.T) {
 			t.Fatal(err)
 		}
 		messages = nil
-		n.linkData(s, progress)
+		n.linkData([]*Server{s}, progress)
 		if !reachable(s) {
 			t.Errorf("%s: the link to %s wasn't replaced (messages %v)", s.Name, dest, messages)
 		}
@@ -180,7 +239,7 @@ func TestLinkDataRelativePath(t *testing.T) {
 			t.Fatal(err)
 		}
 		messages = nil
-		n.linkData(s, progress)
+		n.linkData([]*Server{s}, progress)
 		if got, err := os.Readlink(items(s)); err != nil || got != dest {
 			t.Errorf("%s: its own link to %s became %q (%v)", s.Name, dest, got, err)
 		}

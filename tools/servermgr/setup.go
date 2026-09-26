@@ -285,7 +285,7 @@ func (n *Network) createServer(o CreateOptions, progress func(string)) (*Server,
 		return nil, err
 	}
 	n.installPaperPlugins(s, progress)
-	n.linkData(s, progress)
+	n.linkData([]*Server{s}, progress)
 
 	n.Servers = append(n.Servers, s)
 	if err := n.save(); err != nil {
@@ -515,34 +515,48 @@ func (n *Network) installProxyPlugin(progress func(string)) {
 	}
 }
 
-// linkData links the private data checkout into a server: the item definitions (items/) into
+// linkData links the private data checkout into servers: the item definitions (items/) into
 // every server, and the captured rooms (rooms/) into dungeon servers. Hypixel's data stays in that
 // checkout, out of the plugin and this repository. Links that are already there are left alone, so
-// it runs on every deploy.
-func (n *Network) linkData(s *Server, progress func(string)) {
+// it runs on every deploy. What the checkout lacks is the same for every server, so it's said once.
+func (n *Network) linkData(servers []*Server, progress func(string)) {
+	if len(servers) == 0 {
+		return
+	}
 	if n.DungeonData == "" {
 		progress("! No data folder configured; items come only from the plugin, and /dungeon paste needs plugins/dungeons/dungeon-rooms/rooms")
 		return
 	}
-	plugin := filepath.Join(n.serverDir(s), "plugins", "dungeons")
-	n.linkDataDir(s, "items", filepath.Join(plugin, "items"), progress)
-	if s.Type == "DUNGEONS" || s.Type == "NONE" {
-		n.linkDataDir(s, "rooms", filepath.Join(plugin, "dungeon-rooms", "rooms"), progress)
-	}
-}
-
-func (n *Network) linkDataDir(s *Server, name, link string, progress func(string)) {
 	// Absolute, because a link's target counts from the link's folder. (Older network.json files
 	// can hold the path as typed at init, relative to where servermgr runs.)
-	target, err := filepath.Abs(filepath.Join(n.DungeonData, name))
+	data, err := filepath.Abs(n.DungeonData)
 	if err != nil {
 		progress("! " + err.Error())
 		return
 	}
-	if _, err := os.Stat(target); err != nil {
-		progress(fmt.Sprintf("! %s: the data folder has no %s/ yet", s.Name, name))
-		return
+	said := map[string]bool{}
+	for _, s := range servers {
+		plugin := filepath.Join(n.serverDir(s), "plugins", "dungeons")
+		dirs := [][2]string{{"items", filepath.Join(plugin, "items")}}
+		if s.Type == "DUNGEONS" || s.Type == "NONE" {
+			dirs = append(dirs, [2]string{"rooms", filepath.Join(plugin, "dungeon-rooms", "rooms")})
+		}
+		for _, d := range dirs {
+			name, link, target := d[0], d[1], filepath.Join(data, d[0])
+			if _, err := os.Stat(target); err != nil {
+				if !said[name] {
+					said[name] = true
+					progress(fmt.Sprintf("! The data folder %s has no %s/ yet", data, name))
+				}
+				continue
+			}
+			linkDataDir(s, name, target, link, progress)
+		}
 	}
+}
+
+// linkDataDir links one of the data checkout's folders (target, which is there) into a server.
+func linkDataDir(s *Server, name, target, link string, progress func(string)) {
 	relinked := false
 	if _, err := os.Lstat(link); err == nil {
 		if !danglingDataLink(link, name) {
