@@ -39,7 +39,6 @@ import net.kyori.adventure.text.Component;
 public final class DungeonQueue {
     public static final int MAX_PLAYERS = 5;
     private static final long WAIT_MINUTES = 5;
-    private static final String[] ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII"};
 
     private record Entry(UUID leader, List<UUID> members, int partyVersion, DungeonFloor floor, long since) {
     }
@@ -69,14 +68,12 @@ public final class DungeonQueue {
 
     /** "The Catacombs, Floor VII", "MM The Catacombs, Floor III", "The Catacombs, Entrance". */
     public static String displayName(DungeonFloor floor) {
-        String where = floor.getNumber() == 0 ? "Entrance" : "Floor " + ROMAN[floor.getNumber() - 1];
-        return (floor.isMasterMode() ? "MM " : "") + "The Catacombs, " + where;
+        return (floor.isMasterMode() ? "MM " : "") + "The Catacombs, " + floor.getTierName();
     }
 
     /** "&aThe Catacombs&e, Entrance!", as in the message when a party enters. */
     private static String enteredName(DungeonFloor floor) {
-        String where = floor.getNumber() == 0 ? "Entrance" : "Floor " + ROMAN[floor.getNumber() - 1];
-        return "§a" + (floor.isMasterMode() ? "MM " : "") + "The Catacombs§e, " + where + "!";
+        return "§a" + (floor.isMasterMode() ? "MM " : "") + "The Catacombs§e, " + floor.getTierName() + "!";
     }
 
     /** {@code /instancerequeue}, from the message at the end of a run: the floor of the player's last run again. */

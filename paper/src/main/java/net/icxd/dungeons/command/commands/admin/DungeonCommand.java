@@ -22,11 +22,13 @@ import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
 
 import net.kyori.adventure.text.Component;
+import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.dungeons.generation.DungeonGenerator;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout;
@@ -49,6 +51,8 @@ import net.icxd.dungeons.common.Rank;
  * {@code plugins/<plugin>/dungeon-rooms} (the scanner's {@code rooms/} folder) and pastes it
  * with WorldEdit where Hypixel has it, from -200,-200, in your world (the main world from the
  * console).
+ *
+ * <p>{@code /dungeon end}: ends the run you're in as if the boss was beaten (until there are bosses).
  */
 @CommandParameters(aliases = "dungeon", permission = Rank.STAFF)
 public class DungeonCommand extends SCommand {
@@ -60,6 +64,10 @@ public class DungeonCommand extends SCommand {
 
   @Override
   public void run(CommandSource source, String[] args) {
+    if (args.length > 0 && args[0].equalsIgnoreCase("end")) {
+      end(source);
+      return;
+    }
     if (args.length > 0 && args[0].equalsIgnoreCase("paste")) {
       paste(source, Arrays.copyOfRange(args, 1, args.length));
       return;
@@ -78,6 +86,17 @@ public class DungeonCommand extends SCommand {
     source.send(ChatColor.GRAY + "Preview at y=" + PREVIEW_Y + ": lime = critical path, gold = door, "
         + "infested stone = entrance door, coal = wither door, pink wool = fairy door, redstone = blood door. "
         + "Map printed to the console.");
+  }
+
+  private void end(CommandSource source) {
+    Player player = source.getPlayer();
+    RunManager runs = Dungeons.getRunManager();
+    DungeonRun run = player == null || runs == null ? null : runs.runOf(player);
+    if (run == null) {
+      source.send(ChatColor.RED + "You're not in a dungeon run.");
+      return;
+    }
+    if (!run.end()) source.send(ChatColor.RED + "The run hasn't started yet.");
   }
 
   private void paste(CommandSource source, String[] args) {

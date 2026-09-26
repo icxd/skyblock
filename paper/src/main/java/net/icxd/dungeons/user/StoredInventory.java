@@ -9,12 +9,14 @@ import java.util.logging.Logger;
 import org.bson.Document;
 import org.bson.types.Binary;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.persistence.PersistentDataType;
 
 /**
  * A player's inventory, armor and off-hand, kept in their user document under {@code storage} so
@@ -122,7 +124,7 @@ public final class StoredInventory {
     List<ItemStack> loose = new ArrayList<>();
     ItemStack cursor = player.getItemOnCursor();
     if (!cursor.isEmpty()) {
-      loose.add(cursor.clone());
+      if (!isNotSaved(cursor)) loose.add(cursor.clone());
       player.setItemOnCursor(null);
     }
     Inventory top = player.getOpenInventory().getTopInventory();
@@ -193,8 +195,20 @@ public final class StoredInventory {
 
   private static List<Binary> encode(ItemStack[] items) {
     List<Binary> out = new ArrayList<>(items.length);
-    for (ItemStack item : items) out.add(item == null || item.isEmpty() ? null : write(item));
+    for (ItemStack item : items) out.add(item == null || item.isEmpty() || isNotSaved(item) ? null : write(item));
     return out;
+  }
+
+  /** Hypixel's {@code dontSaveToProfile}: items that belong to where you are (a dungeon's map), not to you. */
+  private static final NamespacedKey NOT_SAVED = new NamespacedKey("skyblock", "dont_save_to_profile");
+
+  /** Keeps the item out of the stored inventory: it stays on this server and is gone when they come back. */
+  public static void markNotSaved(ItemStack item) {
+    item.editPersistentDataContainer(data -> data.set(NOT_SAVED, PersistentDataType.BOOLEAN, true));
+  }
+
+  public static boolean isNotSaved(ItemStack item) {
+    return item != null && !item.isEmpty() && item.getPersistentDataContainer().has(NOT_SAVED);
   }
 
   private static Binary write(ItemStack item) {

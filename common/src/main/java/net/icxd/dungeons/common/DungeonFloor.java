@@ -67,6 +67,27 @@ public enum DungeonFloor {
     public boolean isSpecialColumn() { return specialColumn; }
 
     private static final String[] NUMBERS = {"ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN"};
+    private static final String[] ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII"};
+    /**
+     * Who you beat to finish it, as the end-of-run message has it ("Defeated The Watcher in 01m 49s").
+     * Only the Entrance's is from a recording so far.
+     */
+    private static final String[] BOSSES = {"The Watcher", "Bonzo", "Scarf", "The Professor", "Thorn", "Livid", "Sadan",
+            "Maxor, Storm, Goldor, and Necron"};
+
+    /** "Entrance", "Floor VII". */
+    public String getTierName() {
+        return number == 0 ? "Entrance" : "Floor " + ROMAN[number - 1];
+    }
+
+    /** "The Catacombs", or "Master Mode The Catacombs". */
+    public String getDungeonName() {
+        return (masterMode ? "Master Mode " : "") + "The Catacombs";
+    }
+
+    public String getBossName() {
+        return BOSSES[number];
+    }
 
     /** E, F1-F7 or M1-M7. */
     public String getShortName() {

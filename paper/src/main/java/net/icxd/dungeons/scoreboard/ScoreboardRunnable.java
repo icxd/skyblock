@@ -3,6 +3,8 @@ package net.icxd.dungeons.scoreboard;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.SkyBlockServer;
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.region.Region;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.user.User;
@@ -41,6 +43,12 @@ public class ScoreboardRunnable implements Runnable {
     }
 
     private List<String> lines(Player player, User user) {
+        SkyBlockServer server = Dungeons.getSkyBlockServer();
+        String dateLine = "&7" + Utils.getDateFormatted(new Date()) + " &8" + server.getName();
+        RunManager runs = Dungeons.getRunManager();
+        DungeonRun run = runs == null ? null : runs.runOf(player);
+        if (run != null) return run.sidebar(player, dateLine, "&fEarly Summer 23rd", "&e \u2600 &79:30am");
+
         UUID id = player.getUniqueId();
         int coinsNow = user.getDocument().getInteger("coins");
         int bitsNow = user.getDocument().getInteger("bits");
@@ -57,9 +65,8 @@ public class ScoreboardRunnable implements Runnable {
             bits.append(" &3(").append(difference > 0 ? "+" : "").append(Utils.getFormattedNumber(difference)).append(")");
         }
 
-        SkyBlockServer server = Dungeons.getSkyBlockServer();
         List<String> lines = new ArrayList<>();
-        lines.add("&7" + Utils.getDateFormatted(new Date()) + " &8" + server.getName());
+        lines.add(dateLine);
         lines.add("&0");
         if (server.getServerType() == ServerType.DUNGEONS) {
             lines.add("&7 \u23e3 &c" + server.getServerType().getDisplayName());
@@ -94,6 +101,8 @@ public class ScoreboardRunnable implements Runnable {
         Set<String> shown = new HashSet<>();
         for (int i = 0; i < lines.size(); i++) {
             String entry = Utils.color(lines.get(i));
+            // Each line is a score entry, so blank lines (and any other repeats) need telling apart.
+            while (shown.contains(entry)) entry += "\u00a7r";
             objective.getScore(entry).setScore(lines.size() - i);
             shown.add(entry);
         }

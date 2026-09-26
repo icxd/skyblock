@@ -184,6 +184,27 @@ public final class PastePlan {
     return new Block(baseX, OPENING_BOTTOM, baseZ);
   }
 
+  /** The side of the entrance room its one door is on. */
+  public Direction entranceDoor() {
+    for (PlacedRoom r : layout.getRooms()) {
+      if (r.type() != RoomType.START) continue;
+      Position cell = r.cells().get(0);
+      for (Door door : layout.getDoors()) {
+        if (door.edge().a().equals(cell) || door.edge().b().equals(cell)) return door.edge().sideOf(cell);
+      }
+    }
+    return Direction.SOUTH;
+  }
+
+  /** Rooms in the layout, for the score. */
+  public int roomCount() {
+    return layout.getRooms().size();
+  }
+
+  public int puzzleCount() {
+    return layout.roomsOfType(RoomType.PUZZLE).size();
+  }
+
   private int cellMinX(Position cell) {
     return baseX + PITCH * cell.x();
   }

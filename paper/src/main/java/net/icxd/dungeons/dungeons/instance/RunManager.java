@@ -36,14 +36,25 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.map.MapView;
 import org.bukkit.plugin.Plugin;
 
 import com.mongodb.client.MongoCollection;
@@ -58,6 +69,7 @@ import net.icxd.dungeons.dungeons.generation.DungeonGenerator;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.dungeons.paste.RoomLibrary;
 import net.icxd.dungeons.dungeons.paste.WorldEditPaster;
+import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
@@ -67,7 +79,8 @@ import net.kyori.adventure.util.TriState;
  * The dungeon runs on this (DUNGEONS) server. The proxy writes a run to the {@code runs} collection
  * (see {@link Runs}) and sends its party here; each run gets a world of its own with a freshly
  * generated floor pasted where Hypixel has it, so several share the server. Members who arrive
- * before it's built wait on a platform above it. A run nobody is in any more for a minute ends.
+ * before it's built wait on a platform above it; once it's built, {@link DungeonRun} takes the run
+ * from waiting in the entrance room to the end. A run nobody is in any more for a minute ends.
  *
  * <p>Run worlds ({@code run-1}, {@code run-2}, ...) are kept and reused: generating the chunks of a
  * new one takes seconds, emptying an old one doesn't. One spare is always generated ahead.
@@ -92,6 +105,9 @@ public final class RunManager {
         World world;
         Location waiting;
         Location entrance;
+        /** Once the floor is built. */
+        DungeonRun lifecycle;
+        MapView map;
         /** Members told it's being prepared, so they're told once. */
         final Set<UUID> told = new HashSet<>();
         boolean ended;
@@ -119,6 +135,8 @@ public final class RunManager {
     private final Deque<String> idle = new ArrayDeque<>();
     /** Run worlds nothing has been pasted in yet. */
     private final Set<String> empty = new HashSet<>();
+    /** Maps of finished runs, for the next ones (each new one is saved with the main world for good). */
+    private final Deque<MapView> spareMaps = new ArrayDeque<>();
     private CompletableFuture<RoomLibrary> library;
     /** Everything a floor can take up, and the height of the waiting platform; known once the rooms are loaded. */
     private PastePlan.Box largest;
@@ -171,6 +189,8 @@ public final class RunManager {
     private void tick() {
         long now = System.currentTimeMillis();
         for (Run run : List.copyOf(byId.values())) {
+            if (run.lifecycle != null) run.lifecycle.second();
+            if (run.ended) continue;
             boolean anyone = run.members.stream().anyMatch(m -> isHere(m, run));
             if (anyone) run.emptySince = 0;
             else if (run.emptySince == 0) run.emptySince = now;
@@ -288,9 +308,12 @@ public final class RunManager {
                 log.info("Dungeon run " + run.id + " (" + run.floor.getName() + ", seed " + seed + ") ready in "
                         + world.getName() + ": " + run.timings);
                 run.entrance = standingSpot(world, entrance.x(), entrance.y(), entrance.z());
+                platform(world, entrance, Material.AIR);
+                run.map = takeMap(world);
+                run.lifecycle = new DungeonRun(this, plugin, run.id, run.floor, run.members, world, entrance, plan.entranceDoor(),
+                        plan.roomCount(), plan.puzzleCount(), run.map);
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runs.updateOne(eq("_id", run.id), set(Runs.STATE, Runs.RUNNING)));
                 for (Player player : online(run)) send(player, run);
-                platform(world, entrance, Material.AIR);
             });
         }));
     }
@@ -308,13 +331,12 @@ public final class RunManager {
         run.stepStart = now;
     }
 
-    /** To wherever the run is at: the entrance once it's built, the platform before that. */
+    /** To wherever the run is at: the platform until it's built, then wherever {@link DungeonRun} has them. */
     private void send(Player player, Run run) {
         User user = User.cached(player.getUniqueId());
         if (user != null) user.setInDungeon(true);
-        if (run.entrance != null) {
-            player.teleport(run.entrance);
-            player.sendMessage(Utils.color("&a" + run.floor.getName() + " is ready. Good luck!"));
+        if (run.lifecycle != null) {
+            run.lifecycle.arrive(player);
             return;
         }
         if (run.waiting != null) player.teleport(run.waiting);
@@ -324,7 +346,7 @@ public final class RunManager {
     private void fail(Run run, String reason) {
         for (Player player : online(run)) {
             player.sendMessage(Utils.color("&cCouldn't set up the dungeon" + (reason == null ? "." : ": " + reason)));
-            proxy.send(player, "LOBBY");
+            leave(player);
         }
         end(run, false);
     }
@@ -335,6 +357,8 @@ public final class RunManager {
         byId.remove(run.id);
         for (UUID member : run.members) byMember.remove(member, run);
         DungeonRegistry.unregisterDungeon(run.dungeon);
+        if (run.lifecycle != null) run.lifecycle.dispose();
+        if (run.map != null) spareMaps.add(run.map);
         Runnable ended = () -> {
             try {
                 runs.updateOne(eq("_id", run.id), set(Runs.STATE, Runs.ENDED));
@@ -346,10 +370,55 @@ public final class RunManager {
         else Bukkit.getScheduler().runTaskAsynchronously(plugin, ended);
         if (run.world == null) return;
         World main = Bukkit.getWorlds().get(0);
-        for (Player player : run.world.getPlayers()) player.teleport(main.getSpawnLocation());
+        for (Player player : run.world.getPlayers()) {
+            DungeonRun.takeRunItems(player);
+            player.teleport(main.getSpawnLocation());
+        }
         run.world.removePluginChunkTickets(plugin);
         // Emptied when the next run takes it.
         idle.add(run.world.getName());
+    }
+
+    /** Off to the Dungeon Hub (a hub if there's none). */
+    void leave(Player player) {
+        User user = User.cached(player.getUniqueId());
+        if (user != null) user.setInDungeon(false);
+        proxy.send(player, "DUNGEON_HUB");
+    }
+
+    /** A run that's over (or closed before it started). */
+    void finish(DungeonRun lifecycle) {
+        Run run = byId.get(lifecycle.id);
+        if (run != null && run.lifecycle == lifecycle) end(run, false);
+    }
+
+    /** Whether the player is (still) in this run: after a re-queue they're in the next one. */
+    boolean belongs(UUID player, DungeonRun lifecycle) {
+        Run run = byMember.get(player);
+        return run != null && run.lifecycle == lifecycle;
+    }
+
+    /** The run a player is in, once its floor is built; null if none. */
+    public DungeonRun runOf(Player player) {
+        Run run = byMember.get(player.getUniqueId());
+        return run == null || run.lifecycle == null || !player.getWorld().equals(run.world) ? null : run.lifecycle;
+    }
+
+    private DungeonRun runIn(World world) {
+        for (Run run : byId.values()) {
+            if (run.lifecycle != null && world.equals(run.world)) return run.lifecycle;
+        }
+        return null;
+    }
+
+    private MapView takeMap(World world) {
+        MapView map = spareMaps.poll();
+        if (map == null) map = Bukkit.createMap(world);
+        map.setTrackingPosition(false);
+        map.setUnlimitedTracking(false);
+        map.setLocked(false);
+        ScoreCard.blank(map);
+        return map;
     }
 
     private List<Player> online(Run run) {
@@ -505,6 +574,67 @@ public final class RunManager {
         @EventHandler
         public void onQuit(PlayerQuitEvent event) {
             arriving.remove(event.getPlayer().getUniqueId());
+        }
+
+        /** Clicking Mort (or his name tags) before the start opens the Ready Up menu. */
+        @EventHandler
+        public void onInteract(PlayerInteractEntityEvent event) {
+            DungeonRun run = runIn(event.getRightClicked().getWorld());
+            if (run == null || !run.isMort(event.getRightClicked())) return;
+            event.setCancelled(true);
+            if (event.getHand() != EquipmentSlot.HAND) return;
+            Player player = event.getPlayer();
+            if (runOf(player) == run && (run.phase() == DungeonRun.Phase.WAITING || run.phase() == DungeonRun.Phase.STARTING)) {
+                new ReadyUpMenu(run, player).open(player);
+            }
+        }
+
+        @EventHandler
+        public void onArmorStand(PlayerArmorStandManipulateEvent event) {
+            DungeonRun run = runIn(event.getRightClicked().getWorld());
+            if (run != null && run.isMort(event.getRightClicked())) event.setCancelled(true);
+        }
+
+        /** They arrive a few blocks above the back of the entrance room, as on Hypixel; the drop doesn't hurt. */
+        @EventHandler(ignoreCancelled = true)
+        public void onFall(EntityDamageEvent event) {
+            if (event.getCause() != EntityDamageEvent.DamageCause.FALL || !(event.getEntity() instanceof Player player)) return;
+            DungeonRun run = runOf(player);
+            if (run != null && !run.isStarted()) event.setCancelled(true);
+        }
+
+        @EventHandler
+        public void onDrop(PlayerDropItemEvent event) {
+            if (StoredInventory.isNotSaved(event.getItemDrop().getItemStack())) event.setCancelled(true);
+        }
+
+        /** For EXTRA STATS and the tab list. */
+        @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+        public void onDamage(EntityDamageByEntityEvent event) {
+            if (event.getEntity() instanceof Player) return;
+            Player damager = playerBehind(event.getDamager());
+            DungeonRun run = damager == null ? null : runOf(damager);
+            if (run != null) run.damageDealt(damager.getUniqueId(), event.getFinalDamage());
+        }
+
+        @EventHandler(priority = EventPriority.MONITOR)
+        public void onKill(EntityDeathEvent event) {
+            if (event.getEntity() instanceof Player) return;
+            Player killer = event.getEntity().getKiller();
+            DungeonRun run = killer == null ? null : runOf(killer);
+            if (run != null) run.killed(killer.getUniqueId());
+        }
+
+        @EventHandler(priority = EventPriority.MONITOR)
+        public void onDeath(PlayerDeathEvent event) {
+            DungeonRun run = runOf(event.getEntity());
+            if (run != null) run.died(event.getEntity().getUniqueId());
+        }
+
+        private Player playerBehind(Entity damager) {
+            if (damager instanceof Player player) return player;
+            if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) return player;
+            return null;
         }
     }
 }

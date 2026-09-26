@@ -111,6 +111,8 @@ public final class Transfers {
      * there.
      */
     public CompletableFuture<Boolean> connect(Player player, RegisteredServer target) {
+        // Already there, like a party re-queuing into a dungeon on the server it's on.
+        if (player.getCurrentServer().map(c -> c.getServer().equals(target)).orElse(false)) return CompletableFuture.completedFuture(true);
         Chat.send(player, "§7Sending to server " + target.getServerInfo().getName() + "...");
         return player.createConnectionRequest(target).connect().handle((result, error) -> {
             if (error == null && (result.isSuccessful() || result.getStatus() == ConnectionRequestBuilder.Status.ALREADY_CONNECTED)) {

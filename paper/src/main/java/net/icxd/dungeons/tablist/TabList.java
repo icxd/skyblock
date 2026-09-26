@@ -29,6 +29,8 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate.PlayerInfo;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.region.Region;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.user.User;
@@ -109,6 +111,10 @@ public class TabList {
     }
 
     private static Line[] lines(Player viewer, Collection<? extends Player> online) {
+        RunManager runs = Dungeons.getRunManager();
+        DungeonRun run = runs == null ? null : runs.runOf(viewer);
+        if (run != null) return runLines(run.tab(viewer));
+
         User user = User.getUser(viewer.getUniqueId());
         ServerType type = Dungeons.getSkyBlockServer().getServerType();
         boolean hub = type == ServerType.LOBBY || type == ServerType.DUNGEON_HUB || type == ServerType.NONE;
@@ -172,6 +178,19 @@ public class TabList {
         lines.add(new Line("§e§lSkills: ", GRAY));
         while (lines.size() < SLOTS) lines.add(new Line("§9 ", GRAY));
         return lines.toArray(new Line[0]);
+    }
+
+    /** A dungeon run's tab list: party members with their skins, headers in their colours. */
+    private static Line[] runLines(List<DungeonRun.TabEntry> entries) {
+        Skin[] headers = {DARK_AQUA, GREEN, DARK_AQUA, GOLD};
+        Line[] lines = new Line[SLOTS];
+        for (int i = 0; i < SLOTS; i++) {
+            DungeonRun.TabEntry entry = i < entries.size() ? entries.get(i) : new DungeonRun.TabEntry("", null);
+            Player member = entry.player() == null ? null : Bukkit.getPlayer(entry.player());
+            Skin skin = member != null ? skin(member) : i % 20 == 0 ? headers[i / 20] : GRAY;
+            lines[i] = new Line(Utils.color(entry.text()), skin, member != null ? member.getPing() : 0);
+        }
+        return lines;
     }
 
     /** A player's own skin, or gray if the server has none (offline mode). */

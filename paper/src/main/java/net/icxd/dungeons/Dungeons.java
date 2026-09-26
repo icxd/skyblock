@@ -37,7 +37,8 @@ public class Dungeons extends JavaPlugin {
     @Getter private static ICollection userCollection;
     @Getter private static UserStore userStore;
     @Getter private static ProxyLink proxyLink;
-    private RunManager runManager;
+    /** Dungeon runs, on DUNGEONS servers; null elsewhere. */
+    @Getter private static RunManager runManager;
 
     @Getter
     public CommandMap commandMap;
@@ -112,6 +113,7 @@ public class Dungeons extends JavaPlugin {
     @Override
     public void onDisable() {
         if (runManager != null) runManager.stop();
+        runManager = null;
         if (userStore != null) userStore.stop();
         if (mongoClient != null) mongoClient.close();
         instance = null;

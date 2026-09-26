@@ -26,4 +26,14 @@ class DungeonFloorTest {
         assertNull(DungeonFloor.parse("F8"));
         assertNull(DungeonFloor.parse("catacombs"));
     }
+
+    @Test
+    void namesInMessages() {
+        assertEquals("Entrance", DungeonFloor.ENTRANCE.getTierName());
+        assertEquals("Floor VII", DungeonFloor.MASTER_FLOOR_7.getTierName());
+        assertEquals("The Catacombs", DungeonFloor.FLOOR_4.getDungeonName());
+        assertEquals("Master Mode The Catacombs", DungeonFloor.MASTER_FLOOR_4.getDungeonName());
+        assertEquals("The Watcher", DungeonFloor.ENTRANCE.getBossName());
+        assertEquals("Bonzo", DungeonFloor.MASTER_FLOOR_1.getBossName());
+    }
 }

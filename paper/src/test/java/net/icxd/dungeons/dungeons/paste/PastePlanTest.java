@@ -395,5 +395,9 @@ class PastePlanTest {
     PlacedRoom start = layout.roomsOfType(RoomType.START).get(0);
     Position c = start.cells().get(0);
     assertEquals(new Block(-185 + 32 * c.x(), 69, -185 + 32 * c.y()), plan.entrance());
+    // Its one door leads to the room on that side.
+    Position next = c.offset(plan.entranceDoor());
+    assertTrue(layout.getDoors().stream().anyMatch(d -> (d.edge().a().equals(c) || d.edge().b().equals(c))
+        && d.edge().other(c).equals(next)));
   }
 }

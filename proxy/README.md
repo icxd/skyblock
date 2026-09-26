@@ -65,4 +65,5 @@ online, and only the leader can start one.
   `run-1`, `run-2`, ... and reused: when one is taken, the largest floor's area is emptied and the
   new floor pasted where Hypixel has it, at -200,-200. One spare world is always generated ahead,
   since generating chunks takes seconds and emptying them doesn't. Players who arrive first wait
-  on a glass platform above the entrance.
+  on a glass platform above the entrance. From there the run goes as on Hypixel: waiting with
+  Mort, the countdown, the run, the score and back to the Dungeon Hub (`DUNGEON_RUNS.md`).
