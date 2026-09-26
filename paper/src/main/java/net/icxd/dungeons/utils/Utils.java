@@ -66,6 +66,11 @@ public class Utils {
   }
 
   public static String getDateFormatted(Date date) { return new SimpleDateFormat("dd/MM/yy").format(date); }
+  /** A stat as SkyBlock shows it: whole numbers without decimals, the rest to one place. */
+  public static String formatStat(double value) {
+    return value == Math.rint(value) ? String.valueOf((long) value) : String.format(java.util.Locale.ROOT, "%.1f", value);
+  }
+
   public static String getFormattedNumber(int n) {
     return NumberFormat.getNumberInstance().format(n);
   }
@@ -148,8 +153,9 @@ public class Utils {
   public static void skull(ItemStack head, String skin) {
     if (skin.isEmpty()) return;
     SkullMeta headMeta = (SkullMeta) head.getItemMeta();
-    // skin is the base64 "textures" property value.
-    com.destroystokyo.paper.profile.PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+    // skin is the base64 "textures" property value. The profile's id comes from the skin, so the
+    // same head is the same item and stacks (a random one made every head unique).
+    com.destroystokyo.paper.profile.PlayerProfile profile = Bukkit.createProfile(UUID.nameUUIDFromBytes(skin.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
     profile.setProperty(new ProfileProperty("textures", skin));
     headMeta.setPlayerProfile(profile);
     head.setItemMeta(headMeta);
@@ -191,8 +197,7 @@ public class Utils {
   public static ArrayList<Player> getAllUsersOfRankOrHigher(Rank rank) {
     ArrayList<Player> players = new ArrayList<>();
     for (Player player : Bukkit.getOnlinePlayers()) {
-      User user = User.getUser(player.getUniqueId());
-      if (Rank.valueOf(user.getDocument().getString("rank")).isEqualOrStrongerThan(rank))
+      if (User.rankOf(player.getUniqueId()).isEqualOrStrongerThan(rank))
         players.add(player);
     }
     return players;
@@ -220,7 +225,7 @@ public class Utils {
     if (url.isEmpty())
       return null;
     SkullMeta headMeta = (SkullMeta) stack.getItemMeta();
-    PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+    PlayerProfile profile = Bukkit.createPlayerProfile(UUID.nameUUIDFromBytes(url.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
     try {
       profile.getTextures().setSkin(URI.create(url).toURL());
     } catch (MalformedURLException | IllegalArgumentException e) {

@@ -18,6 +18,10 @@ public class SkillRequirement extends Requirement {
 
     @Override
     public Predicate<Player> requirement() {
-        return (player) -> Skill.getLevelFromXP(User.getUser(player.getUniqueId()).getDocument().get("skills", Document.class).getInteger(skill.name().toLowerCase())) >= level;
+        return (player) -> {
+            User user = User.ifLoaded(player.getUniqueId());
+            Integer xp = user == null ? null : user.get("skills." + skill.name().toLowerCase(), Integer.class);
+            return xp != null && Skill.getLevelFromXP(xp) >= level;
+        };
     }
 }

@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -69,7 +69,11 @@ public enum Attribute {
     private AttributeFunctionality attributeFunctionality = null;
 
     public Predicate<Player> requirement() {
-        return player -> User.getUser(player.getUniqueId()).get("crimsonIsle.kuudra.highest", Integer.class) >= requiredCompletion.getTier();
+        return player -> {
+            User user = User.ifLoaded(player.getUniqueId());
+            Integer highest = user == null ? null : user.get("crimsonIsle.kuudra.highest", Integer.class);
+            return highest != null && highest >= requiredCompletion.getTier();
+        };
     }
     public ArrayList<String> getLore(int level) {
         ArrayList<String> lore = new ArrayList<>();
@@ -87,15 +91,13 @@ public enum Attribute {
         return lore;
     }
 
-    public static Attribute getRandomAttribute() {
-        return Attribute.values()[new Random().nextInt(Attribute.values().length)];
-    }
-    public static Attribute getRandomAttributeButNot(Attribute attribute) {
-        Attribute randomAttribute = Attribute.values()[new Random().nextInt(Attribute.values().length)];
-        if (randomAttribute == attribute) {
-            return getRandomAttributeButNot(attribute);
-        }
-        return randomAttribute;
+    /** One that can roll on this kind of item, other than {@code not} (null for any). */
+    public static Attribute random(GenericItemType type, Attribute not) {
+        List<Attribute> fitting = Arrays.stream(values())
+                .filter(a -> a != not && (type == null || a.genericItemTypes.contains(type)))
+                .toList();
+        if (fitting.isEmpty()) fitting = Arrays.stream(values()).filter(a -> a != not).toList();
+        return fitting.get(ThreadLocalRandom.current().nextInt(fitting.size()));
     }
 
     static interface AttributeFunctionality {

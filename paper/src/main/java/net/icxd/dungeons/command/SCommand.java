@@ -72,15 +72,18 @@ public abstract class SCommand implements CommandExecutor, TabCompleter {
             this.sc = xc;
         }
 
+        /** The console can run anything; players need the command's rank (and their data loaded). */
+        private boolean allowed(CommandSender sender) {
+            if (!(sender instanceof Player player)) return true;
+            User user = User.cached(player.getUniqueId());
+            return user != null && user.isLoaded() && user.getRank().isEqualOrStrongerThan(this.sc.permission);
+        }
+
         @Override
         public boolean execute(CommandSender sender, String commandLabel, String[] args) {
             this.sc.sender = new CommandSource(sender);
             try {
-                if (sender instanceof Player) {
-                    if (Rank.valueOf(User.getUser(((Player) sender).getPlayer().getUniqueId()).getDocument().getString("rank")).isEqualOrStrongerThan(this.sc.permission)) {
-                        sc.run(this.sc.sender, args);
-                        return true;
-                    }
+                if (!allowed(sender)) {
                     sender.sendMessage("\u00a7cYou need " + this.sc.permission.name().toUpperCase() + " or above to do this command");
                     return true;
                 }
@@ -100,7 +103,10 @@ public abstract class SCommand implements CommandExecutor, TabCompleter {
 
         @Override
         public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
-            return this.sc.tabCompleters(sender, alias, args);
+            // Suggestions can show other players' data (/pd): only for those who may run the command.
+            if (!allowed(sender)) return List.of();
+            List<String> suggestions = this.sc.tabCompleters(sender, alias, args);
+            return suggestions == null ? List.of() : suggestions;
         }
     }
 }

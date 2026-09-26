@@ -18,6 +18,12 @@ public class DungeonTierRequirement extends Requirement {
 
     @Override
     public Predicate<Player> requirement() {
-        return (player) -> Skill.getLevelFromXP(User.getUser(player.getUniqueId()).getDocument().get("dungeons", Document.class).get("floors", Document.class).getInteger("highest")) >= tier;
+        // The highest floor they've completed, of The Catacombs or of Master Mode.
+        return (player) -> {
+            User user = User.ifLoaded(player.getUniqueId());
+            Integer highest = user == null ? null
+                    : user.get(dungeonType == DungeonType.MASTER_CATACOMBS ? "dungeons.floors.masterHighest" : "dungeons.floors.highest", Integer.class);
+            return highest != null && highest >= tier;
+        };
     }
 }

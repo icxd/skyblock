@@ -19,18 +19,21 @@ public class RecombobulateCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {
         Player player = source.getPlayer();
-
-        ItemStack item = player.getInventory().getItemInHand();
+        if (player == null) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
         ItemNBT nmsItem = ItemNBT.of(item);
+        if (item.isEmpty() || !nmsItem.hasTag()) {
+            player.sendMessage("§cHold a SkyBlock item first.");
+            return;
+        }
         NBTTagCompound tag = nmsItem.getTag();
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
+        if (sbItem == null) return;
+        if (tag.getString("rarity").isEmpty()) tag.setString("rarity", sbItem.rarity().name());
         tag.setBoolean("recombobulated", !tag.getBoolean("recombobulated"));
         if (tag.getBoolean("recombobulated")) tag.setString("rarity", Rarity.valueOf(tag.getString("rarity")).upgrade().name());
         else tag.setString("rarity", Rarity.valueOf(tag.getString("rarity")).downgrade().name());
-        nmsItem.setTag(tag);
-        item = nmsItem.toItemStack();
-        player.getInventory().setItemInHand(item);
-        player.getInventory().setItemInHand(ItemBuilder.build(sbItem, tag));
+        player.getInventory().setItemInMainHand(ItemBuilder.build(sbItem, tag));
 
         source.send("§aRecombobulated " + sbItem.name() + " to " + tag.getBoolean("recombobulated") + ".");
     }

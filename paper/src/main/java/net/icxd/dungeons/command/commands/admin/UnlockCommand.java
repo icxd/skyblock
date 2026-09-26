@@ -19,31 +19,32 @@ public class UnlockCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {
         Player player = source.getPlayer();
-
-        int slot = Integer.parseInt(args[0]);
-
-        ItemStack item = player.getInventory().getItemInHand();
+        if (player == null) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
         ItemNBT nmsItem = ItemNBT.of(item);
-        NBTTagCompound tag = nmsItem.getTag();
-        if (tag == null) {
-            tag = new NBTTagCompound();
+        if (item.isEmpty() || !nmsItem.hasTag()) {
+            player.sendMessage("§cHold a SkyBlock item first.");
+            return;
         }
-
+        if (args.length == 0 || !args[0].matches("\\d+")) {
+            send("&cUsage: /unlock <gemstone slot>");
+            return;
+        }
+        int slot = Integer.parseInt(args[0]);
+        NBTTagCompound tag = nmsItem.getTag();
         NBTTagList list = tag.getList("gemstone_slots", 10);
+        if (slot >= list.size()) {
+            send("&cThis item has " + list.size() + " gemstone slots.");
+            return;
+        }
         NBTTagCompound gslot = list.get(slot);
         gslot.setBoolean("locked", false);
         gslot.remove("costs");
-        send(gslot.toString());
         list.set(slot, gslot);
-        send(list.toString());
         tag.set("gemstone_slots", list);
-        send(tag.get("gemstone_slots").toString());
-
-        nmsItem.setTag(tag);
-        item = nmsItem.toItemStack();
 
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
-        player.getInventory().setItemInHand(ItemBuilder.build(sbItem, tag));
+        player.getInventory().setItemInMainHand(ItemBuilder.build(sbItem, tag));
 
         send("&aGemstone " + slot + " unlocked.");
     }

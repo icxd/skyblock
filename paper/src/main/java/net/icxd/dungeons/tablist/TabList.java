@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +30,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate.PlayerInfo;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.region.Region;
@@ -115,7 +117,13 @@ public class TabList {
         DungeonRun run = runs == null ? null : runs.runOf(viewer);
         if (run != null) return runLines(run.tab(viewer));
 
-        User user = User.getUser(viewer.getUniqueId());
+        User user = User.ifLoaded(viewer.getUniqueId());
+        // Their data isn't here yet (it loads before they join; this is the moment between): blank.
+        if (user == null) {
+            Line[] blank = new Line[SLOTS];
+            for (int i = 0; i < SLOTS; i++) blank[i] = new Line("§" + (char) ('a' + i % 6) + " ", GRAY);
+            return blank;
+        }
         ServerType type = Dungeons.getSkyBlockServer().getServerType();
         boolean hub = type == ServerType.LOBBY || type == ServerType.DUNGEON_HUB || type == ServerType.NONE;
         List<Line> lines = new ArrayList<>(SLOTS);
@@ -125,12 +133,15 @@ public class TabList {
                 ? new Line("      §a§a§lPlayers §f(" + online.size() + ")      ", GREEN)
                 : new Line("        §b§b§lIsland       ", DARK_AQUA));
         List<Player> players = new ArrayList<>(online);
-        players.sort(Comparator.comparing((Player p) -> String.valueOf(User.getUser(p.getUniqueId()).getRank().getCharacter()))
+        // Ranks looked up once each, not in every comparison.
+        Map<Player, Rank> ranks = new HashMap<>();
+        for (Player p : players) ranks.put(p, User.rankOf(p.getUniqueId()));
+        players.sort(Comparator.comparing((Player p) -> String.valueOf(ranks.get(p).getCharacter()))
                 .thenComparing(Player::getName));
         for (int i = 0; i < PLAYER_SLOTS; i++) {
             if (i < players.size()) {
                 Player p = players.get(i);
-                lines.add(new Line("" + User.getUser(p.getUniqueId()).getRank().getColor() + p.getName(), skin(p), p.getPing()));
+                lines.add(new Line("" + ranks.get(p).getColor() + p.getName(), skin(p), p.getPing()));
             } else {
                 lines.add(new Line("§3 ", GRAY));
             }

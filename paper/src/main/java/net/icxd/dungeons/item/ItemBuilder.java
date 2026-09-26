@@ -68,8 +68,8 @@ public class ItemBuilder {
             tag.setBoolean("dungeon_item", item.dungeonItem());
             tag.setBoolean("can_have_attributes", item.canHaveAttributes());
             if (item.canHaveAttributes()) {
-                Attribute attribute1 = Attribute.getRandomAttribute();
-                Attribute attribute2 = Attribute.getRandomAttributeButNot(attribute1);
+                Attribute attribute1 = Attribute.random(item.genericItemType(), null);
+                Attribute attribute2 = Attribute.random(item.genericItemType(), attribute1);
                 tag.setString("attribute_1", attribute1.name());
                 tag.setInt("attribute_1_level", Utils.random(1, 2));
                 tag.setString("attribute_2", attribute2.name());
@@ -221,7 +221,7 @@ public class ItemBuilder {
                 (reforge != null ? reforge.getStats().miningFortune() : null)));
         if (tempStats.getCombatWisdom() != 0) lore.add(stat("Combat Wisdom", ChatColor.GREEN, stats.getCombatWisdom(), tag));
         if (tempStats.getFarmingWisdom() != 0) lore.add(stat("Farming Wisdom", ChatColor.GREEN, stats.getFarmingWisdom(), tag));
-        if (tempStats.getForagingWisdom() != 0) lore.add(stat("Foraging Wisdom", ChatColor.GREEN, stats.getFarmingWisdom(), tag));
+        if (tempStats.getForagingWisdom() != 0) lore.add(stat("Foraging Wisdom", ChatColor.GREEN, stats.getForagingWisdom(), tag));
         if (tempStats.getFishingWisdom() != 0) lore.add(stat("Fishing Wisdom", ChatColor.GREEN, stats.getFishingWisdom(), tag));
         if (tempStats.getFishingSpeed() != 0) lore.add(stat("Fishing Speed", ChatColor.GREEN, stats.getFishingSpeed(), tag));
         if (tempStats.getVitality() != 0) lore.add(stat("Vitality", ChatColor.GREEN, stats.getVitality(), tag));
@@ -230,9 +230,11 @@ public class ItemBuilder {
         if (tag.getList("gemstone_slots", 10) != null && !tag.getList("gemstone_slots", 10).isEmpty()) {
             NBTTagList slots = tag.getList("gemstone_slots", 10);
             StringBuilder gemstoneSlots = new StringBuilder();
-            for (int i = 0; i < slots.size(); i++) {
+            // The item's slots are what it can have; the tag's are what this one has.
+            List<GemstoneSlot> kinds = item.gemstoneSlots() == null ? List.of() : item.gemstoneSlots().getSlots();
+            for (int i = 0; i < slots.size() && i < kinds.size(); i++) {
                 NBTTagCompound slot = slots.get(i);
-                GemstoneSlot gemstoneSlot = item.gemstoneSlots().getSlots().get(i);
+                GemstoneSlot gemstoneSlot = kinds.get(i);
                 gemstoneSlots.append(ChatColor.DARK_GRAY)
                         .append(" [")
                         .append(slot.getBoolean("locked") ? ChatColor.DARK_GRAY : ChatColor.GRAY)
@@ -253,7 +255,8 @@ public class ItemBuilder {
                 String name = enchantment.getString("name");
                 int level = enchantment.getInt("lvl");
                 Enchantment enchant = Enchantment.getByIdentifiable(name + "." + level);
-                enchantments.add(enchant);
+                // Enchantments this version doesn't know are left off.
+                if (enchant.getType() != null) enchantments.add(enchant);
             }
             enchantments.sort((o1, o2) -> Boolean.compare(o1.getType().isUltimate(), o2.getType().isUltimate()));
             List<String> stringEnchantments = new ArrayList<>();
@@ -407,7 +410,7 @@ public class ItemBuilder {
     }
 
     private static String stat(String name, ChatColor color, double value, char ending, NBTTagCompound tag, int hotPotatoBooks, boolean artOfWar, ReforgeStat reforgeStat) {
-        Rarity rarity = Rarity.valueOf(tag.getString("rarity"));
+        Rarity rarity = tag.getString("rarity").isEmpty() ? Rarity.COMMON : Rarity.valueOf(tag.getString("rarity"));
         double rsv = reforgeStat == null ? 0 : switch (rarity) {
             case COMMON -> reforgeStat.getCommon();
             case UNCOMMON -> reforgeStat.getUncommon();
@@ -417,7 +420,7 @@ public class ItemBuilder {
             case MYTHIC -> reforgeStat.getMythic();
             default -> 0;
         };
-        double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
+        double boost = tag.getString("dungeon_star").isEmpty() ? 0 : DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
         double val = value + hotPotatoBooks + (artOfWar ? 5 : 0) + rsv;
         double wb = val + (val * boost);
         return Utils.color(
@@ -426,8 +429,8 @@ public class ItemBuilder {
                         (hotPotatoBooks > 0 ? "&e(+" + hotPotatoBooks + ") " : "") +
                         (artOfWar ? "&6[+5] " : "") +
                         (rsv != 0 ? ("&9(" + (rsv < 0 ? (int) rsv : "+" + (int) rsv) + (ending != ' ' ? ""+ending : "") + ") ") : "") +
-                        (tag.getBoolean("dungeon_item") ? "&8(+" + wb + (ending != ' ' ? ending : "") + ")" : "")
-                );
+                        (tag.getBoolean("dungeon_item") ? "&8(+" + Utils.formatStat(wb) + (ending != ' ' ? ending : "") + ")" : "")
+                ).stripTrailing();
     }
 
     private static String stat(String name, ChatColor color, double value, char ending, NBTTagCompound tag, int hotPotatoBooks, boolean artOfWar) {

@@ -44,14 +44,21 @@ public class User {
     this.uuid = uuid;
   }
 
-  /** The player's data. For players on this server it's loaded before they join. */
-  public static User getUser(UUID uuid) {
-    return usersCache.computeIfAbsent(uuid, User::new);
-  }
-
   /** The user if this server holds their data, else null. */
   public static User cached(UUID uuid) {
     return usersCache.get(uuid);
+  }
+
+  /** The user if this server holds their data and it's loaded, else null. */
+  public static User ifLoaded(UUID uuid) {
+    User user = usersCache.get(uuid);
+    return user == null || !user.isLoaded() ? null : user;
+  }
+
+  /** A player's rank; DEFAULT until their data is loaded. */
+  public static Rank rankOf(UUID uuid) {
+    User user = ifLoaded(uuid);
+    return user == null ? Rank.DEFAULT : user.getRank();
   }
 
   static List<User> all() {
@@ -96,21 +103,23 @@ public class User {
     Dungeons.getUserStore().save(this);
   }
 
+  /** A value by its dotted path, e.g. "bank.balance". */
   public <T> T get(String path, Class<T> clazz) {
-    final String[] strings = path.split("\\.");
-    if (strings.length == 1)
-      return document.get(strings[0], clazz);
-    final String last = strings[strings.length - 1];
+    String[] parts = path.split("\\.");
     Document doc = document;
-    for (String string : strings) {
-      if (string.equalsIgnoreCase(last)) break;
-      doc = doc.get(string, Document.class);
+    for (int i = 0; i < parts.length - 1; i++) {
+      doc = doc.get(parts[i], Document.class);
+      if (doc == null) return null;
     }
-    return doc.get(last, clazz);
+    return doc.get(parts[parts.length - 1], clazz);
   }
   public Rank getRank() { return Rank.valueOf(get("rank", String.class)); }
   public int getCoins() { return get("coins", Integer.class); }
-  public int getBankBalance() { return get("bank.balance", Integer.class); }
+  /** Older saves stored it as a double. */
+  public int getBankBalance() {
+    Number balance = get("bank.balance", Number.class);
+    return balance == null ? 0 : balance.intValue();
+  }
   public int getBits() { return get("bits", Integer.class); }
   public int getGems() { return get("gems", Integer.class); }
   /** Null until they pick one. */
@@ -126,7 +135,7 @@ public class User {
   public int getHOTMPerkLevel(Perk perk) { return get("dwarvenMines.hotm.tree."+perk.name(), Integer.class); }
 
   public void withdrawBank(int amount) {
-    double newBalance = getBankBalance() - amount;
+    int newBalance = getBankBalance() - amount;
     document.get("bank", Document.class).append("balance", newBalance);
     document.get("bank", Document.class).getList("transactions", Document.class)
         .add(new BankTransaction(getPlayer(), amount, BankTransaction.TransactionType.WITHDRAW).toDocument());
@@ -134,7 +143,7 @@ public class User {
   }
 
   public void depositBank(int amount) {
-    double newBalance = getBankBalance() + amount;
+    int newBalance = getBankBalance() + amount;
     document.get("bank", Document.class).append("balance", newBalance);
     document.get("bank", Document.class).getList("transactions", Document.class)
         .add(new BankTransaction(getPlayer(), amount, BankTransaction.TransactionType.DEPOSIT).toDocument());

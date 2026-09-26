@@ -7,6 +7,7 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Tuple;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
@@ -40,7 +41,7 @@ public class BlockListener implements Listener {
     MinableBlock minableBlock = BlockRegistry.getMinableBlock(block.getType());
     if (minableBlock == null) return;
 
-    ItemStack itemInHand = player.getInventory().getItemInHand();
+    ItemStack itemInHand = player.getInventory().getItemInMainHand();
     if (itemInHand == null) return;
     ItemNBT nmsItem = ItemNBT.of(itemInHand);
     if (nmsItem == null) return;
@@ -54,10 +55,11 @@ public class BlockListener implements Listener {
       player.sendMessage("You need a pickaxe with at least " + minableBlock.minBreakingPower() + " breaking power to break this block.");
       return;
     }
-    int miningSpeed = (int) skyBlockItem.stats().getMiningSpeed();
-
-    int miningFortune = (int) skyBlockItem.stats().getMiningFortune();
-    double amountMultiplier = 1 + (miningFortune * 0.01);
+    // The player's own mining speed and fortune (tool, armor and all), not just the tool's.
+    Stats stats = Stats.STATS_CACHE.computeIfAbsent(player.getUniqueId(), uuid -> Stats.of(player));
+    int miningSpeed = (int) stats.getMiningSpeed();
+    if (miningSpeed <= 0) return;
+    double fortune = stats.getMiningFortune();
 
     if (minableBlock.instaBreakStrength() != -1 && miningSpeed >= minableBlock.instaBreakStrength()) {
       block.setType(minableBlock.blockWhenBroken());
@@ -65,9 +67,9 @@ public class BlockListener implements Listener {
       return;
     }
 
-    int timeToBreakInTicks = (minableBlock.blockStrength() * 30) / miningSpeed;
-
-    MiningManager.updateAndNextPhase(player, timeToBreakInTicks);
+    // SkyBlock's break time, in ten crack stages: a stage per swing, but no faster than that.
+    int timeToBreakInTicks = Math.max(1, (minableBlock.blockStrength() * 30) / miningSpeed);
+    if (!MiningManager.updatePhaseCooldown(player, Math.max(1, timeToBreakInTicks / 10))) return;
     int breakProgress = MiningManager.getBlockBreakProgress(block.getLocation());
     MiningManager.sendBlockDamage(player, block.getLocation());
     breakProgress = ((breakProgress) + 1) % 10;
@@ -80,14 +82,10 @@ public class BlockListener implements Listener {
 
       if (minableBlock.drops() != null) {
         for (Tuple<SkyBlockItem, Integer> drop : minableBlock.drops()) {
-          int amount = drop.second();
-          if (amountMultiplier > 1) amount *= (int)amountMultiplier;
           ItemStack stack = ItemBuilder.build(drop.first());
-          stack.setAmount(amount);
-          if (player.getInventory().firstEmpty() == -1) {
-            player.getWorld().dropItemNaturally(player.getLocation(), stack);
-          } else {
-            player.getInventory().addItem(stack);
+          stack.setAmount(withFortune(drop.second(), fortune));
+          for (ItemStack left : player.getInventory().addItem(stack).values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), left);
           }
         }
       }
@@ -102,5 +100,12 @@ public class BlockListener implements Listener {
         }
       }.runTaskLater(Dungeons.getInstance(), minableBlock.regenTime());
     }
+  }
+
+  /** Every 100 mining fortune is another drop; the rest is the chance of one more. */
+  static int withFortune(int amount, double fortune) {
+    double exact = amount * (1 + fortune / 100);
+    int whole = (int) exact;
+    return whole + (java.util.concurrent.ThreadLocalRandom.current().nextDouble() < exact - whole ? 1 : 0);
   }
 }

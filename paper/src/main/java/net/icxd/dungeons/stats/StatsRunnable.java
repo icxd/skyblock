@@ -15,25 +15,21 @@ public class StatsRunnable implements Runnable {
     public static final Map<UUID, Replacement> DEFENSE_REPLACEMENT_MAP = new HashMap<>();
     public static final Map<UUID, Replacement> MANA_REPLACEMENT_MAP = new HashMap<>();
 
+    /** A player who's gone: nothing of theirs stays behind (and a rejoin starts from full mana). */
+    public static void forget(UUID player) {
+        MANA_MAP.remove(player);
+        DEFENSE_REPLACEMENT_MAP.remove(player);
+        MANA_REPLACEMENT_MAP.remove(player);
+        Stats.STATS_CACHE.remove(player);
+    }
+
     @Override
     public void run() {
         Bukkit.getOnlinePlayers().forEach(player -> {
             player.setSaturation(999999999);
             player.setFoodLevel(20);
 
-            User user = User.getUser(player.getUniqueId());
-            Stats stats = new Stats().defaultStats();
-
-            if (player.getInventory().getItemInHand() != null && player.getInventory().getItemInHand().getType() != Material.AIR)
-                stats.addFromItemStack(player.getInventory().getItemInHand());
-            if (player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() != Material.AIR)
-                stats.addFromItemStack(player.getInventory().getHelmet());
-            if (player.getInventory().getChestplate() != null && player.getInventory().getChestplate().getType() != Material.AIR)
-                stats.addFromItemStack(player.getInventory().getChestplate());
-            if (player.getInventory().getLeggings() != null && player.getInventory().getLeggings().getType() != Material.AIR)
-                stats.addFromItemStack(player.getInventory().getLeggings());
-            if (player.getInventory().getBoots() != null && player.getInventory().getBoots().getType() != Material.AIR)
-                stats.addFromItemStack(player.getInventory().getBoots());
+            Stats stats = Stats.of(player);
 
             player.setMaxHealth(stats.getHealth());
 
@@ -50,11 +46,9 @@ public class StatsRunnable implements Runnable {
 
             int manaPool = Utils.doubleToInt(100.0 + stats.getIntelligence());
             if (!MANA_MAP.containsKey(player.getUniqueId())) MANA_MAP.put(player.getUniqueId(), manaPool);
-            int mana;
-            if ((mana = MANA_MAP.get(player.getUniqueId())) < manaPool) {
-                MANA_MAP.remove(player.getUniqueId());
-                MANA_MAP.put(player.getUniqueId(), Math.min(manaPool, Math.min(manaPool, mana + manaPool / 50 + (int) ((double) (manaPool / 50) * 0.0))));
-            }
+            // 2% of the pool a second, and never more than the pool (it shrinks when gear comes off).
+            int mana = MANA_MAP.get(player.getUniqueId());
+            MANA_MAP.put(player.getUniqueId(), Math.min(manaPool, mana + (mana < manaPool ? manaPool / 50 : 0)));
 
             Replacement defenseReplacement = DEFENSE_REPLACEMENT_MAP.get(player.getUniqueId());
             if (defenseReplacement != null && System.currentTimeMillis() >= defenseReplacement.getEnd()) {

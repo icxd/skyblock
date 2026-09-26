@@ -1,72 +1,42 @@
 package net.icxd.dungeons.rune;
 
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
+/** Every tick: the runes on what a standing player holds and wears (each of them, not just the first). */
 public class RuneRunnable implements Runnable {
-    private final HashMap<Player, Location> lastLocation = new HashMap<>();
+    private final Map<UUID, Location> lastLocation = new HashMap<>();
     int ticks = 0;
+
     @Override
     public void run() {
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (lastLocation.containsKey(player) && (lastLocation.get(player).getX() != player.getLocation().getX() || lastLocation.get(player).getY() != player.getLocation().getY() || lastLocation.get(player).getZ() != player.getLocation().getZ())) {
-                lastLocation.put(player, player.getLocation());
-                return;
+        lastLocation.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Location now = player.getLocation();
+            Location last = lastLocation.put(player.getUniqueId(), now);
+            if (last == null || last.getX() != now.getX() || last.getY() != now.getY() || last.getZ() != now.getZ()) continue;
+            PlayerInventory inventory = player.getInventory();
+            for (ItemStack item : new ItemStack[]{inventory.getItemInMainHand(), inventory.getHelmet(), inventory.getChestplate(),
+                    inventory.getLeggings(), inventory.getBoots()}) {
+                apply(player, item);
             }
-            lastLocation.put(player, player.getLocation());
-            if (player.getInventory().getItemInHand() != null && player.getInventory().getItemInHand().getType() != Material.AIR) {
-                ItemStack item = player.getInventory().getItemInHand();
-                ItemNBT nmsItem = ItemNBT.of(item);
-                if (nmsItem.hasTag()) {
-                    if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
-                        Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
-                        rune.getRuneFunctionality().apply(player, nmsItem.getTag().getInt("rune_level"), ticks);
-                    }
-                }
-            } else if (player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() != Material.AIR) {
-                ItemStack item = player.getInventory().getHelmet();
-                ItemNBT nmsItem = ItemNBT.of(item);
-                if (nmsItem.hasTag()) {
-                    if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
-                        Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
-                        rune.getRuneFunctionality().apply(player, nmsItem.getTag().getInt("rune_level"), ticks);
-                    }
-                }
-            } else if (player.getInventory().getChestplate() != null && player.getInventory().getChestplate().getType() != Material.AIR) {
-                ItemStack item = player.getInventory().getChestplate();
-                ItemNBT nmsItem = ItemNBT.of(item);
-                if (nmsItem.hasTag()) {
-                    if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
-                        Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
-                        rune.getRuneFunctionality().apply(player, nmsItem.getTag().getInt("rune_level"), ticks);
-                    }
-                }
-            } else if (player.getInventory().getLeggings() != null && player.getInventory().getLeggings().getType() != Material.AIR) {
-                ItemStack item = player.getInventory().getLeggings();
-                ItemNBT nmsItem = ItemNBT.of(item);
-                if (nmsItem.hasTag()) {
-                    if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
-                        Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
-                        rune.getRuneFunctionality().apply(player, nmsItem.getTag().getInt("rune_level"), ticks);
-                    }
-                }
-            } else if (player.getInventory().getBoots() != null && player.getInventory().getBoots().getType() != Material.AIR) {
-                ItemStack item = player.getInventory().getBoots();
-                ItemNBT nmsItem = ItemNBT.of(item);
-                if (nmsItem.hasTag()) {
-                    if (nmsItem.getTag().hasKey("rune") && !nmsItem.getTag().getString("rune").equals("")) {
-                        Rune rune = Rune.valueOf(nmsItem.getTag().getString("rune"));
-                        rune.getRuneFunctionality().apply(player, nmsItem.getTag().getInt("rune_level"), ticks);
-                    }
-                }
-            }
-        });
+        }
         ticks++;
+    }
+
+    private void apply(Player player, ItemStack item) {
+        if (item == null || item.isEmpty()) return;
+        ItemNBT data = ItemNBT.of(item);
+        if (!data.hasTag() || data.getTag().getString("rune").isEmpty()) return;
+        Rune rune = Rune.valueOf(data.getTag().getString("rune"));
+        rune.getRuneFunctionality().apply(player, data.getTag().getInt("rune_level"), ticks);
     }
 }

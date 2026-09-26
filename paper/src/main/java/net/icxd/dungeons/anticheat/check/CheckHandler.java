@@ -22,11 +22,9 @@ public class CheckHandler implements Runnable {
     }
 
     public static void handleCheck(ACUser user, Check check) {
-        if (check instanceof CombatCheck combatCheck) {
-            if (!combatCheck.isEnabled()) return;
-            if (combatCheck.checkTick(user.getPlayer()) != null && !combatCheck.checkTick(user.getPlayer()).isPassed())
-                user.addViolation(combatCheck.checkTick(user.getPlayer()));
-        }
+        if (!(check instanceof CombatCheck combatCheck) || !combatCheck.isEnabled()) return;
+        CheckResult result = combatCheck.checkTick(user.getPlayer());
+        if (result != null && !result.isPassed()) user.addViolation(result);
     }
 
     @Override

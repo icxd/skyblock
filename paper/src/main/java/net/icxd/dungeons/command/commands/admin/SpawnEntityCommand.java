@@ -16,7 +16,15 @@ public class SpawnEntityCommand extends SCommand {
             send("§cUsage: /se <entity>");
             return;
         }
+        if (source.getPlayer() == null) {
+            send("§cOnly players can spawn mobs where they stand.");
+            return;
+        }
         CustomEntity ce = EntityRegistry.get(args[0]);
+        if (ce == null) {
+            send("§cNo mob called " + args[0] + ".");
+            return;
+        }
         EntityBuilder.spawn(ce, source.getPlayer().getLocation());
         send("§aSpawned §c" + ce.getName());
     }

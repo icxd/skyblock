@@ -26,7 +26,7 @@ public class MiningManager {
   }
 
   public static void nextPhase(Player player, int ticks) {
-    NEXT_PHASES.put(player.getUniqueId(), System.currentTimeMillis() + ticks);
+    NEXT_PHASES.put(player.getUniqueId(), System.currentTimeMillis() + ticks * 50L);
   }
 
   public static boolean updateAndNextPhase(Player player, int timeToBreakInTicks) {

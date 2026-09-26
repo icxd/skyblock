@@ -16,6 +16,7 @@ import org.bukkit.Bukkit;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -58,13 +59,25 @@ public class Stats {
     private double farmingWisdom = 0;
     private double healthRegeneration = 0;
 
+    /** Everyone's base: 100 health, intelligence and speed, 30% crit chance, 50% crit damage, 20% sea creature chance. */
     public Stats defaultStats() {
         return new Stats(
                 0, 0, 100, 0, 0, 100, 0, 100,
-                0, 0, 20, 0, 30, 0,
-                0, 50, 0, 0, 100, 100, 0,
+                0, 0, 20, 0, 50, 0,
+                0, 30, 0, 0, 100, 100, 0,
                 0, 0, 0, 0, 0, 0, 0,
                 0, 100);
+    }
+
+    /** A player's stats: the base, their armor and what they're holding. */
+    public static Stats of(Player player) {
+        Stats stats = new Stats().defaultStats();
+        PlayerInventory inventory = player.getInventory();
+        for (ItemStack item : new ItemStack[]{inventory.getItemInMainHand(), inventory.getHelmet(), inventory.getChestplate(),
+                inventory.getLeggings(), inventory.getBoots()}) {
+            if (item != null && !item.isEmpty()) stats.addFromItemStack(item, player);
+        }
+        return stats;
     }
 
     public Stats set(Stats other) {
@@ -169,13 +182,14 @@ public class Stats {
         return this;
     }
 
-    public void addFromItemStack(ItemStack itemStack) {
+    /** An item's stats; its attributes count for whoever wears or holds it. */
+    public void addFromItemStack(ItemStack itemStack, Player wearer) {
         ItemNBT nmsItem = ItemNBT.of(itemStack);
         if (nmsItem.getTag() != null) {
             SkyBlockItem item = ItemRegistry.get(nmsItem.getTag().getString("id"));
             if (item != null) {
-                double boost = DungeonStar.valueOf(nmsItem.getTag().getString("dungeon_star")).getBoost();
-                Rarity rarity = Rarity.valueOf(nmsItem.getTag().getString("rarity"));
+                String rarityName = nmsItem.getTag().getString("rarity");
+                Rarity rarity = rarityName.isEmpty() ? item.rarity() : Rarity.valueOf(rarityName);
                 Reforge reforge = nmsItem.getTag().getString("reforge").equals("") ? null : Reforge.valueOf(nmsItem.getTag().getString("reforge"));
                 ReforgeStats reforgeStats = null;
                 if (reforge != null)
@@ -195,6 +209,7 @@ public class Stats {
                     String name = enchantment.getString("name");
                     int level = enchantment.getInt("lvl");
                     Enchantment enchant = Enchantment.getByIdentifiable(name + "." + level);
+                    if (enchant.getType() == null) continue;
                     switch (enchant.getType().getNamespace()) {
                         case "growth" -> this.add(new Stats().setHealth((level * 15)));
                         case "protection" -> this.add(new Stats().setDefense((level * 3)));
@@ -207,7 +222,7 @@ public class Stats {
                     Attribute attribute2 = Attribute.valueOf(nmsItem.getTag().getString("attribute_2"));
                     int attribute2Level = nmsItem.getTag().getInt("attribute_2_level");
                     Stats stats = new Stats();
-                    Player player = Bukkit.getPlayer(nmsItem.getTag().getString("owner"));
+                    Player player = wearer;
                     if (player != null && attribute1.requirement().test(player)) {
                         stats.add(attribute1.getStatsFunction().apply(attribute1Level));
                     }

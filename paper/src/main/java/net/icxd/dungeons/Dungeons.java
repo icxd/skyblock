@@ -77,16 +77,21 @@ public class Dungeons extends JavaPlugin {
 
         cl = new CommandLoader();
 
-        try {
-            for (Class<?> listener : Utils.instantiableSubTypesOf(Listener.class)) {
-                if (!skyBlockServer.runs(listener)) continue;
-                getServer().getPluginManager().registerEvents((Listener) listener.newInstance(), this);
+        // Each on its own, so one that fails doesn't take the rest with it.
+        for (Class<?> listener : Utils.instantiableSubTypesOf(Listener.class)) {
+            if (!skyBlockServer.runs(listener)) continue;
+            try {
+                getServer().getPluginManager().registerEvents((Listener) listener.getDeclaredConstructor().newInstance(), this);
+            } catch (ReflectiveOperationException | RuntimeException e) {
+                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't register " + listener.getSimpleName(), e);
             }
-            for (Class<?> command : Utils.instantiableSubTypesOf(SCommand.class)) {
-                cl.register((SCommand) command.newInstance());
+        }
+        for (Class<?> command : Utils.instantiableSubTypesOf(SCommand.class)) {
+            try {
+                cl.register((SCommand) command.getDeclaredConstructor().newInstance());
+            } catch (ReflectiveOperationException | RuntimeException e) {
+                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't register " + command.getSimpleName(), e);
             }
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
         }
 
         Bukkit.getScheduler().runTaskTimer(this, new StatsRunnable(), 0, 20);

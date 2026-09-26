@@ -14,6 +14,11 @@ public class ItemCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {
         Player player = source.getPlayer();
+        if (player == null) return;
+        if (args.length == 0) {
+            send("&cUsage: /item <id|list>");
+            return;
+        }
         String itemName = args[0];
 
         if (itemName.equalsIgnoreCase("list")) {

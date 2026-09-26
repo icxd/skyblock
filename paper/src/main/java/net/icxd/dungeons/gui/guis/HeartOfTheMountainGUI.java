@@ -72,6 +72,8 @@ public class HeartOfTheMountainGUI extends GUI {
 
   @Override
   public void onOpen(GUIOpenEvent event) {
+    // The tree is laid out from the same spot each time the menu opens.
+    this.slot = 40;
     Tree.Node<Perk> root = this.hotm.getTree().root();
     Queue<Tree.Node<Perk>> queue = new LinkedList<>();
     queue.add(root);
@@ -87,6 +89,8 @@ public class HeartOfTheMountainGUI extends GUI {
 
   private GUIItem buildNodeItem(Tree.Node<Perk> node) {
     Perk perk = node.value();
+    // Where this node goes: the slot field moves on to the next node's.
+    int nodeSlot = this.slot;
     List<String> lore = new ArrayList<>();
 
     int level = user.getHOTMPerkLevel(perk);
@@ -116,7 +120,7 @@ public class HeartOfTheMountainGUI extends GUI {
       lore.add("&eLeft-click to upgrade!");
       lore.add("&eShift Left-click to upgrade 10 levels!");
     } else {
-      if (user.getHOTMTokens() > 1)
+      if (user.getHOTMTokens() >= 1)
         lore.add("&eClick to unlock!");
       else
         lore.add("&cYou don't have enough Token of the Mountain!");
@@ -127,14 +131,14 @@ public class HeartOfTheMountainGUI extends GUI {
       public void run(InventoryClickEvent event) {
         Player player = (Player)event.getWhoClicked();
         player.sendMessage(
-            ChatColor.stripColor(event.getClickedInventory().getItem(slot()).getItemMeta().getDisplayName())
+            ChatColor.stripColor(event.getClickedInventory().getItem(nodeSlot).getItemMeta().getDisplayName())
                 .replace("'", "")
                 .replace(" ", "_")
                 .toUpperCase()
         );
       }
 
-      @Override public int slot() { return slot; }
+      @Override public int slot() { return nodeSlot; }
       @Override public ItemStack stack() {
         return new ItemBuilder(Material.COAL)
             .setDisplayName((unlocked ? "&e" : "&c") + perk.getName())

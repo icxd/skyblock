@@ -7,16 +7,25 @@ import net.icxd.dungeons.user.User;
 import org.bson.Document;
 import org.bukkit.entity.Player;
 
-import java.util.function.Predicate;
-
 @Getter
 @AllArgsConstructor
 public class EssenceCost extends Cost {
     private final EssenceType essenceType;
     private final int amount;
 
+    private Document essence(User user) {
+        return user.getDocument().get("dungeons", Document.class).get("essence", Document.class);
+    }
+
     @Override
-    public Predicate<Player> check() {
-        return (player) -> User.getUser(player.getUniqueId()).getDocument().get("dungeons", Document.class).get("essence", Document.class).getInteger(essenceType.name().toLowerCase()) >= amount;
+    public boolean canPay(Player player, User user) {
+        return essence(user).getInteger(essenceType.name().toLowerCase()) >= amount;
+    }
+
+    @Override
+    public void pay(Player player, User user) {
+        Document essence = essence(user);
+        String key = essenceType.name().toLowerCase();
+        essence.append(key, essence.getInteger(key) - amount);
     }
 }

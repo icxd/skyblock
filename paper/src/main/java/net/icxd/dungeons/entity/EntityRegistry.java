@@ -3,7 +3,7 @@ package net.icxd.dungeons.entity;
 import net.icxd.dungeons.utils.Utils;
 import lombok.Getter;
 import org.bukkit.entity.LivingEntity;
-import org.reflections.Reflections;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.HashMap;
 
@@ -24,12 +24,11 @@ public class EntityRegistry {
         return registry.get(id.toUpperCase());
     }
 
+    /** The custom mob this entity was spawned as (not every entity of its type is one), or null. */
     public static CustomEntity get(LivingEntity entity) {
-        for (CustomEntity customEntity : registry.values()) {
-            if (customEntity.getEntityType() == entity.getType()) {
-                return customEntity;
-            }
-        }
-        return null;
+        CustomEntity spawned = EntityBuilder.typeOf(entity);
+        if (spawned != null) return spawned;
+        String id = entity.getPersistentDataContainer().get(EntityBuilder.TYPE, PersistentDataType.STRING);
+        return id == null ? null : registry.get(id);
     }
 }

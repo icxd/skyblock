@@ -10,7 +10,6 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Ability;
-import net.icxd.dungeons.item.enums.DungeonStar;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.common.Rank;
@@ -24,18 +23,20 @@ import org.bukkit.*;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class PlayerListener implements Listener {
@@ -68,7 +69,8 @@ public class PlayerListener implements Listener {
         });
     }
 
-    @EventHandler
+    /** First, so everything after it sees the player's stored inventory rather than this server's player file. */
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
         event.setJoinMessage(null);
         Player player = event.getPlayer();
@@ -78,7 +80,6 @@ public class PlayerListener implements Listener {
             player.kick(Component.text("Couldn't load your profile, please rejoin.", NamedTextColor.RED));
             return;
         }
-        // Here, before anything else can see the inventory this server's own player file had.
         try {
             Dungeons.getUserStore().restoreInventory(player, user);
         } catch (StoredInventory.NewerDataException e) {
@@ -91,385 +92,221 @@ public class PlayerListener implements Listener {
             return;
         }
         player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
-
     }
 
-    @EventHandler
+    /** Last, so every other quit handler still has the player's data. */
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onLeave(PlayerQuitEvent event) {
         event.setQuitMessage(null);
-        User user = User.cached(event.getPlayer().getUniqueId());
+        UUID id = event.getPlayer().getUniqueId();
+        lastAbilityUse.keySet().removeIf(key -> key.player().equals(id));
+        StatsRunnable.forget(id);
+        User user = User.cached(id);
         if (user == null) return;
         // Vanilla drops the cursor and crafting grid after this event; they're saved with the rest instead.
         Dungeons.getUserStore().rescueLooseItems(event.getPlayer(), user);
         Dungeons.getUserStore().leave(user);
     }
 
+    /** Off the main thread. The player's own text is sent as typed: colour codes are for ranks. */
     @EventHandler
     public void onChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        User user = User.getUser(player.getUniqueId());
-        Rank rank = Rank.valueOf(user.getDocument().getString("rank"));
-
+        User user = User.cached(player.getUniqueId());
         event.setCancelled(true);
-
-        event.getRecipients().forEach(recipient -> recipient.sendMessage(Utils.color(rank.getPrefix() + player.getName() + (rank == Rank.DEFAULT ? "&7" : "&f") + ": " + event.getMessage())));
+        if (user == null || !user.isLoaded()) return;
+        Rank rank = user.getRank();
+        String line = Utils.color(rank.getPrefix() + player.getName() + (rank == Rank.DEFAULT ? "&7" : "&f") + ": ") + event.getMessage();
+        event.getRecipients().forEach(recipient -> recipient.sendMessage(line));
     }
 
+    /** SkyBlock items are rebuilt as they're picked up (for their owner); what doesn't fit stays on the ground. */
     @EventHandler(ignoreCancelled = true)
-    public void onItemPickup(PlayerPickupItemEvent event) {
-        Player player = event.getPlayer();
-        User user = User.getUser(player.getUniqueId());
+    public void onItemPickup(EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        User user = User.cached(player.getUniqueId());
         ItemStack item = event.getItem().getItemStack();
-        if (item == null) return;
-        if (item.getType() == Material.AIR) return;
+        if (user == null || item.getType() == Material.AIR) return;
         ItemNBT craftItem = ItemNBT.of(item);
         if (!craftItem.hasTag()) return;
         NBTTagCompound tag = craftItem.getTag();
-        String id = tag.getString("id");
-        SkyBlockItem sbItem = ItemRegistry.get(id);
-        if (sbItem.isOwnable())
-            tag.setString("owner", user.getUuid().toString());
+        SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
+        if (sbItem == null) return;
+        if (sbItem.isOwnable()) tag.setString("owner", user.getUuid().toString());
         ItemStack builtItem = ItemBuilder.build(sbItem, tag, item.getAmount());
-        player.getInventory().addItem(builtItem);
         event.setCancelled(true);
-        event.getItem().remove();
+        Map<Integer, ItemStack> left = player.getInventory().addItem(builtItem);
+        int leftOver = left.values().stream().mapToInt(ItemStack::getAmount).sum();
+        if (leftOver == 0) {
+            event.getItem().remove();
+        } else {
+            item.setAmount(leftOver);
+            event.getItem().setItemStack(item);
+        }
     }
 
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
-        User user = User.getUser(player.getUniqueId());
+        User user = User.cached(player.getUniqueId());
         ItemStack item = player.getInventory().getItem(event.getNewSlot());
-        if (item == null) return;
-        if (item.getType() == Material.AIR) return;
+        if (user == null || item == null || item.getType() == Material.AIR) return;
         ItemNBT craftItem = ItemNBT.of(item);
         if (!craftItem.hasTag()) return;
         NBTTagCompound tag = craftItem.getTag();
-        String id = tag.getString("id");
-        SkyBlockItem sbItem = ItemRegistry.get(id);
-        if (sbItem.isOwnable())
-            tag.setString("owner", user.getUuid().toString());
+        SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
+        if (sbItem == null) return;
+        if (sbItem.isOwnable()) tag.setString("owner", user.getUuid().toString());
         ItemStack builtItem = ItemBuilder.build(sbItem, tag, item.getAmount());
         player.getInventory().setItem(event.getNewSlot(), builtItem);
     }
 
-    private final HashMap<UUID, Long> lastAbilityUse = new HashMap<>();
+    /** When each player last used each ability (cooldowns are per ability). */
+    private record AbilityUse(UUID player, String ability) {
+    }
+
+    private final Map<AbilityUse, Long> lastAbilityUse = new HashMap<>();
 
     @EventHandler
     public void onAbilityUse(PlayerInteractEvent event) {
         // Fired once per hand since 1.9; the ability is on the main hand item.
         if (event.getHand() != EquipmentSlot.HAND) return;
+        // Denied (e.g. while the player's data is being handed to another server).
+        if (event.useItemInHand() == Event.Result.DENY) return;
         Player player = event.getPlayer();
-        User user = User.getUser(player.getUniqueId());
-        ItemStack item = player.getItemInHand();
-        if (item == null) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item.getType() == Material.AIR) return;
+        ItemNBT craftItem = ItemNBT.of(item);
+        if (!craftItem.hasTag()) return;
+        SkyBlockItem sbItem = ItemRegistry.get(craftItem.getTag().getString("id"));
+        if (sbItem == null) return;
+        Ability ability = sbItem.ability();
+        if (ability == null) return;
+        boolean right = event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK;
+        boolean left = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
+        switch (ability.getActivation()) {
+            case RIGHT_CLICK -> { if (right) useAbility(player, sbItem, ability); }
+            case LEFT_CLICK -> { if (left) useAbility(player, sbItem, ability); }
+            default -> { }
+        }
+    }
+
+    /** Mana first: a cast that fails for lack of it doesn't start the cooldown. */
+    private void useAbility(Player player, SkyBlockItem sbItem, Ability ability) {
+        AbilityUse use = new AbilityUse(player.getUniqueId(), ability.getName());
+        Long last = lastAbilityUse.get(use);
+        if (last != null && System.currentTimeMillis() - last < ability.getCooldown() * 1000L) {
+            player.sendMessage(ChatColor.RED + "You currently have a cooldown for this ability!");
+            return;
+        }
+
+        int mana = StatsRunnable.MANA_MAP.getOrDefault(player.getUniqueId(), 0);
+        int cost = ability.getManaCost();
+        if (mana < cost) {
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
+            long now = System.currentTimeMillis();
+            StatsRunnable.MANA_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
+                @Override
+                public String getReplacement() {
+                    return "" + ChatColor.RED + ChatColor.BOLD + "NOT ENOUGH MANA";
+                }
+
+                @Override
+                public long getEnd() {
+                    return now + 2000;
+                }
+            });
+            return;
+        }
+
+        if (ability.getCooldown() > 0) lastAbilityUse.put(use, System.currentTimeMillis());
+        StatsRunnable.MANA_MAP.put(player.getUniqueId(), mana - cost);
+        ability.activate(player, sbItem);
+
+        if (ability.isShowManaCost()) {
+            long now = System.currentTimeMillis();
+            StatsRunnable.DEFENSE_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
+                @Override
+                public String getReplacement() {
+                    return ChatColor.AQUA + "-" + cost + " Mana (" + ChatColor.GOLD + ability.getName() + ChatColor.AQUA + ")";
+                }
+
+                @Override
+                public long getEnd() {
+                    return now + 400;
+                }
+            });
+        }
+    }
+
+    /**
+     * A player's melee hit with a SkyBlock item: (5 + damage) x (1 + strength / 100), crits, then
+     * One For All. Their stats already include armor and the held item (see {@link Stats#of}). Arrows
+     * count as the shooter's hit with what they're holding.
+     * Cancelled hits (sweeps, see CombatListener) don't count.
+     */
+    @EventHandler(ignoreCancelled = true)
+    public void onAttack(EntityDamageByEntityEvent event) {
+        // Their own hit, or an arrow from their SkyBlock bow.
+        Player player = event.getDamager() instanceof Player p ? p
+                : event.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player p ? p : null;
+        if (!(event.getEntity() instanceof LivingEntity target) || player == null) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType() == Material.AIR) return;
         ItemNBT craftItem = ItemNBT.of(item);
         if (!craftItem.hasTag()) return;
         NBTTagCompound tag = craftItem.getTag();
-        tag.setString("owner", user.getUuid().toString());
-        String id = tag.getString("id");
-        SkyBlockItem sbItem = ItemRegistry.get(id);
+        SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
-        Ability ability = sbItem.ability();
-        if (ability == null) return;
-        switch (ability.getActivation()) {
-            case RIGHT_CLICK -> {
-                if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                    if (lastAbilityUse.containsKey(player.getUniqueId())) {
-                        long cooldown = ability.getCooldown() * 1000L;
-                        if (System.currentTimeMillis() - lastAbilityUse.get(player.getUniqueId()) < cooldown) {
-                            player.sendMessage(ChatColor.RED + "You currently have a cooldown for this ability!");
-                            return;
-                        }
-                    }
-                    if (ability.getCooldown() > 0) lastAbilityUse.put(player.getUniqueId(), System.currentTimeMillis());
 
-                    int mana = StatsRunnable.MANA_MAP.get(player.getUniqueId());
-                    int cost = ability.getManaCost();
-                    int resMana = mana - cost;
-                    if (resMana < 0) {
-                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
-
-                        long c = System.currentTimeMillis();
-                        StatsRunnable.MANA_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
-                            @Override
-                            public String getReplacement() {
-                                return "" + ChatColor.RED + ChatColor.BOLD + "NOT ENOUGH MANA";
-                            }
-
-                            @Override
-                            public long getEnd() {
-                                return c + 2000;
-                            }
-                        });
-                        return;
-                    }
-
-                    StatsRunnable.MANA_MAP.put(player.getUniqueId(), resMana);
-                    ability.activate(player, sbItem);
-
-                    if (ability.isShowManaCost()) {
-                        long cms = System.currentTimeMillis();
-                        StatsRunnable.DEFENSE_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
-                            @Override
-                            public String getReplacement() {
-                                return ChatColor.AQUA + "-" + cost + " Mana (" + ChatColor.GOLD + ability.getName() + ChatColor.AQUA + ")";
-                            }
-
-                            @Override
-                            public long getEnd() {
-                                return cms + 400;
-                            }
-                        });
-                    }
-                }
-            }
-            case LEFT_CLICK -> {
-                if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
-                    if (lastAbilityUse.containsKey(player.getUniqueId())) {
-                        long cooldown = ability.getCooldown() * 1000L;
-                        if (System.currentTimeMillis() - lastAbilityUse.get(player.getUniqueId()) < cooldown) {
-                            player.sendMessage(ChatColor.RED + "You currently have a cooldown for this ability!");
-                            return;
-                        }
-                    }
-                    if (ability.getCooldown() > 0) lastAbilityUse.put(player.getUniqueId(), System.currentTimeMillis());
-
-                    int mana = StatsRunnable.MANA_MAP.get(player.getUniqueId());
-                    int cost = ability.getManaCost();
-                    int resMana = mana - cost;
-                    if (resMana < 0) {
-                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
-
-                        long c = System.currentTimeMillis();
-                        StatsRunnable.MANA_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
-                            @Override
-                            public String getReplacement() {
-                                return "" + ChatColor.RED + ChatColor.BOLD + "NOT ENOUGH MANA";
-                            }
-
-                            @Override
-                            public long getEnd() {
-                                return c + 2000;
-                            }
-                        });
-                        return;
-                    }
-
-                    StatsRunnable.MANA_MAP.put(player.getUniqueId(), resMana);
-                    ability.activate(player, sbItem);
-
-                    if (ability.isShowManaCost()) {
-                        long cms = System.currentTimeMillis();
-                        StatsRunnable.DEFENSE_REPLACEMENT_MAP.put(player.getUniqueId(), new Replacement() {
-                            @Override
-                            public String getReplacement() {
-                                return ChatColor.AQUA + "-" + cost + " Mana (" + ChatColor.GOLD + ability.getName() + ChatColor.AQUA + ")";
-                            }
-
-                            @Override
-                            public long getEnd() {
-                                return cms + 400;
-                            }
-                        });
-                    }
-                }
-            }
+        Stats stats = Stats.STATS_CACHE.computeIfAbsent(player.getUniqueId(), id -> Stats.of(player));
+        double damageMultiplier = 1;
+        var enchantments = tag.getList("enchantments", 10);
+        for (int i = 0; i < enchantments.size(); i++) {
+            if (enchantments.get(i).getString("name").equalsIgnoreCase("one_for_all")) damageMultiplier = 5;
         }
+        double finalDamage = (5 + stats.getDamage()) * (1 + stats.getStrength() / 100) * damageMultiplier;
+        boolean criticalHit = Math.random() * 100 < stats.getCriticalChance();
+        if (criticalHit) finalDamage *= 1 + stats.getCriticalDamage() / 100;
+
+        DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
+        if (dungeonMob != null) {
+            DungeonMobs.playerHit(event, player, dungeonMob, finalDamage, criticalHit);
+            return;
+        }
+        CustomEntity customEntity = EntityRegistry.get(target);
+        if (customEntity == null) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (target.getHealth() - finalDamage <= 0) {
+            event.setCancelled(true);
+            customEntity.onDeath(target);
+            if (!customEntity.isBoss()) drop(player, target, customEntity, stats.getMagicFind());
+            EntityBuilder.forget(target);
+            target.remove();
+            return;
+        }
+        customEntity.onDamaged(target, finalDamage);
+        event.setDamage(finalDamage);
+        // The name tag catches up on the next tick (EntityRunnable).
+        DungeonMobs.showDamage(target, finalDamage, criticalHit);
     }
 
-    @EventHandler
-    public void onAttack(EntityDamageByEntityEvent event) {
-        Entity damaged = event.getEntity();
-        if (!(damaged instanceof LivingEntity)) return;
-        if (event.getDamager() instanceof Player player) {
-            User user = User.getUser(player.getUniqueId());
-            ItemStack item = player.getItemInHand();
-            if (item == null) return;
-            if (item.getType() == Material.AIR) return;
-            ItemNBT craftItem = ItemNBT.of(item);
-            if (!craftItem.hasTag()) return;
-            NBTTagCompound tag = craftItem.getTag();
-            tag.setString("owner", user.getUuid().toString());
-            String id = tag.getString("id");
-            SkyBlockItem sbItem = ItemRegistry.get(id);
-            if (sbItem == null) return;
-
-            Stats stats = Stats.STATS_CACHE.get(player.getUniqueId());
-            double boost1 = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
-            double damage = stats.getDamage();
-            double strength = stats.getStrength();
-            double critChance = stats.getCriticalChance();
-            double critDamage = stats.getCriticalDamage();
-            double magicFind = stats.getMagicFind();
-            double armor = 0;
-
-            if (player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() != Material.AIR) {
-                ItemStack helmet = player.getInventory().getHelmet();
-                ItemNBT craft1 = ItemNBT.of(helmet);
-                if (craft1.hasTag()) {
-                    NBTTagCompound tag1 = craft1.getTag();
-                    String id1 = tag1.getString("id");
-                    SkyBlockItem item1 = ItemRegistry.get(id1);
-                    double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
-                    if (item1 != null) {
-                        damage += item1.stats().getDamage();
-                        strength += item1.stats().getStrength();
-                        critChance += item1.stats().getCriticalChance();
-                        critDamage += item1.stats().getCriticalDamage();
-                        magicFind += item1.stats().getMagicFind();
-                    }
-                }
-            }
-            if (player.getInventory().getChestplate() != null && player.getInventory().getChestplate().getType() != Material.AIR) {
-                ItemStack chestplate = player.getInventory().getChestplate();
-                ItemNBT craft1 = ItemNBT.of(chestplate);
-                if (craft1.hasTag()) {
-                    NBTTagCompound tag1 = craft1.getTag();
-                    String id1 = tag1.getString("id");
-                    SkyBlockItem item1 = ItemRegistry.get(id1);
-                    double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
-                    if (item1 != null) {
-                        damage += item1.stats().getDamage();
-                        strength += item1.stats().getStrength();
-                        critChance += item1.stats().getCriticalChance();
-                        critDamage += item1.stats().getCriticalDamage();
-                        magicFind += item1.stats().getMagicFind();
-                    }
-                }
-            }
-            if (player.getInventory().getLeggings() != null && player.getInventory().getLeggings().getType() != Material.AIR) {
-                ItemStack leggings = player.getInventory().getLeggings();
-                ItemNBT craft1 = ItemNBT.of(leggings);
-                if (craft1.hasTag()) {
-                    NBTTagCompound tag1 = craft1.getTag();
-                    String id1 = tag1.getString("id");
-                    SkyBlockItem item1 = ItemRegistry.get(id1);
-                    double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
-                    if (item1 != null) {
-                        damage += item1.stats().getDamage();
-                        strength += item1.stats().getStrength();
-                        critChance += item1.stats().getCriticalChance();
-                        critDamage += item1.stats().getCriticalDamage();
-                        magicFind += item1.stats().getMagicFind();
-                    }
-                }
-            }
-            if (player.getInventory().getBoots() != null && player.getInventory().getBoots().getType() != Material.AIR) {
-                ItemStack boots = player.getInventory().getBoots();
-                ItemNBT craft1 = ItemNBT.of(boots);
-                if (craft1.hasTag()) {
-                    NBTTagCompound tag1 = craft1.getTag();
-                    String id1 = tag1.getString("id");
-                    SkyBlockItem item1 = ItemRegistry.get(id1);
-                    double boost = DungeonStar.valueOf(tag.getString("dungeon_star")).getBoost();
-                    if (item1 != null) {
-                        damage += item1.stats().getDamage();
-                        strength += item1.stats().getStrength();
-                        critChance += item1.stats().getCriticalChance();
-                        critDamage += item1.stats().getCriticalDamage();
-                        magicFind += item1.stats().getMagicFind();
-                    }
-                }
-            }
-
-            double initialDamage = (5 + damage) * (1 + strength / 100);
-            double damageMultiplier = 1;
-
-            for (int i = 0; i < tag.getList("enchantments", 10).size(); i++) {
-                NBTTagCompound ench = tag.getList("enchantments", 10).get(i);
-                String name = ench.getString("name");
-                int level = ench.getInt("lvl");
-                if (name.equalsIgnoreCase("one_for_all")) {
-                    damageMultiplier = 5;
-                }
-            }
-
-            double finalDamage = (initialDamage * damageMultiplier * (1 + armor));
-            boolean criticalHit = Math.random() * 100 < critChance;
-            if (criticalHit)
-                finalDamage *= (1 + critDamage / 100);
-
-            LivingEntity target = (LivingEntity) damaged;
-            DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
-            if (dungeonMob != null) {
-                DungeonMobs.playerHit(event, player, dungeonMob, finalDamage, criticalHit);
-                return;
-            }
-            CustomEntity customEntity = EntityRegistry.get(target);
-            if (customEntity == null) {
-                event.setCancelled(true);
-                return;
-            }
-
-            if (target.getHealth() - finalDamage <= 0) {
-                customEntity.onDeath(target);
-                target.remove();
-                if (customEntity.hasPassenger()) {
-                    EntityBuilder.passengers.get(target).remove();
-                    EntityBuilder.passengers.remove(target);
-                }
-                EntityBuilder.nameTags.get(target).remove();
-                EntityBuilder.nameTags.remove(target);
-                EntityBuilder.entities.remove(target);
-                event.setCancelled(true);
-
-                if (!customEntity.isBoss()) {
-                    double finalMagicFind = magicFind;
-                    customEntity.getDrops().forEach(drop -> {
-                        double chance = drop.getChance() / 100;
-                        double finalChance = chance * (1 + finalMagicFind / 100);
-                        if (Math.random() < finalChance) {
-                            ItemStack i = ItemBuilder.build(drop.getItem());
-                            i.setAmount(Utils.random(drop.getMinAmount(), drop.getMaxAmount()));
-                            target.getWorld().dropItemNaturally(target.getLocation(), i);
-                        }
-                        player.sendMessage((drop.getType() == EntityDropType.RNGESUS_INCARNATE ? drop.getType().getColor() + "" + ChatColor.BOLD + "INSANE DROP! " :
-                                drop.getType().getColor() + "" + ChatColor.BOLD +
-                                        (drop.getType() == EntityDropType.CRAZY_RARE ? "CRAZY " : "") + "RARE DROP! ") + "" + drop.getItem().rarity().getColor() + drop.getItem().name() + " " + ChatColor.AQUA + "(+" + Utils.round(finalMagicFind, 0) + "% ✯ Magic Find)");
-                    });
-                }
-
-                return;
-            }
-            else customEntity.onDamaged(target, finalDamage);
-
-            event.setDamage(finalDamage);
-            if (customEntity.isBoss()) {
-                target.setCustomName(Utils.color(String.format("%s﴾ %s[%sLv%s%s] %s%s %s%s%s/%s%s%s❤ %s﴿",
-                        ChatColor.YELLOW, ChatColor.DARK_GRAY,
-                        ChatColor.GRAY, customEntity.getLevel(),
-                        ChatColor.DARK_GRAY, ChatColor.RED,
-                        customEntity.getName(), ChatColor.GREEN,
-                        Utils.formatNumber((int) target.getHealth()), ChatColor.WHITE,
-                        ChatColor.GREEN, Utils.formatNumber((int) customEntity.getMaxHealth()),
-                        ChatColor.RED, ChatColor.YELLOW)));
-            } else {
-                target.setCustomName(Utils.color(String.format("%s[%sLv%s%s] %s%s %s%s%s/%s%s%s❤",
-                        ChatColor.DARK_GRAY, ChatColor.GRAY,
-                        customEntity.getLevel(), ChatColor.DARK_GRAY,
-                        ChatColor.RED, customEntity.getName(),
-                        ChatColor.GREEN, Utils.formatNumber((int) target.getHealth()),
-                        ChatColor.WHITE, ChatColor.GREEN,
-                        Utils.formatNumber((int) customEntity.getMaxHealth()), ChatColor.RED)));
-            }
-
-            ArmorStand stand = (ArmorStand) player.getWorld().spawnEntity(damaged.getLocation().clone().add(Utils.random(-0.5, 0.5), 2, Utils.random(-0.5, 0.5)), EntityType.ARMOR_STAND);
-            stand.setCustomName(criticalHit ?
-                    Utils.rainbowize("✧" + ((int) finalDamage) + "✧") : "" + ChatColor.GRAY + (int) finalDamage);
-            stand.setCustomNameVisible(true);
-            stand.setGravity(false);
-            stand.setVisible(false);
-            stand.setMarker(true);
-            new BukkitRunnable() {
-                public void run() {
-                    stand.remove();
-                }
-            }.runTaskLater(Dungeons.getInstance(), 30);
-            /*player.sendMessage(ChatColor.RED + "Damage: " + ChatColor.GRAY + finalDamage);
-            player.sendMessage(ChatColor.RED + "Critical Hit: " + ChatColor.GRAY + criticalHit + " (" + critChance + "%)");*/
-        }
+    /** Each drop rolls on its own (magic find raises the chance); only what drops is announced. */
+    private static void drop(Player player, LivingEntity target, CustomEntity customEntity, double magicFind) {
+        if (customEntity.getDrops() == null) return;
+        customEntity.getDrops().forEach(drop -> {
+            double chance = drop.getChance() / 100 * (1 + magicFind / 100);
+            if (Math.random() >= chance) return;
+            ItemStack stack = ItemBuilder.build(drop.getItem());
+            stack.setAmount(Utils.random(drop.getMinAmount(), drop.getMaxAmount()));
+            target.getWorld().dropItemNaturally(target.getLocation(), stack);
+            String kind = drop.getType() == EntityDropType.RNGESUS_INCARNATE ? "INSANE DROP! "
+                    : (drop.getType() == EntityDropType.CRAZY_RARE ? "CRAZY " : "") + "RARE DROP! ";
+            player.sendMessage(drop.getType().getColor() + "" + ChatColor.BOLD + kind + drop.getItem().rarity().getColor() + drop.getItem().name()
+                    + " " + ChatColor.AQUA + "(+" + Utils.round(magicFind, 0) + "% ✯ Magic Find)");
+        });
     }
-
 }

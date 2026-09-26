@@ -170,4 +170,9 @@ public class EnchantmentType {
         return ((EnchantmentType) o).namespace.equals(namespace);
     }
 
+    @Override
+    public int hashCode() {
+        return namespace.hashCode();
+    }
+
 }

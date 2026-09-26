@@ -3,22 +3,17 @@ package net.icxd.dungeons.entity;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
 
+import java.util.List;
+
 public class EntityRunnable implements Runnable {
     @Override
     public void run() {
         if (EntityBuilder.entities.size() < 1) return;
-        for (LivingEntity entity : EntityBuilder.entities) {
+        // A copy: dead ones are forgotten along the way.
+        for (LivingEntity entity : List.copyOf(EntityBuilder.entities)) {
             if (entity == null) continue;
             if (entity.isDead()) {
-                EntityBuilder.entities.remove(entity);
-                if (EntityBuilder.nameTags.containsKey(entity)) {
-                    EntityBuilder.nameTags.get(entity).remove();
-                    EntityBuilder.nameTags.remove(entity);
-                }
-                if (EntityBuilder.passengers.containsKey(entity)) {
-                    EntityBuilder.passengers.get(entity).remove();
-                    EntityBuilder.passengers.remove(entity);
-                }
+                EntityBuilder.forget(entity);
                 continue;
             }
             CustomEntity customEntity = EntityRegistry.get(entity);

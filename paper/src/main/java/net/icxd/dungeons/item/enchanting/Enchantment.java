@@ -52,6 +52,11 @@ public class Enchantment implements ConfigurationSerializable {
     }
 
     @Override
+    public int hashCode() {
+        return java.util.Objects.hash(type, level);
+    }
+
+    @Override
     public Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
         map.put("type", type.getNamespace());

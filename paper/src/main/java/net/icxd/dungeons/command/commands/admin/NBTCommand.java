@@ -14,16 +14,14 @@ public class NBTCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {
         Player player = source.getPlayer();
-
-        ItemStack item = player.getInventory().getItemInHand();
-        if (item == null) {
-            player.sendMessage("§cYou must be holding an item.");
+        if (player == null) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
+        ItemNBT nmsItem = ItemNBT.of(item);
+        if (item.isEmpty() || !nmsItem.hasTag()) {
+            player.sendMessage("§cHold a SkyBlock item first.");
             return;
         }
-
-        ItemNBT nmsItem = ItemNBT.of(item);
         for (String key : nmsItem.getTag().c()) {
-            if (key.equals("display") || key.equals("SkullOwner")) continue;
             player.sendMessage("§f" + key + ": §a" + nmsItem.getTag().get(key));
         }
     }

@@ -10,27 +10,24 @@ import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
-import net.icxd.dungeons.item.cost.item.ItemCost;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
-import org.bson.Document;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import java.lang.annotation.Documented;
 
 @CommandParameters(aliases = "upgrade", description = "Upgrade an item", permission = Rank.STAFF)
 public class UpgradeCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {
         Player player = source.getPlayer();
-        ItemStack item = player.getInventory().getItemInHand();
+        if (player == null || source.getUser() == null) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
         ItemNBT nmsItem = ItemNBT.of(item);
         NBTTagCompound tag = nmsItem.getTag();
-        SkyBlockItem skyBlockItem = ItemRegistry.get(tag.getString("id"));
-        if (skyBlockItem.upgradeCosts() == null) {
+        SkyBlockItem skyBlockItem = tag == null ? null : ItemRegistry.get(tag.getString("id"));
+        if (skyBlockItem == null || skyBlockItem.upgradeCosts() == null) {
             player.sendMessage("§cThis item cannot be upgraded");
             return;
         }
@@ -41,63 +38,19 @@ public class UpgradeCommand extends SCommand {
         }
         int upgradeCount = tag.getInt("upgrade_count");
         UpgradeCost upgradeCost = skyBlockItem.upgradeCosts().getCosts().get(upgradeCount);
+        User user = source.getUser();
+        // All of it or nothing: check every cost before taking any.
         for (Cost cost : upgradeCost.getCosts()) {
-            if (cost instanceof CoinCost coinCost) {
-                if (!coinCost.check().test(player)) {
-                    player.sendMessage("§cYou don't have enough coins to upgrade this item");
-                    return;
-                }
-                User.getUser(player.getUniqueId()).getDocument().append("coins", User.getUser(player.getUniqueId()).getDocument().getInteger("coins") - coinCost.getAmount());
-                User.getUser(player.getUniqueId()).save();
-                tag.setInt("upgrade_count", upgradeCount + 1);
-            } else if (cost instanceof EssenceCost essenceCost) {
-                if (!essenceCost.check().test(player)) {
-                    player.sendMessage("§cYou don't have enough essence to upgrade this item");
-                    return;
-                }
-                Document d = User.getUser(player.getUniqueId()).getDocument()
-                        .get("dungeons", Document.class).get("essence", Document.class);
-                d.append(essenceCost.getEssenceType().name().toLowerCase(),
-                        d.getInteger(essenceCost.getEssenceType().name().toLowerCase()) - essenceCost.getAmount());
-                User.getUser(player.getUniqueId()).save();
-                tag.setInt("upgrade_count", upgradeCount + 1);
-            } else if (cost instanceof ItemCost itemCost) {
-                if (!itemCost.check().test(player)) {
-                    player.sendMessage("§cYou don't have enough items to upgrade this item");
-                    return;
-                }
-                ItemStack itemStack = ItemBuilder.build(itemCost.getItem());
-                ItemStack[] contents = player.getInventory().getContents();
-                int count = 0;
-                for (ItemStack content : contents) {
-                    if (content == null) continue;
-                    if (content.getType() != itemStack.getType()) continue;
-                    count += content.getAmount();
-                }
-                if (count > itemCost.getAmount()) {
-                    for (ItemStack content : contents) {
-                        if (content == null) continue;
-                        if (content.getType() != itemStack.getType()) continue;
-                        if (content.getAmount() > itemCost.getAmount()) {
-                            content.setAmount(content.getAmount() - itemCost.getAmount());
-                            break;
-                        } else {
-                            itemCost.setAmount(itemCost.getAmount() - content.getAmount());
-                            content.setAmount(0);
-                        }
-                    }
-                } else {
-                    for (ItemStack content : contents) {
-                        if (content == null) continue;
-                        if (content.getType() != itemStack.getType()) continue;
-                        content.setAmount(0);
-                    }
-                }
-                tag.setInt("upgrade_count", upgradeCount + 1);
-            }
+            if (cost.canPay(player, user)) continue;
+            String what = cost instanceof CoinCost ? "coins" : cost instanceof EssenceCost ? "essence" : "items";
+            player.sendMessage("§cYou don't have enough " + what + " to upgrade this item");
+            return;
         }
+        for (Cost cost : upgradeCost.getCosts()) cost.pay(player, user);
+        user.save();
+        tag.setInt("upgrade_count", upgradeCount + 1);
 
         ItemStack stack = ItemBuilder.build(skyBlockItem, tag);
-        player.getInventory().setItemInHand(stack);
+        player.getInventory().setItemInMainHand(stack);
     }
 }

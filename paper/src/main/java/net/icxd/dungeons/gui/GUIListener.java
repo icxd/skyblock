@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 
 import java.util.HashMap;
@@ -31,6 +32,12 @@ public class GUIListener implements Listener {
 
     if (event.getClick() == ClickType.DOUBLE_CLICK)
       event.setCancelled(true);
+
+    // Shift-clicking from their own inventory would put the item in a menu slot.
+    if (event.getClickedInventory() != event.getView().getTopInventory() && event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+      event.setCancelled(true);
+      return;
+    }
 
     if (GUI_COOLDOWN.containsKey(player.getUniqueId()) && System.currentTimeMillis() - GUI_COOLDOWN.get(player.getUniqueId()) < 100L) {
       event.setCancelled(true);
@@ -55,6 +62,14 @@ public class GUIListener implements Listener {
     gui.update(event.getView().getTopInventory());
   }
 
+  /** Dragging across a menu's slots would drop items into them. */
+  @EventHandler
+  public void onInventoryDrag(InventoryDragEvent event) {
+    if (!GUI.GUI_MAP.containsKey(event.getWhoClicked().getUniqueId())) return;
+    int top = event.getView().getTopInventory().getSize();
+    if (event.getRawSlots().stream().anyMatch(slot -> slot < top)) event.setCancelled(true);
+  }
+
   @EventHandler
   public void onGUIOpen(GUIOpenEvent event) {
     event.getOpened().onOpen(event);
@@ -67,6 +82,7 @@ public class GUIListener implements Listener {
     if (gui == null) return;
     gui.onClose(event);
     GUI.GUI_MAP.remove(player.getUniqueId());
+    GUI_COOLDOWN.remove(player.getUniqueId());
     Utils.delay(player::updateInventory, 1L);
   }
 }

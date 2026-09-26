@@ -20,11 +20,16 @@ public class DataCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {
         Player player = source.getPlayer();
+        if (player == null) return;
+        if (args.length < 2) {
+            player.sendMessage("§cUsage: /data <key> <value>");
+            return;
+        }
 
         String key = args[0];
         String value = args[args.length - 1];
 
-        ItemStack item = player.getInventory().getItemInHand();
+        ItemStack item = player.getInventory().getItemInMainHand();
         ItemNBT nmsItem = ItemNBT.of(item);
         NBTTagCompound tag = nmsItem.getTag();
         if (tag == null) {
@@ -32,45 +37,43 @@ public class DataCommand extends SCommand {
         }
 
         String[] keys = key.split("\\.");
-        if (keys.length == 1) {
-            switch (tag.get(key).getTypeId()) {
-                case 1 -> tag.setByte(key, Byte.parseByte(value));
-                case 2 -> tag.setShort(key, Short.parseShort(value));
-                case 3 -> tag.setInt(key, Integer.parseInt(value));
-                case 4 -> tag.setLong(key, Long.parseLong(value));
-                case 5 -> tag.setFloat(key, Float.parseFloat(value));
-                case 6 -> tag.setDouble(key, Double.parseDouble(value));
-                case 7 -> tag.setByteArray(key, value.getBytes());
-                case 8 -> tag.setString(key, value);
-                case 9, 11, 12 -> tag.setIntArray(key, new int[]{Integer.parseInt(value)});
-                case 10 -> tag.set(key, new NBTTagCompound());
-            }
-        } else {
-            NBTTagCompound subTag = tag.getCompound(keys[0]);
-            if (subTag == null) {
-                subTag = new NBTTagCompound();
-            }
-            switch (subTag.get(keys[1]).getTypeId()) {
-                case 1 -> subTag.setByte(keys[1], Byte.parseByte(value));
-                case 2 -> subTag.setShort(keys[1], Short.parseShort(value));
-                case 3 -> subTag.setInt(keys[1], Integer.parseInt(value));
-                case 4 -> subTag.setLong(keys[1], Long.parseLong(value));
-                case 5 -> subTag.setFloat(keys[1], Float.parseFloat(value));
-                case 6 -> subTag.setDouble(keys[1], Double.parseDouble(value));
-                case 7 -> subTag.setByteArray(keys[1], value.getBytes());
-                case 8 -> subTag.setString(keys[1], value);
-                case 9, 11, 12 -> subTag.setIntArray(keys[1], new int[]{Integer.parseInt(value)});
-                case 10 -> subTag.set(keys[1], new NBTTagCompound());
-            }
-            tag.set(keys[0], subTag);
+        NBTTagCompound target = tag;
+        String name = key;
+        if (keys.length > 1) {
+            target = tag.getCompound(keys[0]);
+            if (target == null) target = new NBTTagCompound();
+            name = keys[1];
         }
+        if (!set(target, name, value)) {
+            player.sendMessage("§c" + key + " is a list or compound; /data only sets plain values.");
+            return;
+        }
+        if (keys.length > 1) tag.set(keys[0], target);
 
         nmsItem.setTag(tag);
         item = nmsItem.toItemStack();
 
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
-        player.getInventory().setItemInHand(ItemBuilder.build(sbItem, tag));
+        player.getInventory().setItemInMainHand(ItemBuilder.build(sbItem, tag));
 
         player.sendMessage("§aSet " + key + " to " + value);
+    }
+
+    /** Sets a value as the type already there (a string if it's new); false for lists and compounds. */
+    private static boolean set(NBTTagCompound tag, String key, String value) {
+        int type = tag.get(key) == null ? 8 : tag.get(key).getTypeId();
+        switch (type) {
+            case 1 -> tag.setByte(key, Byte.parseByte(value));
+            case 2 -> tag.setShort(key, Short.parseShort(value));
+            case 3 -> tag.setInt(key, Integer.parseInt(value));
+            case 4 -> tag.setLong(key, Long.parseLong(value));
+            case 5 -> tag.setFloat(key, Float.parseFloat(value));
+            case 6 -> tag.setDouble(key, Double.parseDouble(value));
+            case 8 -> tag.setString(key, value);
+            default -> {
+                return false;
+            }
+        }
+        return true;
     }
 }

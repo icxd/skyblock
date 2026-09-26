@@ -16,7 +16,13 @@ public class ReachCheck extends CombatCheck {
         if (!(event.getDamager() instanceof Player player)) return new CheckResult(this, false);
         Entity damaged = event.getEntity();
 
-        double distance = player.getEyeLocation().distance(damaged.getLocation());
+        // To the nearest point of the target's hitbox, as the game measures reach (not to its feet).
+        var eye = player.getEyeLocation().toVector();
+        var box = damaged.getBoundingBox();
+        double dx = Math.max(box.getMinX() - eye.getX(), Math.max(0, eye.getX() - box.getMaxX()));
+        double dy = Math.max(box.getMinY() - eye.getY(), Math.max(0, eye.getY() - box.getMaxY()));
+        double dz = Math.max(box.getMinZ() - eye.getZ(), Math.max(0, eye.getZ() - box.getMaxZ()));
+        double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (distance > 4.0)
             return new CheckResult(this, false, "Distance: " + Utils.round(distance, 2));
 

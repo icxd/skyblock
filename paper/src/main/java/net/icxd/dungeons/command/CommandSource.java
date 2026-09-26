@@ -12,7 +12,7 @@ public class CommandSource {
     public CommandSource(CommandSender sender) {
         this.sender = sender;
         this.player = sender instanceof Player ? (Player)sender : null;
-        this.user = this.player != null ? User.getUser(this.player.getUniqueId()) : null;
+        this.user = this.player != null ? User.cached(this.player.getUniqueId()) : null;
     }
 
     public void send(String message) {

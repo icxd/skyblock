@@ -30,7 +30,7 @@ public class AttributeShard implements SkyBlockItem {
     @Override
     public NBTTagCompound nbt() {
         NBTTagCompound nbt = new NBTTagCompound();
-        Attribute attribute1 = Attribute.getRandomAttribute();
+        Attribute attribute1 = Attribute.random(null, null);
         nbt.setString("attribute_1", attribute1.name());
         nbt.setInt("attribute_1_level", Utils.random(1, 2));
         return nbt;
