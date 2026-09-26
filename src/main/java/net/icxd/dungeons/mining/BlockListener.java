@@ -1,5 +1,8 @@
 package net.icxd.dungeons.mining;
 
+import net.icxd.dungeons.OnlyOn;
+import net.icxd.dungeons.SkyBlockServer;
+
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
@@ -15,7 +18,6 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerAnimationType;
 import org.bukkit.inventory.ItemStack;
@@ -23,12 +25,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Set;
 
+/** Mining: the mithril in the Dwarven Mines. */
+@OnlyOn({SkyBlockServer.Type.DWARVEN_MINES})
 public class BlockListener implements Listener {
-
-  @EventHandler
-  public void onBreak(BlockBreakEvent event) {
-    event.setCancelled(true);
-  }
 
   @EventHandler
   public void onPlayerAnimation(PlayerAnimationEvent event) {

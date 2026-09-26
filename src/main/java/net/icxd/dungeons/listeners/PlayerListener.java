@@ -91,9 +91,6 @@ public class PlayerListener implements Listener {
         }
         player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
 
-//        player.teleport(new Location(Bukkit.getWorld("world"), 0, 100, 0));
-//        World world = Bukkit.getWorld(Dungeons.getSkyBlockServer().getServerType().getWorldName());
-//        player.teleport(world.getSpawnLocation());
     }
 
     @EventHandler

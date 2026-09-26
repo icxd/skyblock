@@ -1,14 +1,15 @@
 package net.icxd.dungeons.region;
 
 import lombok.Getter;
-import org.bukkit.Bukkit;
+import net.icxd.dungeons.Dungeons;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.util.BoundingBox;
 
 @Getter
 public enum RegionType {
     PRIVATE_ISLAND_3("Your Island", ChatColor.GREEN),
-    VILLAGE("Village", new Location(Bukkit.getWorld("world"), 229, 3, -194), new Location(Bukkit.getWorld("world"), -276, 182, 201)),
+    VILLAGE("Village", new BoundingBox(229, 3, -194, -276, 182, 201)),
     MOUNTAIN("Mountain"),
     FOREST("Forest"),
     FARM("Farm"),
@@ -76,7 +77,8 @@ public enum RegionType {
     NONE("None", ChatColor.GRAY);
 
     private final String name;
-    private final Location loc1, loc2;
+    /** In the server's main world; null for regions without bounds yet. */
+    private final BoundingBox bounds;
     private final ChatColor color;
 
     RegionType() {
@@ -88,17 +90,16 @@ public enum RegionType {
     }
 
     RegionType(String name, ChatColor color) {
-        this(name, null, null, color);
+        this(name, null, color);
     }
 
-    RegionType(String name, Location loc1, Location loc2) {
-        this(name, loc1, loc2, ChatColor.AQUA);
+    RegionType(String name, BoundingBox bounds) {
+        this(name, bounds, ChatColor.AQUA);
     }
 
-    RegionType(String name, Location loc1, Location loc2, ChatColor color) {
+    RegionType(String name, BoundingBox bounds, ChatColor color) {
         this.name = name;
-        this.loc1 = loc1;
-        this.loc2 = loc2;
+        this.bounds = bounds;
         this.color = color;
     }
 
@@ -118,34 +119,24 @@ public enum RegionType {
         return null;
     }
 
-    /*private boolean isInsideRegion(RegionType type, double x, double y, double z) {
-        if (type == null) return false;
-        if (type.getLoc1() == null || type.getLoc2() == null) return false;
-        return x >= type.getLoc1().getX() && x <= type.getLoc2().getX() && y >= type.getLoc1().getY() && y <= type.getLoc2().getY() && z >= type.getLoc1().getZ() && z <= type.getLoc2().getZ();
-    }*/
-
+    /** The region at a position in the server's main world. */
     public static RegionType getRegionType(double x, double y, double z) {
         for (RegionType region : values()) {
-            if (region == NONE) continue;
-            if (region.getLoc1() == null || region.getLoc2() == null) continue;
-
-            double minX = Math.min(region.getLoc1().getX(), region.getLoc2().getX());
-            double maxX = Math.max(region.getLoc1().getX(), region.getLoc2().getX());
-            double minY = Math.min(region.getLoc1().getY(), region.getLoc2().getY());
-            double maxY = Math.max(region.getLoc1().getY(), region.getLoc2().getY());
-            double minZ = Math.min(region.getLoc1().getZ(), region.getLoc2().getZ());
-            double maxZ = Math.max(region.getLoc1().getZ(), region.getLoc2().getZ());
-
-            // debugging: Bukkit.getLogger().info("Checking region " + region.name() + " with coords " + minX + ", " + maxX + ", " + minY + ", " + maxY + ", " + minZ + ", " + maxZ);
-
-            if (x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ) {
+            BoundingBox box = region.bounds;
+            // Both corners count, as they did when regions were two corner locations.
+            if (box != null && x >= box.getMinX() && x <= box.getMaxX() && y >= box.getMinY() && y <= box.getMaxY()
+                    && z >= box.getMinZ() && z <= box.getMaxZ()) {
                 return region;
             }
         }
         return NONE;
     }
 
+    /** NONE outside the main world, and on servers without regions (dungeons). */
     public static RegionType getRegionType(Location location) {
-        return getRegionType(location.getX(), location.getY(), location.getX());
+        if (!Dungeons.getSkyBlockServer().hasRegions() || !location.getWorld().equals(Dungeons.getSkyBlockServer().getMainWorld())) {
+            return NONE;
+        }
+        return getRegionType(location.getX(), location.getY(), location.getZ());
     }
 }

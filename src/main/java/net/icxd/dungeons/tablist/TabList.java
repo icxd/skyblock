@@ -28,7 +28,9 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate.PlayerInfo;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.SkyBlockServer;
 import net.icxd.dungeons.region.Region;
+import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -108,7 +110,8 @@ public class TabList {
 
     private static Line[] lines(Player viewer, Collection<? extends Player> online) {
         User user = User.getUser(viewer.getUniqueId());
-        boolean hub = viewer.getWorld().getName().equalsIgnoreCase("world");
+        SkyBlockServer.Type type = Dungeons.getSkyBlockServer().getServerType();
+        boolean hub = type == SkyBlockServer.Type.LOBBY || type == SkyBlockServer.Type.NONE;
         List<Line> lines = new ArrayList<>(SLOTS);
 
         // Column 1: players.
@@ -137,7 +140,7 @@ public class TabList {
         lines.add(new Line("      §3§lServer Info     ", DARK_AQUA));
         if (hub) {
             Region region = Region.regionCache.get(viewer.getUniqueId());
-            lines.add(new Line("§b§lArea: §7" + (region != null ? region.getType().getName() : "Village"), GRAY));
+            lines.add(new Line("§b§lArea: §7" + (region != null ? region.getType() : RegionType.getRegionType(viewer.getLocation())).getName(), GRAY));
             lines.add(new Line("§f Server: §8" + Dungeons.getSkyBlockServer().getName(), GRAY));
             lines.add(new Line("§f Gems: §a" + user.getGems(), GRAY));
             lines.add(new Line("§3§l§6", GRAY));
@@ -153,7 +156,7 @@ public class TabList {
             }
             for (int i = 0; i < 11; i++) lines.add(new Line("§8§a§a ", GRAY));
         } else {
-            lines.add(new Line("§b§lArea: §7Private Island", GRAY));
+            lines.add(new Line("§b§lArea: §7" + type.getDisplayName(), GRAY));
             lines.add(new Line("§f Server: §8" + Dungeons.getSkyBlockServer().getName(), GRAY));
             lines.add(new Line("§f Crystals: §d0", GRAY));
             for (int i = 0; i < 16; i++) lines.add(new Line("§8§a§1§a ", GRAY));

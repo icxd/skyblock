@@ -1,8 +1,17 @@
 package net.icxd.dungeons;
 
+import java.util.List;
+
 import lombok.Getter;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
+/**
+ * This server: its name on the network and which part of SkyBlock it hosts ({@code server.type}
+ * in config.yml). Each server hosts one area in its main world; listeners marked {@link OnlyOn}
+ * only run where they belong.
+ */
 @Getter
 public class SkyBlockServer {
     private final String name;
@@ -16,16 +25,35 @@ public class SkyBlockServer {
     }
 
     public enum Type {
-        LOBBY("hub"),
-        DUNGEONS(null),
-        CRIMSON_ISLE("crimson_isle"),
-        DWARVEN_MINES("dwarven_mines"),
-        NONE(null);
+        LOBBY("Hub"),
+        /** Dungeon runs. */
+        DUNGEONS("The Catacombs"),
+        CRIMSON_ISLE("Crimson Isle"),
+        DWARVEN_MINES("Dwarven Mines"),
+        /** For development: runs everything. */
+        NONE("Dev");
 
         @Getter
-        private final String worldName;
-        Type(String worldName) {
-            this.worldName = worldName;
+        private final String displayName;
+
+        Type(String displayName) {
+            this.displayName = displayName;
         }
+    }
+
+    /** The world the area is in (level-name in server.properties). Dungeon runs get worlds of their own. */
+    public World getMainWorld() {
+        return Bukkit.getWorlds().get(0);
+    }
+
+    /** Whether something marked {@link OnlyOn} belongs on this server. */
+    public boolean runs(Class<?> type) {
+        OnlyOn only = type.getAnnotation(OnlyOn.class);
+        return only == null || serverType == Type.NONE || List.of(only.value()).contains(serverType);
+    }
+
+    /** Areas with regions (the hub, the mines, ...); dungeons have rooms instead. */
+    public boolean hasRegions() {
+        return serverType != Type.DUNGEONS;
     }
 }

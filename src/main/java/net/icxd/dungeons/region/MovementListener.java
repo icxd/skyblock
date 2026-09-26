@@ -1,5 +1,7 @@
 package net.icxd.dungeons.region;
 
+import net.icxd.dungeons.OnlyOn;
+import net.icxd.dungeons.SkyBlockServer;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.utils.Replacement;
 import org.bukkit.Bukkit;
@@ -8,7 +10,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
+/** Tracks which region each player is in, for the sidebar and tab list. */
+@OnlyOn({SkyBlockServer.Type.LOBBY, SkyBlockServer.Type.CRIMSON_ISLE, SkyBlockServer.Type.DWARVEN_MINES})
 public class MovementListener implements Listener {
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
@@ -35,5 +40,10 @@ public class MovementListener implements Listener {
             });
         }
         Region.regionCache.put(player.getUniqueId(), region);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        Region.regionCache.remove(event.getPlayer().getUniqueId());
     }
 }

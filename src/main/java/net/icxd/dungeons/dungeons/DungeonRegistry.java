@@ -1,26 +1,26 @@
 package net.icxd.dungeons.dungeons;
 
-import org.bukkit.entity.Player;
-
 import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
+/** The dungeon runs on this server, by run id. */
 public class DungeonRegistry {
-    private static final HashMap<Player, Dungeon> dungeons = new HashMap<>();
+    private static final Map<UUID, Dungeon> dungeons = new HashMap<>();
 
-    public static Dungeon getDungeonByPlayer(Player player) {
+    /** The run a player is in, alive or dead; null if none. */
+    public static Dungeon getDungeonByPlayer(UUID player) {
         for (Dungeon dungeon : dungeons.values()) {
-            if (dungeon.getPlayers().contains(player)) {
-                return dungeon;
-            }
+            if (dungeon.isMember(player)) return dungeon;
         }
         return null;
     }
 
     public static void registerDungeon(Dungeon dungeon) {
-        dungeons.put(dungeon.getOwner(), dungeon);
+        dungeons.put(dungeon.getId(), dungeon);
     }
 
     public static void unregisterDungeon(Dungeon dungeon) {
-        dungeons.remove(dungeon.getOwner());
+        dungeons.remove(dungeon.getId());
     }
 }

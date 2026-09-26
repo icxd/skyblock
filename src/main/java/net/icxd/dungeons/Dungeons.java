@@ -66,6 +66,7 @@ public class Dungeons extends JavaPlugin {
 
         try {
             for (Class<?> listener : Utils.instantiableSubTypesOf(Listener.class)) {
+                if (!skyBlockServer.runs(listener)) continue;
                 getServer().getPluginManager().registerEvents((Listener) listener.newInstance(), this);
             }
             for (Class<?> command : Utils.instantiableSubTypesOf(SCommand.class)) {
