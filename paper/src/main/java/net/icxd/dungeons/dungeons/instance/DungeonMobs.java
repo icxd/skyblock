@@ -16,6 +16,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
@@ -70,14 +71,14 @@ public final class DungeonMobs {
 
     /**
      * A mob hits a player for SkyBlock damage, less their defense (SkyBlock's {@code defense /
-     * (defense + 100)}). Vanilla armor doesn't count again, so their health is set directly.
+     * (defense + 100)}). Vanilla armor doesn't count again, so it's taken from their health directly.
      */
     public static void hit(Player player, double damage, Entity by) {
         if (player.isDead() || player.getGameMode() == org.bukkit.GameMode.CREATIVE || player.getGameMode() == org.bukkit.GameMode.SPECTATOR) return;
         Stats stats = PlayerSession.of(player).stats();
         double defense = stats == null ? 0 : stats.get(Stat.DEFENSE);
         double taken = damage * 100 / (defense + 100);
-        player.setHealth(Math.max(0, player.getHealth() - taken));
+        PlayerHealth.damage(player, taken);
         if (player.isDead()) return;
         Vector away = player.getLocation().toVector().subtract(by.getLocation().toVector()).setY(0);
         if (away.lengthSquared() > 0) away.normalize().multiply(0.4);

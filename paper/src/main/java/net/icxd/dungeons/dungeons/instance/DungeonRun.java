@@ -31,6 +31,7 @@ import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
+import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
@@ -576,7 +577,7 @@ public final class DungeonRun {
             if (others.isEmpty()) lines.add("&3&lSolo");
             for (Member m : others) {
                 Player p = Bukkit.getPlayer(m.id);
-                int health = p == null ? 0 : (int) p.getHealth();
+                int health = p == null ? 0 : (int) PlayerHealth.get(p);
                 lines.add("&e[" + classOf(m.id).getLetter() + "] " + m.rankColor + m.name + " &a" + Utils.getFormattedNumber(health) + "&c❤");
             }
         }

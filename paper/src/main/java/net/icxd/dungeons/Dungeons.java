@@ -21,6 +21,7 @@ import net.icxd.dungeons.command.commands.user.ShowExtraStatsCommand;
 import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.gui.GUIListener;
 import net.icxd.dungeons.listeners.CombatListener;
+import net.icxd.dungeons.listeners.HealthListener;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.listeners.PlayerListener;
 import net.icxd.dungeons.listeners.WorldListener;
@@ -87,6 +88,7 @@ public class Dungeons extends JavaPlugin {
         // Each on its own, so one that fails doesn't take the rest with it.
         listen(PlayerListener.class, PlayerListener::new);
         listen(CombatListener.class, CombatListener::new);
+        listen(HealthListener.class, HealthListener::new);
         listen(InventorySyncListener.class, InventorySyncListener::new);
         listen(WorldListener.class, WorldListener::new);
         listen(GUIListener.class, GUIListener::new);

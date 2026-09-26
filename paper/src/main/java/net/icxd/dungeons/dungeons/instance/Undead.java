@@ -20,6 +20,7 @@ import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.DungeonFloor;
+import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.utils.Text;
 
@@ -216,8 +217,7 @@ final class Undead implements DungeonMobs.Mob {
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
         for (Player player : watcher.run().players()) {
             if (player.getLocation().distanceSquared(at) > 16) continue;
-            var max = player.getAttribute(Attribute.MAX_HEALTH);
-            if (max != null) DungeonMobs.hit(player, max.getValue() * 0.01, body);
+            DungeonMobs.hit(player, PlayerHealth.max(player) * 0.01, body);
         }
     }
 

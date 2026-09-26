@@ -15,9 +15,9 @@ import java.util.UUID;
 
 /**
  * What this server keeps about an online player while they're on it: their stats (worked out at
- * most once a tick), mana, ability cooldowns, the region they're in and what the action bar shows
- * in place of defense or mana. It ends when they leave (see PlayerListener), so nothing of theirs
- * stays behind, and a rejoin starts from full mana. Main thread.
+ * most once a tick), health, mana, ability cooldowns, the region they're in and what the action bar
+ * shows in place of defense or mana. It ends when they leave (see PlayerListener), so nothing of
+ * theirs stays behind, and a rejoin starts from full health and mana. Main thread.
  */
 public final class PlayerSession {
     private static final Map<UUID, PlayerSession> sessions = new HashMap<>();
@@ -25,6 +25,8 @@ public final class PlayerSession {
     private final Player player;
     private Stats stats;
     private int statsTick = Integer.MIN_VALUE;
+    /** SkyBlock health; -1 for full (see {@link PlayerHealth}). */
+    @Getter @Setter private double health = -1;
     /** -1 until their mana pool is known, then full. */
     @Getter @Setter private int mana = -1;
     private Replacement defenseReplacement;
