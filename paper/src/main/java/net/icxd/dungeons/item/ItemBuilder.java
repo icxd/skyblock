@@ -74,8 +74,8 @@ public final class ItemBuilder {
 
     /** Stats Hypixel scales by Catacombs level in dungeons (the rest only by stars, or not at all). */
     private static final Set<Stat> CATACOMBS_SCALED = EnumSet.of(Stat.HEALTH, Stat.DEFENSE, Stat.STRENGTH, Stat.DAMAGE,
-            Stat.CRIT_DAMAGE, Stat.INTELLIGENCE, Stat.SPEED, Stat.SEA_CREATURE_CHANCE, Stat.MINING_SPEED, Stat.MINING_FORTUNE,
-            Stat.FARMING_FORTUNE);
+            Stat.CRIT_DAMAGE, Stat.INTELLIGENCE, Stat.SPEED, Stat.SEA_CREATURE_CHANCE, Stat.PRISTINE, Stat.MINING_SPEED,
+            Stat.MINING_FORTUNE, Stat.FARMING_FORTUNE);
     /** Stats dungeons don't boost at all (health regen and vitality since 0.26.1). */
     private static final Set<Stat> NOT_SCALED = EnumSet.of(Stat.HEALTH_REGEN, Stat.VITALITY, Stat.MENDING, Stat.SWING_RANGE);
 
@@ -307,7 +307,7 @@ public final class ItemBuilder {
             double artOfWar = stat == Stat.STRENGTH && tag.getBoolean("art_of_war") ? 5 : 0;
             double reforged = reforge == null || reforge.getStats().get(stat) == null ? 0 : reforge.getStats().get(stat).at(rarity);
             // Stars add 2% of the base stat each out of a dungeon; in one, the dungeon boost replaces that.
-            double starBonus = base.get(stat) * 0.02 * stars;
+            double starBonus = starBonus(stat, base.get(stat), stars);
             // What enchantments grant counts in the total, with no bracket of its own.
             double shown = base.get(stat) + starBonus + potatoBooks + artOfWar + reforged + enchanted.get(stat);
             if (shown == 0) continue;
@@ -324,6 +324,14 @@ public final class ItemBuilder {
         }
         if (item.shotCooldown() > 0) lines.add("&7Shot Cooldown: &a" + Text.number(item.shotCooldown()) + "s");
         return lines;
+    }
+
+    /**
+     * What a dungeon item's stars add to one of its own stats out of a dungeon: 2% of it a star, but
+     * nothing to Swing Range (the recorded 5-star Giant's Sword showed its 1 as {@code +1} in the Hub).
+     */
+    public static double starBonus(Stat stat, double base, int stars) {
+        return stat == Stat.SWING_RANGE ? 0 : base * 0.02 * stars;
     }
 
     /**

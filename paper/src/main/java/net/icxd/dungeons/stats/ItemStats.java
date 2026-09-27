@@ -44,8 +44,9 @@ public final class ItemStats {
 
     /**
      * The stats its lore lists: its own, its reforge's, its hot potato books', Art of War's and its
-     * enchantments'. On a dungeon item each star adds 2% of its own stats; in a dungeon ({@code catacombs}
-     * is the wearer's Catacombs boost there, null elsewhere) the whole line is multiplied instead by
+     * enchantments'. On a dungeon item each star adds 2% of its own stats ({@link ItemBuilder#starBonus});
+     * in a dungeon ({@code catacombs} is the wearer's Catacombs boost there, null elsewhere) the whole
+     * line is multiplied instead by
      * {@link ItemBuilder#dungeonFactor} (+10% a star and the Catacombs boost), as Hypixel does: the
      * recorded Giant's Sword's 265 Strength was 922.2 in a dungeon.
      */
@@ -74,7 +75,7 @@ public final class ItemStats {
             // a weapon's own ability damage.
             boolean boosted = catacombs != null && stats.get(stat) > 0 && stat != Stat.BREAKING_POWER && stat != Stat.WEAPON_ABILITY_DAMAGE;
             if (boosted) stats.set(stat, stats.get(stat) * ItemBuilder.dungeonFactor(stat, stars, catacombs));
-            else stats.add(stat, base.get(stat) * 0.02 * stars);
+            else stats.add(stat, ItemBuilder.starBonus(stat, base.get(stat), stars));
         }
         return stats;
     }

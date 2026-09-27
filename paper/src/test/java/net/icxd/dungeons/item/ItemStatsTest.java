@@ -24,10 +24,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ItemStatsTest {
     private static final String STAR = "[{\"amount\":10,\"essence\":\"WITHER\"}]";
-    /** Like the recorded Giant's Sword: 500 Damage, and Crit Chance to show it only gets the stars' boost. */
+    /**
+     * Like the recorded Giant's Sword: 500 Damage and 1 Swing Range, with Crit Chance to show it only gets
+     * the stars' boost, and Pristine that it gets the Catacombs one.
+     */
     private static final DataItem SWORD = item("""
             "TEST_GIANT_SWORD":{"dungeon_item":true,"material":"IRON_SWORD","name":"Test Giant Sword","rarity":"LEGENDARY",\
-            "stats":{"DAMAGE":500,"CRIT_CHANCE":10,"HEALTH_REGEN":5},"type":"SWORD","upgrade_costs":[@,@,@,@,@]}""".replace("@", STAR));
+            "stats":{"DAMAGE":500,"CRIT_CHANCE":10,"HEALTH_REGEN":5,"SWING_RANGE":1,"PRISTINE":2},"type":"SWORD",\
+            "upgrade_costs":[@,@,@,@,@]}""".replace("@", STAR));
     private static final DataItem PLAIN = item("""
             "TEST_PLAIN_SWORD":{"material":"IRON_SWORD","name":"Test Plain Sword","rarity":"RARE","stats":{"DAMAGE":100},"type":"SWORD"}""");
 
@@ -77,6 +81,9 @@ class ItemStatsTest {
         assertEquals(30, stats.get(Stat.STRENGTH), 1e-9);
         assertEquals(70, stats.get(Stat.CRIT_DAMAGE), 1e-9);
         assertEquals(11, stats.get(Stat.CRIT_CHANCE), 1e-9);
+        assertEquals(2.2, stats.get(Stat.PRISTINE), 1e-9);
+        // The recorded 5-star Giant's Sword's Swing Range was +1 in the Hub: stars don't add to it.
+        assertEquals(1, stats.get(Stat.SWING_RANGE), 1e-9);
     }
 
     /**
@@ -92,6 +99,9 @@ class ItemStatsTest {
         // Crit Chance: the stars' 50% only; Health Regen: nothing.
         assertEquals(15, stats.get(Stat.CRIT_CHANCE), 1e-9);
         assertEquals(5, stats.get(Stat.HEALTH_REGEN), 1e-9);
+        // Pristine gets the Catacombs boost too (the wiki's "Stats affected on Dungeon items"); Swing Range nothing.
+        assertEquals(2 * 3.45, stats.get(Stat.PRISTINE), 1e-9);
+        assertEquals(1, stats.get(Stat.SWING_RANGE), 1e-9);
         // Only dungeon items.
         assertEquals(100, ItemStats.of(PLAIN, ItemBuilder.newData(PLAIN), 1.95).get(Stat.DAMAGE), 1e-9);
     }
@@ -104,5 +114,6 @@ class ItemStatsTest {
         List<String> lines = ItemBuilder.statLines(SWORD, tag, Rarity.LEGENDARY, null);
         assertTrue(lines.contains("&7Damage: &c+580 &e(+30) &8(+" + net.icxd.dungeons.utils.Text.number(stats.get(Stat.DAMAGE)) + ")"), lines.toString());
         assertTrue(lines.contains("&7Crit Damage: &9+70% &8(+" + net.icxd.dungeons.utils.Text.number(stats.get(Stat.CRIT_DAMAGE)) + "%)"), lines.toString());
+        assertTrue(lines.contains("&7Swing Range: &e+1 &8(+1)"), lines.toString());
     }
 }
