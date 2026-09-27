@@ -1,7 +1,12 @@
 package net.icxd.dungeons.mob;
 
 import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.dungeons.instance.DungeonMobs;
+import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.combat.Damage;
+import net.icxd.dungeons.combat.DamageIndicators;
+import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.mob.mobs.Bladesoul;
@@ -59,6 +64,8 @@ public final class Mobs implements Listener {
         private final SkyBlockMob type;
         private final LivingEntity entity;
         private double health;
+        /** Hits it has taken from players (First Strike and Triple-Strike count them). */
+        private int hits;
         private TextDisplay nameTag;
         private LivingEntity passenger;
         private String shownName;
@@ -79,6 +86,11 @@ public final class Mobs implements Listener {
 
         public double health() {
             return health;
+        }
+
+        /** What a hit on it is worked out against. */
+        public Damage.Target target() {
+            return new Damage.Target(health, type.getMaxHealth(), type.getDefense(), type.getTypes(), hits);
         }
     }
 
@@ -170,7 +182,10 @@ public final class Mobs implements Listener {
         }
         event.setDamage(0);
         live.health -= damage;
-        DungeonMobs.showDamage(live.entity, damage, critical);
+        live.hits++;
+        DamageIndicators.show(live.entity, damage, critical);
+        DungeonRun run = RunManager.of(player);
+        if (run != null) run.damageDealt(player.getUniqueId(), damage);
         if (live.health <= 0) {
             event.setCancelled(true);
             die(live, player);
@@ -181,6 +196,8 @@ public final class Mobs implements Listener {
     }
 
     private static void die(Live live, Player killer) {
+        DungeonRun run = killer == null ? null : RunManager.of(killer);
+        if (run != null) run.killed(killer.getUniqueId());
         live.type.onDeath(live.entity, killer);
         if (killer != null && !live.type.isBoss()) drop(live, killer);
         remove(live);
@@ -235,18 +252,14 @@ public final class Mobs implements Listener {
         return live;
     }
 
-    /** Hits on our mobs that PlayerListener didn't deal with (fists, other items) do fist damage; nothing else hurts them. */
+    /** Players' hits on our mobs that PlayerListener didn't deal with are worked out the same way ({@link Combat}); nothing else hurts them. */
     @EventHandler(priority = EventPriority.HIGH)
     public void onHurt(EntityDamageEvent event) {
         Live live = of(event.getEntity());
         if (live == null || event.getDamage() == 0) return;
-        if (event instanceof EntityDamageByEntityEvent hit) {
-            Player player = hit.getDamager() instanceof Player p ? p
-                    : hit.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player p ? p : null;
-            if (player != null && !event.isCancelled()) {
-                playerHit(hit, player, live, DungeonMobs.fistDamage(player), false);
-                return;
-            }
+        if (event instanceof EntityDamageByEntityEvent hit && Combat.playerBehind(hit.getDamager()) != null) {
+            if (!event.isCancelled()) Combat.playerHit(hit);
+            return;
         }
         if (event.getCause() != EntityDamageEvent.DamageCause.KILL) event.setCancelled(true);
     }
@@ -257,8 +270,14 @@ public final class Mobs implements Listener {
         Live live = attacker(event.getDamager());
         if (live == null || !(event.getEntity() instanceof Player player)) return;
         event.setCancelled(true);
-        if (live.type.getDamage() > 0) DungeonMobs.hit(player, live.type.getDamage(), live.entity);
+        if (live.type.getDamage() > 0) PlayerDamage.hit(player, live.type.getDamage(), PlayerDamage.Kind.NORMAL, event.getDamager(), live.type.getKnockback());
         live.type.onAttack(live.entity, player);
+    }
+
+    /** Their wither skulls hit, and don't blow up as well (the blast would hit again). */
+    @EventHandler
+    public void onPrime(org.bukkit.event.entity.ExplosionPrimeEvent event) {
+        if (event.getEntity() instanceof Projectile && attacker(event.getEntity()) != null) event.setCancelled(true);
     }
 
     /** Killed some other way (/kill): gone, with no vanilla drops. */

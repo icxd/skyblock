@@ -2,31 +2,22 @@ package net.icxd.dungeons.dungeons.instance;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.util.Vector;
 
-import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.session.PlayerHealth;
-import net.icxd.dungeons.session.PlayerSession;
-import net.icxd.dungeons.stats.Stat;
-import net.icxd.dungeons.stats.Stats;
-import net.icxd.dungeons.utils.Utils;
-import net.icxd.dungeons.utils.Text;
+import net.icxd.dungeons.combat.DamageIndicators;
+import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.mob.MobType;
 
 /**
  * Dungeon mobs (the Watcher and his undeads) and how they fight. Their health is SkyBlock health,
- * kept here rather than in the entity; hits on them are routed here by the combat listeners, and
- * their hits on players go through {@link #hit}.
+ * kept here rather than in the entity; hits on them are worked out by {@code Combat} (as every
+ * player's hit is), and their hits on players go through {@link #hit}.
  */
 public final class DungeonMobs {
     /** One of our mobs. */
@@ -43,12 +34,33 @@ public final class DungeonMobs {
         default double attackDamage() {
             return 0;
         }
+
+        /** Its health now, and at most (for Giant Killer, Prosecute and Execute). */
+        default double health() {
+            return 1;
+        }
+
+        default double maxHealth() {
+            return 1;
+        }
+
+        /** What hits on it are reduced by: 100 / (100 + Defense). */
+        default double defense() {
+            return 0;
+        }
+
+        /** For Smite and the like. */
+        default Set<MobType> types() {
+            return Set.of();
+        }
     }
 
     /** On every entity that's one of ours, dead or alive: their deaths drop nothing. */
     public static final String TAG = "skyblock_dungeon_mob";
 
     private static final Map<UUID, Mob> MOBS = new HashMap<>();
+    /** How many hits each has taken (First Strike and Triple-Strike count them). */
+    private static final Map<UUID, Integer> HITS = new HashMap<>();
     /** The last hit {@link #playerHit} took care of, so the catch-all listener leaves it be. */
     private static EntityDamageEvent handled;
 
@@ -67,24 +79,17 @@ public final class DungeonMobs {
 
     static void remove(Entity entity) {
         MOBS.remove(entity.getUniqueId());
+        HITS.remove(entity.getUniqueId());
     }
 
-    /**
-     * A mob hits a player for SkyBlock damage, less their defense (SkyBlock's {@code defense /
-     * (defense + 100)}). Vanilla armor doesn't count again, so it's taken from their health directly.
-     */
+    /** How many hits it has taken from players so far. */
+    public static int hitsTaken(Entity entity) {
+        return HITS.getOrDefault(entity.getUniqueId(), 0);
+    }
+
+    /** A mob hits a player for SkyBlock damage, less their defense (see {@link PlayerDamage}). */
     public static void hit(Player player, double damage, Entity by) {
-        if (player.isDead() || player.getGameMode() == org.bukkit.GameMode.CREATIVE || player.getGameMode() == org.bukkit.GameMode.SPECTATOR) return;
-        Stats stats = PlayerSession.of(player).stats();
-        double defense = stats == null ? 0 : stats.get(Stat.DEFENSE);
-        double taken = damage * 100 / (defense + 100);
-        PlayerHealth.damage(player, taken);
-        if (player.isDead()) return;
-        Vector away = player.getLocation().toVector().subtract(by.getLocation().toVector()).setY(0);
-        if (away.lengthSquared() > 0) away.normalize().multiply(0.4);
-        player.setVelocity(away.setY(0.36));
-        player.playHurtAnimation(0);
-        player.getWorld().playSound(player, Sound.ENTITY_PLAYER_HURT, 1, 1);
+        PlayerDamage.hit(player, damage, by);
     }
 
     /**
@@ -99,6 +104,7 @@ public final class DungeonMobs {
             return;
         }
         event.setDamage(0);
+        HITS.merge(event.getEntity().getUniqueId(), 1, Integer::sum);
         mob.hurt(player, damage);
         showDamage(event.getEntity(), damage, critical);
     }
@@ -110,23 +116,6 @@ public final class DungeonMobs {
 
     /** The number that pops up where a mob was hit, as for SkyBlock's other mobs. */
     public static void showDamage(Entity at, double damage, boolean critical) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        Location spot = at.getLocation().add(random.nextDouble(-0.5, 0.5), 2, random.nextDouble(-0.5, 0.5));
-        ArmorStand stand = at.getWorld().spawn(spot, ArmorStand.class, s -> {
-            s.setVisible(false);
-            s.setGravity(false);
-            s.setMarker(true);
-            s.setPersistent(false);
-            s.customName(Text.line(critical ? Utils.rainbowize("✧" + (int) damage + "✧") : "&7" + (int) damage));
-            s.setCustomNameVisible(true);
-        });
-        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), stand::remove, 30);
-    }
-
-    /** What a player's fist (or a non-SkyBlock item) does: 5 base damage with their damage and strength. */
-    public static double fistDamage(Player player) {
-        Stats stats = PlayerSession.of(player).stats();
-        if (stats == null) return 5;
-        return (5 + stats.get(Stat.DAMAGE)) * (1 + stats.get(Stat.STRENGTH) / 100);
+        DamageIndicators.show(at, damage, critical);
     }
 }

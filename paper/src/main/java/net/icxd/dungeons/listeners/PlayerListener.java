@@ -1,9 +1,9 @@
 package net.icxd.dungeons.listeners;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.common.Rank;
-import net.icxd.dungeons.dungeons.instance.DungeonMobs;
-import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.profile.ProfileActions;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
@@ -14,8 +14,6 @@ import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
-import net.icxd.dungeons.stats.Stat;
-import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
@@ -29,10 +27,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -235,8 +230,9 @@ public class PlayerListener implements Listener {
     private void useAbility(Player player, SkyBlockItem sbItem, NBTTagCompound tag, ItemBlock ability) {
         PlayerSession session = PlayerSession.of(player);
         String cooldown = "ability:" + ability.name();
-        if (session.cooldownLeft(cooldown) > 0) {
-            player.sendMessage("§cYou currently have a cooldown for this ability!");
+        long left = session.cooldownLeft(cooldown);
+        if (left > 0) {
+            player.sendMessage("§cThis ability is on cooldown for " + Damage.cooldownSeconds(left) + "s.");
             return;
         }
 
@@ -267,44 +263,12 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * A player's melee hit with a SkyBlock item: (5 + damage) x (1 + strength / 100), crits, then
-     * One For All. Their stats already include armor and the held item (see {@link PlayerSession#stats}). Arrows
-     * count as the shooter's hit with what they're holding.
-     * Cancelled hits (sweeps, see CombatListener) don't count.
+     * A player's hit, or their arrow's: on SkyBlock's mobs it does SkyBlock damage, worked out by
+     * {@link Combat} (with whatever they hold, fists too; an arrow with the bow it left). Cancelled hits
+     * (sweeps, see CombatListener) don't count.
      */
     @EventHandler(ignoreCancelled = true)
     public void onAttack(EntityDamageByEntityEvent event) {
-        // Their own hit, or an arrow from their SkyBlock bow.
-        Player player = event.getDamager() instanceof Player p ? p
-                : event.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player p ? p : null;
-        if (!(event.getEntity() instanceof LivingEntity target) || player == null) return;
-        ItemStack item = player.getInventory().getItemInMainHand();
-        if (item.getType() == Material.AIR) return;
-        NBTTagCompound tag = ItemNBT.read(item);
-        if (tag == null) return;
-        SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
-        if (sbItem == null) return;
-
-        Stats stats = PlayerSession.of(player).stats();
-        double damageMultiplier = 1;
-        var enchantments = tag.getList("enchantments", 10);
-        for (int i = 0; i < enchantments.size(); i++) {
-            if (enchantments.get(i).getString("name").equalsIgnoreCase("one_for_all")) damageMultiplier = 5;
-        }
-        double finalDamage = (5 + stats.get(Stat.DAMAGE)) * (1 + stats.get(Stat.STRENGTH) / 100) * damageMultiplier;
-        boolean criticalHit = Math.random() * 100 < stats.get(Stat.CRIT_CHANCE);
-        if (criticalHit) finalDamage *= 1 + stats.get(Stat.CRIT_DAMAGE) / 100;
-
-        DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
-        if (dungeonMob != null) {
-            DungeonMobs.playerHit(event, player, dungeonMob, finalDamage, criticalHit);
-            return;
-        }
-        Mobs.Live mob = Mobs.of(target);
-        if (mob == null) {
-            event.setCancelled(true);
-            return;
-        }
-        Mobs.playerHit(event, player, mob, finalDamage, criticalHit);
+        Combat.playerHit(event);
     }
 }

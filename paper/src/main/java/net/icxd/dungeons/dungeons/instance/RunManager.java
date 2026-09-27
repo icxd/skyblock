@@ -65,6 +65,7 @@ import com.mongodb.client.MongoCollection;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.math.Position;
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
@@ -635,15 +636,15 @@ public final class RunManager {
         }
 
         /**
-         * Hits on dungeon mobs that {@code PlayerListener} didn't deal with (fists, other items,
-         * arrows) do the player's fist damage; nothing else hurts them.
+         * Players' hits on dungeon mobs that {@code PlayerListener} didn't deal with are worked out the
+         * same way ({@link Combat}); nothing else hurts them.
          */
         @EventHandler(priority = EventPriority.HIGH)
         public void onMobHurt(EntityDamageEvent event) {
             DungeonMobs.Mob mob = DungeonMobs.of(event.getEntity());
             if (mob == null || DungeonMobs.isHandled(event)) return;
-            if (event instanceof EntityDamageByEntityEvent hit && playerBehind(hit.getDamager()) instanceof Player player) {
-                if (!event.isCancelled()) DungeonMobs.playerHit(hit, player, mob, DungeonMobs.fistDamage(player), false);
+            if (event instanceof EntityDamageByEntityEvent hit && playerBehind(hit.getDamager()) != null) {
+                if (!event.isCancelled()) Combat.playerHit(hit);
                 return;
             }
             if (event.getCause() != EntityDamageEvent.DamageCause.KILL) event.setCancelled(true);

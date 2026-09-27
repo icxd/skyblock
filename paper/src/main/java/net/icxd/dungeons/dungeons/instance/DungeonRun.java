@@ -516,12 +516,13 @@ public final class DungeonRun {
         return phase == Phase.RUNNING || phase == Phase.ENDED;
     }
 
-    void damageDealt(UUID member, double damage) {
+    /** For EXTRA STATS and the tab list: how much damage a member has dealt, and how many kills. */
+    public void damageDealt(UUID member, double damage) {
         Member m = members.get(member);
         if (m != null && phase == Phase.RUNNING) m.damage += damage;
     }
 
-    void killed(UUID member) {
+    public void killed(UUID member) {
         Member m = members.get(member);
         if (m != null && phase == Phase.RUNNING) m.kills++;
     }

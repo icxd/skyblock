@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item.ability.abilities;
 
+import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
@@ -29,6 +30,8 @@ public class InstantlyShoots implements AbilityHandler {
             l.setYaw(location.getYaw() + (i * 10) - (arrows * 5) + 5);
             Arrow a = player.getWorld().spawnArrow(l.clone().add(l.getDirection().multiply(0.7)), l.getDirection(), 5, 1);
             a.setShooter(player);
+            // A shortbow's shot is always a full draw.
+            Shots.record(a, player, tag, true);
         }
     }
 }

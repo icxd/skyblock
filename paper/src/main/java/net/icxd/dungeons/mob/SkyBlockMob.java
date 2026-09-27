@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * A kind of SkyBlock mob: what it is, and what it does. {@link Mobs} spawns them and keeps their
@@ -22,6 +23,12 @@ public interface SkyBlockMob {
     default double getMaxHealth() { return 100; }
     /** What its hits do to a player, in SkyBlock damage (before their defense). */
     default double getDamage() { return 0; }
+    /** What players' hits on it are reduced by: 100 / (100 + Defense). */
+    default double getDefense() { return 0; }
+    /** Its mob types, for Smite and the like. */
+    default Set<MobType> getTypes() { return Set.of(); }
+    /** How hard its hits knock players back: 1 for the usual. */
+    default double getKnockback() { return 1; }
     /** A boss's name tag is framed: "﴾ [Lv200] Bladesoul 50M/50M❤ ﴿". */
     default boolean isBoss() { return false; }
     /** Nothing hurts it (a passenger that's part of how its mob looks, say). */

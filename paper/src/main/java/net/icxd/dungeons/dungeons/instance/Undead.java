@@ -20,7 +20,8 @@ import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.DungeonFloor;
-import net.icxd.dungeons.session.PlayerHealth;
+import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.mob.MobType;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.utils.Text;
 
@@ -178,6 +179,30 @@ final class Undead implements DungeonMobs.Mob {
     }
 
     @Override
+    public double health() {
+        return health;
+    }
+
+    @Override
+    public double maxHealth() {
+        return maxHealth;
+    }
+
+    /**
+     * The wiki says they "have high Defense", but not how high (the recording's hits on them were 50 to
+     * 100 times smaller than on room mobs, with buffs that aren't known): UNKNOWN, so none yet.
+     */
+    @Override
+    public double defense() {
+        return 0;
+    }
+
+    @Override
+    public java.util.Set<MobType> types() {
+        return java.util.Set.of(MobType.UNDEAD);
+    }
+
+    @Override
     public void hurt(Player by, double amount) {
         if (dead) return;
         health -= amount;
@@ -217,7 +242,8 @@ final class Undead implements DungeonMobs.Mob {
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
         for (Player player : watcher.run().players()) {
             if (player.getLocation().distanceSquared(at) > 16) continue;
-            DungeonMobs.hit(player, PlayerHealth.max(player) * 0.01, body);
+            // "Dealing 1% of nearby players' max health" (the wiki's Watcher page): a share of max health, which Defense doesn't reduce.
+            PlayerDamage.hit(player, 0.01, PlayerDamage.Kind.MAX_HEALTH, body, 1);
         }
     }
 
@@ -233,11 +259,13 @@ final class Undead implements DungeonMobs.Mob {
         private final Watcher watcher;
         final Silverfish body;
         private double health;
+        private final double maxHealth;
         private final double damage;
 
         Parasite(Watcher watcher, DungeonFloor floor, Location at) {
             this.watcher = watcher;
-            this.health = UndeadType.parasiteHealth(floor);
+            this.maxHealth = UndeadType.parasiteHealth(floor);
+            this.health = maxHealth;
             this.damage = UndeadType.parasiteDamage(floor);
             this.body = at.getWorld().spawn(at, Silverfish.class, s -> {
                 s.setPersistent(false);
@@ -251,6 +279,16 @@ final class Undead implements DungeonMobs.Mob {
         @Override
         public double attackDamage() {
             return damage;
+        }
+
+        @Override
+        public double health() {
+            return health;
+        }
+
+        @Override
+        public double maxHealth() {
+            return maxHealth;
         }
 
         @Override

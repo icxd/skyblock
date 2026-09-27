@@ -35,6 +35,7 @@ import net.icxd.dungeons.database.mongo.Settings;
 import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.network.ProxyLink;
@@ -104,6 +105,7 @@ public class Dungeons extends JavaPlugin {
         listen(Mobs.class, Mobs::new);
         listen(SandboxDrops.class, SandboxDrops::new);
         listen(SandboxStorage.class, SandboxStorage::new);
+        listen(Shots.class, Shots::new);
 
         List<SCommand> commands = List.of(new AddEnchantmentCommand(), new DataCommand(), new DungeonCommand(), new ItemCommand(),
                 new NBTCommand(), new PlayerDataCommand(), new RecombobulateCommand(), new SpawnEntityCommand(),
