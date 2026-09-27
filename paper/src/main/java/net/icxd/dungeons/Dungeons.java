@@ -41,6 +41,8 @@ import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.network.ProxyLink;
+import net.icxd.dungeons.npc.Npcs;
+import net.icxd.dungeons.npc.Ophelia;
 import net.icxd.dungeons.profile.SandboxDrops;
 import net.icxd.dungeons.profile.SandboxStorage;
 import net.icxd.dungeons.rune.RuneRunnable;
@@ -111,6 +113,14 @@ public class Dungeons extends JavaPlugin {
         listen(Shots.class, Shots::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
+        listen(Npcs.class, Npcs::new);
+        if (skyBlockServer.runs(Ophelia.class)) {
+            try {
+                Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));
+            } catch (RuntimeException e) {
+                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't spawn Ophelia", e);
+            }
+        }
 
         List<SCommand> commands = List.of(new AddEnchantmentCommand(), new DataCommand(), new DungeonCommand(), new ItemCommand(),
                 new NBTCommand(), new PlayerDataCommand(), new RecombobulateCommand(), new SpawnEntityCommand(),
@@ -159,6 +169,7 @@ public class Dungeons extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        Npcs.removeAll();
         if (runManager != null) runManager.stop();
         runManager = null;
         if (userStore != null) userStore.stop();
