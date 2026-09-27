@@ -33,7 +33,6 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
-import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stat;
@@ -43,9 +42,12 @@ import net.icxd.dungeons.utils.Utils;
 /**
  * The members' classes once the run has started (research critic.md 3.2): each one's class and level
  * as they started, their stats ({@link ClassBonus}, doubled for a class nobody else plays, with the
- * recorded chat), and the Berserk's passives and Dungeon Orb abilities: Throwing Axe (right click the
- * orb, or ctrl+drop) and Ragnarok (left click the orb, or drop), with the recorded messages and timings.
- * The other classes' abilities aren't built: only their menus and stats.
+ * recorded chat), the Berserk's passives, and the Dungeon Orb abilities: the class ability (right
+ * click the orb, or ctrl+drop) and the ultimate (left click the orb, or drop). The Berserk's Throwing
+ * Axe and Ragnarok are as recorded (messages, timings, the axe's flight); the Archer's Explosive Shot
+ * and Rapid Fire, the Tank's Seismic Wave and Castle of Stone and the Healer's Wish follow their lore
+ * ({@link ClassAbilities}), with the Berserk's messages; the Healer's Healing Circle and the Mage's
+ * aren't built.
  *
  * <p>Stats go in through {@link PlayerStats#addModifier} and damage through {@link Combat#addMultiplier}
  * (see {@link #register}). Main thread.
@@ -55,8 +57,14 @@ final class RunClasses {
     private static final int FIRST_REMINDER = 466;
     private static final int REMINDER_EVERY = 600;
     private static final long AXE_COOLDOWN = 10_000;
+    private static final long SEISMIC_WAVE_COOLDOWN = 15_000;
     private static final long RAGNAROK_COOLDOWN = 60_000;
     private static final long RAGNAROK_MILLIS = 15_000;
+    private static final long RAPID_FIRE_COOLDOWN = 100_000;
+    private static final long CASTLE_OF_STONE_COOLDOWN = 150_000;
+    private static final long CASTLE_OF_STONE_MILLIS = 20_000;
+    /** Rapid Fire's arrows "deal 75.0% of your highest Bow hit". */
+    private static final double RAPID_FIRE_SHARE = 0.75;
     /** "your highest hit in the last minute". */
     private static final long HIGHEST_HIT_WINDOW = 60_000;
     /** Bloodlust takes this much off Throwing Axe's cooldown. */
@@ -75,11 +83,12 @@ final class RunClasses {
         final DungeonClass dungeonClass;
         final int level;
         final boolean solo;
-        long axeReadyAt;
-        boolean axeAnnounced = true;
+        long abilityReadyAt;
+        boolean abilityAnnounced = true;
         long ultimateReadyAt;
         int nextReminder = FIRST_REMINDER;
-        long ragnarokUntil;
+        /** Until when Ragnarok or Castle of Stone lasts. */
+        long ultimateUntil;
         long bloodlustUntil;
         /** Their hits in the last minute: when, and how much. */
         final Deque<double[]> hits = new ArrayDeque<>();
@@ -99,10 +108,33 @@ final class RunClasses {
     private final Map<UUID, State> states = new HashMap<>();
     /** Axes in flight. */
     private final List<ArmorStand> axes = new ArrayList<>();
+    private final ClassAbilities abilities;
     private int ticks;
 
     RunClasses(DungeonRun run) {
         this.run = run;
+        this.abilities = new ClassAbilities(run);
+    }
+
+    /** What a class's ability is called; null where it isn't built. */
+    static String abilityName(DungeonClass dungeonClass) {
+        return switch (dungeonClass) {
+            case BERSERK -> "Throwing Axe";
+            case ARCHER -> "Explosive Shot";
+            case TANK -> "Seismic Wave";
+            case HEALER, MAGE -> null;
+        };
+    }
+
+    /** What a class's ultimate is called; null where it isn't built. */
+    static String ultimateName(DungeonClass dungeonClass) {
+        return switch (dungeonClass) {
+            case BERSERK -> "Ragnarok";
+            case ARCHER -> "Rapid Fire";
+            case TANK -> "Castle of Stone";
+            case HEALER -> "Wish";
+            case MAGE -> null;
+        };
     }
 
     /** Stats and damage for everyone in a run, from their class (once, when the server starts runs). */
@@ -200,7 +232,7 @@ final class RunClasses {
             case BERSERK -> {
                 stats.add(Stat.SPEED, s.value(ClassBonus.BERSERK_WALK_SPEED));
                 stats.add(Stat.SWING_RANGE, s.value(ClassBonus.BERSERK_WEAPON_MASTER));
-                if (System.currentTimeMillis() < s.ragnarokUntil) {
+                if (System.currentTimeMillis() < s.ultimateUntil) {
                     stats.add(Stat.ATTACK_SPEED, 100);
                     stats.add(Stat.SPEED, 400);
                 }
@@ -215,6 +247,7 @@ final class RunClasses {
                 stats.add(Stat.VITALITY, s.value(ClassBonus.TANK_VITALITY));
                 // Protective Barrier: "Grants 1.3x Defense".
                 stats.set(Stat.DEFENSE, stats.get(Stat.DEFENSE) * (1 + s.value(ClassBonus.TANK_PROTECTIVE_BARRIER) / 100));
+                if (System.currentTimeMillis() < s.ultimateUntil) stats.set(Stat.DEFENSE, ClassAbilities.castleOfStoneDefense(stats.get(Stat.DEFENSE)));
             }
         }
     }
@@ -234,7 +267,7 @@ final class RunClasses {
                 double factor = 1 + s.value(ClassBonus.BERSERK_MELEE_DAMAGE) / 100;
                 long now = System.currentTimeMillis();
                 if (now < s.bloodlustUntil) factor *= 1 + s.value(ClassBonus.BERSERK_BLOODLUST_DAMAGE) / 100;
-                if (now < s.ragnarokUntil) factor *= 1.5;
+                if (now < s.ultimateUntil) factor *= 1.5;
                 yield factor;
             }
             case ARCHER -> 1 + (ranged ? s.value(ClassBonus.ARCHER_ARROW_DAMAGE) : s.value(ClassBonus.ARCHER_MELEE_DAMAGE)) / 100;
@@ -255,7 +288,7 @@ final class RunClasses {
         // Bloodlust: the boosted hit takes a second off Throwing Axe's cooldown.
         if (now < s.bloodlustUntil) {
             s.bloodlustUntil = 0;
-            if (s.axeReadyAt > now) s.axeReadyAt = Math.max(now, s.axeReadyAt - BLOODLUST_AXE);
+            if (s.abilityReadyAt > now) s.abilityReadyAt = Math.max(now, s.abilityReadyAt - BLOODLUST_AXE);
         }
         // "Heals you for 3% of your missing health every hit."
         double missing = PlayerHealth.max(player) - PlayerHealth.get(player);
@@ -281,15 +314,66 @@ final class RunClasses {
     /** Right click on the orb, or ctrl+drop: the class's ability. */
     void ability(Player player) {
         State s = active(player);
-        if (s == null) return;
-        if (s.dungeonClass == DungeonClass.BERSERK) throwAxe(player, s);
+        String name = s == null ? null : abilityName(s.dungeonClass);
+        if (name == null || onCooldown(player, s.abilityReadyAt)) return;
+        long now = System.currentTimeMillis();
+        s.abilityAnnounced = false;
+        player.sendMessage(Utils.color("&aUsed &6" + name + "&a!"));
+        switch (s.dungeonClass) {
+            case BERSERK -> {
+                s.abilityReadyAt = now + AXE_COOLDOWN;
+                new ThrownAxe(player, highestHit(s)).fly();
+            }
+            case ARCHER -> {
+                s.abilityReadyAt = now + ClassAbilities.explosiveShotCooldown(s.level);
+                // "your highest bow hit": bow hits aren't told apart from the rest here.
+                abilities.explosiveShot(player, highestHit(s));
+            }
+            case TANK -> {
+                s.abilityReadyAt = now + SEISMIC_WAVE_COOLDOWN;
+                abilities.seismicWave(player);
+            }
+            default -> {
+            }
+        }
     }
 
-    /** Left click on the orb, or drop: the class's ultimate. */
+    /**
+     * Left click on the orb, or drop: the class's ultimate. "Used ...!" is Throwing Axe's line: no
+     * ultimate was ever cast in a recording.
+     */
     void ultimate(Player player) {
         State s = active(player);
-        if (s == null) return;
-        if (s.dungeonClass == DungeonClass.BERSERK) ragnarok(player, s);
+        String name = s == null ? null : ultimateName(s.dungeonClass);
+        if (name == null || onCooldown(player, s.ultimateReadyAt)) return;
+        long now = System.currentTimeMillis();
+        long cooldown = switch (s.dungeonClass) {
+            case BERSERK -> {
+                // Its 3 Zombie minions aren't built.
+                s.ultimateUntil = now + RAGNAROK_MILLIS;
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.5f, 1.5f);
+                yield RAGNAROK_COOLDOWN;
+            }
+            case ARCHER -> {
+                abilities.rapidFire(player, RAPID_FIRE_SHARE * highestHit(s), ClassAbilities.rapidFireSeconds(s.level));
+                yield RAPID_FIRE_COOLDOWN;
+            }
+            case TANK -> {
+                s.ultimateUntil = now + CASTLE_OF_STONE_MILLIS;
+                abilities.castleOfStone(player);
+                yield CASTLE_OF_STONE_COOLDOWN;
+            }
+            case HEALER -> ClassAbilities.wishCooldown(abilities.wish(player));
+            case MAGE -> 0;
+        };
+        s.ultimateReadyAt = now + cooldown;
+        s.nextReminder = ticks + (int) (cooldown / 50);
+        player.sendMessage(Utils.color("&aUsed &6" + name + "&a!"));
+    }
+
+    /** One of their arrows landed; false if it isn't an ability's. */
+    boolean arrowLanded(org.bukkit.entity.Projectile projectile, Entity hit) {
+        return abilities.landed(projectile, hit);
     }
 
     /** Whether its ultimate can be used, for the tab list's "Ultimate: Ready". */
@@ -308,49 +392,36 @@ final class RunClasses {
         return true;
     }
 
-    private void throwAxe(Player player, State s) {
-        if (onCooldown(player, s.axeReadyAt)) return;
-        s.axeReadyAt = System.currentTimeMillis() + AXE_COOLDOWN;
-        s.axeAnnounced = false;
-        player.sendMessage(Utils.color("&aUsed &6Throwing Axe&a!"));
-        new ThrownAxe(player, highestHit(s)).fly();
-    }
-
-    private void ragnarok(Player player, State s) {
-        if (onCooldown(player, s.ultimateReadyAt)) return;
-        long now = System.currentTimeMillis();
-        s.ultimateReadyAt = now + RAGNAROK_COOLDOWN;
-        s.ragnarokUntil = now + RAGNAROK_MILLIS;
-        s.nextReminder = ticks + (int) (RAGNAROK_COOLDOWN / 50);
-        // Never recorded (the recorded player never cast it): Throwing Axe's line. Its 3 Zombie minions aren't built.
-        player.sendMessage(Utils.color("&aUsed &6Ragnarok&a!"));
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.5f, 1.5f);
-    }
-
-    /** The run is over: axes still flying go. */
+    /** The run is over: axes and arrows still flying go. */
     void dispose() {
         for (ArmorStand axe : axes) axe.remove();
         axes.clear();
+        abilities.dispose();
     }
 
-    /** Every tick: "Throwing Axe is now available!" and Ragnarok's reminder. */
+    /**
+     * Every tick: "Throwing Axe is now available!" when its cooldown is over, and "Ragnarok is ready to
+     * use! Press DROP to activate it!" while it's unused (the Berserk's, as recorded; the other built
+     * ones' the same way, as SkyHanni's chat filter has Rapid Fire's and Castle of Stone's).
+     */
     void tick() {
         ticks++;
         long now = System.currentTimeMillis();
         for (Map.Entry<UUID, State> entry : states.entrySet()) {
             State s = entry.getValue();
-            if (s.dungeonClass != DungeonClass.BERSERK) continue;
             Player player = Bukkit.getPlayer(entry.getKey());
             if (player == null || !player.getWorld().equals(run.world)) continue;
-            if (!s.axeAnnounced && now >= s.axeReadyAt) {
-                s.axeAnnounced = true;
-                player.sendMessage(Utils.color("&6Throwing Axe &ais now available!"));
+            String ability = abilityName(s.dungeonClass);
+            if (ability != null && !s.abilityAnnounced && now >= s.abilityReadyAt) {
+                s.abilityAnnounced = true;
+                player.sendMessage(Utils.color("&6" + ability + " &ais now available!"));
             }
-            if (ticks >= s.nextReminder) {
+            String ultimate = ultimateName(s.dungeonClass);
+            if (ultimate != null && ticks >= s.nextReminder) {
                 s.nextReminder = ticks + REMINDER_EVERY;
                 // Not for ghosts (UNKNOWN whether Hypixel reminds them).
                 if (now >= s.ultimateReadyAt && !run.ghosts().isGhost(entry.getKey())) {
-                    player.sendMessage(Utils.color("&6Ragnarok&a is ready to use! Press &6&lDROP&a to activate it!"));
+                    player.sendMessage(Utils.color("&6" + ultimate + "&a is ready to use! Press &6&lDROP&a to activate it!"));
                 }
             }
         }
@@ -417,18 +488,8 @@ final class RunClasses {
             axes.remove(stand);
         }
 
-        /** Hurts a mob that can be hurt; false for anything else. */
         private boolean hit(Entity entity) {
-            DungeonMobs.Mob dungeonMob = DungeonMobs.of(entity);
-            if (dungeonMob != null) {
-                if (dungeonMob.invulnerable()) return false;
-                if (damage > 0) DungeonMobs.damage(entity, thrower, damage, false);
-                return true;
-            }
-            Mobs.Live mob = Mobs.of(entity);
-            if (mob == null || mob.type().isInvulnerable() || mob.health() <= 0) return false;
-            if (damage > 0) Mobs.damage(mob, thrower, damage, false);
-            return true;
+            return ClassAbilities.hurt(entity, thrower, damage);
         }
     }
 }

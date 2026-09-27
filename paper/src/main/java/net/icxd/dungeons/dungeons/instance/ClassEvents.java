@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -111,6 +112,14 @@ final class ClassEvents implements Listener {
         Action action = event.getAction();
         if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) run.classes().ability(event.getPlayer());
         else if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) run.classes().ultimate(event.getPlayer());
+    }
+
+    /** An ability's arrow (Explosive Shot, Rapid Fire) landed: it does its own damage, not a vanilla hit. */
+    @EventHandler(priority = EventPriority.LOW)
+    public void onArrowLand(ProjectileHitEvent event) {
+        if (!(event.getEntity().getShooter() instanceof Player player)) return;
+        DungeonRun run = manager.runOf(player);
+        if (run != null && run.classes().arrowLanded(event.getEntity(), event.getHitEntity())) event.setCancelled(true);
     }
 
     @EventHandler

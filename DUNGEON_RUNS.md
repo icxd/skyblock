@@ -146,13 +146,18 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
 - Right-clicking a class in Ready Up opens its Class Details (passives, Dungeon Orb abilities,
   ghost abilities), as recorded, at your level. Mort gives a Dungeon Orb to anyone without one.
 - Abilities: right-click the Dungeon Orb (or ctrl+drop) for the class ability, left-click it (or
-  drop) for the ultimate; in a run the drop key never drops what you hold. Only the Berserk's are
-  built: Throwing Axe ("Used Throwing Axe!", your held item flies ahead and hits the first mob for
-  your highest hit in the last minute, "Your Throwing Axe hit 1 enemy for ... damage.", 10 second
-  cooldown, "Throwing Axe is now available!") and Ragnarok (+100 Attack Speed, +400 Speed, 1.5x
-  melee for 15 seconds, 60 second cooldown; no minions), with "Ragnarok is ready to use! Press
+  drop) for the ultimate; in a run the drop key never drops what you hold. The Berserk's are as
+  recorded: Throwing Axe ("Used Throwing Axe!", your held item flies ahead and hits the first mob
+  for your highest hit in the last minute, "Your Throwing Axe hit 1 enemy for ... damage.", 10
+  second cooldown, "Throwing Axe is now available!") and Ragnarok (+100 Attack Speed, +400 Speed,
+  1.5x melee for 15 seconds, 60 second cooldown; no minions), with "Ragnarok is ready to use! Press
   DROP to activate it!" 23 seconds in and every 30 seconds while it's unused. Bloodlust: the next
   hit within 5 seconds of a kill does 35% more, and every hit heals 3% of missing health.
+- The others follow their Class Details lore, with the Berserk's messages: Archer Explosive Shot
+  (3 arrows that blow up for your highest hit within 4 blocks) and Rapid Fire (5 arrows a second
+  at 75% of it), Tank Seismic Wave (20,000 +10% per 50 Defense to every mob along 12 blocks) and
+  Castle of Stone (70% less damage from hits for 20 seconds, and mobs around go for you), Healer
+  Wish (everyone to full health; no shield). Healing Circle and the Mage's aren't built.
 
 **The Magical Map** (`RunMap`), pixel for pixel Hypixel's: rooms 18 pixels (16 on 6-wide floors)
 with 4 between, centred. A room shows once someone walks into it (the entrance from the start),
@@ -326,7 +331,8 @@ Those multipliers are community reverse-engineering, unverified.
   his real icons (placeholders for now).
 - The puzzles of later floors (Higher or Lower, Boulder, Ice Path, Quiz, Ice Fill) and the
   Teleport Maze; Water Boards 1 and 2 (only 3 and 4 were captured); the Three Weirdos' skins.
-- Ghosts' Haunt and ghost abilities; the Healer's revives; the other classes' abilities (their
-  menus and stats are in); Lust For Blood and Weapon Master's extra targets; Ragnarok's minions.
+- Ghosts' Haunt and ghost abilities; the Healer's revives, Healing Circle and Wish's shield; the
+  Mage's abilities; Lust For Blood and Weapon Master's extra targets; Ragnarok's minions; "Acts as
+  Superboom TNT!".
 - Stars on the score card, Catacombs and class level-up messages, the "Creating instance..." and
   "Undersized party!" menus, the Catacombs Gate menu in the Dungeon Hub.
