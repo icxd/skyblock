@@ -51,8 +51,10 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
   someone walks in, as both recordings have it.
 - Damage dealt, kills and deaths are counted for EXTRA STATS and the tab list, and deaths for the
   score.
-- Until there are ghosts, dying brings you back in the entrance room, with everything you had
-  (run worlds keep inventories).
+- Dying makes you a ghost (see Deaths and ghosts).
+- Your class's stats count once it starts; if nobody else plays your class they're doubled, with
+  "Your Berserk stats are doubled because you are the only player using this class!" and a line per
+  stat (see Classes).
 
 **Doors and keys** (`RunDoors`, `DoorAnimation`).
 - Wither doors are coal blocks and the Blood Door red terracotta, 3x4x3 across the gap between the
@@ -108,6 +110,49 @@ Floor III they're 20% stronger. The tab list footer lists them under "Dungeon Bu
 Wisdom, Stone, Life, as recorded). One out of a chest or a bat comes with "DUNGEON BUFF! You found a
 Blessing of Life I!" and the "Granted you ..." lines; one picked up where a room's last mob died
 also with the run's time ("(14s)").
+
+**Deaths and ghosts** (`Ghosts`, `GhostEvents`, `ReviveStones`, `Fairies`; no recording has a death,
+so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' message patterns).
+- At 0 health you don't die: "☠ You were killed by Zombie Grunt and became a ghost." (the others
+  see your name), or "... died to a trap", "... fell into a deep hole", "... burnt to death" and
+  so on. Leaving the server while it runs does the same ("... disconnected from the Dungeon"), and
+  you're a ghost when you're back ("... reconnected.").
+- A ghost flies (without going through blocks), is invisible to the others but for a head that
+  follows it, can't be hurt or targeted, can't hit, open, pick up or drop anything, and can only
+  kill fairies.
+- It comes back ("❣ Alice was revived!", full health and mana): by itself after 15 seconds on the
+  Entrance (45 on Floor 1, 100 on Floor 2, never later); when a teammate right-clicks a Revive
+  Stone (5 seconds later, next to them; with several dead, a menu to pick one; with none, "There
+  are no players available to revive right now!"); or when it, or a teammate, kills a fairy. A
+  Revive Stone in your inventory when you die brings you straight back. Revive Stones go when you
+  leave.
+- The Fairy Room has four fairies (Mari, Nymira, Zana, Q'ara, "[Lv0] Mari 4❤") floating about.
+  Any hit kills one: it revives the ghost who hit it, or the first dead teammate, or gives a Revive
+  Stone ("You killed me! Take this Revive Stone so that my death is not in vain!").
+- Tab list: a ghost's class shows "DEAD"; "Downed" names the first ghost and "Time" its seconds
+  until it's back; "Team Deaths" counts every death; "Revive Stones" what each member carries.
+- The run fails when everyone still in it is a ghost, or after an hour: the summary as usual
+  without "Defeated ...", and the score 30% lower (the wiki's rule; no failed run was recorded).
+  Its experience follows that score, without Bits or the day's bonus, and it isn't a completion
+  (MCW Dungeoneering: failed runs give Catacombs experience but don't count for the bonus).
+
+**Classes** (`ClassBonus`, `ClassDetails`, `RunClasses`, `ClassEvents`).
+- Each class's stats at its level: base plus what the levels add, fitted to the one level of each
+  that was recorded (Healer Vitality and Mending, Mage Intelligence and Ability Damage, Berserk
+  Melee Damage and Walk Speed, Archer Arrow Damage and -25% melee, Tank Health, Defense and
+  Vitality, and the passives' numbers). They're in the Ready Up menu, and count once the run
+  starts: melee and arrow damage as multipliers on hits, the rest as stats (the Tank's Protective
+  Barrier multiplies Defense, the Berserk's Indomitable adds a share of Strength as Defense).
+- Right-clicking a class in Ready Up opens its Class Details (passives, Dungeon Orb abilities,
+  ghost abilities), as recorded, at your level. Mort gives a Dungeon Orb to anyone without one.
+- Abilities: right-click the Dungeon Orb (or ctrl+drop) for the class ability, left-click it (or
+  drop) for the ultimate; in a run the drop key never drops what you hold. Only the Berserk's are
+  built: Throwing Axe ("Used Throwing Axe!", your held item flies ahead and hits the first mob for
+  your highest hit in the last minute, "Your Throwing Axe hit 1 enemy for ... damage.", 10 second
+  cooldown, "Throwing Axe is now available!") and Ragnarok (+100 Attack Speed, +400 Speed, 1.5x
+  melee for 15 seconds, 60 second cooldown; no minions), with "Ragnarok is ready to use! Press
+  DROP to activate it!" 23 seconds in and every 30 seconds while it's unused. Bloodlust: the next
+  hit within 5 seconds of a kill does 35% more, and every hit heals 3% of missing health.
 
 **The Magical Map** (`RunMap`), pixel for pixel Hypixel's: rooms 18 pixels (16 on 6-wide floors)
 with 4 between, centred. A room shows once someone walks into it (the entrance from the start),
@@ -281,8 +326,7 @@ Those multipliers are community reverse-engineering, unverified.
   his real icons (placeholders for now).
 - The puzzles of later floors (Higher or Lower, Boulder, Ice Path, Quiz, Ice Fill) and the
   Teleport Maze; Water Boards 1 and 2 (only 3 and 4 were captured); the Three Weirdos' skins.
-- Deaths as ghosts, revives.
-- Classes beyond picking one: their stats in the Ready Up menu, Class Details (right click), the
-  Dungeon Orb, "stats are doubled because you are the only player using this class".
+- Ghosts' Haunt and ghost abilities; the Healer's revives; the other classes' abilities (their
+  menus and stats are in); Lust For Blood and Weapon Master's extra targets; Ragnarok's minions.
 - Stars on the score card, Catacombs and class level-up messages, the "Creating instance..." and
   "Undersized party!" menus, the Catacombs Gate menu in the Dungeon Hub.
