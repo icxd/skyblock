@@ -3,6 +3,7 @@ package net.icxd.dungeons.mining.blocks;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.mining.MinableBlock;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.utils.Tuple;
 import org.bukkit.Material;
 
@@ -17,6 +18,7 @@ public class MithrilBlock {
         @Override public int minBreakingPower() { return MIN_BREAKING_POWER; }
         @Override public int blockStrength() { return 500; }
         @Override public int instaBreakStrength() { return 30000; }
+        @Override public Stat fortune() { return Stat.DWARVEN_METAL_FORTUNE; }
         @Override public ArrayList<Tuple<SkyBlockItem, Integer>> drops() { return new ArrayList<>(List.of(new Tuple<>(ItemRegistry.get("MITHRIL_ORE"), 1))); }
     }
 }

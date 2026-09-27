@@ -1,6 +1,7 @@
 package net.icxd.dungeons.mining;
 
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.utils.Tuple;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,6 +19,12 @@ public interface MinableBlock {
     default int instaBreakStrength() { return -1; } // -1 = no insta break
     default Material blockWhenBroken() { return Material.BEDROCK; }
     default ArrayList<Tuple<SkyBlockItem, Integer>> drops() { return null; }
+
+    /**
+     * The fortune stat that adds to Mining Fortune on this block (Dwarven Metal Fortune on Mithril and the
+     * other Dwarven Metals, the wiki's Dwarven Metal Fortune); null for none.
+     */
+    default Stat fortune() { return null; }
 
     default void onBreak(Block block, Player player) {}
 

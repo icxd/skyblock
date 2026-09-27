@@ -51,11 +51,12 @@ public class BlockListener implements Listener {
             player.sendMessage("You need a pickaxe with at least " + minableBlock.minBreakingPower() + " breaking power to break this block.");
             return;
         }
-        // The player's own mining speed and fortune (tool, armor and all), not just the tool's.
+        // The player's own mining speed and fortune (tool, armor and all), not just the tool's; on a Dwarven
+        // Metal, Dwarven Metal Fortune adds to Mining Fortune (the wiki doesn't say how they combine: added up).
         Stats stats = PlayerSession.of(player).stats();
         int miningSpeed = (int) stats.get(Stat.MINING_SPEED);
         if (miningSpeed <= 0) return;
-        double fortune = stats.get(Stat.MINING_FORTUNE);
+        double fortune = stats.get(Stat.MINING_FORTUNE) + (minableBlock.fortune() == null ? 0 : stats.get(minableBlock.fortune()));
 
         if (minableBlock.instaBreakStrength() != -1 && miningSpeed >= minableBlock.instaBreakStrength()) {
             block.setType(minableBlock.blockWhenBroken());
