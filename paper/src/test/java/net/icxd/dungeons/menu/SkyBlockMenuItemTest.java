@@ -58,6 +58,44 @@ class SkyBlockMenuItemTest {
     }
 
     /**
+     * A pick (a middle click on a block) with a full hotbar can be given its slot; it goes where the
+     * server would put it without the item there.
+     */
+    @Test
+    void picks() {
+        boolean[] full = new boolean[9];
+        boolean[] plain = new boolean[9];
+        boolean[] enchanted = {true, true, true, true, true, true, true, true, false};
+        // Holding it: the next slot on, from the start of the hotbar.
+        assertEquals(0, SkyBlockMenuListener.pickSlot(8, full, plain));
+        // The server skips enchanted slots from the selected one on, and would reach it next.
+        boolean[] sixAndSeven = {false, false, false, false, false, false, true, true, false};
+        assertEquals(0, SkyBlockMenuListener.pickSlot(6, full, sixAndSeven));
+        // Every other slot enchanted: the selected one, as the server does; holding it, no pick at all.
+        assertEquals(3, SkyBlockMenuListener.pickSlot(3, full, enchanted));
+        assertEquals(-1, SkyBlockMenuListener.pickSlot(8, full, enchanted));
+        // An empty slot first, if there is one.
+        boolean[] fiveEmpty = new boolean[9];
+        fiveEmpty[5] = true;
+        assertEquals(5, SkyBlockMenuListener.pickSlot(8, fiveEmpty, enchanted));
+        // Never its slot, whatever the hotbar holds.
+        boolean[] someEmpty = new boolean[9];
+        boolean[] someEnchanted = new boolean[9];
+        for (int emptyMask = 0; emptyMask < 1 << 9; emptyMask++) {
+            for (int enchantedMask = 0; enchantedMask < 1 << 9; enchantedMask++) {
+                for (int slot = 0; slot < 9; slot++) {
+                    someEmpty[slot] = (emptyMask >> slot & 1) == 1;
+                    someEnchanted[slot] = (enchantedMask >> slot & 1) == 1;
+                }
+                for (int selected = 0; selected < 9; selected++) {
+                    int pick = SkyBlockMenuListener.pickSlot(selected, someEmpty, someEnchanted);
+                    assertTrue(pick >= -1 && pick < 9 && pick != SkyBlockMenuItem.SLOT);
+                }
+            }
+        }
+    }
+
+    /**
      * Its clicks come after the freeze and before the menus' own: a shop never sells it. It's given
      * after PlayerListener has put their stored items on them.
      */

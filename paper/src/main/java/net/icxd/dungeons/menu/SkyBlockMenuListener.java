@@ -28,8 +28,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import io.papermc.paper.event.player.PlayerPickItemEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.listeners.InventorySyncListener;
@@ -38,8 +40,8 @@ import net.icxd.dungeons.listeners.InventorySyncListener;
  * The SkyBlock Menu item ({@link SkyBlockMenuItem}): a left or right click with it in hand, or on it
  * in their inventory, opens the SkyBlock Menu, and so does dropping it (the fandom wiki's SkyBlock
  * Menu, "How to open"); a click on an entity (an NPC, a hit) is the entity's. Nothing moves it: not a
- * click, a number key, the off-hand key or a drag, and it can't go into an item frame, onto an armor
- * stand or to an allay. Death doesn't drop it; they get it back when they join (after their items are
+ * click, a number key, the off-hand key, a drag or a pick (a middle click on a block or an entity),
+ * and it can't go into an item frame, onto an armor stand or to an allay. Death doesn't drop it; they get it back when they join (after their items are
  * put on them) and when they respawn.
  */
 public final class SkyBlockMenuListener implements Listener {
@@ -64,6 +66,24 @@ public final class SkyBlockMenuListener implements Listener {
         return onItem && OPENS.contains(click) ? Response.OPEN : Response.BLOCK;
     }
 
+    /**
+     * The hotbar slot a pick goes to instead of the item's: the one the server would choose if the
+     * item's weren't there (Inventory.getSuitableHotbarSlot: the first empty slot from the selected
+     * one on, else the first with no enchantments, else the selected one). -1 when that's the item's
+     * too (it's selected and the rest are enchanted): nothing is picked.
+     */
+    static int pickSlot(int selected, boolean[] empty, boolean[] enchanted) {
+        for (int i = 0; i < 9; i++) {
+            int slot = (selected + i) % 9;
+            if (slot != SkyBlockMenuItem.SLOT && empty[slot]) return slot;
+        }
+        for (int i = 0; i < 9; i++) {
+            int slot = (selected + i) % 9;
+            if (slot != SkyBlockMenuItem.SLOT && !enchanted[slot]) return slot;
+        }
+        return selected == SkyBlockMenuItem.SLOT ? -1 : selected;
+    }
+
     /** After the freeze (InventorySyncListener, LOWEST), before the menus' own clicks (GUIListener, NORMAL): a menu never gets it. */
     @EventHandler(priority = EventPriority.LOW)
     public void onClick(InventoryClickEvent event) {
@@ -75,6 +95,30 @@ public final class SkyBlockMenuListener implements Listener {
         if (response == Response.NONE) return;
         event.setCancelled(true);
         if (response == Response.OPEN) open(player);
+    }
+
+    /**
+     * A pick into its slot would move it out: the server swaps what's picked in from their inventory,
+     * or in creative puts a new stack there and moves it to a free slot (over it, with none free). The
+     * server only chooses its slot with no empty hotbar slot, so the pick goes to another one
+     * ({@link #pickSlot}). A pick of what's in the hotbar already only selects that slot.
+     */
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPick(PlayerPickItemEvent event) {
+        int source = event.getSourceSlot();
+        if (event.getTargetSlot() != SkyBlockMenuItem.SLOT || (source >= 0 && source < 9)) return;
+        PlayerInventory inventory = event.getPlayer().getInventory();
+        if (!SkyBlockMenuItem.is(inventory.getItem(SkyBlockMenuItem.SLOT))) return;
+        boolean[] empty = new boolean[9];
+        boolean[] enchanted = new boolean[9];
+        for (int slot = 0; slot < 9; slot++) {
+            ItemStack item = inventory.getItem(slot);
+            empty[slot] = item == null || item.isEmpty();
+            enchanted[slot] = !empty[slot] && !item.getEnchantments().isEmpty();
+        }
+        int slot = pickSlot(inventory.getHeldItemSlot(), empty, enchanted);
+        if (slot < 0) event.setCancelled(true);
+        else event.setTargetSlot(slot);
     }
 
     @EventHandler(priority = EventPriority.LOW)
