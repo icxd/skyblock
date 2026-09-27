@@ -14,6 +14,7 @@ import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.user.ItemStash;
+import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
@@ -282,17 +283,20 @@ public final class Mobs implements Listener {
     }
 
     /**
-     * Each drop rolls on its own (magic find raises the chance). A dungeon mob's go straight into the
+     * Each drop rolls on its own: Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind});
+     * Pet Luck would raise a pet's, but no mob drops a pet yet. A dungeon mob's go straight into the
      * killer's inventory, as recorded on Hypixel (into their item stash if there's no room), and
      * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
      * on the ground, and each is announced.
      */
     private static void drop(List<MobDrop> drops, boolean dungeon, Location at, Player killer) {
-        double magicFind = PlayerSession.of(killer).stats().get(Stat.MAGIC_FIND);
+        Stats stats = PlayerSession.of(killer).stats();
+        double magicFind = MobDrop.magicFind(stats.get(Stat.MAGIC_FIND));
+        double petLuck = stats.get(Stat.PET_LUCK);
         boolean toInventory = dungeon && !InventorySyncListener.frozen(killer);
         for (MobDrop drop : drops) {
             SkyBlockItem item = drop.item();
-            if (item == null || Math.random() >= drop.chance() / 100 * (1 + magicFind / 100)) continue;
+            if (item == null || Math.random() >= MobDrop.withMagicFind(drop.chance(), magicFind, petLuck, false) / 100) continue;
             ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
             if (toInventory) {
                 ItemStash.give(killer, stack);
