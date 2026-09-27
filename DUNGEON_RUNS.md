@@ -118,8 +118,9 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
   so on. Leaving the server while it runs does the same ("... disconnected from the Dungeon"), and
   you're a ghost when you're back ("... reconnected.").
 - A ghost flies (without going through blocks), is invisible to the others but for a head that
-  follows it, can't be hurt or targeted, can't hit, open, pick up or drop anything, and can only
-  kill fairies.
+  follows it, can't be hurt or targeted, doesn't push mobs or stop projectiles (they fly through
+  it), can't hit, open, pick up or drop anything, and can only kill fairies; its abilities still in
+  flight when it died don't hit.
 - It comes back ("❣ Alice was revived!", full health and mana): by itself after 15 seconds on the
   Entrance (45 on Floor 1, 100 on Floor 2, never later); when a teammate right-clicks a Revive
   Stone (5 seconds later, next to them; with several dead, a menu to pick one; with none, "There

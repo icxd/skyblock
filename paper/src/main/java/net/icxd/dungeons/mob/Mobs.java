@@ -405,8 +405,8 @@ public final class Mobs implements Listener {
         if (event.getHitBlock() != null && event.getEntity() instanceof AbstractArrow arrow && attacker(arrow) != null) arrow.remove();
     }
 
-    /** A Crypt Lurker's bone (a snowball that looks like one) hits whoever it lands on. */
-    @EventHandler
+    /** A Crypt Lurker's bone (a snowball that looks like one) hits whoever it lands on, unless the hit was called off. */
+    @EventHandler(ignoreCancelled = true)
     public void onProjectileHit(ProjectileHitEvent event) {
         if (!(event.getEntity() instanceof Snowball bone) || !(event.getHitEntity() instanceof Player player)) return;
         Live live = attacker(bone);

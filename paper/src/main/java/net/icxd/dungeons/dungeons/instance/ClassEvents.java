@@ -115,8 +115,11 @@ final class ClassEvents implements Listener {
         else if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) run.classes().ultimate(event.getPlayer());
     }
 
-    /** An ability's arrow (Explosive Shot, Rapid Fire) landed: it does its own damage, not a vanilla hit. */
-    @EventHandler(priority = EventPriority.LOW)
+    /**
+     * An ability's arrow (Explosive Shot, Rapid Fire) landed: it does its own damage, not a vanilla hit.
+     * Not when the hit was called off (it went through a ghost).
+     */
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onArrowLand(ProjectileHitEvent event) {
         if (!(event.getEntity().getShooter() instanceof Player player)) return;
         DungeonRun run = manager.runOf(player);

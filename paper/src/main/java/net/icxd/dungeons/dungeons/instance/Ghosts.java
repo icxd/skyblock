@@ -181,6 +181,8 @@ final class Ghosts {
         player.setAllowFlight(true);
         player.setFlying(true);
         player.setInvulnerable(true);
+        // Nothing bumps into it: mobs aren't pushed, and projectiles go through (see GhostEvents).
+        player.setCollidable(false);
         player.setFireTicks(0);
         player.setFallDistance(0);
         Ghost ghost = ghosts.get(player.getUniqueId());
@@ -279,6 +281,7 @@ final class Ghosts {
             player.setAllowFlight(false);
         }
         player.setInvulnerable(false);
+        player.setCollidable(true);
         for (Player other : player.getWorld().getPlayers()) if (!other.canSee(player)) other.showPlayer(plugin, player);
     }
 

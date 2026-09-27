@@ -179,6 +179,15 @@ final class GhostEvents implements Listener {
         if (event.getEntity().getShooter() instanceof Entity shooter && ghost(shooter)) event.setCancelled(true);
     }
 
+    /**
+     * Nothing flying hits a ghost: the hit is called off, so the projectile goes on through (else a mob's
+     * arrow would bounce off it and a Crypt Lurker's bone be used up on it, shielding whoever is behind).
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onProjectileHitGhost(ProjectileHitEvent event) {
+        if (ghost(event.getHitEntity())) event.setCancelled(true);
+    }
+
     // Fairies
 
     /** Any hit on a fairy kills it, a ghost's too (they're invulnerable stands, so it's caught before any damage). */
