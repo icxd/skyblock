@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.combat.PlayerDamage;
@@ -66,8 +65,6 @@ public final class DungeonMobs {
     private static final Map<UUID, Mob> MOBS = new HashMap<>();
     /** How many hits each has taken (First Strike and Triple-Strike count them). */
     private static final Map<UUID, Integer> HITS = new HashMap<>();
-    /** The last hit {@link #playerHit} took care of, so the catch-all listener leaves it be. */
-    private static EntityDamageEvent handled;
 
     private DungeonMobs() {
     }
@@ -102,7 +99,6 @@ public final class DungeonMobs {
      * no vanilla damage (so it still flinches and takes knockback), or not at all if it's invulnerable.
      */
     public static void playerHit(EntityDamageByEntityEvent event, Player player, Mob mob, double damage, boolean critical) {
-        handled = event;
         if (mob.invulnerable()) {
             event.setCancelled(true);
             mob.hurt(player, damage);
@@ -112,11 +108,6 @@ public final class DungeonMobs {
         HITS.merge(event.getEntity().getUniqueId(), 1, Integer::sum);
         mob.hurt(player, damage);
         showDamage(event.getEntity(), damage, critical);
-    }
-
-    /** Whether {@link #playerHit} already dealt with this hit. */
-    public static boolean isHandled(EntityDamageEvent event) {
-        return event == handled;
     }
 
     /** The number that pops up where a mob was hit, as for SkyBlock's other mobs. */

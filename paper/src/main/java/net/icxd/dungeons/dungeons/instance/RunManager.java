@@ -65,7 +65,6 @@ import com.mongodb.client.MongoCollection;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.math.Position;
 import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
@@ -635,18 +634,11 @@ public final class RunManager {
             if (run != null && run.clickBlock(event.getPlayer(), event.getClickedBlock())) event.setCancelled(true);
         }
 
-        /**
-         * Players' hits on dungeon mobs that {@code PlayerListener} didn't deal with are worked out the
-         * same way ({@link Combat}); nothing else hurts them.
-         */
+        /** Only players hurt dungeon mobs (their hits are {@code Combat}'s, through PlayerListener), and /kill. */
         @EventHandler(priority = EventPriority.HIGH)
         public void onMobHurt(EntityDamageEvent event) {
-            DungeonMobs.Mob mob = DungeonMobs.of(event.getEntity());
-            if (mob == null || DungeonMobs.isHandled(event)) return;
-            if (event instanceof EntityDamageByEntityEvent hit && playerBehind(hit.getDamager()) != null) {
-                if (!event.isCancelled()) Combat.playerHit(hit);
-                return;
-            }
+            if (DungeonMobs.of(event.getEntity()) == null) return;
+            if (event instanceof EntityDamageByEntityEvent hit && playerBehind(hit.getDamager()) != null) return;
             if (event.getCause() != EntityDamageEvent.DamageCause.KILL) event.setCancelled(true);
         }
 

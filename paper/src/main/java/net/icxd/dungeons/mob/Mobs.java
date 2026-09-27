@@ -304,15 +304,11 @@ public final class Mobs implements Listener {
         return live;
     }
 
-    /** Players' hits on our mobs that PlayerListener didn't deal with are worked out the same way ({@link Combat}); nothing else hurts them. */
+    /** Only players hurt our mobs (their hits are {@link Combat}'s, through PlayerListener), and /kill. */
     @EventHandler(priority = EventPriority.HIGH)
     public void onHurt(EntityDamageEvent event) {
-        Live live = of(event.getEntity());
-        if (live == null || event.getDamage() == 0) return;
-        if (event instanceof EntityDamageByEntityEvent hit && Combat.playerBehind(hit.getDamager()) != null) {
-            if (!event.isCancelled()) Combat.playerHit(hit);
-            return;
-        }
+        if (of(event.getEntity()) == null) return;
+        if (event instanceof EntityDamageByEntityEvent hit && Combat.playerBehind(hit.getDamager()) != null) return;
         if (event.getCause() != EntityDamageEvent.DamageCause.KILL) event.setCancelled(true);
     }
 
