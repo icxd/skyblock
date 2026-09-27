@@ -1,6 +1,10 @@
 package net.icxd.dungeons.command.commands.admin;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -26,5 +30,21 @@ class PlayerDataCommandTest {
         assertEquals("", PlayerDataCommand.resolve(doc, ""));
         // One from before profiles still has them at the top.
         assertEquals("coins", PlayerDataCommand.resolve(new Document("coins", 1), "coins"));
+    }
+
+    /** What the overview and the stored inventory show: the selected profile, or a document from before profiles itself. */
+    @Test
+    void theProfileShownIsTheSelectedOneOrTheOldDocument() {
+        Document doc = new Document("rank", "DEFAULT");
+        Document kiwi = Profiles.create(doc, "abc", "Kiwi", ProfileMode.NORMAL, new Document("coins", 5), 0);
+        doc.put(Profiles.SELECTED, "abc");
+        assertSame(kiwi, PlayerDataCommand.shownProfile(doc));
+
+        Document old = new Document("coins", 1).append("storage", new Document("inventory", List.of()));
+        assertSame(old, PlayerDataCommand.shownProfile(old));
+
+        // Profiles, but none selected: nothing to show, not the account's fields.
+        doc.put(Profiles.SELECTED, "gone");
+        assertNull(PlayerDataCommand.shownProfile(doc));
     }
 }

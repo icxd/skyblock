@@ -141,6 +141,8 @@ public class PlayerDataCommand extends SCommand {
                 }
                 parent.put(key, value);
                 user.save();
+                // Which commands they may use can change with it (their rank, their profile's mode).
+                player.updateCommands();
                 sender.sendMessage(Component.text("Set ", NamedTextColor.GREEN).append(Component.text(path, NamedTextColor.YELLOW))
                         .append(Component.text(" to ", NamedTextColor.GREEN)).append(value(value))
                         .append(Component.text(" (was ", LABEL)).append(value(old)).append(Component.text("), saving.", LABEL)));
@@ -182,7 +184,7 @@ public class PlayerDataCommand extends SCommand {
             case "get" -> show(sender, name, doc, resolve(doc, path(args)));
             case "inv" -> {
                 String who = name;
-                Document profile = Profiles.selected(doc);
+                Document profile = shownProfile(doc);
                 // Items are read on the main thread.
                 Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
                     if (profile == null || StoredInventory.isEmpty(profile)) {
@@ -203,7 +205,9 @@ public class PlayerDataCommand extends SCommand {
                 Document profile = Profiles.selected(doc);
                 if (mode == null) return;
                 if (profile == null) {
-                    error(sender, name + " has no profile yet.");
+                    error(sender, shownProfile(doc) == doc
+                            ? name + " hasn't played since profiles came in; their first (a Sandbox one) is made when they do."
+                            : name + " has no profile yet.");
                     return;
                 }
                 String path = Profiles.PROFILES + "." + doc.getString(Profiles.SELECTED) + "." + Profiles.MODE;
@@ -277,11 +281,12 @@ public class PlayerDataCommand extends SCommand {
                 .append(Component.text("  " + doc.getString("uuid"), NamedTextColor.DARK_GRAY).decoration(TextDecoration.BOLD, false)));
         sender.sendMessage(Component.text(" ").append(held));
         Document profile = Profiles.selected(doc);
-        Document shown = profile == null ? new Document() : profile;
+        Document shown = shownProfile(doc);
+        String which = profile != null ? profile.getString(Profiles.NAME) + " (" + Profiles.mode(profile) + ")"
+                : shown == doc ? "none yet (from before profiles)" : null;
+        if (shown == null) shown = new Document();
         sender.sendMessage(Component.text(" ")
-                .append(stat("Rank", doc.get("rank")))
-                .append(stat("Profile", profile == null ? null : profile.getString(Profiles.NAME) + " (" + Profiles.mode(profile) + ")"))
-                .append(stat("Gems", doc.get("gems"))));
+                .append(stat("Rank", doc.get("rank"))).append(stat("Profile", which)).append(stat("Gems", doc.get("gems"))));
         sender.sendMessage(Component.text(" ")
                 .append(stat("Purse", shown.get("coins"))).append(stat("Bank", get(shown, "bank.balance"))).append(stat("Bits", shown.get("bits"))));
         sender.sendMessage(fields.build());
@@ -455,6 +460,16 @@ public class PlayerDataCommand extends SCommand {
         if (path.startsWith("profile.")) return selected + path.substring("profile".length());
         String first = path.contains(".") ? path.substring(0, path.indexOf('.')) : path;
         return Profiles.PROFILE_KEYS.contains(first) && !doc.containsKey(first) ? selected + "." + path : path;
+    }
+
+    /**
+     * Whose fields to show as their profile's: the selected profile's, or, for a document from before
+     * profiles (they haven't played since), the document's own, which still has them at the top (as
+     * {@link #resolve} reads them). Null if neither.
+     */
+    static Document shownProfile(Document doc) {
+        Document profile = Profiles.selected(doc);
+        return profile == null && !doc.containsKey(Profiles.PROFILES) ? doc : profile;
     }
 
     private static ProfileMode mode(CommandSender sender, String name, String[] args) {
