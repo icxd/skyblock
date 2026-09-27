@@ -245,6 +245,10 @@ final class RoomMobs {
     private final List<Loot> loot = new ArrayList<>();
     private final List<Blast> crypts = new ArrayList<>();
     private final List<Blast> walls = new ArrayList<>();
+    /** Kinds (and levels) this floor has no variant of, told once each. */
+    private final Set<String> missing = new HashSet<>();
+    /** Whether Undead Skeletons spawn on this floor, so skulls rise. */
+    private final boolean skullsRise;
     private int openedSquares;
     private int cryptsBlown;
     private long ticks;
@@ -257,6 +261,7 @@ final class RoomMobs {
         this.doors = doors;
         this.floor = floor;
         this.log = log;
+        this.skullsRise = spawnable(MobKinds.UNDEAD_SKELETON, null);
         RoomSpawnData.Loaded loaded = data;
         List<Planned> planned = new ArrayList<>();
         for (PlacedRoom room : layout.rooms()) {
@@ -286,6 +291,20 @@ final class RoomMobs {
         return hasMobs && tally.planned() > 0;
     }
 
+    /**
+     * Whether this kind (at this level; null for the floor's lowest) spawns on the run's floor. The mob
+     * kinds only have the Entrance's variants so far, so on other floors the rooms get no mobs (and clear
+     * when they open); the log says so once a kind.
+     */
+    private boolean spawnable(MobKind kind, Integer level) {
+        if (kind.variant(floor, level) != null) return true;
+        if (missing.add(kind.id() + " " + level)) {
+            log.warning("Room mobs: " + kind.id() + " has no " + (level == null ? "" : "Lv" + level + " ") + "variant on "
+                    + (floor == null ? "this floor" : floor.getName()) + ": left out of the rooms");
+        }
+        return false;
+    }
+
     /** Normal (and rare, a normal room's dead-end kind) and champion rooms have mobs; puzzles, traps and the rest none. */
     static boolean hasMobs(RoomType type) {
         return type == RoomType.REGULAR || type == RoomType.RARE || type == RoomType.MINIBOSS;
@@ -303,7 +322,7 @@ final class RoomMobs {
         if (roomData != null && roomData.recorded()) {
             for (RoomSpawnData.Mob m : roomData.mobs()) {
                 MobKind kind = MobKinds.get(m.kind());
-                if (kind == null) continue;
+                if (kind == null || !spawnable(kind, m.level())) continue;
                 double[] p = state.frame.point(m.x(), m.y(), m.z());
                 mine.add(new Planned(state, kind, options(kind, m.starred(), m.level()), at(p)));
             }
@@ -332,7 +351,7 @@ final class RoomMobs {
 
     /** The room's skulls: the capture's own stands if it has any, else the recorded spots. */
     private void skulls(RoomState state, List<RoomSpawnData.Point> recorded) {
-        if (!captureSkulls(state).isEmpty()) return;
+        if (!captureSkulls(state).isEmpty() || !skullsRise) return;
         for (RoomSpawnData.Point p : recorded) {
             double[] w = state.frame.point(p.x(), p.y(), p.z());
             skulls.add(new Skull(state, skullStand(new Location(world, w[0], w[1], w[2], random.nextFloat() * 360, 0))));
@@ -383,17 +402,17 @@ final class RoomMobs {
             List<FallbackSpawns.Spot> anywhere = FallbackSpawns.spots(blocks, columns, low, high);
             Location middle = layout.center(world, RunLayout.firstCell(state.room));
             FallbackSpawns.Spot spot = FallbackSpawns.nearest(anywhere, middle.getX(), middle.getY(), middle.getZ());
-            if (spot != null) {
-                MobKind kind = FallbackSpawns.miniboss(random);
+            MobKind kind = FallbackSpawns.miniboss(random);
+            if (spot != null && spawnable(kind, FallbackSpawns.MINIBOSS_LEVEL)) {
                 out.add(new Planned(state, kind, new SpawnOptions(true, null, 1, FallbackSpawns.MINIBOSS_LEVEL), spotLocation(spot)));
             }
         } else {
             for (FallbackSpawns.Spot spot : FallbackSpawns.groups(floorSpots, FallbackSpawns.starredCount(squares, random), random)) {
                 MobKind kind = FallbackSpawns.kind(random);
-                out.add(new Planned(state, kind, options(kind, true, null), spotLocation(spot)));
+                if (spawnable(kind, null)) out.add(new Planned(state, kind, options(kind, true, null), spotLocation(spot)));
             }
         }
-        if (captureSkulls(state).isEmpty()) {
+        if (captureSkulls(state).isEmpty() && skullsRise) {
             int count = FallbackSpawns.skullCount(squares, random);
             for (int i = 0; i < count && !floorSpots.isEmpty(); i++) {
                 FallbackSpawns.Spot spot = FallbackSpawns.any(floorSpots, random);
@@ -471,7 +490,7 @@ final class RoomMobs {
         if (room.type() != RoomType.START) openedSquares += room.cells().size();
         for (Tracked t : state.mobs) wake(t);
         for (Skull skull : skulls) {
-            if (skull.room == state && skull.riseAt < 0) rise(skull, SKULL_RISE_MIN, SKULL_RISE_MAX);
+            if (skull.room == state && skull.riseAt < 0 && skullsRise) rise(skull, SKULL_RISE_MIN, SKULL_RISE_MAX);
         }
         // Nothing starred in it (none planned, or none could stand anywhere): done as soon as it's open.
         if (state.hasMobs && state.tally.open()) clear(state, state.lastDeath);
@@ -608,7 +627,7 @@ final class RoomMobs {
         t.dead = true;
         TRACKED.remove(t.mob());
         RoomState state = t.room;
-        if (skeletal(t.mob().kind()) && !disposed) {
+        if (skeletal(t.mob().kind()) && skullsRise && !disposed) {
             Skull skull = new Skull(state, skullStand(new Location(world, at.getX(), at.getY() - DEAD_SKULL_BELOW, at.getZ(),
                     random.nextFloat() * 360, 0)));
             skulls.add(skull);
@@ -743,7 +762,7 @@ final class RoomMobs {
             world.spawnParticle(Particle.ANGRY_VILLAGER, crypt.undead, 4, 0.4, 0.4, 0.4, 0);
             // Its room is open by now: someone is standing in it.
             open(crypt.room.room);
-            Tracked undead = spawnAwake(crypt.room, MobKinds.CRYPT_UNDEAD, crypt.undead);
+            Tracked undead = spawnable(MobKinds.CRYPT_UNDEAD, null) ? spawnAwake(crypt.room, MobKinds.CRYPT_UNDEAD, crypt.undead) : null;
             // Counted when it dies; with no Crypt Undead to kill (none on this floor), when it's blown.
             if (undead != null) undead.crypt = true;
             else cryptsBlown++;

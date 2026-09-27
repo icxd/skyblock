@@ -81,6 +81,8 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   rooms), else planned (`FallbackSpawns`, fitted to the recordings: 5 to 16 starred mobs a
   square in groups of 2 to 6 on the main floor, kinds as often as recorded, a Lost Adventurer or
   Angry Archaeologist near the middle of a champion room). Modifiers are rolled for each run.
+  The mob kinds only have the Entrance's variants so far: on other floors the rooms have no mobs
+  and clear when they open (the log says which kinds are missing, once each).
 - They wait at their base health, not moving, until their room opens (its door is opened, someone
   walks in, or someone hits one of them). Then they wake up with the room's multiplier on their
   health and damage: 1.05 for the first room, then 1 + 0.05 x (squares opened before, the
