@@ -57,6 +57,8 @@ public enum Stat {
     BLOCK_FORTUNE("Block Fortune", "☘", '6'),
     GEMSTONE_FORTUNE("Gemstone Fortune", "☘", '6'),
     DWARVEN_METAL_FORTUNE("Dwarven Metal Fortune", "☘", '6'),
+    /** From Hunting levels ("&8+&a1 &d☘ Hunting Fortune"). */
+    HUNTING_FORTUNE("Hunting Fortune", "☘", 'd'),
     SPEED("Speed", "✦", 'f'),
     MAGIC_FIND("Magic Find", "✯", 'b'),
     PET_LUCK("Pet Luck", "♣", 'd'),
@@ -67,11 +69,19 @@ public enum Stat {
     PRESSURE_RESISTANCE("Pressure Resistance", "❍", '9'),
     PULL("Pull", "ᛷ", 'b'),
     TRACKING("Tracking", "❃", 'd'),
+    /** How much more XP the skill gains: 1 + Wisdom / 100 (research skills.md 5.1). Only Combat's is used yet. */
     COMBAT_WISDOM("Combat Wisdom", "☯", '3'),
     FARMING_WISDOM("Farming Wisdom", "☯", '3'),
     FISHING_WISDOM("Fishing Wisdom", "☯", '3'),
+    MINING_WISDOM("Mining Wisdom", "☯", '3'),
     FORAGING_WISDOM("Foraging Wisdom", "☯", '3'),
+    ENCHANTING_WISDOM("Enchanting Wisdom", "☯", '3'),
     ALCHEMY_WISDOM("Alchemy Wisdom", "☯", '3'),
+    CARPENTRY_WISDOM("Carpentry Wisdom", "☯", '3'),
+    RUNECRAFTING_WISDOM("Runecrafting Wisdom", "☯", '3'),
+    TAMING_WISDOM("Taming Wisdom", "☯", '3'),
+    SOCIAL_WISDOM("Social Wisdom", "☯", '3'),
+    HUNTING_WISDOM("Hunting Wisdom", "☯", '3'),
     /** Seconds: "Rift Time: +55s". */
     RIFT_TIME("Rift Time", "ф", 'a', "s"),
     RIFT_HEALTH("Hearts", "❤", 'c'),

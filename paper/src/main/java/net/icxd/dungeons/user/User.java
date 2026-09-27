@@ -11,6 +11,7 @@ import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
 import net.icxd.dungeons.profile.ProfileMode;
 import net.icxd.dungeons.profile.Profiles;
+import net.icxd.dungeons.skill.Skills;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -37,7 +38,6 @@ public class User {
     private boolean inventoryRestored;
     /** Main thread. */
     private long lastSavedAt;
-    private int skyBlockXp;
 
     @Setter
     private boolean inDungeon = false;
@@ -188,9 +188,11 @@ public class User {
         save();
     }
 
-    public void calculateSkyBlockXp() {
-        int xp = 0;
-
-        this.skyBlockXp = xp;
+    /**
+     * SkyBlock XP on the profile they play on: for now only what its skill levels give (see
+     * {@link Skills#skyBlockXp}); 0 until their data is loaded.
+     */
+    public int getSkyBlockXp() {
+        return isLoaded() ? Skills.skyBlockXp(profile()) : 0;
     }
 }

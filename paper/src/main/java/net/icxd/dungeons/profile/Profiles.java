@@ -21,6 +21,7 @@ import org.bson.Document;
 
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.skill.Skill;
+import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.utils.Utils;
 
 /**
@@ -280,16 +281,15 @@ public final class Profiles {
     }
 
     /**
-     * "&7Combat: &eLevel XXIV": their best three skills, highest first, or "&cNo skills yet!". Skills
-     * are XP under {@code skills}, by the skill's name in lower case.
+     * "&7Combat: &eLevel XXIV": their best three skills, highest first, or "&cNo skills yet!" (see
+     * {@link Skills}).
      */
     public static List<String> skillLines(Document profile) {
         record Level(Skill skill, int level) {
         }
         List<Level> levels = new ArrayList<>();
-        Document skills = profile.get("skills") instanceof Document d ? d : new Document();
         for (Skill skill : Skill.values()) {
-            int level = skills.get(skill.name().toLowerCase(Locale.ROOT)) instanceof Number xp ? Skill.getLevelFromXP(xp.intValue()) : 0;
+            int level = Skills.level(profile, skill);
             if (level > 0) levels.add(new Level(skill, level));
         }
         if (levels.isEmpty()) return List.of("&cNo skills yet!");
