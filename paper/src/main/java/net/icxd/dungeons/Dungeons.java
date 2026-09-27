@@ -38,6 +38,7 @@ import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.profile.SandboxDrops;
+import net.icxd.dungeons.profile.SandboxStorage;
 import net.icxd.dungeons.rune.RuneRunnable;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.stats.StatsRunnable;
@@ -100,6 +101,7 @@ public class Dungeons extends JavaPlugin {
         listen(CheckListener.class, CheckListener::new);
         listen(Mobs.class, Mobs::new);
         listen(SandboxDrops.class, SandboxDrops::new);
+        listen(SandboxStorage.class, SandboxStorage::new);
 
         List<SCommand> commands = List.of(new AddEnchantmentCommand(), new DataCommand(), new DungeonCommand(), new ItemCommand(),
                 new NBTCommand(), new PlayerDataCommand(), new RecombobulateCommand(), new SpawnEntityCommand(),

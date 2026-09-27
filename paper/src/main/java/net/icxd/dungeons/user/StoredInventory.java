@@ -22,7 +22,8 @@ import org.bukkit.potion.PotionEffect;
 /**
  * A player's inventory, armor and off-hand, kept in the profile they play on under {@code storage}
  * (each profile has its own; see Profiles), so they follow the player between servers. The methods
- * here take that profile's document. The ender chest is separate (it isn't vanilla's).
+ * here take that profile's document. There's no ender chest in it: vanilla's is closed (see
+ * SandboxStorage).
  *
  * <p>Each slot is its own {@link ItemStack#serializeAsBytes()} blob (gzipped NBT with the
  * Minecraft data version, so Paper upgrades it after a Minecraft update), or null when empty. A

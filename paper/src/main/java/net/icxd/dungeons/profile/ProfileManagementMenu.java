@@ -77,7 +77,10 @@ public final class ProfileManagementMenu extends Menu {
         return item(material, mode.prefix() + "&eProfile: &a" + entry.name(), lore);
     }
 
-    /** Hypixel's, without the island (there are none here) and the co-op lines. */
+    /**
+     * Hypixel's, without the island (there are none here), the Ender Chest (vanilla's is one per
+     * player, and closed; see SandboxStorage) and the co-op lines.
+     */
     private static ItemStack emptySlot() {
         return item(Material.OAK_BUTTON, "&eEmpty Profile Slot",
             "&8Available",
@@ -87,7 +90,6 @@ public final class ProfileManagementMenu extends Menu {
             "",
             "&7Each profile has its own:",
             "&8• &7Inventory",
-            "&8• &7Ender Chest",
             "&8• &7Bank & Purse",
             "&8• &7Quests",
             "&8• &7Collections",
