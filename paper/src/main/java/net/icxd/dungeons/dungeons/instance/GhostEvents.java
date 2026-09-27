@@ -96,12 +96,19 @@ final class GhostEvents implements Listener {
         });
     }
 
-    /** "Zombie Grunt": a SkyBlock mob's name, else what the entity is called; null for nobody. */
+    /**
+     * "Zombie Grunt": a SkyBlock mob's name, the Blood Room's undead's ("Revoker") or the Watcher's,
+     * else what the entity is called; null for nobody.
+     */
     private static String killerName(Entity killer) {
         if (killer instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) killer = shooter;
         if (killer == null) return null;
         Mobs.Live mob = Mobs.of(killer);
         if (mob != null && !mob.type().getName().isEmpty()) return mob.type().getName().replaceAll("[&§].", "");
+        // Their bodies are nameless mannequins and zombies: the name is on a stand over them.
+        DungeonMobs.Mob dungeonMob = DungeonMobs.of(killer);
+        if (dungeonMob instanceof Undead undead) return undead.type.displayName;
+        if (dungeonMob instanceof Watcher) return "The Watcher";
         if (killer.customName() != null) return PlainTextComponentSerializer.plainText().serialize(killer.customName());
         return killer instanceof LivingEntity && !(killer instanceof Player) ? null : killer.getName();
     }
