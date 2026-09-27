@@ -40,12 +40,22 @@ final class DeathRules {
     }
 
     /**
-     * A failed run's score: "If the boss is not killed, Dungeon Score will be reduced by 30%" (FW Dungeon
-     * Score trivia; no failed run was recorded). Each part is cut by 30% and rounded, as the Entrance's
-     * own 70% is.
+     * A failed run's score, UNVERIFIED (no failed run was recorded; FW Dungeon Score): its Speed isn't
+     * the time's but "the percentage of the dungeon rooms that have been cleared" (see {@link
+     * #failedSpeed}), and then "If the boss is not killed, Dungeon Score will be reduced by 30%": each
+     * part is cut by 30% and rounded, as the Entrance's own 70% is.
      */
-    static Score failedScore(Score score) {
-        return new Score(cut(score.skill()), cut(score.explore()), cut(score.speed()), cut(score.bonus()));
+    static Score failedScore(Score score, DungeonFloor floor, int completedRooms, int totalRooms) {
+        return new Score(cut(score.skill()), cut(score.explore()), cut(failedSpeed(floor, completedRooms, totalRooms)), cut(score.bonus()));
+    }
+
+    /**
+     * A failed run's Speed before the cut: the share of the rooms cleared, in whole percent (rounded
+     * down, as the sidebar's "Cleared: 46%"), and 70% of that on the Entrance, as every part is there.
+     */
+    static int failedSpeed(DungeonFloor floor, int completedRooms, int totalRooms) {
+        int percent = totalRooms <= 0 ? 0 : Math.clamp(completedRooms * 100L / totalRooms, 0, 100);
+        return floor.getNumber() == 0 ? (int) (percent * 0.7) : percent;
     }
 
     private static int cut(int points) {

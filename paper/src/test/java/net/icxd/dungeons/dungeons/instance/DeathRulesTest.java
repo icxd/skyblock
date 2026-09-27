@@ -30,9 +30,27 @@ class DeathRulesTest {
     }
 
     @Test
+    void aFailedRunsSpeedIsTheRoomsCleared() {
+        DungeonFloor entrance = DungeonFloor.valueOf("ENTRANCE");
+        // 7 of 15: 46%, and 70% of that on the Entrance.
+        assertEquals(32, DeathRules.failedSpeed(entrance, 7, 15));
+        assertEquals(70, DeathRules.failedSpeed(entrance, 15, 15));
+        assertEquals(0, DeathRules.failedSpeed(entrance, 0, 0));
+        DungeonFloor first = floor(1);
+        assertEquals(50, DeathRules.failedSpeed(first, 10, 20));
+        assertEquals(100, DeathRules.failedSpeed(first, 25, 20));
+    }
+
+    @Test
     void aFailedRunLosesThirtyPercent() {
-        Score score = DeathRules.failedScore(new Score(59, 57, 70, 3));
-        assertEquals(new Score(41, 40, 49, 2), score);
-        assertEquals(132, score.total());
+        // Speed 70 by the clock, 32 by the rooms.
+        Score score = DeathRules.failedScore(new Score(59, 57, 70, 3), DungeonFloor.valueOf("ENTRANCE"), 7, 15);
+        assertEquals(new Score(41, 40, 22, 2), score);
+        assertEquals(105, score.total());
+    }
+
+    private static DungeonFloor floor(int number) {
+        for (DungeonFloor floor : DungeonFloor.values()) if (!floor.isMasterMode() && floor.getNumber() == number) return floor;
+        throw new IllegalArgumentException("no floor " + number);
     }
 }

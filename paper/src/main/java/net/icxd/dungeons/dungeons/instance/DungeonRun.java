@@ -797,7 +797,7 @@ public final class DungeonRun implements ScoreCounts {
     /** The score as it stands (rooms done, secrets, puzzles, crypts, deaths and time). */
     Score score(long now) {
         Score score = Score.of(floor, scoreInputs(now));
-        return failed ? DeathRules.failedScore(score) : score;
+        return failed ? DeathRules.failedScore(score, floor, runMap.completedCells(), runMap.totalCells()) : score;
     }
 
     /**

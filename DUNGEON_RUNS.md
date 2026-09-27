@@ -133,9 +133,10 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
 - Tab list: a ghost's class shows "DEAD"; "Downed" names the first ghost and "Time" its seconds
   until it's back; "Team Deaths" counts every death; "Revive Stones" what each member carries.
 - The run fails when everyone still in it is a ghost, or after an hour: the summary as usual
-  without "Defeated ...", and the score 30% lower (the wiki's rule; no failed run was recorded).
-  Its experience follows that score, without Bits or the day's bonus, and it isn't a completion
-  (MCW Dungeoneering: failed runs give Catacombs experience but don't count for the bonus).
+  without "Defeated ...", Speed the share of rooms cleared instead of the time's, and the score 30%
+  lower (the wiki's rules; no failed run was recorded). Its experience follows that score, without
+  Bits or the day's bonus, and it isn't a completion (MCW Dungeoneering: failed runs give Catacombs
+  experience but don't count for the bonus).
 
 **Classes** (`ClassBonus`, `ClassDetails`, `RunClasses`, `ClassEvents`).
 - Each class's stats at its level: base plus what the levels add, fitted to the one level of each
