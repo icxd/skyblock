@@ -1,6 +1,7 @@
 package net.icxd.dungeons.anticheat.check.combat;
 
 import net.icxd.dungeons.anticheat.check.CheckResult;
+import net.icxd.dungeons.stats.PlayerAttributes;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -23,7 +24,8 @@ public class ReachCheck extends CombatCheck {
         double dy = Math.max(box.getMinY() - eye.getY(), Math.max(0, eye.getY() - box.getMaxY()));
         double dz = Math.max(box.getMinZ() - eye.getZ(), Math.max(0, eye.getZ() - box.getMaxZ()));
         double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (distance > 4.0)
+        // Their reach (3, and more with Swing Range) and a block to spare.
+        if (distance > PlayerAttributes.reach(player) + 1.0)
             return new CheckResult(this, false, "Distance: " + Utils.round(distance, 2));
 
         return new CheckResult(this, true);

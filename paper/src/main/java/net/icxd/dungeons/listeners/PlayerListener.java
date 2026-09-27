@@ -8,6 +8,7 @@ import net.icxd.dungeons.profile.ProfileActions;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.PlayerAttributes;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
@@ -167,9 +168,16 @@ public class PlayerListener implements Listener {
         }
     }
 
+    /**
+     * What they switch to is rebuilt from its data, and their reach follows its Swing Range at once, not
+     * on the next second (once the switch has happened, so their stats have it).
+     */
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
+        Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
+            if (player.isOnline()) PlayerAttributes.apply(player, PlayerSession.of(player).stats());
+        });
         User user = User.cached(player.getUniqueId());
         ItemStack item = player.getInventory().getItem(event.getNewSlot());
         if (user == null || item == null || item.getType() == Material.AIR) return;
