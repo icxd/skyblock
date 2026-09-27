@@ -67,8 +67,6 @@ final class RunClasses {
     private static final double RAPID_FIRE_SHARE = 0.75;
     /** "your highest hit in the last minute". */
     private static final long HIGHEST_HIT_WINDOW = 60_000;
-    /** Bloodlust takes this much off Throwing Axe's cooldown. */
-    private static final long BLOODLUST_AXE = 1_000;
     /** A thrown axe: a block a tick (RUN1/RUN2's flew 7 to 13 blocks in 0.4 to 0.7 s) for at most a second (UNKNOWN). */
     private static final double AXE_SPEED = 1.0;
     private static final int AXE_TICKS = 20;
@@ -292,11 +290,10 @@ final class RunClasses {
         if (s.dungeonClass != DungeonClass.BERSERK) return;
         Player player = Bukkit.getPlayer(id);
         if (player == null || run.ghosts().isGhost(id)) return;
-        // Bloodlust: the boosted hit takes a second off Throwing Axe's cooldown.
-        if (now < s.bloodlustUntil) {
-            s.bloodlustUntil = 0;
-            if (s.abilityReadyAt > now) s.abilityReadyAt = Math.max(now, s.abilityReadyAt - BLOODLUST_AXE);
-        }
+        // Bloodlust's boosted hit is used up. Its lore also has it take a second off Throwing Axe's
+        // cooldown ("on activation"), but the recordings don't: the axe is back exactly 10.0 s after
+        // each throw (RUN1 00:33.1, 00:57.6, 01:58.7; RUN2 01:59.1) with kills all through. Left out.
+        if (now < s.bloodlustUntil) s.bloodlustUntil = 0;
         // "Heals you for 3% of your missing health every hit."
         double missing = PlayerHealth.max(player) - PlayerHealth.get(player);
         if (missing > 0) PlayerHealth.heal(player, missing * s.value(ClassBonus.BERSERK_BLOODLUST_HEAL) / 100);

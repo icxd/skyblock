@@ -153,7 +153,8 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
   second cooldown, "Throwing Axe is now available!") and Ragnarok (+100 Attack Speed, +400 Speed,
   1.5x melee for 15 seconds, 60 second cooldown; no minions), with "Ragnarok is ready to use! Press
   DROP to activate it!" 23 seconds in and every 30 seconds while it's unused. Bloodlust: the next
-  hit within 5 seconds of a kill does 35% more, and every hit heals 3% of missing health.
+  hit within 5 seconds of a kill does 35% more, and every hit heals 3% of missing health (the
+  lore's second off Throwing Axe isn't there: the recorded axe is always back after 10 seconds).
 - The others follow their Class Details lore, with the Berserk's messages: Archer Explosive Shot
   (3 arrows that blow up for your highest hit within 4 blocks) and Rapid Fire (5 arrows a second
   at 75% of it), Tank Seismic Wave (20,000 +10% per 50 Defense to every mob along 12 blocks) and
