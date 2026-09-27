@@ -66,4 +66,21 @@ class SidebarTest {
         // A new change after it's gone starts from nothing.
         assertEquals(-40, change.update(100));
     }
+
+    @Test
+    void aChangeUndoneShowsNothing() {
+        SidebarChange change = new SidebarChange();
+        change.update(100);
+        // Sold for 0.3, and bought back on the next update: the purse is where it was.
+        assertEquals(0.3, change.update(100.3), 1e-9);
+        assertNull(change.update(100), "not (+0)");
+        assertNull(change.update(100));
+        // The next change is shown as usual.
+        assertEquals(5, change.update(105));
+        // Undone after it had gone: that's a change of its own.
+        change.update(105);
+        change.update(105);
+        assertNull(change.update(105));
+        assertEquals(-5, change.update(100));
+    }
 }
