@@ -21,6 +21,7 @@ import net.icxd.dungeons.command.commands.user.ProfilesCommand;
 import net.icxd.dungeons.command.commands.user.ShowExtraStatsCommand;
 import net.icxd.dungeons.command.commands.user.SkillsCommand;
 import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
+import net.icxd.dungeons.economy.KillCoins;
 import net.icxd.dungeons.gui.GUIListener;
 import net.icxd.dungeons.listeners.CombatListener;
 import net.icxd.dungeons.listeners.HealthListener;
@@ -109,6 +110,7 @@ public class Dungeons extends JavaPlugin {
         listen(SandboxStorage.class, SandboxStorage::new);
         listen(Shots.class, Shots::new);
         listen(SkillGains.class, SkillGains::new);
+        listen(KillCoins.class, KillCoins::new);
 
         List<SCommand> commands = List.of(new AddEnchantmentCommand(), new DataCommand(), new DungeonCommand(), new ItemCommand(),
                 new NBTCommand(), new PlayerDataCommand(), new RecombobulateCommand(), new SpawnEntityCommand(),
