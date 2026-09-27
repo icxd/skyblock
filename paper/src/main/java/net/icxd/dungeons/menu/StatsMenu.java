@@ -7,15 +7,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.session.PlayerSession;
@@ -108,26 +104,8 @@ public final class StatsMenu extends GUI {
         worn(CHESTPLATE, inventory.getChestplate());
         worn(LEGGINGS, inventory.getLeggings());
         worn(BOOTS, inventory.getBoots());
-        set(new GUIClickableItem() {
-            @Override
-            public void run(InventoryClickEvent event) {
-                ClickType click = event.getClick();
-                if (!click.isLeftClick() && !click.isRightClick()) return;
-                Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
-                    if (viewer.isOnline()) new SkyBlockMenu(viewer).open(viewer);
-                });
-            }
-
-            @Override
-            public int slot() {
-                return BACK;
-            }
-
-            @Override
-            public ItemStack stack() {
-                return new Icon(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu").stack();
-            }
-        });
+        set(SkyBlockMenu.button(BACK, new Icon(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu").stack(), viewer,
+                () -> new SkyBlockMenu(viewer).open(viewer)));
         set(GUIClickableItem.close(CLOSE));
     }
 

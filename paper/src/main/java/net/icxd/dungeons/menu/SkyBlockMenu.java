@@ -114,9 +114,9 @@ public final class SkyBlockMenu extends GUI {
                 stack.setItemMeta(head);
             }
             switch (slot) {
-                case STATS -> set(button(slot, stack, () -> new StatsMenu(viewer).open(viewer)));
-                case SKILLS -> set(button(slot, stack, () -> new SkillsMenu(viewer).open(viewer)));
-                case PROFILES -> set(button(slot, stack, () -> new ProfileManagementMenu(viewer).open(viewer)));
+                case STATS -> set(button(slot, stack, viewer, () -> new StatsMenu(viewer).open(viewer)));
+                case SKILLS -> set(button(slot, stack, viewer, () -> new SkillsMenu(viewer).open(viewer)));
+                case PROFILES -> set(button(slot, stack, viewer, () -> new ProfileManagementMenu(viewer).open(viewer)));
                 default -> set(slot, stack);
             }
         }
@@ -124,7 +124,7 @@ public final class SkyBlockMenu extends GUI {
     }
 
     /** Runs {@code action} on the next tick for a left or right click (shift or not), if they're still on. */
-    private GUIClickableItem button(int slot, ItemStack stack, Runnable action) {
+    static GUIClickableItem button(int slot, ItemStack stack, Player viewer, Runnable action) {
         return new GUIClickableItem() {
             @Override
             public void run(InventoryClickEvent event) {
