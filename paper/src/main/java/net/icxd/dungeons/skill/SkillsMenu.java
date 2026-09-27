@@ -66,11 +66,13 @@ public final class SkillsMenu extends GUI {
 
     /**
      * The "Your Skills" item's lore (the SkyBlock Menu's has "&eClick to view!" too): "&621.6 Skill Avg.
-     * &8(non-cosmetic)", one decimal.
+     * &8(non-cosmetic)", one decimal. With no skill levels there's no average line (a new profile's
+     * SkyBlock Menu, recorded 04:29.1).
      */
     public static List<String> summary(double average, boolean click) {
-        List<String> lore = new ArrayList<>(List.of("&7View your Skill progression and", "&7rewards.", "",
-                "&6" + SkillText.number(average) + " Skill Avg. &8(non-cosmetic)", "", "&8Also accessible via /skills."));
+        List<String> lore = new ArrayList<>(List.of("&7View your Skill progression and", "&7rewards.", ""));
+        if (average > 0) lore.addAll(List.of("&6" + SkillText.number(average) + " Skill Avg. &8(non-cosmetic)", ""));
+        lore.add("&8Also accessible via /skills.");
         if (click) lore.addAll(List.of("", "&eClick to view!"));
         return lore;
     }

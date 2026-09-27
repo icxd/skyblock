@@ -163,6 +163,9 @@ class SkillMenuTest {
         assertEquals(List.of("&7View your Skill progression and", "&7rewards.", "", "&621.6 Skill Avg. &8(non-cosmetic)", "",
                 "&8Also accessible via /skills."), SkillsMenu.summary(21.6, false));
         assertEquals("&eClick to view!", SkillsMenu.summary(0, true).getLast());
+        // A new profile's has no average (its SkyBlock Menu, recorded 04:29.1).
+        assertEquals(List.of("&7View your Skill progression and", "&7rewards.", "", "&8Also accessible via /skills."),
+                SkillsMenu.summary(0, false));
         assertEquals(19, SkillsMenu.slot(Skill.COMBAT));
         assertEquals(28, SkillsMenu.slot(Skill.CARPENTRY));
         assertEquals(32, SkillsMenu.slot(Skill.SOCIAL));
