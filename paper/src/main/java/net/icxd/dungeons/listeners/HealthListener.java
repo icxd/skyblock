@@ -1,5 +1,6 @@
 package net.icxd.dungeons.listeners;
 
+import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.session.PlayerHealth;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,7 +13,8 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 
 /**
  * Vanilla damage and healing on players, as SkyBlock health (see {@link PlayerHealth}). SkyBlock's
- * own hits (mobs, explosions) take health directly and never get here.
+ * own hits (mobs, traps, true damage) go through {@link net.icxd.dungeons.combat.PlayerDamage} and
+ * never get here.
  */
 public class HealthListener implements Listener {
     /** More than any player's vanilla health, whatever protects them. */
@@ -28,6 +30,11 @@ public class HealthListener implements Listener {
         if (!(event.getEntity() instanceof Player player)) return;
         double amount = event.getFinalDamage();
         if (amount <= 0) return;
+        // Hurt players show the number too; burning is gold (as recorded on Hypixel).
+        EntityDamageEvent.DamageCause cause = event.getCause();
+        boolean fire = cause == EntityDamageEvent.DamageCause.FIRE || cause == EntityDamageEvent.DamageCause.FIRE_TICK
+                || cause == EntityDamageEvent.DamageCause.LAVA;
+        DamageIndicators.show(player, amount, fire ? '6' : '7');
         double left = PlayerHealth.get(player) - amount;
         if (left > 0) {
             event.setDamage(0);

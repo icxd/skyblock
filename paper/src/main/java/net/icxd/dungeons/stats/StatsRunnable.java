@@ -1,5 +1,6 @@
 package net.icxd.dungeons.stats;
 
+import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.utils.Replacement;
@@ -18,16 +19,16 @@ public class StatsRunnable implements Runnable {
             PlayerSession session = PlayerSession.of(player);
             Stats stats = session.stats();
 
-            // Health regeneration: 1.5 + 1% of max health a second.
+            // Health regeneration: 1% of max health and 1.5 a second, times Health Regen / 100.
             double maxHealth = PlayerHealth.max(player);
-            if (!player.isDead()) PlayerHealth.heal(player, 1.5 + (int) maxHealth * 0.01);
+            if (!player.isDead()) PlayerHealth.heal(player, Damage.healthRegen(maxHealth, stats.get(Stat.HEALTH_REGEN)));
 
             player.setWalkSpeed(Math.min((float) (stats.get(Stat.SPEED) / 5.0) / 100.0f, 1.0f));
 
-            // 2% of the pool a second, and never more than the pool (it shrinks when gear comes off).
+            // 2% of the pool a second, rounded up, and never more than the pool (it shrinks when gear comes off).
             int manaPool = session.maxMana();
             int mana = session.getMana() < 0 ? manaPool : session.getMana();
-            session.setMana(Math.min(manaPool, mana + (mana < manaPool ? manaPool / 50 : 0)));
+            session.setMana(Math.min(manaPool, mana + (mana < manaPool ? Damage.manaRegen(manaPool) : 0)));
 
             Replacement defense = session.getDefenseReplacement();
             Replacement manaText = session.getManaReplacement();

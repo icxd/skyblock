@@ -1,0 +1,61 @@
+package net.icxd.dungeons.combat;
+
+import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.utils.Text;
+import net.icxd.dungeons.utils.Utils;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * The numbers that pop up where something was hurt, as Hypixel's (research damage.md 3): an invisible
+ * marker armor stand named "&71,047", or "✧16,485,463✧" with its characters cycling white, white,
+ * yellow, gold, red, red for a critical hit; there for 20 ticks. Players get them too when they're hurt.
+ */
+public final class DamageIndicators {
+    /** Recorded: removed 1.0 s after they appear (0.9 to 1.1 s for most). */
+    static final int LIFE_TICKS = 20;
+
+    private DamageIndicators() {
+    }
+
+    /** What a hit shows: rounded down, thousands grouped, never past what Hypixel's can show (2,147,483,647). */
+    public static String text(double damage, boolean critical) {
+        String number = Utils.getFormattedNumber((int) Math.min(Integer.MAX_VALUE, Math.floor(Math.max(0, damage))));
+        return critical ? Utils.rainbowize("✧" + number + "✧") : "&7" + number;
+    }
+
+    /** A hit on something. */
+    public static void show(Entity at, double damage, boolean critical) {
+        spawn(at, text(damage, critical));
+    }
+
+    /** In a colour of its own (gold for fire). */
+    public static void show(Entity at, double damage, char color) {
+        spawn(at, "&" + color + Utils.getFormattedNumber((int) Math.min(Integer.MAX_VALUE, Math.floor(Math.max(0, damage)))));
+    }
+
+    /**
+     * Where Hypixel puts them is UNKNOWN; the recorded ones were 0.65 to 0.87 blocks from the mob's feet
+     * sideways in any direction and 0.88 to 1.38 up (their middle half), so they're put there at random.
+     */
+    private static void spawn(Entity at, String name) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        double angle = random.nextDouble(2 * Math.PI);
+        double out = random.nextDouble(0.65, 0.87);
+        Location spot = at.getLocation().add(Math.cos(angle) * out, random.nextDouble(0.88, 1.38), Math.sin(angle) * out);
+        ArmorStand stand = at.getWorld().spawn(spot, ArmorStand.class, s -> {
+            s.setVisible(false);
+            s.setGravity(false);
+            s.setMarker(true);
+            s.setSilent(true);
+            s.setPersistent(false);
+            s.customName(Text.line(name));
+            s.setCustomNameVisible(true);
+        });
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), stand::remove, LIFE_TICKS);
+    }
+}
