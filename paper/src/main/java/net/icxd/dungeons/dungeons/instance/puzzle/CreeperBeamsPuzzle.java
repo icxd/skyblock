@@ -1,10 +1,7 @@
 package net.icxd.dungeons.dungeons.instance.puzzle;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -27,7 +24,7 @@ import org.bukkit.entity.Player;
  *
  * <p>How a beam is made in 26.2 (shooting or clicking) and what it looks like are UNKNOWN: here a
  * lantern is picked by shooting or clicking it, the second pick makes the beam if it goes through
- * the creeper ({@link BeamGeometry}) and otherwise drops the first, and a made beam is a line of
+ * the creeper and otherwise drops the first ({@link BeamPairs}), and a made beam is a line of
  * particles.
  */
 final class CreeperBeamsPuzzle extends Puzzle {
@@ -41,9 +38,7 @@ final class CreeperBeamsPuzzle extends Puzzle {
 
     private final PuzzleData.Beams data;
     private final List<int[]> lanterns = new ArrayList<>();
-    private final List<int[]> used = new ArrayList<>();
-    private final List<int[][]> beams = new ArrayList<>();
-    private final Map<UUID, int[]> picked = new HashMap<>();
+    private final BeamPairs pairs;
     private Creeper creeper;
     private PuzzleChest chest;
     private int ticks;
@@ -51,6 +46,8 @@ final class CreeperBeamsPuzzle extends Puzzle {
     CreeperBeamsPuzzle(PuzzleHost host, int room, PuzzleFrame frame, PuzzleData.Beams data) {
         super(host, room, frame, "Creeper Beams");
         this.data = data;
+        int[] c = data.creeper();
+        this.pairs = new BeamPairs(new double[]{c[0] + 0.5, c[1], c[2] + 0.5}, BEAMS);
     }
 
     @Override
@@ -77,8 +74,8 @@ final class CreeperBeamsPuzzle extends Puzzle {
 
     @Override
     void tick() {
-        if (++ticks % DRAW_EVERY != 0 || beams.isEmpty() || chest != null) return;
-        for (int[][] beam : beams) draw(beam[0], beam[1]);
+        if (++ticks % DRAW_EVERY != 0 || pairs.beams().isEmpty() || chest != null) return;
+        for (int[][] beam : pairs.beams()) draw(beam[0], beam[1]);
     }
 
     @Override
@@ -100,27 +97,25 @@ final class CreeperBeamsPuzzle extends Puzzle {
     }
 
     private void pick(Player player, int[] lantern) {
-        if (creeper == null || used.contains(lantern)) return;
-        int[] first = picked.remove(player.getUniqueId());
+        if (creeper == null) return;
         Location at = block(lantern).getLocation().add(0.5, 0.5, 0.5);
-        if (first == null || first == lantern) {
-            picked.put(player.getUniqueId(), lantern);
-            player.playSound(at, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS, 1f, 1.5f);
-            at.getWorld().spawnParticle(Particle.DUST, at, 12, 0.35, 0.35, 0.35, 0, BEAM);
-            return;
+        switch (pairs.pick(player.getUniqueId(), lantern)) {
+            case FIRST -> {
+                player.playSound(at, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS, 1f, 1.5f);
+                at.getWorld().spawnParticle(Particle.DUST, at, 12, 0.35, 0.35, 0.35, 0, BEAM);
+            }
+            case MISSED -> player.playSound(at, Sound.BLOCK_NOTE_BLOCK_BASS, SoundCategory.BLOCKS, 1f, 0.5f);
+            case BEAM -> {
+                int[][] beam = pairs.last();
+                block(beam[0]).setType(Material.PRISMARINE, false);
+                block(beam[1]).setType(Material.PRISMARINE, false);
+                at.getWorld().playSound(at, Sound.BLOCK_BEACON_ACTIVATE, SoundCategory.BLOCKS, 1f, 1.5f);
+                draw(beam[0], beam[1]);
+                if (pairs.isDone()) explode();
+            }
+            case NONE -> {
+            }
         }
-        if (!BeamGeometry.throughCreeper(first, lantern, new double[]{data.creeper()[0] + 0.5, data.creeper()[1], data.creeper()[2] + 0.5})) {
-            player.playSound(at, Sound.BLOCK_NOTE_BLOCK_BASS, SoundCategory.BLOCKS, 1f, 0.5f);
-            return;
-        }
-        used.add(first);
-        used.add(lantern);
-        beams.add(new int[][]{first, lantern});
-        block(first).setType(Material.PRISMARINE, false);
-        block(lantern).setType(Material.PRISMARINE, false);
-        at.getWorld().playSound(at, Sound.BLOCK_BEACON_ACTIVATE, SoundCategory.BLOCKS, 1f, 1.5f);
-        draw(first, lantern);
-        if (beams.size() >= BEAMS) explode();
     }
 
     /** The creeper blows up and the chest is there. */
