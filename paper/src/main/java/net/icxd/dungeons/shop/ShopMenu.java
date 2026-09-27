@@ -173,7 +173,9 @@ public final class ShopMenu extends GUI {
             return;
         }
         ItemStack bought = ItemBuilder.build(item, ware.amount());
-        if (!fits(viewer.getInventory(), bought)) {
+        // What they hold on the cursor goes back into their inventory when the menu closes, or
+        // falls at their feet if it has no room: it needs its place as much as what they buy.
+        if (!fits(viewer.getInventory(), viewer.getItemOnCursor(), bought)) {
             tell(Selling.FULL);
             return;
         }
@@ -316,14 +318,38 @@ public final class ShopMenu extends GUI {
         }
     }
 
-    /** Whether all of the stack fits in their inventory (armor and off hand slots aside). */
-    static boolean fits(PlayerInventory inventory, ItemStack stack) {
-        int left = stack.getAmount();
-        for (ItemStack slot : inventory.getStorageContents()) {
-            if (slot == null || slot.isEmpty()) left -= stack.getMaxStackSize();
-            else if (slot.isSimilar(stack)) left -= Math.max(0, slot.getMaxStackSize() - slot.getAmount());
-            if (left <= 0) return true;
+    /**
+     * Whether all of these stacks fit in their inventory together (armor and off hand slots aside):
+     * onto stacks like them first, then into empty slots, as they'd go in. Nothing is changed.
+     */
+    static boolean fits(PlayerInventory inventory, ItemStack... stacks) {
+        ItemStack[] slots = inventory.getStorageContents();
+        // What each slot would hold, and how many; the inventory's own stacks aren't touched.
+        ItemStack[] held = new ItemStack[slots.length];
+        int[] amounts = new int[slots.length];
+        for (int i = 0; i < slots.length; i++) {
+            if (empty(slots[i])) continue;
+            held[i] = slots[i];
+            amounts[i] = slots[i].getAmount();
         }
-        return false;
+        for (ItemStack stack : stacks) {
+            if (empty(stack)) continue;
+            int max = stack.getMaxStackSize();
+            int left = stack.getAmount();
+            for (int i = 0; i < slots.length && left > 0; i++) {
+                if (held[i] == null || !held[i].isSimilar(stack)) continue;
+                int put = Math.clamp(max - amounts[i], 0, left);
+                amounts[i] += put;
+                left -= put;
+            }
+            for (int i = 0; i < slots.length && left > 0; i++) {
+                if (held[i] != null) continue;
+                held[i] = stack;
+                amounts[i] = Math.min(max, left);
+                left -= amounts[i];
+            }
+            if (left > 0) return false;
+        }
+        return true;
     }
 }
