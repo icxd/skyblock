@@ -103,7 +103,7 @@ class MobKindsTest {
     void ids() {
         Set<String> ids = new HashSet<>();
         for (MobKind kind : MobKinds.all().values()) assertTrue(ids.add(kind.id()), kind.id());
-        assertEquals(14, ids.size());
+        assertEquals(15, ids.size());
         assertEquals(MobKinds.CRYPT_LURKER, MobKinds.get("crypt_lurker"));
         assertNull(MobKinds.get(null));
     }

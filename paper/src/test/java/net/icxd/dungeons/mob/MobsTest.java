@@ -29,8 +29,8 @@ class MobsTest {
         assertNotNull(mob("BLADESOUL"));
         assertNotNull(mob("zombie_grunt"));
         assertNull(Mobs.kind("NOT_A_MOB"));
-        // The Entrance's eleven, the Watcher's undeads and the Hub's two.
-        assertEquals(14, Mobs.registry().size());
+        // The Entrance's eleven, the Watcher's undeads, the secret bat and the Hub's two.
+        assertEquals(15, Mobs.registry().size());
         assertTrue(Mobs.registry().keySet().containsAll(List.of("MAGMA_CUBE", "BLADESOUL", "ZOMBIE_GRUNT", "ANGRY_ARCHAEOLOGIST")));
         // A dungeon kind comes at its Entrance's first level; the Hub's as they are.
         assertEquals(40, mob("ZOMBIE_GRUNT").getLevel());

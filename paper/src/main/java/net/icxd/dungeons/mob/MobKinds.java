@@ -1,5 +1,6 @@
 package net.icxd.dungeons.mob;
 
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.mob.mobs.Bladesoul;
 import net.icxd.dungeons.mob.mobs.MagmaCube;
 import org.bukkit.Material;
@@ -15,6 +16,8 @@ import static net.icxd.dungeons.common.DungeonFloor.ENTRANCE;
 import static net.icxd.dungeons.mob.MobKind.Gear;
 import static net.icxd.dungeons.mob.MobKind.NameStyle;
 import static net.icxd.dungeons.mob.MobKind.Piece;
+import static net.icxd.dungeons.mob.MobType.AIRBORNE;
+import static net.icxd.dungeons.mob.MobType.ANIMAL;
 import static net.icxd.dungeons.mob.MobType.ARCANE;
 import static net.icxd.dungeons.mob.MobType.CUBIC;
 import static net.icxd.dungeons.mob.MobType.HUMANOID;
@@ -203,6 +206,21 @@ public final class MobKinds {
             .variant(null, 200, 50_000_000, 4_000, 0, 4_000, 1_000)
             .build();
 
+    /**
+     * A secret (research secrets_puzzles.md 1.4, 1.9): the wiki's Bat (Catacombs), 100 health, no damage, 100
+     * Combat XP and a coin, a 1% Beating Heart; the same on every floor (Master Mode's hits for 1 and gives 150
+     * XP, not here yet). Its secret and its reward are the room's to give (RunSecrets). Never room-scaled.
+     */
+    public static final MobKind SECRET_BAT = secretBat();
+
+    private static MobKind secretBat() {
+        MobKind.Builder bat = MobKind.builder("DUNGEON_SECRET_BAT", "Bat", EntityType.BAT).types(ANIMAL, AIRBORNE).notRoomScaled();
+        for (DungeonFloor floor : DungeonFloor.values()) {
+            if (!floor.isMasterMode()) bat.variant(floor, 1, 100, 0, 0, 100, 1, drop("BEATING_HEART", R, 1));
+        }
+        return bat.build();
+    }
+
     /** The Entrance's, in the order of research mobs.md 3. */
     public static final List<MobKind> ENTRANCE_KINDS = List.of(ZOMBIE_GRUNT, SKELETON_GRUNT, TANK_ZOMBIE, CRYPT_LURKER, SCARED_SKELETON,
             CRYPT_SOULEATER, CRYPT_DREADLORD, UNDEAD_SKELETON, CRYPT_UNDEAD, LOST_ADVENTURER, ANGRY_ARCHAEOLOGIST);
@@ -212,6 +230,7 @@ public final class MobKinds {
     static {
         for (MobKind kind : ENTRANCE_KINDS) BY_ID.put(kind.id(), kind);
         BY_ID.put(WATCHER_UNDEAD.id(), WATCHER_UNDEAD);
+        BY_ID.put(SECRET_BAT.id(), SECRET_BAT);
         BY_ID.put(MAGMA_CUBE.id(), MAGMA_CUBE);
         BY_ID.put(BLADESOUL.id(), BLADESOUL);
     }
