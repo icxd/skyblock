@@ -438,7 +438,7 @@ public final class DungeonRun implements ScoreCounts {
                     here++;
                     if (ghosts.isGhost(player.getUniqueId())) ghostsHere++;
                 }
-                if (DeathRules.failed(here, ghostsHere, now - startedAt)) fail();
+                if (DeathRules.failed(here, ghostsHere, DeathRules.autoReviveSeconds(floor) >= 0, now - startedAt)) fail();
             }
             case ENDED -> sidebarScore.tick(now, this::sidebarScore);
         }

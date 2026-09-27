@@ -31,12 +31,13 @@ final class DeathRules {
 
     /**
      * Whether the run has failed: everyone still in it is a ghost ("All players in the run have either
-     * died and become Ghosts or left the run"), or it has gone on for 60 minutes. Taken as written, the
-     * first also ends a solo Entrance at the first death, before its 15 second revive: whether Hypixel
-     * waits for that is UNKNOWN.
+     * died and become Ghosts or left the run") with none coming back by itself, or it has gone on for 60
+     * minutes. {@code ghostsComeBack} is for floors whose ghosts are revived after a while ({@link
+     * #autoReviveSeconds}): there a wipe waits for that, else a solo Entrance would end at its first
+     * death and its 15 second revive could never happen. Whether Hypixel waits is UNKNOWN.
      */
-    static boolean failed(int here, int ghostsHere, long elapsedMillis) {
-        return (here > 0 && ghostsHere >= here) || elapsedMillis >= TIME_LIMIT_MILLIS;
+    static boolean failed(int here, int ghostsHere, boolean ghostsComeBack, long elapsedMillis) {
+        return (here > 0 && ghostsHere >= here && !ghostsComeBack) || elapsedMillis >= TIME_LIMIT_MILLIS;
     }
 
     /**

@@ -20,13 +20,22 @@ class DeathRulesTest {
 
     @Test
     void failsWhenEveryoneHereIsAGhostOrAfterAnHour() {
-        assertFalse(DeathRules.failed(3, 2, 0));
-        assertTrue(DeathRules.failed(3, 3, 0));
-        assertTrue(DeathRules.failed(1, 1, 1000));
+        assertFalse(DeathRules.failed(3, 2, false, 0));
+        assertTrue(DeathRules.failed(3, 3, false, 0));
+        assertTrue(DeathRules.failed(1, 1, false, 1000));
         // Nobody here: the run manager closes an empty run by itself.
-        assertFalse(DeathRules.failed(0, 0, 1000));
-        assertFalse(DeathRules.failed(2, 0, 59 * 60 * 1000L));
-        assertTrue(DeathRules.failed(2, 0, 60 * 60 * 1000L));
+        assertFalse(DeathRules.failed(0, 0, false, 1000));
+        assertFalse(DeathRules.failed(2, 0, false, 59 * 60 * 1000L));
+        assertTrue(DeathRules.failed(2, 0, false, 60 * 60 * 1000L));
+    }
+
+    @Test
+    void aWipeWaitsForGhostsThatComeBackByThemselves() {
+        // A solo Entrance: its 15 second revive comes first.
+        assertFalse(DeathRules.failed(1, 1, true, 1000));
+        assertFalse(DeathRules.failed(3, 3, true, 1000));
+        // The hour still counts.
+        assertTrue(DeathRules.failed(1, 1, true, 60 * 60 * 1000L));
     }
 
     @Test
