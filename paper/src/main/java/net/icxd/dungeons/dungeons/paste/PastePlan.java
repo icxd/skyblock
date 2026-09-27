@@ -372,7 +372,7 @@ public final class PastePlan {
      * Turns a block position inside a {@code sizeX} x {@code sizeZ} area clockwise {@code turns}
      * times, keeping it inside the (turned) area. Same as WorldEdit rotating around the centre.
      */
-    static int[] rotate(int x, int z, int sizeX, int sizeZ, int turns) {
+    public static int[] rotate(int x, int z, int sizeX, int sizeZ, int turns) {
         for (int i = 0; i < Math.floorMod(turns, 4); i++) {
             int t = x;
             x = sizeZ - 1 - z;

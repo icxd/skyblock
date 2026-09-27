@@ -1,7 +1,9 @@
 package net.icxd.dungeons.dungeons.instance;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -14,6 +16,7 @@ import net.icxd.dungeons.dungeons.generation.room.RoomType;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.generation.utils.Position;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
+import net.icxd.dungeons.dungeons.paste.RoomCapture;
 
 /**
  * A run's floor in world coordinates: which cell and room a block is in, where each door is, and
@@ -29,9 +32,35 @@ final class RunLayout {
 
     final DungeonLayout layout;
     private final int base = PastePlan.HYPIXEL_BASE;
+    /** How each room was pasted, by room id. */
+    private final Map<Integer, PastePlan.RoomPaste> pastes = new HashMap<>();
 
     RunLayout(DungeonLayout layout) {
+        this(layout, List.of());
+    }
+
+    RunLayout(DungeonLayout layout, List<PastePlan.RoomPaste> pastes) {
         this.layout = layout;
+        for (PastePlan.RoomPaste paste : pastes) this.pastes.put(paste.room().id(), paste);
+    }
+
+    /** Where a room's capture frame is in the world; null for a room that wasn't pasted. */
+    RoomFrame frame(PlacedRoom room) {
+        PastePlan.RoomPaste paste = pastes.get(room.id());
+        return paste == null ? null : RoomFrame.of(paste);
+    }
+
+    /** The capture a room was pasted from (its id is the room's in the data: "crypt"); null if it wasn't pasted. */
+    RoomCapture capture(PlacedRoom room) {
+        PastePlan.RoomPaste paste = pastes.get(room.id());
+        return paste == null ? null : paste.capture();
+    }
+
+    /** A room's cells' min corners in the world, {x, z}. */
+    List<int[]> cellMins(PlacedRoom room) {
+        List<int[]> out = new ArrayList<>();
+        for (Position cell : room.cells()) out.add(new int[]{base + PastePlan.PITCH * cell.x(), base + PastePlan.PITCH * cell.y()});
+        return out;
     }
 
     List<PlacedRoom> rooms() {

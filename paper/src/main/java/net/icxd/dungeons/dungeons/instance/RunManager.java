@@ -319,7 +319,7 @@ public final class RunManager {
                 platform(world, entrance, Material.AIR);
                 run.map = takeMap(world);
                 run.lifecycle = new DungeonRun(this, plugin, run.id, run.floor, run.members, world, entrance, plan.entranceDoor(),
-                        new RunLayout(plan.layout()), plan.roomCount(), plan.puzzleCount(), run.map);
+                        new RunLayout(plan.layout(), plan.rooms()), plan.roomCount(), plan.puzzleCount(), run.map);
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runs.updateOne(eq("_id", run.id), set(Runs.STATE, Runs.RUNNING)));
                 for (Player player : online(run)) send(player, run);
             });
