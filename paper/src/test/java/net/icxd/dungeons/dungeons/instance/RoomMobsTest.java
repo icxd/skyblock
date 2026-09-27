@@ -44,6 +44,21 @@ class RoomMobsTest {
         }
     }
 
+    /**
+     * A skull rises 12 times over 1.7 s, 2.5 blocks, and is gone 0.2 s after (skull 499637: 39.2 to 40.9, gone
+     * at 41.1), so it starts that long before the recorded times the Undead Skeletons appeared; a bolt comes
+     * 0.3 to 1.4 s before, while it rises.
+     */
+    @Test
+    void skullsRiseBeforeTheUndeadSkeleton() {
+        assertEquals(36, RoomMobs.RISE_TICKS);
+        assertEquals(1.7, (RoomMobs.RISE_STEPS - 1) * RoomMobs.RISE_EVERY / 20.0, 0.15);
+        assertEquals(2.5, RoomMobs.RISE_STEPS * RoomMobs.RISE_STEP, 0.05);
+        assertEquals(0.3, RoomMobs.LIGHTNING_MIN / 20.0, 1e-9);
+        assertEquals(1.4, RoomMobs.LIGHTNING_MAX / 20.0, 1e-9);
+        assertTrue(RoomMobs.LIGHTNING_MAX < RoomMobs.RISE_TICKS && RoomMobs.LIGHTNING_MIN >= RoomMobs.RISE_EVERY, "during the rise");
+    }
+
     /** "A killed skeleton (Scared/Skeleton Grunt/Undead) leaves a skull." */
     @Test
     void skeletonsLeaveSkulls() {

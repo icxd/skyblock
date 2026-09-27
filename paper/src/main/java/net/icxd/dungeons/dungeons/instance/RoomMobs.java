@@ -74,26 +74,32 @@ final class RoomMobs {
     private static final int SPAWNS_PER_TICK = 40;
 
     /**
-     * When a skull rises after its room opens: 6.3 to 28.4 s after, one by one, in the recordings (what sets
-     * it off is UNKNOWN: players were 1.5 to 56 blocks away), so at random in that span.
+     * When a skull becomes an Undead Skeleton after its room opens: 6.3 to 28.4 s after, one by one, in the
+     * recordings (when the skull goes; what sets it off is UNKNOWN: players were 1.5 to 56 blocks away), so
+     * at random in that span. It starts rising {@link #RISE_TICKS} before.
      */
     static final double SKULL_RISE_MIN = 6.3;
     static final double SKULL_RISE_MAX = 28.4;
-    /** A killed skeleton's skull rises 14.6 to 23 s later (recorded). */
+    /** A killed skeleton's skull becomes an Undead Skeleton 14.6 to 23 s later (recorded). */
     static final double SKULL_AGAIN_MIN = 14.6;
     static final double SKULL_AGAIN_MAX = 23;
-    /** It rises 0.21 blocks and turns 43 degrees every 3 ticks, 12 times: 2.5 blocks in 1.8 s (recorded 1.7 s, 2.5 blocks). */
+    /**
+     * It rises 0.21 blocks and turns 43 degrees every 3 ticks, 12 times, and is gone 3 ticks after the
+     * last: 2.5 blocks in 1.65 s (recorded: 12 moves in 1.7 s, 2.5 blocks, gone 0.2 s after the last).
+     */
     static final int RISE_STEPS = 12;
     static final int RISE_EVERY = 3;
+    static final int RISE_TICKS = RISE_STEPS * RISE_EVERY;
     static final double RISE_STEP = 0.21;
     static final float RISE_TURN = 43;
     /** The Undead Skeleton appears this far above where the skull started, and drops to the floor. */
     static final double UNDEAD_ABOVE = 2.72;
     /** A killed skeleton's skull lies this far below where it died (its stand; the skull itself on the floor). */
     static final double DEAD_SKULL_BELOW = 1.44;
-    /** A lightning bolt came down on the skull 0.3 to 1.4 s before 7 of the 44 recorded rises. */
+    /** A lightning bolt came down on the rising skull 0.3 to 1.4 s before 7 of the 44 recorded Undead Skeletons appeared. */
     static final double LIGHTNING_CHANCE = 7 / 44.0;
-    static final int LIGHTNING_BEFORE = 16;
+    static final int LIGHTNING_MIN = 6;
+    static final int LIGHTNING_MAX = 28;
 
     /** The loot's heads lie on stands this far below the drop spot, its names this far, the Superboom's paper this far. */
     private static final double HEAD_BELOW = 0.72;
@@ -173,8 +179,9 @@ final class RoomMobs {
         final Location start;
         /** The tick it starts rising at; -1 until its room opens. */
         long riseAt = -1;
+        /** The tick lightning strikes it; -1 for none. */
+        long lightningAt = -1;
         int step;
-        boolean lightning;
 
         Skull(RoomState room, ArmorStand stand) {
             this.room = room;
@@ -467,9 +474,11 @@ final class RoomMobs {
         t.mob().setDormant(t.live.entity(), false);
     }
 
+    /** It becomes an Undead Skeleton this many seconds from now, rising the 1.65 s before. */
     private void rise(Skull skull, double minSeconds, double maxSeconds) {
-        skull.riseAt = ticks + Math.round(random.nextDouble(minSeconds, maxSeconds) * 20);
-        skull.lightning = random.nextDouble() < LIGHTNING_CHANCE;
+        long undead = ticks + Math.round(random.nextDouble(minSeconds, maxSeconds) * 20);
+        skull.riseAt = undead - RISE_TICKS;
+        skull.lightningAt = random.nextDouble() < LIGHTNING_CHANCE ? undead - random.nextInt(LIGHTNING_MIN, LIGHTNING_MAX + 1) : -1;
     }
 
     /** Whether its starred mobs are all dead (a room with no mobs to clear never is, here). */
@@ -549,13 +558,16 @@ final class RoomMobs {
                 skulls.remove(skull);
                 continue;
             }
-            if (skull.lightning && ticks == skull.riseAt - LIGHTNING_BEFORE) world.strikeLightningEffect(skull.start);
+            // Where the skull is by then, as it rises (R1 at 45.7 s: 1.47 blocks over where it started).
+            if (ticks == skull.lightningAt) world.strikeLightningEffect(skull.stand.getLocation());
             if (ticks < skull.riseAt || (ticks - skull.riseAt) % RISE_EVERY != 0) continue;
-            skull.step++;
-            Location to = skull.start.clone().add(0, skull.step * RISE_STEP, 0);
-            to.setYaw(skull.start.getYaw() + skull.step * RISE_TURN);
-            skull.stand.teleport(to);
-            if (skull.step < RISE_STEPS) continue;
+            if (skull.step < RISE_STEPS) {
+                skull.step++;
+                Location to = skull.start.clone().add(0, skull.step * RISE_STEP, 0);
+                to.setYaw(skull.start.getYaw() + skull.step * RISE_TURN);
+                skull.stand.teleport(to);
+                continue;
+            }
             skulls.remove(skull);
             skull.stand.remove();
             STANDS.remove(skull.stand.getUniqueId());

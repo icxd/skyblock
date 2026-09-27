@@ -90,9 +90,10 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   blessing (rooms bigger than 1x1 and champion rooms, as recorded), the next door's key, and a
   Superboom TNT (two in three) or a Revive Stone. Walking into them picks them up ("Name has
   obtained Superboom TNT!"), into the inventory if there's room.
-- Skeleton skulls (the capture's, else the recorded ones, else 1 to 7 a square) rise and become
-  Undead Skeletons 6 to 28 seconds after their room opens; a killed skeleton leaves one that does
-  the same 15 to 23 seconds later.
+- Skeleton skulls (the capture's, else the recorded ones, else 1 to 7 a square) rise for 1.65
+  seconds and become Undead Skeletons 6 to 28 seconds after their room opens, now and then with a
+  lightning bolt on the rising skull; a killed skeleton leaves one that does the same 15 to 23
+  seconds later.
 - Superboom TNT (right click on a block) blows up the tombs and weak walls next to where it goes
   off: the recorded explosion sounds and squid ink, and the tomb's Crypt Undead; once that's killed
   the crypt counts (`cryptsBlown()`, the tab's Crypts), as the bonus score does on Hypixel. Tombs
