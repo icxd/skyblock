@@ -20,6 +20,7 @@ public final class UtilityAbilities {
         to.accept(SpiritLeap.NAME, new SpiritLeap());
         to.accept("Aspiring Leap", new Refusal("&cYou can only use this item on your private island!"));
         to.accept(CreeperVeil.NAME, new CreeperVeil());
+        to.accept(Shadowstep.NAME, new Shadowstep());
         // Healing
         WandHeal wand = new WandHeal();
         for (String name : new String[] {"Small Heal", "Medium Heal", "Big Heal", "Huge Heal"}) to.accept(name, wand);
@@ -33,5 +34,7 @@ public final class UtilityAbilities {
         to.accept(Soulward.NAME, new Soulward());
         to.accept("Enrage", new Taunt("entity.ravager.roar"));
         to.accept("Jingle Bells", new Taunt("block.note_block.bell"));
+        // Movement
+        to.accept("Ether Transmission", new EtherTransmission());
     }
 }

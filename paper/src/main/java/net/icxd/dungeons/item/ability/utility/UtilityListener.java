@@ -20,14 +20,15 @@ import org.bukkit.inventory.EquipmentSlot;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerHealth;
 
 /**
  * What the utility abilities need besides their clicks: every tick their heals, veils and glides; what
  * immunity does to vanilla damage (SkyBlock hits go through {@link Protection}'s shields); hits from players
- * who can't attack now; a Spirit Leap's immunity ending with a hit; the Creeper Veil taken down with a right
- * click; Spirit Glide on sneaking; and what a player who leaves had going. Registered by {@link Dungeons},
- * which is when the shields and stat hooks go in.
+ * who can't attack now; a Spirit Leap's immunity ending with a hit; Shadowstep ready again on a kill; the
+ * Creeper Veil taken down with a right click; Spirit Glide on sneaking; and what a player who leaves had
+ * going. Registered by {@link Dungeons}, which is when the shields and stat hooks go in.
  */
 public final class UtilityListener implements Listener {
     /** On what abilities put in the world (a veil's creepers): not a mob, and never hit. */
@@ -93,6 +94,12 @@ public final class UtilityListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onTarget(EntityTargetEvent event) {
         if (event.getTarget() != null && event.getTarget().getScoreboardTags().contains(NOT_A_MOB)) event.setCancelled(true);
+    }
+
+    /** "Cooldown resets on kills". */
+    @EventHandler
+    public void onKill(SkyBlockMobDeathEvent event) {
+        if (event.killer() != null) Shadowstep.killed(event.killer());
     }
 
     /**
