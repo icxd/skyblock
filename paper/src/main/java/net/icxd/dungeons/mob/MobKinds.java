@@ -188,18 +188,18 @@ public final class MobKinds {
             .build();
 
     /**
-     * The Hub's test mobs keep the numbers they've had. Coins (20) and Combat XP (120) are the wiki's Lv75
-     * Crimson Isle Magma Cube's.
+     * The Hub's test mobs keep the numbers they've had. Coins (20) are the wiki's Lv75 Crimson Isle Magma
+     * Cube's (research coins.md). Combat XP: research has none, so 0 (the wiki's page says 120).
      */
     public static final MobKind MAGMA_CUBE = MobKind.builder("MAGMA_CUBE", "Magma Cube", EntityType.MAGMA_CUBE)
             .types(CUBIC, INFERNAL).style(NameStyle.HUB).behaviour(MagmaCube::new)
-            .variant(null, 75, 1_000_000, 0, 0, 120, 20, drop("DARK_CLAYMORE", RNG, 100))
+            .variant(null, 75, 1_000_000, 0, 0, 0, 20, drop("DARK_CLAYMORE", RNG, 100))
             .build();
 
-    /** Coins (1,000) and Combat XP (4,000) are the wiki's. */
+    /** Coins (1,000) are the wiki's (research coins.md). Combat XP: research has none, so 0 (the wiki's page says 4,000). */
     public static final MobKind BLADESOUL = MobKind.builder("BLADESOUL", "&8&lBladesoul", EntityType.SKELETON)
             .types(WITHER, SKELETAL, ARCANE).style(NameStyle.BOSS).behaviour(Bladesoul::new).gear(Gear.holding(Material.GOLDEN_AXE))
-            .variant(null, 200, 50_000_000, 4_000, 0, 4_000, 1_000)
+            .variant(null, 200, 50_000_000, 4_000, 0, 0, 1_000)
             .build();
 
     /** The Entrance's, in the order of research mobs.md 3. */
