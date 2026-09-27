@@ -19,8 +19,10 @@ public final class PlayerAttributes {
      */
     static final double SPEED_CAP = 400;
     /**
-     * The fastest a player can walk: vanilla's walk speed of 1, five times its 0.2 (and the wiki's Speed:
-     * "the real speed of the player was still limited to 500%").
+     * The fastest walk speed can make a player: vanilla's walk speed of 1, five times its 0.2. That's
+     * vanilla's limit, not Hypixel's, whose Speed goes past 500 ("Fixed Speed Cap past 500 not actually
+     * doing anything", the wiki's Speed, 0.24.4); nothing raises the cap past 400 yet, and once something
+     * does, Speed past 500% will need the MOVEMENT_SPEED attribute as well.
      */
     static final double SPEED_LIMIT = 500;
     /** Vanilla's melee reach, and SkyBlock's base Swing Range (the wiki's Swing Range: "a base value of 3"). */
