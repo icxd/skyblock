@@ -33,6 +33,9 @@ import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.skill.Skill;
+import net.icxd.dungeons.skill.SkillText;
+import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.StoredInventory;
@@ -638,12 +641,15 @@ public final class DungeonRun {
         });
 
         User user = User.cached(viewer.getUniqueId());
-        Stats stats = PlayerSession.of(viewer).stats();
+        PlayerSession session = PlayerSession.of(viewer);
+        Stats stats = session.stats();
+        // The skill that last gained XP (Combat before any has).
+        Skill skill = session.getLastSkill() == null ? Skill.COMBAT : session.getLastSkill();
         column(out, "       &6&lAccount Info", () -> texts(
                 "&e&lProfile: &a" + (user != null && user.isLoaded() ? user.profileName() : "?"),
                 " Bank: &6" + (user != null && user.isLoaded() ? Utils.formatNumber(user.getBankBalance()) : "0"),
                 "",
-                "&e&lSkills:",
+                SkillText.dungeonTab(skill, user != null && user.isLoaded() ? Skills.xp(user.profile(), skill) : 0),
                 " Speed: &f" + (stats == null ? 0 : (int) stats.get(Stat.SPEED)),
                 " Strength: &c" + (stats == null ? 0 : (int) stats.get(Stat.STRENGTH)),
                 " Crit Chance: &9" + (stats == null ? 0 : (int) stats.get(Stat.CRIT_CHANCE)),

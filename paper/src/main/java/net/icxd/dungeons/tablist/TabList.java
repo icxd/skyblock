@@ -31,10 +31,12 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.Rank;
+import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.skill.SkillText;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -186,7 +188,12 @@ public class TabList {
         lines.add(new Line("§e§lProfile: §a" + user.profileName(), GRAY));
         lines.add(new Line("§f Bank: §6" + Utils.formatNumber(user.getBankBalance()) + "/50M", GRAY));
         lines.add(new Line("§8§1 ", GRAY));
-        lines.add(new Line("§e§lSkills: ", GRAY));
+        // The Dungeon Hub's has Dungeons where the Hub's has Skills (both recorded).
+        List<String> widget = type == ServerType.DUNGEON_HUB
+                ? SkillText.dungeonsTab(DungeonProfile.catacombsXp(user.profile()), DungeonProfile.selectedClass(user),
+                        DungeonProfile.classXp(user.profile(), DungeonProfile.selectedClass(user)))
+                : SkillText.hubTab(user.profile());
+        for (String line : widget) lines.add(new Line(Utils.color(line), GRAY));
         while (lines.size() < SLOTS) lines.add(new Line("§9 ", GRAY));
         return lines.toArray(new Line[0]);
     }

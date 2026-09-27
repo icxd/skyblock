@@ -3,6 +3,7 @@ package net.icxd.dungeons.session;
 import lombok.Getter;
 import lombok.Setter;
 import net.icxd.dungeons.region.RegionType;
+import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
@@ -17,9 +18,10 @@ import java.util.UUID;
 
 /**
  * What this server keeps about an online player while they're on it: their stats (worked out at
- * most once a tick), health, mana, ability cooldowns, the region they're in and what the action bar
- * shows in place of defense or mana. It ends when they leave (see PlayerListener), so nothing of
- * theirs stays behind, and a rejoin starts from full health and mana. Main thread.
+ * most once a tick), health, mana, ability cooldowns, the region they're in, what the action bar
+ * shows in place of defense or mana and the skill that last gained XP. It ends when they leave (see
+ * PlayerListener), so nothing of theirs stays behind, and a rejoin starts from full health and mana.
+ * Main thread.
  */
 public final class PlayerSession {
     private static final Map<UUID, PlayerSession> sessions = new HashMap<>();
@@ -38,6 +40,8 @@ public final class PlayerSession {
     @Getter @Setter private RegionType region;
     /** When their next mining break animation may start (see MiningManager). */
     @Getter @Setter private long nextBreakPhase;
+    /** The skill that last gained XP (the dungeon tab list shows it); null until one has. */
+    @Getter @Setter private Skill lastSkill;
 
     private PlayerSession(Player player) {
         this.player = player;
