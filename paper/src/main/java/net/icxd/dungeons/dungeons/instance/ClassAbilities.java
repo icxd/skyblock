@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.util.Vector;
 
+import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
@@ -210,12 +211,12 @@ final class ClassAbilities {
         DungeonMobs.Mob dungeonMob = DungeonMobs.of(entity);
         if (dungeonMob != null) {
             if (dungeonMob.invulnerable()) return false;
-            if (damage > 0) DungeonMobs.damage(entity, by, damage, false);
+            if (damage > 0) DungeonMobs.damage(entity, by, damage, DamageIndicators.Look.NORMAL);
             return true;
         }
         Mobs.Live mob = Mobs.of(entity);
         if (mob == null || mob.type().isInvulnerable() || mob.health() <= 0) return false;
-        if (damage > 0) Mobs.damage(mob, by, damage, false);
+        if (damage > 0) Mobs.damage(mob, by, damage, DamageIndicators.Look.NORMAL);
         return true;
     }
 

@@ -86,4 +86,28 @@ class RunEndTest {
         assertEquals(127.3 + 129.9, DungeonProfile.catacombsXp(profile), 1e-9);
         assertEquals(16, profile.get("bits"));
     }
+
+    /** A failed run: experience from its score, without the day's bonus, Bits, a completion or records. */
+    @Test
+    void awardFailed() {
+        Document profile = new Document("bits", 10);
+        Score score = new Score(55, 54, 70, 3);
+        RunEnd.Outcome outcome = RunEnd.awardFailed(profile, DungeonFloor.ENTRANCE, score, 19.05, DungeonClass.BERSERK,
+                List.of(DungeonClass.MAGE));
+        RunRewards.Reward noBonus = RunRewards.reward(DungeonFloor.ENTRANCE, 182, 0, RunRewards.DAILY_RUNS, 19.05,
+                DungeonClass.BERSERK, List.of(DungeonClass.MAGE));
+        assertEquals(noBonus.catacombs(), DungeonProfile.catacombsXp(profile));
+        // The day's 40% isn't in it: 127.3 with it (see award).
+        assertEquals(127.3 / RunRewards.DAILY_BONUS, DungeonProfile.catacombsXp(profile), 0.1);
+        assertEquals(noBonus.classes().get(DungeonClass.MAGE), DungeonProfile.classXp(profile, DungeonClass.MAGE));
+        assertEquals(10, profile.get("bits"));
+        assertEquals(0, outcome.reward().bits());
+        assertEquals(0, DungeonRecords.completions(profile, DungeonFloor.ENTRANCE));
+        assertEquals(0, DungeonRecords.completionsOn(profile, DAY));
+
+        List<String> lines = RunEnd.summary(DungeonFloor.ENTRANCE, score, 235_000, outcome, true);
+        assertEquals(false, lines.stream().anyMatch(l -> l.contains("Defeated") || l.contains("Bits")));
+        assertEquals(true, lines.get(4).equals(RunEnd.EXTRA_STATS));
+        assertEquals(true, lines.get(5).endsWith(" Catacombs Experience"));
+    }
 }

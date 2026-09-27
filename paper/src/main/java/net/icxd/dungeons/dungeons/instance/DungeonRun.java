@@ -767,11 +767,6 @@ public final class DungeonRun implements ScoreCounts {
         classes.kill(member);
     }
 
-    /** Deaths so far, everyone's (for the score and the tab list). */
-    public int deaths() {
-        return members.values().stream().mapToInt(m -> m.deaths).sum();
-    }
-
     // Ghosts, fairies and classes
 
     Ghosts ghosts() {
