@@ -44,6 +44,7 @@ import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.combat.Shots;
+import net.icxd.dungeons.item.ability.weapons.WeaponEvents;
 import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
@@ -119,6 +120,7 @@ public class Dungeons extends JavaPlugin {
         listen(SandboxDrops.class, SandboxDrops::new);
         listen(SandboxStorage.class, SandboxStorage::new);
         listen(Shots.class, Shots::new);
+        listen(WeaponEvents.class, WeaponEvents::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
         listen(Essences.class, Essences::new);

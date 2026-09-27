@@ -37,7 +37,7 @@ public class InstantTransmission implements AbilityHandler {
     private static final long SPEED_MILLIS = 3_000;
     /** Finer than a block, so the line can't slip past a corner. */
     private static final double STEP = 0.25;
-    static final String BLOCKED = "§cThere are blocks in the way!";
+    public static final String BLOCKED = "§cThere are blocks in the way!";
     /** The most snow layers a teleport goes through (Skyblocker's "3 or less snow layers"). */
     static final int MAX_SNOW_LAYERS = 3;
 
@@ -48,7 +48,7 @@ public class InstantTransmission implements AbilityHandler {
     }
 
     /** Where the feet land (a block), and whether blocks cut the way short. */
-    record Landing(int x, int y, int z, boolean blocked) {
+    public record Landing(int x, int y, int z, boolean blocked) {
     }
 
     @Override
@@ -88,9 +88,14 @@ public class InstantTransmission implements AbilityHandler {
     }
 
     private static Landing landing(Player player) {
+        return landing(player, DISTANCE);
+    }
+
+    /** Where a teleport up to {@code distance} blocks the way they look takes them, as this one's does (Wither Impact's 10). */
+    public static Landing landing(Player player, double distance) {
         World world = player.getWorld();
         Location eye = player.getEyeLocation();
-        return landing(eye.toVector(), eye.getDirection(), DISTANCE, (x, y, z) -> passable(world.getBlockAt(x, y, z)));
+        return landing(eye.toVector(), eye.getDirection(), distance, (x, y, z) -> passable(world.getBlockAt(x, y, z)));
     }
 
     /**
