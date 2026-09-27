@@ -40,6 +40,15 @@ public final class PlayerDamage {
             ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.#", DecimalFormatSymbols.getInstance(Locale.US)));
     /** What else changes the damage players take (a Tank's Castle of Stone), as factors. */
     private static final List<ToDoubleFunction<Player>> TAKEN = new ArrayList<>();
+    /** What stands between a hit and their health (an ability's immunity or veil), in the order they were added. */
+    private static final List<Shield> SHIELDS = new ArrayList<>();
+
+    /** Something that takes a hit before a player's health does. */
+    @FunctionalInterface
+    public interface Shield {
+        /** What's left of a hit that would take {@code taken} from them ({@code by}: who's behind it, or null): 0 if nothing. */
+        double left(Player player, double taken, Entity by);
+    }
 
     private PlayerDamage() {
     }
@@ -47,6 +56,19 @@ public final class PlayerDamage {
     /** Adds a factor on what every hit takes from a player, after their Defense (0.3 for 70% less). */
     public static void addTakenMultiplier(ToDoubleFunction<Player> factor) {
         TAKEN.add(factor);
+    }
+
+    /** Adds a shield on every hit's way to a player's health, after their Defense and the factors. */
+    public static void addShield(Shield shield) {
+        SHIELDS.add(shield);
+    }
+
+    private static double shielded(Player player, double taken, Entity by) {
+        for (Shield shield : SHIELDS) {
+            if (taken <= 0) return 0;
+            taken = shield.left(player, taken, by);
+        }
+        return taken;
     }
 
     private static double takenMultiplier(Player player) {
@@ -72,7 +94,8 @@ public final class PlayerDamage {
     /**
      * Hits a player. {@code by} is what they're knocked away from (null for no knockback), and
      * {@code knockback} how much of the usual knockback they get. Returns the health it took (0 if they
-     * can't be hurt: dead, invulnerable (a dungeon ghost), or in creative or spectator).
+     * can't be hurt: dead, invulnerable (a dungeon ghost), or in creative or spectator; or if a shield,
+     * see {@link #addShield}, took it all).
      */
     public static double hit(Player player, double amount, Kind kind, Entity by, double knockback) {
         if (player.isDead() || player.isInvulnerable() || player.getGameMode() == GameMode.CREATIVE
@@ -81,6 +104,9 @@ public final class PlayerDamage {
         Stats stats = PlayerSession.of(player).stats();
         double taken = taken(amount, kind, stats.get(Stat.DEFENSE), stats.get(Stat.TRUE_DEFENSE), PlayerHealth.max(player))
                 * takenMultiplier(player);
+        // A shield that takes all of it leaves them as they were: no number, flinch or knockback.
+        taken = shielded(player, taken, by);
+        if (taken <= 0) return 0;
         PlayerHealth.damage(player, taken);
         DamageIndicators.show(player, taken, false);
         if (player.isDead()) return taken;

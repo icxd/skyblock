@@ -212,6 +212,11 @@ class DamageTest {
         assertEquals(21, Damage.manaRegen(1030));
         assertEquals(19, Damage.manaRegen(940));
         assertEquals(2, Damage.manaRegen(100));
+        // A Power Orb's "+50% base mana regen" is 3% of the pool, "+125%" 4.5%, rounded up the same way.
+        assertEquals(3, Damage.manaRegen(100, 0.5));
+        assertEquals(38, Damage.manaRegen(1264, 0.5));
+        assertEquals(57, Damage.manaRegen(1264, 1.25));
+        assertEquals(26, Damage.manaRegen(1264, 0));
         // Each hit in a dungeon: 5 and 1% of the pool (14.4 at 940).
         assertEquals(14.4, Damage.manaOnHit(940), 1e-9);
     }

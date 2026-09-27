@@ -767,6 +767,37 @@ public final class DungeonRun implements ScoreCounts {
         classes.kill(member);
     }
 
+    /** For the tab list's "Team Healing Done" and EXTRA STATS' "Ally Healing": a member healed others for this much. */
+    public void healedAllies(UUID member, double healing) {
+        Member m = members.get(member);
+        if (m != null && phase == Phase.RUNNING && healing > 0) m.healing += healing;
+    }
+
+    // For items' abilities (item/ability/utility)
+
+    /** A member as a menu of teammates shows them: their name, "§b[MVP§6+§b] Name", and whether they're a ghost now. */
+    public record Teammate(UUID id, String name, String display, boolean ghost) {
+    }
+
+    /** Everyone in the run but {@code viewer}, in the order they joined it. */
+    public List<Teammate> teammates(UUID viewer) {
+        List<Teammate> out = new ArrayList<>();
+        for (Member m : members.values()) {
+            if (!m.id.equals(viewer)) out.add(new Teammate(m.id, m.name, m.display(), ghosts.isGhost(m.id)));
+        }
+        return out;
+    }
+
+    /** Whether this member is a ghost now: dead in the run, and not to be healed, buffed or leapt to. */
+    public boolean isGhost(UUID member) {
+        return ghosts.isGhost(member);
+    }
+
+    /** Whether this player is a member here now, in this run's world (a Spirit Leap goes to them). */
+    public boolean isHere(Player player) {
+        return players().contains(player);
+    }
+
     // Ghosts, fairies and classes
 
     Ghosts ghosts() {

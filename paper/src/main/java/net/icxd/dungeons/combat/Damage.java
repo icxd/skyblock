@@ -226,7 +226,15 @@ public final class Damage {
      * it's rounded up or rounded down plus one is UNKNOWN: no recorded pool made a whole 2%).
      */
     public static int manaRegen(int pool) {
-        return (int) Math.ceil(pool * 0.02);
+        return manaRegen(pool, 0);
+    }
+
+    /**
+     * With {@code bonus} more of the base, as a share: a Power Orb's "Grants +50% base mana regen" is 0.5 (3% of
+     * the pool a second, rounded up as the base is).
+     */
+    public static int manaRegen(int pool, double bonus) {
+        return (int) Math.ceil(pool * 0.02 * (1 + Math.max(0, bonus)) - 1e-9);
     }
 
     /** In dungeons each melee or arrow hit restores 5 mana and 1% of the pool. */

@@ -11,8 +11,20 @@ import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.ToDoubleFunction;
+
 /** Every second: health, speed, reach, mana and vitality regeneration and the action bar, from each player's stats. */
 public class StatsRunnable implements Runnable {
+    /** What else speeds up a player's mana regeneration, as shares of the base that add up (see {@link Damage#manaRegen(int, double)}). */
+    private static final List<ToDoubleFunction<Player>> MANA_REGEN = new ArrayList<>();
+
+    /** Adds something that speeds up mana regeneration (a Power Orb's "+50% base mana regen": 0.5). */
+    public static void addManaRegenBonus(ToDoubleFunction<Player> bonus) {
+        MANA_REGEN.add(bonus);
+    }
+
     @Override
     public void run() {
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -31,7 +43,9 @@ public class StatsRunnable implements Runnable {
             // 2% of the pool a second, rounded up, and never more than the pool (it shrinks when gear comes off).
             int manaPool = session.maxMana();
             int mana = session.getMana() < 0 ? manaPool : session.getMana();
-            session.setMana(Math.min(manaPool, mana + (mana < manaPool ? Damage.manaRegen(manaPool) : 0)));
+            double bonus = 0;
+            for (ToDoubleFunction<Player> more : MANA_REGEN) bonus += more.applyAsDouble(player);
+            session.setMana(Math.min(manaPool, mana + (mana < manaPool ? Damage.manaRegen(manaPool, bonus) : 0)));
             Vitality.regenerate(player);
 
             sendActionBar(player);

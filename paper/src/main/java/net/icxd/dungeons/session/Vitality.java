@@ -6,7 +6,9 @@ import net.icxd.dungeons.utils.Utils;
 import org.bson.Document;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * A player's Vitality: since the Healing Revamp (0.26.1) a pool that healing abilities spend, as other
@@ -31,6 +33,8 @@ public final class Vitality {
     static final List<String> DISCOVERED = List.of(RULE, "&6&lNEW STAT DISCOVERED! &4♨ Vitality", "",
             "&4♨ Vitality &7is a resource for healing abilities. The more &4♨ Vitality &7you have, the more healing you will have available.",
             "", RULE);
+    /** What stops Vitality regenerating (see {@link #addRegenPause}). */
+    private static final List<Predicate<Player>> PAUSES = new ArrayList<>();
 
     private Vitality() {
     }
@@ -67,8 +71,14 @@ public final class Vitality {
         return true;
     }
 
-    /** A second's regeneration: 5% of the pool, never past it. */
+    /** Stops a player's Vitality regenerating while it says so ("You cannot ... regenerate Vitality while the veil is up"). */
+    public static void addRegenPause(Predicate<Player> pause) {
+        PAUSES.add(pause);
+    }
+
+    /** A second's regeneration: 5% of the pool, never past it; none while something pauses it. */
     public static void regenerate(Player player) {
+        for (Predicate<Player> pause : PAUSES) if (pause.test(player)) return;
         double max = max(player);
         PlayerSession.of(player).setVitality(Math.min(max, get(player) + regenPerSecond(max)));
     }
