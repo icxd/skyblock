@@ -13,8 +13,10 @@ import static net.icxd.dungeons.item.bonus.TestPieces.fullSet;
 import static net.icxd.dungeons.item.bonus.TestPieces.item;
 import static net.icxd.dungeons.item.bonus.TestPieces.worn;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The other sets in numbers: the Tuxedos, the Blaze auras, Emerald's Tank, Smart Miner. */
+/** The other sets in numbers: the Tuxedos, the Blaze auras, Emerald's Tank, Smart Miner, Bat Person's night. */
 class OtherSetsTest {
     private static final double EPSILON = 1e-9;
 
@@ -41,6 +43,18 @@ class OtherSetsTest {
         OtherSets.SmartMiner.convert(stats);
         assertEquals(0, stats.get(Stat.INTELLIGENCE), EPSILON);
         assertEquals(46, stats.get(Stat.MINING_SPEED), EPSILON);
+    }
+
+    /** Bat Person's pieces (not its accessories) count their Combat Stats twice at night, and nothing else. */
+    @Test
+    void batPerson() {
+        Bonus bat = new OtherSets.BatPerson();
+        assertTrue(bat.item("BAT_PERSON_HELMET"));
+        assertTrue(bat.item("BAT_PERSON_BOOTS"));
+        assertFalse(bat.item("BAT_PERSON_TALISMAN"));
+        Stats stats = new Stats().set(Stat.DEFENSE, 100).set(Stat.SPEED, 100);
+        OtherSets.BatPerson.twice(new Stats().set(Stat.DEFENSE, 30).set(Stat.STRENGTH, 10).set(Stat.SPEED, 5), stats);
+        assertEquals(new Stats().set(Stat.DEFENSE, 130).set(Stat.STRENGTH, 10).set(Stat.SPEED, 100), stats);
     }
 
     private static List<Double> list(double[] values) {

@@ -9,9 +9,11 @@ import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
+import net.icxd.dungeons.stats.ItemStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.utils.SkyBlockTime;
 import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -30,8 +32,8 @@ import java.util.UUID;
 /**
  * The other armor sets whose bonuses the plugin's systems can do: Speedster, the Tuxedos, Blaze and
  * Frozen Blaze, Mushroom, Rabbit, the mining sets (Prospecting, Glacite, Goblin), Mercenary, Armor of the
- * Pack, Sponge and Shark Scale, Cactus, Zombie, Ember and Emerald. The rest wait for their systems (see
- * BONUSES.md).
+ * Pack, Sponge and Shark Scale, Cactus, Zombie, Ember, Emerald and Bat Person's pieces. The rest wait for
+ * their systems (see BONUSES.md).
  */
 final class OtherSets {
     private OtherSets() {
@@ -41,7 +43,7 @@ final class OtherSets {
         return List.of(new Flat("Bonus Speed", new Stats().set(Stat.SPEED, 20)), new Flat("Beginner's Boost", new Stats().set(Stat.MINING_SPEED, 40)),
                 new Dashing(), new BlazingAura(false), new BlazingAura(true), new NightAffinity(), new Springsneak(), new ExpertMiner(),
                 new SmartMiner(), new DeathTax(), new ArmorOfThePack(), new PackPieces(), new Absorb(), new Deflect(), new ProjectileAbsorption(),
-                new NetherLord(), new Tank());
+                new NetherLord(), new Tank(), new BatPerson());
     }
 
     /** A full set bonus that's only stats: Speedster's "Increases Speed by +20", Prospecting Armor's "Grants +40 Mining Speed". */
@@ -443,6 +445,39 @@ final class OtherSets {
 
         static double each(double emeralds) {
             return Math.min(Math.floor(Math.max(0, emeralds) / 3_000), 350);
+        }
+    }
+
+    /**
+     * Each Bat Person piece: "All Combat Stats on this armor piece are multiplied by 2x at night, or by 3x
+     * during the Spooky Festival!": at SkyBlock's night (7pm to 6am, when the sidebar shows the moon) the
+     * piece's Combat Stats count twice. There's no Spooky Festival yet.
+     */
+    static final class BatPerson implements Bonus {
+        @Override
+        public String kind() {
+            return ITEM;
+        }
+
+        @Override
+        public String name() {
+            return "Bat Person";
+        }
+
+        @Override
+        public boolean item(String id) {
+            return DungeonSets.armorOf(id, "BAT_PERSON");
+        }
+
+        @Override
+        public void stats(Player player, Active active, Stats stats) {
+            if (SkyBlockTime.now().isDay()) return;
+            for (Worn.Piece piece : active.pieces()) twice(ItemStats.of(piece.stack(), player), stats);
+        }
+
+        /** A piece's Combat Stats (its own, reforge's, enchantments'...) once more, so they count twice. */
+        static void twice(Stats piece, Stats stats) {
+            for (Stat stat : DragonSets.COMBAT) stats.add(stat, piece.get(stat));
         }
     }
 }
