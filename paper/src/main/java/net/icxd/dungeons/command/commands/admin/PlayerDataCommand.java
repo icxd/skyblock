@@ -32,6 +32,7 @@ import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.common.Rank;
+import net.icxd.dungeons.profile.ProfileMode;
 import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
@@ -49,19 +50,22 @@ import net.kyori.adventure.text.format.TextDecoration;
  * sharing it.
  * <ul>
  *   <li>{@code /pd <player>}: who holds their data, their main numbers and their fields</li>
- *   <li>{@code /pd <player> get <path>}: one field, e.g. {@code dungeons.floors.highest}</li>
+ *   <li>{@code /pd <player> get <path>}: one field, e.g. {@code dungeons.floors.highest}. A profile's
+ *       field (coins, skills, dungeons, ...) is the selected profile's; {@code profile.<path>} says so
+ *       outright, {@code profiles.<id>.<path>} is any profile's.</li>
  *   <li>{@code /pd <player> set <path> <value>}: keeps the field's type. For a player on no server
  *       it changes the database directly; if another server holds them, run it there.</li>
+ *   <li>{@code /pd <player> mode <NORMAL|SANDBOX>}: their selected profile's mode</li>
  *   <li>{@code /pd <player> inv}: their items, read-only (live if they're here, else as stored)</li>
  *   <li>{@code /pd <player> save} and {@code /pd <player> handoff}</li>
  *   <li>{@code /pd servers}: every server's type, players and heartbeat</li>
  * </ul>
  * Fields are clickable: documents open, values fill in a set command.
  */
-@CommandParameters(description = "View and edit player data", usage = "/playerdata <player> [get|set|inv|save|handoff] | servers",
+@CommandParameters(description = "View and edit player data", usage = "/playerdata <player> [get|set|mode|inv|save|handoff] | servers",
         aliases = "pd", permission = Rank.STAFF)
 public class PlayerDataCommand extends SCommand {
-    private static final List<String> ACTIONS = List.of("get", "set", "inv", "save", "handoff");
+    private static final List<String> ACTIONS = List.of("get", "set", "mode", "inv", "save", "handoff");
     private static final Component RULE = Component.text("━".repeat(34), NamedTextColor.DARK_GRAY);
     private static final TextColor LABEL = NamedTextColor.GRAY;
 
@@ -96,7 +100,7 @@ public class PlayerDataCommand extends SCommand {
         String name = player.getName();
         Document doc = user.getDocument();
         UserStore store = Dungeons.getUserStore();
-        if (user.isReleased() && (action.equals("set") || action.equals("save") || action.equals("handoff"))) {
+        if (user.isReleased() && (action.equals("set") || action.equals("mode") || action.equals("save") || action.equals("handoff"))) {
             error(sender, name + "'s data has been handed off; this server doesn't save it any more.");
             return;
         }
@@ -109,13 +113,18 @@ public class PlayerDataCommand extends SCommand {
                 showItems(sender, name, "live", inventory.getStorageContents(), inventory.getArmorContents(), inventory.getItemInOffHand(),
                         StoredInventory.stored(user.profile(), "overflow", 4));
             }
-            case "get" -> show(sender, name, doc, path(args));
+            case "get" -> show(sender, name, doc, resolve(doc, path(args)));
             case "set" -> {
                 if (args.length < 4) {
                     error(sender, "Usage: /pd " + name + " set <path> <value>");
                     return;
                 }
-                String path = args[2];
+                String path = resolve(doc, args[2]);
+                if (path.equals(Profiles.SELECTED) || path.equals(Profiles.PROFILES)) {
+                    // Their items wouldn't go with it: the next save would copy them into another profile.
+                    error(sender, name + " is online: they make and switch profiles with /profiles.");
+                    return;
+                }
                 Document parent = parent(doc, path);
                 String key = leaf(path);
                 if (parent == null) {
@@ -135,6 +144,16 @@ public class PlayerDataCommand extends SCommand {
                 sender.sendMessage(Component.text("Set ", NamedTextColor.GREEN).append(Component.text(path, NamedTextColor.YELLOW))
                         .append(Component.text(" to ", NamedTextColor.GREEN)).append(value(value))
                         .append(Component.text(" (was ", LABEL)).append(value(old)).append(Component.text("), saving.", LABEL)));
+            }
+            case "mode" -> {
+                ProfileMode mode = mode(sender, name, args);
+                if (mode == null) return;
+                ProfileMode old = user.mode();
+                user.profile().put(Profiles.MODE, mode.name());
+                user.save();
+                // The Sandbox tools come or go with it.
+                player.updateCommands();
+                modeChanged(sender, name, user.profileName(), mode, old, "saving.");
             }
             case "save" -> {
                 user.save();
@@ -160,7 +179,7 @@ public class PlayerDataCommand extends SCommand {
         String holder = session == null ? null : session.getString("server");
         switch (action) {
             case "view" -> overview(sender, name, doc, holder, -1);
-            case "get" -> show(sender, name, doc, path(args));
+            case "get" -> show(sender, name, doc, resolve(doc, path(args)));
             case "inv" -> {
                 String who = name;
                 Document profile = Profiles.selected(doc);
@@ -175,6 +194,27 @@ public class PlayerDataCommand extends SCommand {
                             StoredInventory.stored(profile, "overflow", 4));
                 });
             }
+            case "mode" -> {
+                if (holder != null) {
+                    error(sender, holder + " holds " + name + "'s data; change it there.");
+                    return;
+                }
+                ProfileMode mode = mode(sender, name, args);
+                Document profile = Profiles.selected(doc);
+                if (mode == null) return;
+                if (profile == null) {
+                    error(sender, name + " has no profile yet.");
+                    return;
+                }
+                String path = Profiles.PROFILES + "." + doc.getString(Profiles.SELECTED) + "." + Profiles.MODE;
+                long changed = store.users().updateOne(and(eq("uuid", doc.getString("uuid")), eq("session", null)), Updates.set(path, mode.name()))
+                        .getMatchedCount();
+                if (changed == 0) {
+                    error(sender, name + " just logged in somewhere; try again there.");
+                    return;
+                }
+                modeChanged(sender, name, profile.getString(Profiles.NAME), mode, Profiles.mode(profile), "in the database.");
+            }
             case "set" -> {
                 if (holder != null) {
                     error(sender, holder + " holds " + name + "'s data; change it there.");
@@ -184,7 +224,11 @@ public class PlayerDataCommand extends SCommand {
                     error(sender, "Usage: /pd " + name + " set <path> <value>");
                     return;
                 }
-                String path = args[2];
+                String path = resolve(doc, args[2]);
+                if (path.equals(Profiles.SELECTED) && !(Profiles.profiles(doc).get(args[3]) instanceof Document)) {
+                    error(sender, args[3] + " isn't one of " + name + "'s profiles.");
+                    return;
+                }
                 Document parent = parent(doc, path);
                 if (parent == null) {
                     error(sender, "No field " + path.substring(0, path.lastIndexOf('.')));
@@ -312,6 +356,7 @@ public class PlayerDataCommand extends SCommand {
                 {"<player>", "their data at a glance"},
                 {"<player> get <path>", "one field, e.g. dungeons.floors.highest"},
                 {"<player> set <path> <value>", "change a field, keeping its type"},
+                {"<player> mode <NORMAL|SANDBOX>", "their selected profile's mode"},
                 {"<player> inv", "their items, read-only"},
                 {"<player> save", "save now"},
                 {"<player> handoff", "save and release, as for a server switch"},
@@ -398,6 +443,31 @@ public class PlayerDataCommand extends SCommand {
 
     private static String path(String[] args) {
         return args.length > 2 ? args[2] : "";
+    }
+
+    /**
+     * The path in the document: {@code profile.coins}, or {@code coins} (a profile's field, which the
+     * top of the document doesn't have), is the selected profile's.
+     */
+    static String resolve(Document doc, String path) {
+        String selected = Profiles.PROFILES + "." + doc.getString(Profiles.SELECTED);
+        if (path.equals("profile")) return selected;
+        if (path.startsWith("profile.")) return selected + path.substring("profile".length());
+        String first = path.contains(".") ? path.substring(0, path.indexOf('.')) : path;
+        return Profiles.PROFILE_KEYS.contains(first) && !doc.containsKey(first) ? selected + "." + path : path;
+    }
+
+    private static ProfileMode mode(CommandSender sender, String name, String[] args) {
+        for (ProfileMode mode : ProfileMode.values()) {
+            if (args.length > 2 && mode.name().equalsIgnoreCase(args[2])) return mode;
+        }
+        error(sender, "Usage: /pd " + name + " mode <NORMAL|SANDBOX>");
+        return null;
+    }
+
+    private static void modeChanged(CommandSender sender, String name, String profile, ProfileMode mode, ProfileMode old, String where) {
+        sender.sendMessage(Component.text("Set " + name + "'s profile ", NamedTextColor.GREEN).append(Component.text(profile, NamedTextColor.YELLOW))
+                .append(Component.text(" to " + mode, NamedTextColor.GREEN)).append(Component.text(" (was " + old + "), " + where, LABEL)));
     }
 
     private static String leaf(String path) {
@@ -510,14 +580,17 @@ public class PlayerDataCommand extends SCommand {
             for (Player p : Bukkit.getOnlinePlayers()) options.add(p.getName());
         } else if (args.length == 2 && !args[0].equalsIgnoreCase("servers")) {
             options.addAll(ACTIONS);
+        } else if (args.length == 3 && args[1].equalsIgnoreCase("mode")) {
+            for (ProfileMode mode : ProfileMode.values()) options.add(mode.name());
         } else if (args.length >= 3 && (args[1].equalsIgnoreCase("get") || args[1].equalsIgnoreCase("set"))) {
             Player p = Bukkit.getPlayerExact(args[0]);
             User user = p == null ? null : User.cached(p.getUniqueId());
             if (user == null || !user.isLoaded()) return List.of();
             if (args.length == 3) {
+                if (user.profile() != null) paths(user.profile(), "profile.", options);
                 paths(user.getDocument(), "", options);
             } else if (args.length == 4 && args[1].equalsIgnoreCase("set")) {
-                Object value = get(user.getDocument(), args[2]);
+                Object value = get(user.getDocument(), resolve(user.getDocument(), args[2]));
                 if (value != null && !(value instanceof Document)) options.add(raw(value));
             }
         }
