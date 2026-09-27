@@ -49,6 +49,7 @@ import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.npc.Ophelia;
@@ -128,6 +129,11 @@ public class Dungeons extends JavaPlugin {
         listen(Npcs.class, Npcs::new);
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         listen(UtilityListener.class, UtilityListener::new);
+        try {
+            SetBonuses.enable(this);
+        } catch (RuntimeException e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable set bonuses", e);
+        }
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));

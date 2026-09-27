@@ -145,7 +145,10 @@ public class PlayerListener implements Listener {
         event.renderer((source, displayName, message, viewer) -> name.append(message.colorIfAbsent(text)));
     }
 
-    /** SkyBlock items are rebuilt as they're picked up (for their owner); what doesn't fit stays on the ground. */
+    /**
+     * SkyBlock items are rebuilt as they're picked up (for their owner, and with the set bonus counts of what
+     * they wear); what doesn't fit stays on the ground.
+     */
     @EventHandler(ignoreCancelled = true)
     public void onItemPickup(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
@@ -158,7 +161,7 @@ public class PlayerListener implements Listener {
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
         if (sbItem.isOwnable()) tag.setString("owner", user.getUuid().toString());
-        ItemStack builtItem = ItemBuilder.build(sbItem, tag, item.getAmount());
+        ItemStack builtItem = ItemBuilder.build(sbItem, tag, item.getAmount(), player);
         event.setCancelled(true);
         Map<Integer, ItemStack> left = player.getInventory().addItem(builtItem);
         int leftOver = left.values().stream().mapToInt(ItemStack::getAmount).sum();
@@ -171,8 +174,9 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * What they switch to is rebuilt from its data, and their speed and reach follow its stats at once,
-     * not on the next second (once the switch has happened, so their stats have it).
+     * What they switch to is rebuilt from its data (with the set bonus counts of what they wear), and their
+     * speed and reach follow its stats at once, not on the next second (once the switch has happened, so
+     * their stats have it).
      */
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent event) {
@@ -189,7 +193,7 @@ public class PlayerListener implements Listener {
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
         if (sbItem.isOwnable()) tag.setString("owner", user.getUuid().toString());
-        ItemStack builtItem = ItemBuilder.build(sbItem, tag, item.getAmount());
+        ItemStack builtItem = ItemBuilder.build(sbItem, tag, item.getAmount(), player);
         player.getInventory().setItem(event.getNewSlot(), builtItem);
     }
 

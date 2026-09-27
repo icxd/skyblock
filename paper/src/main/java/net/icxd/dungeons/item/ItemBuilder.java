@@ -10,6 +10,7 @@ import net.icxd.dungeons.dungeons.DungeonLevels;
 import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.item.behaviour.ItemBehaviour;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
+import net.icxd.dungeons.item.bonus.SetBonusLore;
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
@@ -58,7 +59,8 @@ import java.util.UUID;
  *   <li>enchantments: with descriptions when there are up to 5 (and it isn't a dungeon item), one
  *       a line up to 9, else three a line</li>
  *   <li>attributes, the item's own text, rune, then its abilities and bonuses (text and abilities as its
- *       {@link ItemBehaviour} has them with the item's data)</li>
+ *       {@link ItemBehaviour} has them with the item's data; set bonuses count what the item's holder
+ *       wears, see {@link SetBonusLore})</li>
  *   <li>"This item can be reforged!", requirements the owner doesn't meet, soulbound, rarity line</li>
  * </ol>
  * Every line is one {@code &}-coded string turned into a component (see {@link Text#line}).
@@ -96,13 +98,27 @@ public final class ItemBuilder {
     }
 
     public static ItemStack build(SkyBlockItem item, NBTTagCompound tag, int amount) {
-        ItemStack itemStack = build(item, tag);
+        return build(item, tag, amount, null);
+    }
+
+    /** {@link #build(SkyBlockItem, NBTTagCompound, Player)}, this many. */
+    public static ItemStack build(SkyBlockItem item, NBTTagCompound tag, int amount, Player holder) {
+        ItemStack itemStack = build(item, tag, holder);
         itemStack.setAmount(amount);
         return itemStack;
     }
 
     /** A new item of this kind if {@code tag} is null, else the item that data describes. */
     public static ItemStack build(SkyBlockItem item, NBTTagCompound tag) {
+        return build(item, tag, (Player) null);
+    }
+
+    /**
+     * {@link #build(SkyBlockItem, NBTTagCompound)} for {@code holder}'s inventory: its set bonuses show how
+     * many of their pieces the holder wears ("(2/4)", see {@link SetBonusLore}); null for nobody's, as
+     * the data has it ("(0/4)").
+     */
+    public static ItemStack build(SkyBlockItem item, NBTTagCompound tag, Player holder) {
         if (tag == null) tag = newData(item);
         addGemstoneSlots(item, tag);
         ItemNBT nbt = ItemNBT.of(new ItemStack(item.material()));
@@ -111,7 +127,7 @@ public final class ItemBuilder {
         if (item.material() == Material.PLAYER_HEAD && item.skin() != null) Utils.skull(stack, item.skin());
 
         stack.setData(DataComponentTypes.CUSTOM_NAME, Text.line(name(item, tag)));
-        stack.setData(DataComponentTypes.LORE, ItemLore.lore(Text.lines(lore(item, tag))));
+        stack.setData(DataComponentTypes.LORE, ItemLore.lore(Text.lines(lore(item, tag, holder))));
         stack.setData(DataComponentTypes.UNBREAKABLE);
         stack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().addHiddenComponents(Hidden.COMPONENTS).build());
         if (item.color() != null) stack.setData(DataComponentTypes.DYED_COLOR, DyedItemColor.dyedItemColor(item.color()));
@@ -124,16 +140,21 @@ public final class ItemBuilder {
      * the current way); anything else as it is.
      */
     public static ItemStack refresh(ItemStack stack) {
+        return refresh(stack, null);
+    }
+
+    /** {@link #refresh(ItemStack)} for {@code holder}'s inventory (see {@link #build(SkyBlockItem, NBTTagCompound, Player)}). */
+    public static ItemStack refresh(ItemStack stack, Player holder) {
         if (stack == null || stack.isEmpty()) return stack;
         NBTTagCompound tag = ItemNBT.read(stack);
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
-        return item == null ? stack : build(item, tag, stack.getAmount());
+        return item == null ? stack : build(item, tag, stack.getAmount(), holder);
     }
 
-    /** Every SkyBlock item a player has, {@link #refresh refreshed}. */
+    /** Every SkyBlock item a player has, {@link #refresh refreshed} for them. */
     public static void refreshInventory(Player player) {
         ItemStack[] contents = player.getInventory().getContents();
-        for (int i = 0; i < contents.length; i++) contents[i] = refresh(contents[i]);
+        for (int i = 0; i < contents.length; i++) contents[i] = refresh(contents[i], player);
         player.getInventory().setContents(contents);
     }
 
@@ -245,6 +266,11 @@ public final class ItemBuilder {
     // ---------- the lore ----------
 
     static List<String> lore(SkyBlockItem item, NBTTagCompound tag) {
+        return lore(item, tag, null);
+    }
+
+    /** The lore in {@code holder}'s inventory: set bonuses count what they wear (null: as the data has it). */
+    static List<String> lore(SkyBlockItem item, NBTTagCompound tag, Player holder) {
         Rarity rarity = rarity(item, tag);
         Player owner = owner(tag);
         List<List<String>> sections = new ArrayList<>();
@@ -264,7 +290,7 @@ public final class ItemBuilder {
         ItemBehaviour behaviour = ItemBehaviours.of(item);
         sections.add(behaviour.lore(item, tag, item.lore()));
         sections.add(runeLines(tag));
-        for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(block, rarity));
+        for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(SetBonusLore.shown(block, holder), rarity));
 
         List<String> lore = new ArrayList<>();
         for (List<String> section : sections) {
