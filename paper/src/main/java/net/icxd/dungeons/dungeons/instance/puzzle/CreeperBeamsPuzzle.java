@@ -19,8 +19,9 @@ import org.bukkit.entity.Player;
  * the middle of the room with more sea lanterns on the walls and ceiling; shooting two lanterns joins
  * them with a beam, and a beam that goes through the creeper turns both into prismarine (the state
  * Skyblocker's solver waits for). Four of those and the creeper blows up, "revealing a treasure
- * chest containing a level V Blessing" (the wiki; Odin sees the chest appear): opening it solves the
- * puzzle. It can't be failed.
+ * chest containing a level V Blessing" (the wiki). The puzzle is solved when the chest appears (Odin
+ * takes that for solved; no chat line was ever seen, as with the Water Board), and the chest gives
+ * the blessing when it's opened. It can't be failed.
  *
  * <p>How a beam is made in 26.2 (shooting or clicking) and what it looks like are UNKNOWN: here a
  * lantern is picked by shooting or clicking it, the second pick makes the beam if it goes through
@@ -81,7 +82,7 @@ final class CreeperBeamsPuzzle extends Puzzle {
     @Override
     boolean click(Player player, Block block, boolean right) {
         if (chest != null && chest.is(block)) {
-            if (right && chest.open(host, player, randomBlessing(), BLESSING_LEVEL)) solve(PuzzleTab.AFTER_CHEST);
+            if (right) chest.open(host, player, randomBlessing(), BLESSING_LEVEL);
             return true;
         }
         int[] lantern = local(block, lanterns);
@@ -118,7 +119,7 @@ final class CreeperBeamsPuzzle extends Puzzle {
         }
     }
 
-    /** The creeper blows up and the chest is there. */
+    /** The creeper blows up and the chest is there: that's the puzzle solved. */
     private void explode() {
         Location at = creeper.getLocation().add(0, 0.85, 0);
         at.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, at, 1);
@@ -137,6 +138,8 @@ final class CreeperBeamsPuzzle extends Puzzle {
             }
         }
         chest = PuzzleChest.place(block(data.chest()), frame.face(data.chestFacing()));
+        // How long its tab line takes is UNKNOWN (never recorded): as long as after a chest is opened.
+        solve(PuzzleTab.AFTER_CHEST);
     }
 
     private void draw(int[] a, int[] b) {

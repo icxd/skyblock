@@ -236,8 +236,8 @@ red cross and isn't. Every puzzle not solved costs 10 points of skill.
   wrong one fails it.
 - **Creeper Beams**: a creeper on a sea lantern. Shoot (or click) two lanterns: if the line
   between them goes through the creeper they turn to prismarine and stay joined by a line of
-  particles. Four and the creeper blows up, clearing the pillar under it; opening the chest there
-  solves it.
+  particles. Four and the creeper blows up, clearing the pillar under it, and the chest that
+  appears there is the puzzle solved (opening it gives the blessing).
 - A solved puzzle gives a Tier V blessing: from its chest, the way a blessing chest opens (lid up,
   harp notes, the blessing 1.3 seconds later), or for Tic Tac Toe at once. The Teleport Maze was
   never captured, so it's kept off the Entrance.
