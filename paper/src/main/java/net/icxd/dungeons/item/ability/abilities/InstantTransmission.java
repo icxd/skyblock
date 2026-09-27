@@ -1,9 +1,15 @@
 package net.icxd.dungeons.item.ability.abilities;
 
+import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.PlayerAttributes;
+import net.icxd.dungeons.stats.Stat;
+import net.icxd.dungeons.stats.Stats;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.Tag;
@@ -13,18 +19,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 /**
- * Aspect of the End/Void: "Teleport 8 blocks ahead of you". How Hypixel works out where to isn't
- * published; this follows what the recorded runs show and the Skyblocker mod's copy of it ("very similar
- * to Hypixel's method"): the way is traced from the eyes, a block at a time, and the feet go where the
- * eyes' line got to, in the middle of that block (all 33 teleports of a recorded run landed in a block's
- * middle, 29 of them at a whole height), a block lower if there's room below. So looking a little down
- * doesn't put them in the floor, and they go over a block in front of their feet. Where the line runs
- * into blocks it stops short, and Hypixel says "There are blocks in the way!"; the recording shows the
- * teleport still happening then, and its mana spent, and neither when there's no room to move at all.
- * Running into the floor looking down isn't that: they land on it.
+ * Aspect of the End/Void: "Teleport 8 blocks ahead of you and gain +50 Speed for 3 seconds". How Hypixel
+ * works out where to isn't published; this follows what the recorded runs show and the Skyblocker mod's
+ * copy of it ("very similar to Hypixel's method"): the way is traced along a line from the eyes, and the
+ * feet go where that line got to, in the middle of that block (all 33 teleports of a recorded run landed
+ * in a block's middle, 29 of them at a whole height), a block lower if there's room below. So looking a
+ * little down doesn't put them in the floor, and they go over a block in front of their feet. Where the
+ * line runs into blocks it stops short, and Hypixel says "There are blocks in the way!"; the recording
+ * shows the teleport still happening then, and its mana spent, and neither when there's no room to move
+ * at all. Running into the floor looking down isn't that: they land on it.
  */
 public class InstantTransmission implements AbilityHandler {
     private static final double DISTANCE = 8;
+    private static final double SPEED = 50;
+    private static final long SPEED_MILLIS = 3_000;
     /** Finer than a block, so the line can't slip past a corner. */
     private static final double STEP = 0.25;
     static final String BLOCKED = "§cThere are blocks in the way!";
@@ -59,6 +67,20 @@ public class InstantTransmission implements AbilityHandler {
         player.setFallDistance(0);
         player.playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0F, 1.0F);
         if (landing.blocked()) player.sendMessage(BLOCKED);
+        speedUp(player);
+    }
+
+    /**
+     * "...and gain +50 ✦ Speed for 3 seconds" (both swords' lore): their walk speed follows at once, and
+     * again when it's over (a use in between starts the 3 seconds again, see {@link PlayerSession#buff}).
+     */
+    private static void speedUp(Player player) {
+        PlayerSession session = PlayerSession.of(player);
+        session.buff("Instant Transmission", new Stats().set(Stat.SPEED, SPEED), SPEED_MILLIS);
+        PlayerAttributes.apply(player, session.stats());
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
+            if (player.isOnline()) PlayerAttributes.apply(player, PlayerSession.of(player).stats());
+        }, SPEED_MILLIS / 50 + 1);
     }
 
     private static Landing landing(Player player) {

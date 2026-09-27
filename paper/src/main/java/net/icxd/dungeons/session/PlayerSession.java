@@ -38,6 +38,8 @@ public final class PlayerSession {
     private Replacement defenseReplacement;
     private Replacement manaReplacement;
     private final Map<String, Long> cooldownEnds = new HashMap<>();
+    /** Stats they have for a while, by what gave them (see {@link #buff}). */
+    private final Map<String, Buff> buffs = new HashMap<>();
     /** Null until they've moved. */
     @Getter @Setter private RegionType region;
     /** When their next mining break animation may start (see MiningManager). */
@@ -65,14 +67,29 @@ public final class PlayerSession {
         sessions.remove(player);
     }
 
-    /** Their stats now: the base, their armor and held item, worked out once per tick. */
+    /** Their stats now: the base, their armor and held item and what they have for a while, worked out once per tick. */
     public Stats stats() {
         int tick = Bukkit.getCurrentTick();
         if (stats == null || statsTick != tick) {
             stats = PlayerStats.of(player);
+            long now = System.currentTimeMillis();
+            buffs.values().removeIf(buff -> buff.endMillis <= now);
+            for (Buff buff : buffs.values()) stats.add(buff.stats);
             statsTick = tick;
         }
         return stats;
+    }
+
+    /**
+     * Gives them these stats for this long ("gain +50 ✦ Speed for 3 seconds"), in place of what the same
+     * source gave them before: using it again starts it again, it doesn't stack. They count at once.
+     */
+    public void buff(String source, Stats stats, long millis) {
+        buffs.put(source, new Buff(stats.copy(), System.currentTimeMillis() + millis));
+        this.stats = null;
+    }
+
+    private record Buff(Stats stats, long endMillis) {
     }
 
     /** Their mana pool: 100, and 1 for each point of intelligence. */
