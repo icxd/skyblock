@@ -19,5 +19,6 @@ public final class WeaponAbilities {
         to.accept("Wither Shield", new WitherBlade.WitherShield());
         to.accept("Shadow Warp", new WitherBlade.ShadowWarp());
         to.accept("Wither Impact", new WitherBlade.WitherImpact());
+        to.accept("Giant's Slam", new GiantsSlam());
     }
 }
