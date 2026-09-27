@@ -8,6 +8,7 @@ import net.icxd.dungeons.profile.ProfileActions;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.session.Vitality;
 import net.icxd.dungeons.stats.PlayerAttributes;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -233,8 +234,10 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * Cooldown, then mana: a cast that fails for lack of mana doesn't start the cooldown (cooldowns are per
-     * ability). Its mana cost is what it says, and its share of their max mana.
+     * Cooldown, then mana, then Vitality: a cast that fails for lack of either doesn't start the cooldown
+     * (cooldowns are per ability) or take anything. Its mana cost is what it says, and its share of their
+     * max mana; its Vitality cost what it says. What Hypixel does for too little Vitality isn't recorded:
+     * "Vitality is now a resource akin to Mana" (the June 10 changelog), so it's what too little mana does.
      */
     private void useAbility(Player player, SkyBlockItem sbItem, NBTTagCompound tag, ItemBlock ability) {
         PlayerSession session = PlayerSession.of(player);
@@ -252,9 +255,15 @@ public class PlayerListener implements Listener {
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
             return;
         }
+        if (!Vitality.has(player, ability.vitality())) {
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
+            session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH VITALITY", 2000));
+            return;
+        }
 
         if (ability.cooldown() > 0) session.startCooldown(cooldown, (long) (ability.cooldown() * 1000));
         session.setMana(mana - cost);
+        Vitality.spend(player, ability.vitality());
         Abilities.handler(ability).use(player, sbItem, tag, ability);
 
         if (cost > 0) {
