@@ -477,11 +477,12 @@ final class RunSecrets {
                 reward.isBlessing() ? reward.level() : 1);
     }
 
-    /** Its lid opens for good (Hypixel never closes a secret chest), with the sound (R1: volume 0.5, pitch 0.9 to 0.97). */
-    private void openLid(Block chest) {
+    /**
+     * Its lid opens for good (Hypixel never closes a secret chest). Opening it plays vanilla's chest sound
+     * (volume 0.5, pitch 0.9 to 1), the one sound R1 has (volume 0.5, pitch 0.9 to 0.97).
+     */
+    private static void openLid(Block chest) {
         if (chest.getState(false) instanceof Lidded lid) lid.open();
-        world.playSound(chest.getLocation().add(0.5, 0.5, 0.5), Sound.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.5f,
-                0.9f + ThreadLocalRandom.current().nextFloat() * 0.07f);
     }
 
     /**
@@ -512,7 +513,8 @@ final class RunSecrets {
                 name.remove();
                 names.remove(name);
             });
-            if (player.isOnline()) run.blessingFound(player, blessing, level, null);
+            // The team's even if the finder has left since.
+            run.blessingFound(player, blessing, level, null);
         });
     }
 
