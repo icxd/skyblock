@@ -75,6 +75,7 @@ public final class SetBonuses implements Listener {
         for (Bonus bonus : DungeonSets.all()) add(bonus);
         for (Bonus bonus : DragonSets.all()) add(bonus);
         for (Bonus bonus : SlayerSets.all()) add(bonus);
+        for (Bonus bonus : OtherSets.all()) add(bonus);
         for (Bonus bonus : TieredSets.all()) add(bonus);
     }
 

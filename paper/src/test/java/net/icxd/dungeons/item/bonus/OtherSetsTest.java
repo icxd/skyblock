@@ -1,0 +1,64 @@
+package net.icxd.dungeons.item.bonus;
+
+import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.combat.Damage;
+import net.icxd.dungeons.item.data.DataItem;
+import net.icxd.dungeons.stats.Stat;
+import net.icxd.dungeons.stats.Stats;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static net.icxd.dungeons.item.bonus.TestPieces.fullSet;
+import static net.icxd.dungeons.item.bonus.TestPieces.item;
+import static net.icxd.dungeons.item.bonus.TestPieces.worn;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/** The other sets in numbers: the Tuxedos, the Blaze auras, Emerald's Tank, Smart Miner. */
+class OtherSetsTest {
+    private static final double EPSILON = 1e-9;
+
+    /** The Tuxedos: the cheapest worn piece's max health and damage. */
+    @Test
+    void dashing() {
+        DataItem cheap = item("CHEAP_TUXEDO_BOOTS", fullSet("Dashing", 3));
+        DataItem elegant = item("ELEGANT_TUXEDO_CHESTPLATE", fullSet("Dashing", 3));
+        assertEquals(List.of(250.0, 150.0), list(OtherSets.Dashing.of(List.of(worn(elegant)))));
+        assertEquals(List.of(75.0, 50.0), list(OtherSets.Dashing.of(List.of(worn(elegant), worn(cheap)))));
+    }
+
+    @Test
+    void otherSets() {
+        assertEquals(500, OtherSets.BlazingAura.most(4_999), EPSILON);
+        assertEquals(700, OtherSets.BlazingAura.most(10_000), EPSILON);
+        assertEquals(5_000, OtherSets.BlazingAura.most(1_000_000), EPSILON);
+        assertEquals(300, OtherSets.BlazingAura.damage(10_000, false, 500), EPSILON);
+        assertEquals(500, OtherSets.BlazingAura.damage(1_000_000, false, 500), EPSILON);
+        assertEquals(330, OtherSets.BlazingAura.damage(1_000, true, 500), EPSILON);
+        assertEquals(350, OtherSets.Tank.each(5_000_000), EPSILON);
+        assertEquals(3, OtherSets.Tank.each(9_999), EPSILON);
+        Stats stats = new Stats().set(Stat.INTELLIGENCE, 100).set(Stat.MINING_SPEED, 40);
+        OtherSets.SmartMiner.convert(stats);
+        assertEquals(0, stats.get(Stat.INTELLIGENCE), EPSILON);
+        assertEquals(46, stats.get(Stat.MINING_SPEED), EPSILON);
+    }
+
+    private static List<Double> list(double[] values) {
+        return java.util.Arrays.stream(values).boxed().toList();
+    }
+
+    /** A set that's only stats adds them; the Tuxedo's damage is additive, on every hit. */
+    @Test
+    void hooks() {
+        Bonus speedster = new OtherSets.Flat("Bonus Speed", new Stats().set(Stat.SPEED, 20));
+        Stats stats = new Stats().set(Stat.SPEED, 100);
+        speedster.stats(null, new Bonus.Active(speedster, null, 4, List.of()), stats);
+        assertEquals(120, stats.get(Stat.SPEED), EPSILON);
+        Bonus dashing = new OtherSets.Dashing();
+        Bonus.Active fancy = new Bonus.Active(dashing, null, 3, List.of(worn(item("FANCY_TUXEDO_BOOTS"))));
+        assertEquals(new Combat.HitBuff(100, 1), dashing.hit(null, fancy, true, new Damage.Target(1, 1, 0, 0, null, 0)));
+        Stats health = new Stats().set(Stat.HEALTH, 900);
+        dashing.derivedStats(null, fancy, health);
+        assertEquals(150, health.get(Stat.HEALTH), EPSILON);
+    }
+}
