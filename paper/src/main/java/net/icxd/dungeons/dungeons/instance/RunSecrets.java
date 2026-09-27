@@ -97,8 +97,10 @@ final class RunSecrets {
     static final String KEY_ITEM = "SECRET_DUNGEON_REDSTONE_KEY";
     /**
      * A lever's wall (R1 03:51.9-03:54.0, Tic Tac Toe's): its blocks ride bats as a door's do, sinking from
-     * half a second on about 0.2 a tick (0.59 every 3 ticks), the barrier gone after 1.3 s and the entities
-     * after 2.1 s; 9 plate clicks 5 ticks apart under it.
+     * half a second on about 0.2 a tick (0.59 every 3 ticks), the barrier gone after 1.3 s (Long Hall's too,
+     * 01:44.7) and the entities after 2.1 s; 9 plate clicks 5 ticks apart under it. Long Hall's recording
+     * has only the last two clicks, at the same times as Tic Tac Toe's last two, when the player had come to
+     * 17-18.5 blocks from it (20-23 for the seven before), so the same clicks are taken to play at every wall.
      */
     private static final DoorAnimation.Timing WALL = new DoorAnimation.Timing(10, 0.2, 26, 42);
     private static final int WALL_CLICKS = 9;
@@ -548,24 +550,32 @@ final class RunSecrets {
             lever.setPowered(true);
             spot.block.setBlockData(lever, false);
         }
-        Location at = spot.center();
-        world.playSound(at, Sound.BLOCK_LEVER_CLICK, SoundCategory.BLOCKS, 0.3f, 0.587f);
-        world.playSound(at, Sound.BLOCK_ANVIL_BREAK, SoundCategory.BLOCKS, 1, 1.698f);
+        world.playSound(spot.center(), Sound.BLOCK_LEVER_CLICK, SoundCategory.BLOCKS, 0.3f, 0.587f);
+        // At whoever pulled it, not at the lever (R1: (-123.5, 69, -194.25) for a lever at (-126, 70, -197)).
+        world.playSound(player.getLocation(), Sound.BLOCK_ANVIL_BREAK, SoundCategory.BLOCKS, 1, 1.698f);
         // Only the one who pulled it (both recorded runs were solo).
         player.sendMessage(Utils.color(SecretText.SOMETHING_OPENING));
         if (spot.wall.isEmpty()) return;
         List<BlockData> looks = new ArrayList<>();
         for (int[] b : spot.wall) looks.add(world.getBlockAt(b[0], b[1], b[2]).getBlockData());
         DoorAnimation.play(plugin, world, spot.wall, looks, run.players(), WALL);
-        // Under the middle of the wall (R1: (-83.5, 69.5, -191.5) under a wall at y 70-71).
-        double x = spot.wall.stream().mapToInt(b -> b[0]).average().orElseThrow();
-        double z = spot.wall.stream().mapToInt(b -> b[2]).average().orElseThrow();
-        int y = spot.wall.stream().mapToInt(b -> b[1]).min().orElseThrow();
-        Location plates = new Location(world, x + 0.5, y - 0.5, z + 0.5);
+        Location plates = platesAt(spot.wall).toLocation(world);
         for (int i = 0; i < WALL_CLICKS; i++) {
             float volume = i < 2 ? 2 : 1;
-            run.later(1 + 5L * i, () -> world.playSound(plates, Sound.BLOCK_WOODEN_PRESSURE_PLATE_CLICK_ON, SoundCategory.BLOCKS, volume, 0.492f));
+            run.later(1 + 5L * i, () -> world.playSound(plates, Sound.BLOCK_WOODEN_PRESSURE_PLATE_CLICK_ON, SoundCategory.MASTER, volume, 0.492f));
         }
+    }
+
+    /**
+     * Where a wall's plate clicks are: the middle of the block under its lowest north-west corner (R1:
+     * (-83.5, 69.5, -191.5) for Tic Tac Toe's at x -84..-82, y 70-71, z -192; (-126.5, 83.5, -179.5) for
+     * Long Hall's at x -127..-125, y 84-88, z -180).
+     */
+    static Vector platesAt(List<int[]> wall) {
+        int x = wall.stream().mapToInt(b -> b[0]).min().orElseThrow();
+        int y = wall.stream().mapToInt(b -> b[1]).min().orElseThrow();
+        int z = wall.stream().mapToInt(b -> b[2]).min().orElseThrow();
+        return new Vector(x + 0.5, y - 0.5, z + 0.5);
     }
 
     // Items and bats
