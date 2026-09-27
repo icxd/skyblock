@@ -27,7 +27,7 @@ import org.bukkit.entity.Player;
 final class TicTacToePuzzle extends Puzzle {
     /** Ticks from a player's move to the AI's (04:01.7 and 04:06.4, each 3.0 s after the O). */
     static final long AI_DELAY = 60;
-    /** The player's move cue: a pling at them, volume 8, pitch 4.05 as sent (clients stop at 2). */
+    /** The player's move cue: a pling at them, block sounds, volume 8, pitch 4.05 as sent (clients stop at 2). */
     private static final float PLING_VOLUME = 8;
     private static final float PLING_PITCH = 2;
 
@@ -65,7 +65,7 @@ final class TicTacToePuzzle extends Puzzle {
         Location at = block.getLocation().add(0.5, 0.5, 0.5);
         at.getWorld().playSound(at, Sound.BLOCK_STONE_BUTTON_CLICK_ON, SoundCategory.BLOCKS, 1f, 1f);
         mark(cell, TicTacToeGame.Mark.O);
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.RECORDS, PLING_VOLUME, PLING_PITCH);
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS, PLING_VOLUME, PLING_PITCH);
         last = player;
         if (!finished()) {
             aiToMove = true;
