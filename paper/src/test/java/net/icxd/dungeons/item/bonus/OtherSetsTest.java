@@ -57,6 +57,15 @@ class OtherSetsTest {
         assertEquals(new Stats().set(Stat.DEFENSE, 130).set(Stat.STRENGTH, 10).set(Stat.SPEED, 100), stats);
     }
 
+    /** The hats are their own items only; the Racing Helmet raises the Speed cap by 100. */
+    @Test
+    void hats() {
+        assertTrue(new OtherSets.SpiderHat().item("SPIDER_HAT"));
+        assertFalse(new OtherSets.SpiderHat().item("SPIDER_BOOTS"));
+        assertTrue(new OtherSets.GhastHead().item("GHAST_HEAD"));
+        assertEquals(100, new OtherSets.RacingHelmet().speedCap(null, null), EPSILON);
+    }
+
     private static List<Double> list(double[] values) {
         return java.util.Arrays.stream(values).boxed().toList();
     }

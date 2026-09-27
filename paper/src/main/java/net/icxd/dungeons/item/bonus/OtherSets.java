@@ -32,8 +32,8 @@ import java.util.UUID;
 /**
  * The other armor sets whose bonuses the plugin's systems can do: Speedster, the Tuxedos, Blaze and
  * Frozen Blaze, Mushroom, Rabbit, the mining sets (Prospecting, Glacite, Goblin), Mercenary, Armor of the
- * Pack, Sponge and Shark Scale, Cactus, Zombie, Ember, Emerald and Bat Person's pieces. The rest wait for
- * their systems (see BONUSES.md).
+ * Pack, Sponge and Shark Scale, Cactus, Zombie, Ember, Emerald and Bat Person's pieces, and the Spider
+ * Hat, Racing Helmet and Ghast Head's own text. The rest wait for their systems (see BONUSES.md).
  */
 final class OtherSets {
     private OtherSets() {
@@ -43,7 +43,7 @@ final class OtherSets {
         return List.of(new Flat("Bonus Speed", new Stats().set(Stat.SPEED, 20)), new Flat("Beginner's Boost", new Stats().set(Stat.MINING_SPEED, 40)),
                 new Dashing(), new BlazingAura(false), new BlazingAura(true), new NightAffinity(), new Springsneak(), new ExpertMiner(),
                 new SmartMiner(), new DeathTax(), new ArmorOfThePack(), new PackPieces(), new Absorb(), new Deflect(), new ProjectileAbsorption(),
-                new NetherLord(), new Tank(), new BatPerson());
+                new NetherLord(), new Tank(), new BatPerson(), new SpiderHat(), new RacingHelmet(), new GhastHead());
     }
 
     /** A full set bonus that's only stats: Speedster's "Increases Speed by +20", Prospecting Armor's "Grants +40 Mining Speed". */
@@ -478,6 +478,78 @@ final class OtherSets {
         /** A piece's Combat Stats (its own, reforge's, enchantments'...) once more, so they count twice. */
         static void twice(Stats piece, Stats stats) {
             for (Stat stat : DragonSets.COMBAT) stats.add(stat, piece.get(stat));
+        }
+    }
+
+    // ---------- hats' own text ----------
+
+    /** A helmet whose own text is its bonus. */
+    abstract static class Hat implements Bonus {
+        private final String id;
+
+        Hat(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String kind() {
+            return ITEM;
+        }
+
+        @Override
+        public boolean item(String id) {
+            return this.id.equals(id);
+        }
+    }
+
+    /** The Spider Hat's "When worn, Arthropod mobs deal -30% damage." */
+    static final class SpiderHat extends Hat {
+        SpiderHat() {
+            super("SPIDER_HAT");
+        }
+
+        @Override
+        public String name() {
+            return "Spider Hat";
+        }
+
+        @Override
+        public double takenFrom(Player player, Active active, Entity by) {
+            return SetBonuses.types(by).contains(MobType.ARTHROPOD) ? 0.7 : 1;
+        }
+    }
+
+    /** The Racing Helmet's "Grants +100 Speed Cap." */
+    static final class RacingHelmet extends Hat {
+        RacingHelmet() {
+            super("RACING_HELMET");
+        }
+
+        @Override
+        public String name() {
+            return "Racing Helmet";
+        }
+
+        @Override
+        public double speedCap(Player player, Active active) {
+            return 100;
+        }
+    }
+
+    /** The Ghast Head's "Restores +5 Health every second while worn" (0.26.1's; it was 1% of their max health). */
+    static final class GhastHead extends Hat {
+        GhastHead() {
+            super("GHAST_HEAD");
+        }
+
+        @Override
+        public String name() {
+            return "Ghast Head";
+        }
+
+        @Override
+        public void second(Player player, Active active) {
+            PlayerHealth.heal(player, 5);
         }
     }
 }
