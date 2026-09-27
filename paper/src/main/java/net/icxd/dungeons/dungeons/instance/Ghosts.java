@@ -68,10 +68,6 @@ final class Ghosts {
         return List.copyOf(ghosts.keySet());
     }
 
-    int count() {
-        return ghosts.size();
-    }
-
     /** Whether a Revive Stone is already on its way to this ghost. */
     boolean beingRevived(UUID id) {
         return reviving.contains(id);

@@ -283,6 +283,12 @@ public final class DungeonRun implements ScoreCounts {
         tell(member.rankColor + member.name + "&a selected the " + dungeonClass.getDisplayName() + " Class!");
     }
 
+    /** Whether their profile is here to tell their class (not for a member who isn't on this server yet). */
+    boolean classKnown(UUID id) {
+        User user = User.cached(id);
+        return user != null && user.isLoaded();
+    }
+
     DungeonClass classOf(UUID id) {
         User user = User.cached(id);
         return user == null || !user.isLoaded() ? DungeonClass.HEALER : DungeonProfile.selectedClass(user);

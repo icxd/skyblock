@@ -143,8 +143,10 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
   that was recorded (Healer Vitality and Mending, Mage Intelligence and Ability Damage, Berserk
   Melee Damage and Walk Speed, Archer Arrow Damage and -25% melee, Tank Health, Defense and
   Vitality, and the passives' numbers). They're in the Ready Up menu, and count once the run
-  starts: melee and arrow damage as multipliers on hits, the rest as stats (the Tank's Protective
-  Barrier multiplies Defense, the Berserk's Indomitable adds a share of Strength as Defense).
+  starts (for a member who gets there later, once they're there): melee and arrow damage as
+  multipliers on hits, the rest as stats (the Tank's Protective Barrier multiplies Defense, the
+  Berserk's Indomitable adds a share of Strength as Defense). A class played by only one of those
+  playing is doubled, with the recorded lines.
 - Right-clicking a class in Ready Up opens its Class Details (passives, Dungeon Orb abilities,
   ghost abilities), as recorded, at your level. Mort gives a Dungeon Orb to anyone without one.
 - Abilities: right-click the Dungeon Orb (or ctrl+drop) for the class ability, left-click it (or

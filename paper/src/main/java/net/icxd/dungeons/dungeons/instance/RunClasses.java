@@ -5,7 +5,8 @@ import java.text.DecimalFormatSymbols;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -35,6 +36,7 @@ import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerHealth;
+import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
@@ -42,7 +44,7 @@ import net.icxd.dungeons.utils.Utils;
 
 /**
  * The members' classes once the run has started (research critic.md 3.2): each one's class and level
- * as they started, their stats ({@link ClassBonus}, doubled for a class nobody else plays, with the
+ * as they started playing (at the start, or when they got here after it), their stats ({@link ClassBonus}, doubled for a class nobody else plays, with the
  * recorded chat), the Berserk's passives, and the Dungeon Orb abilities: the class ability (right
  * click the orb, or ctrl+drop) and the ultimate (left click the orb, or drop). The Berserk's Throwing
  * Axe and Ragnarok are as recorded (messages, timings, the axe's flight; not the axe's damage, see
@@ -78,11 +80,12 @@ final class RunClasses {
     private static final ThreadLocal<DecimalFormat> DAMAGE =
             ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.#", DecimalFormatSymbols.getInstance(Locale.US)));
 
-    /** A member's class as the run started. */
+    /** A member's class as they started playing in the run: when it started, or when they got here after. */
     static final class State {
         final DungeonClass dungeonClass;
         final int level;
-        final boolean solo;
+        /** Nobody else in the run plays their class (see {@link #countSolo}). */
+        boolean solo;
         long abilityReadyAt;
         boolean abilityAnnounced = true;
         long ultimateReadyAt;
@@ -105,7 +108,8 @@ final class RunClasses {
     }
 
     private final DungeonRun run;
-    private final Map<UUID, State> states = new HashMap<>();
+    /** Members' classes, in the order they started playing. */
+    private final Map<UUID, State> states = new LinkedHashMap<>();
     /** Axes in flight. */
     private final List<ArmorStand> axes = new ArrayList<>();
     private final ClassAbilities abilities;
@@ -153,23 +157,58 @@ final class RunClasses {
         });
     }
 
-    /** The run started: everyone's class and level are set, and a class's only player hears it's doubled. */
+    /**
+     * The run started: the class and level of every member whose profile is here are set, and a class's
+     * only player hears it's doubled. A member who isn't here yet (whose class this server can't know)
+     * gets theirs once they are (see {@link #join}), and until then doesn't count.
+     */
     void start(List<DungeonRun.Member> members) {
-        Map<DungeonClass, Integer> picked = new HashMap<>();
-        for (DungeonRun.Member m : members) picked.merge(run.classOf(m.id), 1, Integer::sum);
-        for (DungeonRun.Member m : members) {
-            DungeonClass dungeonClass = run.classOf(m.id);
-            State state = new State(dungeonClass, run.classLevel(m.id), picked.get(dungeonClass) == 1);
-            states.put(m.id, state);
-            Player player = Bukkit.getPlayer(m.id);
-            if (state.solo && player != null) {
-                for (String line : ClassBonus.soloMessage(dungeonClass, state.level)) player.sendMessage(Utils.color(line));
-            }
+        for (DungeonRun.Member m : members) if (run.classKnown(m.id)) states.put(m.id, newState(m.id));
+        recountSolo();
+    }
+
+    private State newState(UUID id) {
+        return new State(run.classOf(id), run.classLevel(id), false);
+    }
+
+    /**
+     * A member playing for the first time since the start (they came late, or their profile was still
+     * loading): their class and level as they are now, and who plays a class alone is counted again.
+     * They hear it if theirs is; someone whose class isn't played alone any more loses the doubling
+     * without a word (UNKNOWN on Hypixel, whose server knows every member's class at the start).
+     */
+    private void join(UUID id) {
+        states.put(id, newState(id));
+        recountSolo();
+    }
+
+    /** Who plays their class alone, again: their stats are worked out again, and those it's new to hear it. */
+    private void recountSolo() {
+        for (UUID id : countSolo(states)) {
+            State s = states.get(id);
+            Player player = Bukkit.getPlayer(id);
+            if (player == null) continue;
+            PlayerSession.of(player).invalidateStats();
+            if (s.solo) for (String line : ClassBonus.soloMessage(s.dungeonClass, s.level)) player.sendMessage(Utils.color(line));
         }
     }
 
-    State state(UUID id) {
-        return states.get(id);
+    /**
+     * Sets whether each of them plays their class alone (only they, of everyone in {@code states}, play
+     * it); returns those it changed for, in order.
+     */
+    static List<UUID> countSolo(Map<UUID, State> states) {
+        Map<DungeonClass, Integer> picked = new EnumMap<>(DungeonClass.class);
+        for (State s : states.values()) picked.merge(s.dungeonClass, 1, Integer::sum);
+        List<UUID> changed = new ArrayList<>();
+        for (Map.Entry<UUID, State> entry : states.entrySet()) {
+            State s = entry.getValue();
+            boolean solo = picked.get(s.dungeonClass) == 1;
+            if (solo == s.solo) continue;
+            s.solo = solo;
+            changed.add(entry.getKey());
+        }
+        return changed;
     }
 
     // The Dungeon Orb
@@ -439,6 +478,10 @@ final class RunClasses {
      */
     void tick() {
         ticks++;
+        for (Player player : run.players()) {
+            UUID id = player.getUniqueId();
+            if (!states.containsKey(id) && run.classKnown(id)) join(id);
+        }
         long now = System.currentTimeMillis();
         for (Map.Entry<UUID, State> entry : states.entrySet()) {
             State s = entry.getValue();

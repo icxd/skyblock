@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +42,36 @@ class RunClassesTest {
     void aClassPlayedAloneDoublesItsBase() {
         // 40% doubled, and the levels' 15%.
         assertEquals(1.95, RunClasses.damageFactor(new RunClasses.State(DungeonClass.BERSERK, 20, true), false, NOW), EPSILON);
+    }
+
+    @Test
+    void soloIsCountedOverWhoeverIsPlaying() {
+        UUID a = new UUID(0, 1);
+        UUID b = new UUID(0, 2);
+        UUID c = new UUID(0, 3);
+        UUID late = new UUID(0, 4);
+        Map<UUID, RunClasses.State> states = new LinkedHashMap<>();
+        states.put(a, new RunClasses.State(DungeonClass.BERSERK, 20, false));
+        states.put(b, new RunClasses.State(DungeonClass.BERSERK, 10, false));
+        states.put(c, new RunClasses.State(DungeonClass.HEALER, 15, false));
+        // At the start: the Healer is alone.
+        assertEquals(List.of(c), RunClasses.countSolo(states));
+        assertFalse(states.get(a).solo);
+        assertTrue(states.get(c).solo);
+        assertEquals(List.of(), RunClasses.countSolo(states));
+
+        // A late Healer: neither is alone any more.
+        states.put(late, new RunClasses.State(DungeonClass.HEALER, 5, false));
+        assertEquals(List.of(c), RunClasses.countSolo(states));
+        assertFalse(states.get(c).solo);
+        assertFalse(states.get(late).solo);
+
+        // A late Archer (in the Healer's place): alone.
+        states.put(late, new RunClasses.State(DungeonClass.ARCHER, 16, false));
+        assertEquals(List.of(c, late), RunClasses.countSolo(states));
+        assertTrue(states.get(c).solo);
+        assertTrue(states.get(late).solo);
+        assertEquals(2.756 + 1.5, RunClasses.damageFactor(states.get(late), true, NOW), EPSILON);
     }
 
     @Test
