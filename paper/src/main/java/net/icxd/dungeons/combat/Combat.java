@@ -78,7 +78,7 @@ public final class Combat {
     }
 
     /** The item's enchantments, id to level (none for null). */
-    static Map<String, Integer> enchantments(NBTTagCompound tag) {
+    public static Map<String, Integer> enchantments(NBTTagCompound tag) {
         Map<String, Integer> enchantments = new HashMap<>();
         if (tag == null) return enchantments;
         NBTTagList list = tag.getList("enchantments", 10);

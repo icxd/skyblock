@@ -121,11 +121,14 @@ final class Hits {
         return ItemBuilder.dungeonFactor(Stat.DAMAGE, Math.min(ItemBuilder.starCount(tag), 5), ItemBuilder.catacombsBoost(caster));
     }
 
-    /** What the caster's spell does to this mob (see {@link Magic#damage}). */
+    /**
+     * What the caster's spell does to this mob (see {@link Magic#damage}): with the enchantments of the item
+     * it was cast with ({@code tag}, even if a skull lands after they've switched), and their stats now.
+     */
     static double magic(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, LivingEntity entity) {
         Stats stats = PlayerSession.of(caster).stats();
         Damage.Target target = target(entity);
-        double additive = Magic.additive(Skills.combatLevel(caster), PlayerHealth.get(caster), Combat.heldEnchantments(caster), target);
+        double additive = Magic.additive(Skills.combatLevel(caster), PlayerHealth.get(caster), Combat.enchantments(tag), target);
         Magic.Caster by = new Magic.Caster(stats.get(Stat.INTELLIGENCE), stats.get(Stat.ABILITY_DAMAGE), additive);
         return Magic.damage(spell, dungeonFactor(caster, item, tag), by, target);
     }
