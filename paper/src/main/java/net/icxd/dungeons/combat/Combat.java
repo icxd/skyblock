@@ -1,5 +1,8 @@
 package net.icxd.dungeons.combat;
 
+import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.dungeons.DungeonClass;
+import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemRegistry;
@@ -12,13 +15,19 @@ import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
+import net.icxd.dungeons.user.User;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +38,8 @@ import java.util.function.ToDoubleBiFunction;
 
 /**
  * Players' hits on SkyBlock's mobs, worked out by {@link Damage}: a sword, a fist or any other item
- * (fists crit too), and arrows with the bow they left (see {@link Shots}). Main thread.
+ * (fists crit too), and arrows with the bow they left (see {@link Shots}), and their Ferocity's extra
+ * strikes. Main thread.
  */
 public final class Combat {
     /**
@@ -129,6 +139,60 @@ public final class Combat {
         if (!invulnerable && RunManager.inRun(player)) restoreMana(player);
         if (dungeonMob != null) DungeonMobs.playerHit(event, player, dungeonMob, damage, critical);
         else Mobs.playerHit(event, player, mob, damage, critical);
+        if (!invulnerable) {
+            double ferocity = shot != null ? shot.ferocity() : PlayerSession.of(player).stats().get(Stat.FEROCITY);
+            ferocity(player, target, damage, critical, ferocity, projectile != null);
+        }
+    }
+
+    /**
+     * A hit's extra strikes (see {@link Ferocity}), {@link Ferocity#STRIKE_DELAY_TICKS} apart. Each does the
+     * hit's damage again, crit or not as the hit was (the wiki doesn't say they're worked out anew; they
+     * don't roll a crit of their own), with its own damage number and a red slash across the target; they
+     * stop once it's dead, and one can kill it. They aren't hits: no mana back, no knockback, and First
+     * Strike and the like don't count them. None for a melee hit from more than 6 blocks (from their feet
+     * to its: the wiki doesn't say where it measures from), or for a Berserk in a dungeon run.
+     */
+    private static void ferocity(Player player, LivingEntity target, double damage, boolean critical, double ferocity, boolean ranged) {
+        if (ferocity <= 0 || !player.getWorld().equals(target.getWorld())) return;
+        if (!Ferocity.inRange(ranged, player.getLocation().distance(target.getLocation())) || ferocityDisabled(player)) return;
+        int strikes = Ferocity.extraStrikes(ferocity, ThreadLocalRandom.current().nextDouble());
+        for (int i = 1; i <= strikes; i++) {
+            Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> strike(player, target, damage, critical),
+                    (long) i * Ferocity.STRIKE_DELAY_TICKS);
+        }
+    }
+
+    /**
+     * "Ferocity is disabled for Berserkers in dungeons" (the wiki's Ferocity, Trivia): the class they've
+     * picked (in the Ready Up menu), while they're in a run.
+     */
+    static boolean ferocityDisabled(Player player) {
+        if (!RunManager.inRun(player)) return false;
+        User user = User.ifLoaded(player.getUniqueId());
+        return user != null && DungeonProfile.selectedClass(user) == DungeonClass.BERSERK;
+    }
+
+    /** One extra strike, if the target is still one of SkyBlock's mobs that can be hurt. */
+    private static void strike(Player player, LivingEntity target, double damage, boolean critical) {
+        if (!player.isOnline() || !target.isValid() || target.isDead()) return;
+        DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
+        Mobs.Live mob = dungeonMob == null ? Mobs.of(target) : null;
+        if (dungeonMob != null ? dungeonMob.invulnerable() : mob == null || mob.type().isInvulnerable()) return;
+        slash(player, target);
+        if (dungeonMob != null) DungeonMobs.damage(target, player, damage, critical);
+        else Mobs.damage(mob, player, damage, critical);
+    }
+
+    /** A strike's red slash: dust in a line across the target, sideways to the player, one way or the other at random. */
+    private static void slash(Player player, LivingEntity target) {
+        BoundingBox box = target.getBoundingBox();
+        Vector from = target.getLocation().toVector().subtract(player.getLocation().toVector());
+        Particle.DustOptions red = new Particle.DustOptions(Color.RED, 1);
+        boolean falling = ThreadLocalRandom.current().nextBoolean();
+        for (Vector point : Ferocity.slash(box.getCenter(), from, box.getWidthX() + 0.4, box.getHeight(), falling)) {
+            target.getWorld().spawnParticle(Particle.DUST, point.getX(), point.getY(), point.getZ(), 1, 0, 0, 0, 0, red);
+        }
     }
 
     /**

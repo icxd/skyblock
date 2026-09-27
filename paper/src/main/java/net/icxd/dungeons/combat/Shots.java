@@ -4,6 +4,8 @@ import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.Mobs;
+import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.Stat;
 import org.bukkit.Location;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.LivingEntity;
@@ -23,13 +25,13 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Players' arrows hit with what they had when the arrow left the bow: their stats (with that bow in
- * hand), its enchantments and whether it crits, rolled then, not with whatever they hold when it
- * lands. Bows only crit fully drawn (the wiki's Bow history); how a bow's damage scales with a partial
- * draw is UNKNOWN, so it doesn't. Main thread.
+ * hand, Ferocity too), its enchantments and whether it crits, rolled then, not with whatever they hold
+ * when it lands. Bows only crit fully drawn (the wiki's Bow history); how a bow's damage scales with a
+ * partial draw is UNKNOWN, so it doesn't. Main thread.
  */
 public final class Shots implements Listener {
-    /** An arrow in flight: who shot it, with what, from where. */
-    record Shot(Damage.Attacker launched, boolean critical, Location from) {
+    /** An arrow in flight: who shot it, with what (and their Ferocity then), from where. */
+    record Shot(Damage.Attacker launched, boolean critical, double ferocity, Location from) {
         /** The attacker, with how far the arrow has come (Snipe) by the time it hits. */
         Damage.Attacker attacker(Location at) {
             double travelled = from.getWorld().equals(at.getWorld()) ? from.distance(at) : 0;
@@ -45,7 +47,8 @@ public final class Shots implements Listener {
     public static void record(Projectile projectile, Player shooter, NBTTagCompound bow, boolean fullyDrawn) {
         Damage.Attacker attacker = Combat.attacker(shooter, bow, true, 0);
         boolean critical = fullyDrawn && Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
-        SHOTS.put(projectile.getUniqueId(), new Shot(attacker, critical, projectile.getLocation()));
+        double ferocity = PlayerSession.of(shooter).stats().get(Stat.FEROCITY);
+        SHOTS.put(projectile.getUniqueId(), new Shot(attacker, critical, ferocity, projectile.getLocation()));
     }
 
     /** The shot this projectile is, once (null if it isn't one). */
