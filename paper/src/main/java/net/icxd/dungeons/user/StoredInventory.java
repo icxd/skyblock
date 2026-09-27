@@ -2,6 +2,7 @@ package net.icxd.dungeons.user;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -18,6 +19,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
+
+import net.icxd.dungeons.item.nbt.ItemNBT;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 
 /**
  * A player's inventory, armor and off-hand, kept in the profile they play on under {@code storage}
@@ -134,7 +138,7 @@ public final class StoredInventory {
         List<ItemStack> loose = new ArrayList<>();
         ItemStack cursor = player.getItemOnCursor();
         if (!cursor.isEmpty()) {
-            if (!isNotSaved(cursor)) loose.add(cursor.clone());
+            if (saved(cursor)) loose.add(cursor.clone());
             player.setItemOnCursor(null);
         }
         Inventory top = player.getOpenInventory().getTopInventory();
@@ -155,7 +159,7 @@ public final class StoredInventory {
         if (loose.isEmpty()) return;
 
         List<Binary> overflow = new ArrayList<>();
-        for (ItemStack rest : player.getInventory().addItem(loose.toArray(new ItemStack[0])).values()) overflow.add(write(rest));
+        for (ItemStack rest : player.getInventory().addItem(loose.toArray(new ItemStack[0])).values()) if (saved(rest)) overflow.add(write(rest));
         if (overflow.isEmpty()) return;
         Document storage = storage(doc);
         List<Object> kept = new ArrayList<>(list(storage, OVERFLOW));
@@ -205,8 +209,28 @@ public final class StoredInventory {
 
     private static List<Binary> encode(ItemStack[] items) {
         List<Binary> out = new ArrayList<>(items.length);
-        for (ItemStack item : items) out.add(item == null || item.isEmpty() || isNotSaved(item) ? null : write(item));
+        for (ItemStack item : items) out.add(saved(item) ? write(item) : null);
         return out;
+    }
+
+    /** Whether it goes into the stored inventory: not empty, not marked, and not of an id that never does. */
+    private static boolean saved(ItemStack item) {
+        if (item == null || item.isEmpty() || isNotSaved(item)) return false;
+        if (NEVER_SAVED.isEmpty()) return true;
+        NBTTagCompound tag = ItemNBT.read(item);
+        return tag == null || !NEVER_SAVED.contains(tag.getString("id"));
+    }
+
+    /** SkyBlock item ids that are never saved (see {@link #neverSave}). */
+    private static final Set<String> NEVER_SAVED = new HashSet<>();
+
+    /**
+     * Keeps every item of this SkyBlock id out of the stored inventory, however it was made: a mark
+     * ({@link #markNotSaved}) is lost when an item is made again from its data (switching to it, picking
+     * it up) and a mob's drop never had one (a dungeon's Revive Stones). Once, at startup.
+     */
+    public static void neverSave(String id) {
+        NEVER_SAVED.add(id);
     }
 
     /** Hypixel's {@code dontSaveToProfile}: items that belong to where you are (a dungeon's map), not to you. */

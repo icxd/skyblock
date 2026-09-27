@@ -127,7 +127,7 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
   are no players available to revive right now!"; one stone per ghost, and it's given back if the
   ghost is back another way first); or when it, or a teammate, kills a fairy. A
   Revive Stone in your inventory when you die brings you straight back. Revive Stones go when you
-  leave.
+  leave, and are never saved with your items.
 - The Fairy Room has four fairies (Mari, Nymira, Zana, Q'ara, "[Lv0] Mari 4❤") floating about.
   Any hit kills one: it revives the ghost who hit it, or the first dead teammate, or gives a Revive
   Stone ("You killed me! Take this Revive Stone so that my death is not in vain!").

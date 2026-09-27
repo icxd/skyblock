@@ -29,7 +29,9 @@ import net.icxd.dungeons.utils.Utils;
  * pick one when several are dead, or "There are no players available to revive right now!". They're
  * gone when you leave the run ("This item will vanish from your inventory at the end of the
  * Dungeon!"): marked as run items like the map, and taken by id too, since an item made again from
- * its data (switching to it in the hotbar does that) loses the mark.
+ * its data (switching to it in the hotbar does that) loses the mark and a mob's drop never had it;
+ * and by id they're never saved with a player's items (see {@link StoredInventory#neverSave}), so
+ * leaving another way (sent to another server) doesn't keep one either.
  */
 final class ReviveStones {
     /** The item's id in the item data. */
