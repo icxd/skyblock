@@ -53,11 +53,12 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
 - Every door opens the same way: each block becomes a falling block riding an invisible bat (sent
   as packets, so only the run sees them), 0.65625 below the block; the bats sink 0.3125 a tick
   from the 5th tick, the doorway is barrier until the 12th, and they're gone on the 22nd.
-- On Hypixel a key drops from the last starred mob (or the miniboss) of the room before its door.
-  With no mobs yet, it waits in that room from the start (the fairy room is skipped, going back
-  one more room), on the floor near the middle of its first cell at about doorway height: a
-  floating head with "Wither Key" (dark grey) or "Blood Key" (red), on two invisible armor stands
-  0.71875 and 0.46875 below the floor. The head turns 2 degrees a tick and bobs 0.01 a tick
+- A key drops from the last starred mob (or the miniboss) of the room before its door, with the
+  rest of that room's loot (see Room mobs; the fairy room is skipped, going back one more room). A
+  key room with no starred mobs (the entrance room, when the fairy room comes first) has it waiting
+  from the start, on the floor near the middle of its first cell at about doorway height. Either
+  way it's a floating head with "Wither Key" (dark grey) or "Blood Key" (red), on two invisible
+  armor stands 0.71875 and 0.46875 below the floor. The head turns 2 degrees a tick and bobs 0.01 a tick
   between 0.18 below and 0.22 above where it started, pausing a tick at each end; the name stays
   still. Walking into it picks it up for the team: "Name has obtained Wither Key!" and the RIGHT
   CLICK hint, to everyone.
@@ -70,7 +71,36 @@ with 4 between, centred. A room shows once someone walks into it (the entrance f
 and each room behind its doors as a grey cell with a question mark. Doors are 7 pixels wide in the
 gap, in the colour of the room they lead into (black for a shut wither door, red for the Blood
 Door). Rooms with nothing to clear get their green tick when found (the fairy room), and the Blood
-Room when the Watcher is done. You're a green arrow, the others blue.
+Room when the Watcher is done. A cleared room gets a white tick, green once its secrets are all
+found (the wiki). You're a green arrow, the others blue.
+
+**Room mobs** (`RoomMobs`; research mobs.md, critic.md 3.3-3.4). The rooms' data is Hypixel's, so
+it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each capture's frame:
+`RoomSpawnData`, `RoomFrame`).
+- Every normal and champion room has its mobs from the start: the ones recorded on Hypixel (12
+  rooms), else planned (`FallbackSpawns`, fitted to the recordings: 5 to 16 starred mobs a
+  square in groups of 2 to 6 on the main floor, kinds as often as recorded, a Lost Adventurer or
+  Angry Archaeologist near the middle of a champion room). Modifiers are rolled for each run.
+- They wait at their base health, not moving, until their room opens (its door is opened, someone
+  walks in, or someone hits one of them). Then they wake up with the room's multiplier on their
+  health and damage: 1.05 for the first room, then 1 + 0.05 x (squares opened before, the
+  Entrance not counted, - 1), as recorded.
+- A room is cleared when its starred mobs are dead: its tick on the map, the sidebar's Cleared,
+  a `RoomClearedEvent`. Where the last one died its loot lies, half a block apart: a level V
+  blessing (rooms bigger than 1x1 and champion rooms, as recorded), the next door's key, and a
+  Superboom TNT (two in three) or a Revive Stone. Walking into them picks them up ("Name has
+  obtained Superboom TNT!"), into the inventory if there's room.
+- Skeleton skulls (the capture's, else the recorded ones, else 1 to 7 a square) rise and become
+  Undead Skeletons 6 to 28 seconds after their room opens; a killed skeleton leaves one that does
+  the same 15 to 23 seconds later.
+- Superboom TNT (right click on a block) blows up the tombs and weak walls next to where it goes
+  off: the recorded explosion sounds and squid ink, the tomb's Crypt Undead, and the crypt counts
+  (`cryptsBlown()`, the tab's Crypts). Tombs are known where they were recorded or Skyblocker marks
+  them; weak walls are the cracked stone bricks at Skyblocker's superboom marks.
+- Dungeon mobs' drops go into the inventory, and what doesn't fit into the item stash
+  (`ItemStash`, `/pickupstash`, with Hypixel's messages and the reminder every minute). Essence
+  (Crypt Undead, Lost Adventurer, Angry Archaeologist) goes onto the profile's
+  `dungeons.essence`, with "+1 Undead Essence" on the action bar.
 
 **The Watcher** (`Watcher`, `Undead`, `UndeadType`). The Blood Door starts his fight.
 - He's an invisible zombie wearing his head, floating 4 blocks over the middle of the room, with
@@ -126,13 +156,13 @@ floor asks for); speed 100 until the floor's time limit; bonus for crypts, the m
 the Entrance each part counts 70%. Grades: D under 100, C 100, B 160, A 230, S 270, S+ 300.
 
 Hypixel's own numbers don't match these exactly (its sidebar shows 0 at the start; ours shows 84
-on the Entrance, the base skill plus full speed). Rooms, secrets, puzzles and crypts come with
-clearing, so for now the score is the base.
+on the Entrance, the base skill plus full speed). Cleared rooms count; secrets, puzzles and
+crypts aren't fed in yet.
 
 ## Not yet
 
-- Clearing rooms (mobs, secrets, puzzles, crypts), keys dropping from mobs, the bosses, the boss
-  bar compass. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
+- Secrets and puzzles, the bosses, the boss bar compass. Unstarred mobs in the hidden parts of
+  rooms nobody recorded; crypts where no tomb is known; the Dungeon Sack. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
   his real icons (placeholders for now).
 - Deaths as ghosts, revives.
 - Classes beyond picking one: their stats in the Ready Up menu, Class Details (right click), the
