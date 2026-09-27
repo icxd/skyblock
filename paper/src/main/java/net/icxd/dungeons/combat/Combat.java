@@ -91,8 +91,11 @@ public final class Combat {
         return enchantments(skyBlockData(player.getInventory().getItemInMainHand()));
     }
 
-    /** Who's hitting: the player's stats now, and the weapon's enchantments. */
-    static Damage.Attacker attacker(Player player, NBTTagCompound weapon, boolean ranged, double travelled) {
+    /**
+     * Who's hitting: the player's stats now, and the weapon's enchantments (an ability that hits as a
+     * melee hit or an arrow would works its damage out from this too).
+     */
+    public static Damage.Attacker attacker(Player player, NBTTagCompound weapon, boolean ranged, double travelled) {
         Stats stats = PlayerSession.of(player).stats();
         return new Damage.Attacker(stats.get(Stat.DAMAGE), stats.get(Stat.STRENGTH), stats.get(Stat.CRIT_CHANCE), stats.get(Stat.CRIT_DAMAGE),
                 Skills.combatLevel(player), PlayerHealth.get(player), enchantments(weapon), ranged, travelled, multiplier(player, ranged));
