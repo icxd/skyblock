@@ -16,6 +16,9 @@ public final class UtilityAbilities {
 
     /** Hands each of them to {@code to}, by ability name as items' ABILITY blocks have it. */
     public static void register(BiConsumer<String, AbilityHandler> to) {
+        // Dungeons
+        to.accept(SpiritLeap.NAME, new SpiritLeap());
+        to.accept("Aspiring Leap", new Refusal("&cYou can only use this item on your private island!"));
         // Healing
         WandHeal wand = new WandHeal();
         for (String name : new String[] {"Small Heal", "Medium Heal", "Big Heal", "Huge Heal"}) to.accept(name, wand);

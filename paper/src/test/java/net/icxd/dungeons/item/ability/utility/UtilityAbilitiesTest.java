@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item.ability.utility;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -13,15 +14,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.data.ItemData;
 
-/** What's registered. */
+/** What's registered, and Spirit Leap's teammates. */
 class UtilityAbilitiesTest {
     private static Map<String, AbilityHandler> registered() {
         Map<String, AbilityHandler> handlers = new LinkedHashMap<>();
@@ -46,10 +49,25 @@ class UtilityAbilitiesTest {
     @Test
     void theDungeonOnesAreThere() {
         Map<String, AbilityHandler> handlers = registered();
-        for (String name : List.of("Howl", "Small Heal", "Huge Heal", "Speed Boost")) {
+        for (String name : List.of("Spirit Leap", "Howl", "Small Heal", "Huge Heal", "Speed Boost")) {
             assertTrue(handlers.containsKey(name), name);
         }
         // Done by the run itself (a Revive Stone's right click is the run's).
         assertFalse(handlers.containsKey("Revive"));
+    }
+
+    /** "Dead players and players who have left the Dungeon cannot be teleported to": they're in the menu, but not to click. */
+    @Test
+    void leapTargets() {
+        UUID here = UUID.randomUUID(), dead = UUID.randomUUID(), away = UUID.randomUUID();
+        List<DungeonRun.Teammate> team = List.of(new DungeonRun.Teammate(here, "Here", "§7Here", false),
+                new DungeonRun.Teammate(dead, "Dead", "§b[MVP§6+§b] Dead", true), new DungeonRun.Teammate(away, "Away", "§7Away", false));
+        List<SpiritLeap.Target> targets = SpiritLeap.targets(team, Set.of(here, dead)::contains);
+        assertEquals(3, targets.size());
+        assertEquals(SpiritLeap.Status.HERE, targets.get(0).status());
+        // A ghost is dead, wherever it is.
+        assertEquals(SpiritLeap.Status.DEAD, targets.get(1).status());
+        assertEquals(SpiritLeap.Status.AWAY, targets.get(2).status());
+        assertEquals("§b[MVP§6+§b] Dead", targets.get(1).teammate().display());
     }
 }

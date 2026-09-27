@@ -17,8 +17,9 @@ import net.icxd.dungeons.session.PlayerHealth;
 /**
  * What the utility abilities need besides their clicks: every tick their heals and glides; what immunity
  * does to vanilla damage (SkyBlock hits go through {@link Protection}'s shields); hits from players who
- * can't attack now; Spirit Glide on sneaking; and what a player who leaves had going. Registered by
- * {@link Dungeons}, which is when the shields and stat hooks go in.
+ * can't attack now; a Spirit Leap's immunity ending with a hit; Spirit Glide on sneaking; and what a
+ * player who leaves had going. Registered by {@link Dungeons}, which is when the shields and stat hooks go
+ * in.
  */
 public final class UtilityListener implements Listener {
     public UtilityListener() {
@@ -53,6 +54,17 @@ public final class UtilityListener implements Listener {
     public void onAttack(EntityDamageByEntityEvent event) {
         Player attacker = Combat.playerBehind(event.getDamager());
         if (attacker != null && Protection.cantAttack(attacker)) event.setCancelled(true);
+    }
+
+    /**
+     * "immunity is cancelled upon dealing damage": a hit of theirs ends a Spirit Leap's, a killing one too
+     * (SkyBlock's mobs call those off: see {@link net.icxd.dungeons.mob.Mobs#playerHit}).
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onHit(EntityDamageByEntityEvent event) {
+        Player attacker = Combat.playerBehind(event.getDamager());
+        if (attacker == null || event.getEntity().equals(attacker)) return;
+        if (!Protection.cantAttack(attacker)) Protection.endImmunity(attacker, SpiritLeap.NAME);
     }
 
     @EventHandler(ignoreCancelled = true)
