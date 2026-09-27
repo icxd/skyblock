@@ -1,5 +1,7 @@
 package net.icxd.dungeons.item.ability.weapons;
 
+import java.util.UUID;
+
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,8 +30,12 @@ public final class WeaponEvents implements Listener {
         }
     }
 
+    /** What their abilities kept about them goes with them. */
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        Salvation.forget(event.getPlayer().getUniqueId());
+        UUID player = event.getPlayer().getUniqueId();
+        Salvation.forget(player);
+        WitherBlade.forget(player);
+        JerryGun.forget(player);
     }
 }

@@ -40,10 +40,10 @@ final class Missile {
         boolean on(Missile missile, LivingEntity mob);
     }
 
-    /** It stopped here: at a block, a mob it didn't go through, or the end of its range. */
+    /** It stopped here: at a block or a mob it didn't go through ({@code impact}), or at the end of its range. */
     @FunctionalInterface
     interface End {
-        void at(Missile missile, Location where);
+        void at(Missile missile, Location where, boolean impact);
     }
 
     /** A safety net: nothing flies for more than 20 seconds. */
@@ -58,7 +58,7 @@ final class Missile {
     private boolean throughBlocks;
     private Function<Missile, Vector> steer;
     private Hit onHit = (missile, mob) -> false;
-    private End onEnd = (missile, where) -> {
+    private End onEnd = (missile, where, impact) -> {
     };
     private Entity look;
     private Consumer<Location> trail;
@@ -144,8 +144,18 @@ final class Missile {
         return travelled;
     }
 
+    /** Still in the air: launched, and not ended or cancelled. */
+    boolean flying() {
+        return task != null && !done;
+    }
+
     Vector velocity() {
         return velocity.clone();
+    }
+
+    /** Whether it has touched this mob already. */
+    boolean touched(Entity mob) {
+        return struck.contains(mob.getUniqueId());
     }
 
     /** The mobs it has touched can be touched again (a boomerang on its way back). */
@@ -166,6 +176,8 @@ final class Missile {
         }
         if (steer != null) {
             Vector heading = steer.apply(this);
+            // Steering may have ended it (a boomerang caught).
+            if (done) return;
             if (heading != null && heading.lengthSquared() > 1e-9) velocity = heading.clone().normalize().multiply(velocity.length());
         }
         velocity.setY(velocity.getY() - gravity);
@@ -188,7 +200,7 @@ final class Missile {
             if (!onHit.on(this, mob)) {
                 double to = Math.max(0, Shapes.along(from, direction, reach, width, mob.getBoundingBox()));
                 at.add(direction.clone().multiply(to));
-                end();
+                end(true);
                 return;
             }
             if (done) return;
@@ -197,13 +209,13 @@ final class Missile {
         travelled += reach;
         if (look != null && look.isValid()) look.teleport(at);
         if (trail != null) trail.accept(at.clone());
-        if (block || travelled >= range) end();
+        if (block || travelled >= range) end(block);
     }
 
-    private void end() {
+    private void end(boolean impact) {
         if (done) return;
         finish();
-        onEnd.at(this, at.clone());
+        onEnd.at(this, at.clone(), impact);
     }
 
     private void finish() {

@@ -85,7 +85,7 @@ final class Salvation implements AbilityHandler {
         List<LivingEntity> struck = Hits.along(eye, direction, length, WIDTH);
         for (LivingEntity mob : struck.subList(0, Math.min(MOST_HIT, struck.size()))) {
             double travelled = mob.getBoundingBox().getCenter().distance(eye.toVector());
-            Hits.weaponHit(player, tag, mob, true, travelled, 1, true);
+            Hits.weaponHit(player, tag, mob, new Hits.Strike(true, travelled, 1, true, false));
         }
         beam(eye, direction, length);
     }

@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -33,6 +34,7 @@ import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
+import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Utils;
 
 /**
@@ -142,21 +144,85 @@ final class Hits {
     }
 
     /**
-     * An ability's hit that's worked out as a melee hit (or an arrow, {@code ranged}) with what they hold,
-     * times {@code factor} ("dealing 10% melee damage"): its enchantments, their Strength and Crit Damage,
-     * a crit as their Crit Chance rolls it unless {@code alwaysCrits}. Its damage number shows the crit.
-     * Ferocity doesn't strike again for it (UNKNOWN whether Hypixel's do). Returns the damage, 0 if it
-     * didn't hit.
+     * How an ability's hit that's worked out as a melee hit or an arrow goes: an arrow's ({@code ranged}, Snipe
+     * by how far it went), times {@code factor} ("dealing 10% melee damage"), always a crit or as their Crit
+     * Chance rolls, and with only the enchantments that count for abilities ({@code forAbility}: the
+     * roses' "Enchantments that do not affect abilities, such as Sharpness ... do not work"), or all of them
+     * (the whip's "Melee-only enchantments ... work on the beam").
      */
-    static double weaponHit(Player player, NBTTagCompound weapon, LivingEntity entity, boolean ranged, double travelled,
-                            double factor, boolean alwaysCrits) {
+    record Strike(boolean ranged, double travelled, double factor, boolean alwaysCrits, boolean forAbility) {
+        static Strike melee(double factor) {
+            return new Strike(false, 0, factor, false, false);
+        }
+
+        static Strike arrow(double travelled, double factor) {
+            return new Strike(true, travelled, factor, false, false);
+        }
+    }
+
+    /**
+     * An ability's hit worked out as a melee hit or an arrow with what they hold (its enchantments, their
+     * Strength and Crit Damage): see {@link Strike}. Its damage number shows a crit. Ferocity doesn't strike
+     * again for it (UNKNOWN whether Hypixel's do). Returns the damage, 0 if it didn't hit.
+     */
+    static double weaponHit(Player player, NBTTagCompound weapon, LivingEntity entity, Strike strike) {
         if (!hittable(entity)) return 0;
-        Damage.Attacker a = Combat.attacker(player, weapon, ranged, travelled);
+        Damage.Attacker a = Combat.attacker(player, weapon, strike.ranged(), strike.travelled());
         Damage.Attacker attacker = new Damage.Attacker(a.damage(), a.strength(), a.critChance(), a.critDamage(), a.combatLevel(),
-                a.health(), a.enchantments(), a.ranged(), a.travelled(), a.multiplier() * factor);
-        boolean critical = alwaysCrits || Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
+                a.health(), strike.forAbility() ? Magic.forAbilities(a.enchantments()) : a.enchantments(), a.ranged(), a.travelled(),
+                a.multiplier() * strike.factor());
+        boolean critical = strike.alwaysCrits() || Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
         double damage = Math.floor(Damage.exact(attacker, target(entity), critical) * takenFactor(entity));
         return hurt(player, entity, damage, DamageIndicators.Look.of(critical, false)) ? damage : 0;
+    }
+
+    /** The item's own ability damage ("Weapon Ability Damage" in its data: 2,000 on a Spirit Sceptre), else {@code otherwise}. */
+    static double base(SkyBlockItem item, double otherwise) {
+        double own = item.stats().get(Stat.WEAPON_ABILITY_DAMAGE);
+        return own > 0 ? own : otherwise;
+    }
+
+    /** The spell with the item's own base damage, if its data has one. */
+    static Magic.Spell spellOf(SkyBlockItem item, Magic.Spell spell) {
+        return spell.withBase(base(item, spell.base()));
+    }
+
+    private static int mana(PlayerSession session) {
+        return Math.max(0, session.getMana() < 0 ? session.maxMana() : session.getMana());
+    }
+
+    /**
+     * Whether they have the mana an ability costs beyond what its block says (the Jerry-chine Gun's growing
+     * cost), asked from {@link net.icxd.dungeons.item.ability.AbilityHandler#usable}; if not, what too little
+     * mana always does ("NOT ENOUGH MANA"). It's taken in the use ({@link #takeMana}): PlayerListener sets
+     * their mana after asking.
+     */
+    static boolean enoughMana(Player player, int cost) {
+        if (cost <= 0 || mana(PlayerSession.of(player)) >= cost) return true;
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
+        PlayerSession.of(player).setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
+        return false;
+    }
+
+    /** Takes that mana, shown as a block's cost is ("-60 Mana (Rapid-fire)"). */
+    static void takeMana(Player player, int cost, String ability) {
+        if (cost <= 0) return;
+        PlayerSession session = PlayerSession.of(player);
+        session.setMana(Math.max(0, mana(session) - cost));
+        session.setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + ability + "§b)", 400));
+    }
+
+    /**
+     * Whether they can pay an ability's health cost ("This ability cannot be used if the user does not have
+     * enough health to be consumed, so using it repeatedly cannot cause fatal damage", the wiki's Flower of
+     * Truth): more health than it costs.
+     */
+    static boolean canPayHealth(Player player, double cost) {
+        return cost <= 0 || PlayerHealth.get(player) > cost;
+    }
+
+    static void payHealth(Player player, double cost) {
+        if (cost > 0) PlayerHealth.damage(player, cost);
     }
 
     /** Hurts one of SkyBlock's mobs for this much, with its damage number; false if it can't be hurt. */

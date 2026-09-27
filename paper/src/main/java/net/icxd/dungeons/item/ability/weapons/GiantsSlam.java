@@ -41,7 +41,7 @@ final class GiantsSlam implements AbilityHandler {
         show(at, player);
         at.getWorld().playSound(at, Sound.BLOCK_ANVIL_LAND, 1, PITCH);
         at.getWorld().playSound(at, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1, PITCH);
-        Hits.report(player, item.name(), Hits.spell(player, item, tag, SLAM, Hits.near(at, RADIUS)));
+        Hits.report(player, item.name(), Hits.spell(player, item, tag, Hits.spellOf(item, SLAM), Hits.near(at, RADIUS)));
     }
 
     /** The recorded display: the sword they hold, 5 times over, 3 blocks up and tipped 135° about its length. */

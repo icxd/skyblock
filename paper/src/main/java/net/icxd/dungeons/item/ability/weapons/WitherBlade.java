@@ -56,6 +56,13 @@ final class WitherBlade {
     private WitherBlade() {
     }
 
+    /** They left: their shield is down, and a warp waiting to go off is gone. */
+    static void forget(UUID player) {
+        SHIELDED.remove(player);
+        Warp warp = WARPS.remove(player);
+        if (warp != null) warp.pull().cancel();
+    }
+
     /** What every hit takes from them: 10% less while their Wither Shield is up. */
     static double takenFactor(Player player) {
         Long until = SHIELDED.get(player.getUniqueId());

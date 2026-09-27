@@ -24,6 +24,16 @@ public final class WeaponAbilities {
         to.accept("Wither Impact", new WitherBlade.WitherImpact());
         to.accept("Giant's Slam", new GiantsSlam());
         to.accept(Salvation.NAME, new Salvation());
+        // Spells: magic damage from Intelligence.
+        to.accept("Guided Bat", new GuidedBat());
+        to.accept("Showtime", new Showtime());
+        to.accept("Ice Spray", new Cones.IceSpray());
+        to.accept("Dragon Rage", new Cones.DragonRage());
+        to.accept("Molten Wave", new MoltenWave());
+        to.accept("Terrain Toss", new TerrainToss());
+        to.accept("Rapid-fire", new JerryGun());
+        to.accept("Dreadlord", new Skulls("Dreadlord", 1));
+        to.accept("Witherlord", new Skulls("Witherlord", 3));
     }
 
     /** A shortbow shot this arrow: what the bow's abilities need to know of it (Salvation counts its hits). */
