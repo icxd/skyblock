@@ -1,13 +1,17 @@
 package net.icxd.dungeons.dungeons.instance.puzzle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +25,7 @@ class RunPuzzlesTest {
         final List<Integer> failed = new ArrayList<>();
         final List<long[]> when = new ArrayList<>();
         final List<Runnable> tasks = new ArrayList<>();
+        boolean running = true;
 
         @Override
         public World world() {
@@ -35,6 +40,11 @@ class RunPuzzlesTest {
         @Override
         public void tell(String message) {
             chat.add(message);
+        }
+
+        @Override
+        public boolean running() {
+            return running;
         }
 
         @Override
@@ -144,5 +154,59 @@ class RunPuzzlesTest {
         assertEquals(" Water Board: &7[&c&l✖&7] &f(&bSteve&f)", puzzle.tabRow());
         assertTrue(puzzle.isOver());
         assertEquals(false, puzzle.isDone());
+    }
+
+    /** Once the run is over (the score told), nothing is solved or failed any more. */
+    @Test
+    void nothingAfterTheEnd() {
+        FakeHost host = new FakeHost();
+        Plain puzzle = new Plain(host);
+        puzzle.discover();
+        host.run();
+        host.running = false;
+        puzzle.solve(PuzzleTab.AFTER_CHEST);
+        puzzle.fail(named("Steve"), PuzzleTab.AFTER_LINE);
+        assertEquals(List.of(), host.solved);
+        assertEquals(List.of(), host.failed);
+        assertFalse(puzzle.isOver());
+    }
+
+    /** After the end a puzzle room's levers, buttons and chests are dead: the click is taken, and does nothing. */
+    @Test
+    void deadLeversAfterTheEnd() {
+        FakeHost host = new FakeHost();
+        RunPuzzles puzzles = puzzles(host);
+        puzzles.tick(List.of(at("Steve", 5.5, 5.5)));
+        Block lever = block(Material.LEVER, 7, 70, 7);
+        Block stone = block(Material.STONE, 7, 70, 7);
+        assertFalse(puzzles.click(named("Steve"), lever, true), "a puzzle that can't be done doesn't take it");
+        host.running = false;
+        assertTrue(puzzles.click(named("Steve"), lever, true));
+        assertFalse(puzzles.click(named("Steve"), stone, true));
+        assertFalse(puzzles.click(named("Steve"), block(Material.LEVER, 40, 70, 7), true), "not in the room");
+    }
+
+    /** A run with one puzzle it can't do, so nothing in it needs a world. */
+    private static RunPuzzles puzzles(FakeHost host) {
+        return new RunPuzzles(host, List.of(new RunPuzzles.Room(5, "blaze", FRAME)), PuzzleData.NONE);
+    }
+
+    /** A player standing there. */
+    private static Player at(String name, double x, double z) {
+        return (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[]{Player.class}, (proxy, method, args) -> switch (method.getName()) {
+            case "getName" -> name;
+            case "getLocation" -> new Location(null, x, 70, z);
+            default -> throw new UnsupportedOperationException(method.getName());
+        });
+    }
+
+    private static Block block(Material type, int x, int y, int z) {
+        return (Block) Proxy.newProxyInstance(Block.class.getClassLoader(), new Class<?>[]{Block.class}, (proxy, method, args) -> switch (method.getName()) {
+            case "getType" -> type;
+            case "getX" -> x;
+            case "getY" -> y;
+            case "getZ" -> z;
+            default -> throw new UnsupportedOperationException(method.getName());
+        });
     }
 }

@@ -112,8 +112,12 @@ public final class RunPuzzles {
         return n;
     }
 
-    /** A click on a block; whether a puzzle took it. */
+    /**
+     * A click on a block; whether a puzzle took it. Once the run is over the puzzles' levers, buttons
+     * and chests do nothing at all.
+     */
     boolean click(Player player, Block block, boolean right) {
+        if (!host.running()) return isPuzzleBlock(block);
         for (Puzzle puzzle : puzzles) {
             if (inside(puzzle, block) && puzzle.click(player, block, right)) {
                 return true;
@@ -123,11 +127,13 @@ public final class RunPuzzles {
     }
 
     boolean click(Player player, Entity entity) {
+        if (!host.running()) return false;
         for (Puzzle puzzle : puzzles) if (puzzle.click(player, entity)) return true;
         return false;
     }
 
     void shot(Player shooter, Block block) {
+        if (!host.running()) return;
         for (Puzzle puzzle : puzzles) {
             if (inside(puzzle, block)) puzzle.shot(shooter, block);
         }

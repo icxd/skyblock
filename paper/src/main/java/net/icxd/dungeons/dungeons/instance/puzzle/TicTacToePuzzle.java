@@ -76,7 +76,8 @@ final class TicTacToePuzzle extends Puzzle {
 
     private void aiMove() {
         aiToMove = false;
-        if (isOver()) return;
+        // Not once the run is over: its end has been told.
+        if (isOver() || !host.running()) return;
         int cell = game.aiMove(random);
         if (cell >= 0) mark(cell, TicTacToeGame.Mark.X);
         finished();

@@ -71,9 +71,13 @@ final class PuzzleChest {
         at.getWorld().playSound(at, Sound.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.5f, 0.9f + ThreadLocalRandom.current().nextFloat() * 0.1f);
         for (int i = 0; i < NOTE_TICKS.length; i++) {
             float pitch = NOTE_PITCHES[i];
-            host.later(NOTE_TICKS[i], () -> at.getWorld().playSound(at, Sound.BLOCK_NOTE_BLOCK_HARP, SoundCategory.BLOCKS, 1f, pitch));
+            host.later(NOTE_TICKS[i], () -> {
+                if (host.running()) at.getWorld().playSound(at, Sound.BLOCK_NOTE_BLOCK_HARP, SoundCategory.BLOCKS, 1f, pitch);
+            });
         }
         host.later(BLESSING, () -> {
+            // A chest opened just before the end gives nothing after it (the score is told).
+            if (!host.running()) return;
             // Where it was recorded: the middle of the chest, an eighth of a block down.
             Location stand = block.getLocation().add(0.5, -0.125, 0.5);
             label = stand.getWorld().spawn(stand, ArmorStand.class, s -> {

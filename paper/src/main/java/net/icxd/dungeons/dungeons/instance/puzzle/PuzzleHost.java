@@ -15,7 +15,13 @@ public interface PuzzleHost {
     /** A chat line (with {@code &} colour codes) to everyone in the run. */
     void tell(String message);
 
-    /** Runs a task later, unless the run is over by then. */
+    /**
+     * Whether the run is still on. Once it's over (the score is told) the puzzles do nothing more:
+     * no clicks, shots or moves, and nothing solved or failed.
+     */
+    boolean running();
+
+    /** Runs a task later, unless the run has closed by then. */
     void later(long ticks, Runnable task);
 
     /** A puzzle room was solved: it's done on the map (and counts as a cleared room). */

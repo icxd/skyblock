@@ -103,14 +103,14 @@ abstract class Puzzle {
     }
 
     void solve(long tabDelay) {
-        if (isOver()) return;
+        if (isOver() || !host.running()) return;
         state = PuzzleTab.State.SOLVED;
         host.solved(room);
         host.later(tabDelay, () -> shown = PuzzleTab.State.SOLVED);
     }
 
     void fail(Player by, long tabDelay) {
-        if (isOver()) return;
+        if (isOver() || !host.running()) return;
         state = PuzzleTab.State.FAILED;
         failedBy = by.getName();
         host.failed(room);

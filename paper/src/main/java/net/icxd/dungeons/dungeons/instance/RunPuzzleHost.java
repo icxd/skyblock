@@ -54,6 +54,11 @@ final class RunPuzzleHost implements PuzzleHost {
     }
 
     @Override
+    public boolean running() {
+        return run.phase() == DungeonRun.Phase.RUNNING;
+    }
+
+    @Override
     public void later(long ticks, Runnable task) {
         run.later(ticks, task);
     }

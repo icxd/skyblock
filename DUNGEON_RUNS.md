@@ -218,7 +218,8 @@ each room comes from `rooms/_puzzles/<room>.json` in the private data, in the ro
 a puzzle without its file shows in the tab list but can't be done. The tab list's Puzzles lines go
 " ???: [✦]", then the name half a second after someone walks in, then a green tick or a red cross
 with who failed it; a solved puzzle is a cleared room with its tick on the map, a failed one gets a
-red cross and isn't. Every puzzle not solved costs 10 points of skill.
+red cross and isn't. Every puzzle not solved costs 10 points of skill. Once the run is over the
+puzzles stop: their levers, buttons and chests do nothing, and the Tic Tac Toe AI doesn't answer.
 
 - **Tic Tac Toe**: nine stone buttons. The AI (X) takes the middle the moment someone walks in; a
   click on a button puts an O there (the button goes and an item frame with the O map hangs in its
