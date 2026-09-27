@@ -88,11 +88,11 @@ final class TicTacToePuzzle extends Puzzle {
         if (result == TicTacToeGame.Result.PLAYING || last == null) return false;
         if (result == TicTacToeGame.Result.AI_WON) {
             host.tell("&c&lPUZZLE FAIL! " + named(last) + " &elost Tic Tac Toe! &4Y&ci&6k&ee&as&2!");
-            fail(last, PuzzleTab.FAILED);
+            fail(last, PuzzleTab.AFTER_LINE);
         } else {
             // A tie (a win can't happen against this AI, but would count too).
             host.tell("&a&lPUZZLE SOLVED! " + named(last) + " &etied Tic Tac Toe! &4G&co&6o&ed&a &2j&bo&3b&5!");
-            solve(PuzzleTab.FAILED);
+            solve(PuzzleTab.AFTER_LINE);
             // How the blessing comes for Tic Tac Toe is UNKNOWN (never seen); the wiki only says a
             // solved puzzle gives the team a Tier V one, so it's given straight away.
             host.blessing(last, randomBlessing(), BLESSING_LEVEL);

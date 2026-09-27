@@ -116,12 +116,12 @@ final class ThreeWeirdosPuzzle extends Puzzle {
             if (weirdo.reward()) {
                 host.tell("&a&lPUZZLE SOLVED! " + named(player) + " &ewasn't fooled by &c" + weirdo.name() + "&e! &4G&co&6o&ed&a &2j&bo&3b&5!");
                 chest.open(host, player, randomBlessing(), BLESSING_LEVEL);
-                solve(PuzzleTab.SOLVED);
+                solve(PuzzleTab.AFTER_CHEST);
             } else {
                 // Never recorded: worded like Tic Tac Toe's fail and the solve line (the RustClear
                 // recreation has the same). UNVERIFIED.
                 host.tell("&c&lPUZZLE FAIL! " + named(player) + " &ewas fooled by &c" + weirdo.name() + "&e! &4Y&ci&6k&ee&as&2!");
-                fail(player, PuzzleTab.FAILED);
+                fail(player, PuzzleTab.AFTER_LINE);
             }
             return true;
         }

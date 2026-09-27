@@ -1,8 +1,10 @@
 package net.icxd.dungeons.dungeons.instance.puzzle;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Material;
@@ -25,7 +27,7 @@ public final class RunPuzzles {
             "three_weirdos", "Three Weirdos",
             "creeper_beams", "Creeper Beams",
             "teleport_maze", "Teleport Maze",
-            "blaze", "Higher Or Lower",
+            "blaze", "Higher or Lower",
             "boulder", "Boulder",
             "ice_path", "Ice Path",
             "ice_fill", "Ice Fill",
@@ -37,6 +39,8 @@ public final class RunPuzzles {
 
     private final PuzzleHost host;
     private final List<Puzzle> puzzles = new ArrayList<>();
+    /** Puzzles that threw, so each is logged once. */
+    private final Set<Puzzle> broken = new HashSet<>();
 
     public RunPuzzles(PuzzleHost host, List<Room> rooms, PuzzleData data) {
         this.host = host;
@@ -70,15 +74,20 @@ public final class RunPuzzles {
     public void tick(List<Player> players) {
         for (Puzzle puzzle : puzzles) {
             if (puzzle.frame == null) continue;
-            if (puzzle.state() == PuzzleTab.State.UNDISCOVERED) {
-                for (Player player : players) {
-                    if (puzzle.frame.contains(player.getLocation().getX(), player.getLocation().getZ())) {
-                        puzzle.discover();
-                        break;
+            // One puzzle going wrong (a room pasted oddly, say) mustn't stop the rest of the run.
+            try {
+                if (puzzle.state() == PuzzleTab.State.UNDISCOVERED) {
+                    for (Player player : players) {
+                        if (puzzle.frame.contains(player.getLocation().getX(), player.getLocation().getZ())) {
+                            puzzle.discover();
+                            break;
+                        }
                     }
                 }
+                if (puzzle.state() != PuzzleTab.State.UNDISCOVERED) puzzle.tick();
+            } catch (RuntimeException e) {
+                if (broken.add(puzzle)) host.log("The " + puzzle.name() + " puzzle broke: " + e);
             }
-            if (puzzle.state() != PuzzleTab.State.UNDISCOVERED) puzzle.tick();
         }
     }
 

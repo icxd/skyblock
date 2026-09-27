@@ -72,7 +72,7 @@ final class WaterBoardPuzzle extends Puzzle {
     boolean click(Player player, Block block, boolean right) {
         if (gates == null) return false;
         if (chest != null && chest.is(block)) {
-            if (right && chest.open(host, player, randomBlessing(), BLESSING_LEVEL)) solve(PuzzleTab.SOLVED);
+            if (right && chest.open(host, player, randomBlessing(), BLESSING_LEVEL)) solve(PuzzleTab.AFTER_CHEST);
             return true;
         }
         int lever = 0;

@@ -84,7 +84,7 @@ final class CreeperBeamsPuzzle extends Puzzle {
     @Override
     boolean click(Player player, Block block, boolean right) {
         if (chest != null && chest.is(block)) {
-            if (right && chest.open(host, player, randomBlessing(), BLESSING_LEVEL)) solve(PuzzleTab.SOLVED);
+            if (right && chest.open(host, player, randomBlessing(), BLESSING_LEVEL)) solve(PuzzleTab.AFTER_CHEST);
             return true;
         }
         int[] lantern = local(block, lanterns);

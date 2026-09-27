@@ -61,10 +61,10 @@ abstract class Puzzle {
     final void discover() {
         if (state != PuzzleTab.State.UNDISCOVERED) return;
         state = PuzzleTab.State.DISCOVERED;
-        start();
         host.later(PuzzleTab.FOUND, () -> {
             if (shown == PuzzleTab.State.UNDISCOVERED) shown = PuzzleTab.State.DISCOVERED;
         });
+        start();
     }
 
     /** Sets the room up for the puzzle. */
