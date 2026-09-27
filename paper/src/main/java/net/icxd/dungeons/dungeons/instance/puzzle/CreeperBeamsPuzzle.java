@@ -126,6 +126,10 @@ final class CreeperBeamsPuzzle extends Puzzle {
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, SoundCategory.HOSTILE, 4f, 1f);
         creeper.remove();
         creeper = null;
+        // The lantern it stood on goes with it: Skyblocker's solver only takes the room as done once
+        // that block is neither a sea lantern nor prismarine (what Hypixel leaves there is UNKNOWN).
+        int[] c = data.creeper();
+        block(c[0], c[1] - 1, c[2]).setType(Material.AIR, false);
         // The chest is walled in under the creeper's lantern in both captures; what the explosion does
         // to that is UNKNOWN, so it clears the data's box around it (the wiki: "revealing" the chest).
         if (!data.reveal().isEmpty()) {
