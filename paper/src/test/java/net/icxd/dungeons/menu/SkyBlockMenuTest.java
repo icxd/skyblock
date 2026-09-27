@@ -115,6 +115,14 @@ class SkyBlockMenuTest {
         }
     }
 
+    /** The heads' skins, as the recording's packets have them (Banana's and Lemon's menus alike). */
+    @Test
+    void heads() {
+        assertEquals("1a11a7f11bcd5784903c5201d08261c4df8379109d6e611c1cd3ededf031afed", SkyBlockMenu.icons(FRESH).get(29).texture());
+        assertEquals("3255327dd8e90afad681a19231665bea2bd06065a09d77ac1408837f9e0b242", SkyBlockMenu.icons(FRESH).get(22).texture());
+        assertEquals("35f4b40cef9e017cd4112d26b62557f8c1d5b189da2e99534222bc8cec7d9196", SkyBlockMenu.icons(FRESH).get(47).texture());
+    }
+
     @Test
     void levels() {
         assertEquals(0, SkyBlockMenu.level(99));

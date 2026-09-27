@@ -66,12 +66,9 @@ public final class SkyBlockMenu extends GUI {
     private static final List<Stat> SUMMARY = List.of(Stat.SPEED, Stat.STRENGTH, Stat.DEFENSE, Stat.CRIT_DAMAGE, Stat.CRIT_CHANCE,
             Stat.HEALTH, Stat.INTELLIGENCE);
 
-    // Head skins: not in the decoded recording, so taken from other SkyBlock remakes and mods.
-    /** Your Bags: the Accessory Bag's head (the swofty remake's menu, and Skyblocker's Accessory Bag button). */
-    static final String BAGS_HEAD = "961a918c0c49ba8d053e522cb91abc74689367b4d8aa06bfc1ba9154730985ff";
-    /** The swofty remake's SkyBlock Leveling. */
+    // Head skins, from the recording's packets (both menus have the same ones).
+    static final String BAGS_HEAD = "1a11a7f11bcd5784903c5201d08261c4df8379109d6e611c1cd3ededf031afed";
     static final String LEVELING_HEAD = "3255327dd8e90afad681a19231665bea2bd06065a09d77ac1408837f9e0b242";
-    /** The swofty remake's Fast Travel. */
     static final String FAST_TRAVEL_HEAD = "35f4b40cef9e017cd4112d26b62557f8c1d5b189da2e99534222bc8cec7d9196";
 
     /**
