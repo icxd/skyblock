@@ -2,8 +2,11 @@ package net.icxd.dungeons.item.ability;
 
 import net.icxd.dungeons.item.ability.abilities.InstantTransmission;
 import net.icxd.dungeons.item.ability.abilities.InstantlyShoots;
+import net.icxd.dungeons.item.ability.utility.UtilityAbilities;
+import net.icxd.dungeons.item.ability.weapons.WeaponAbilities;
 import net.icxd.dungeons.item.data.ItemBlock;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -14,8 +17,19 @@ import java.util.function.Predicate;
  * block) shoots, on either click.
  */
 public final class Abilities {
-    private static final Map<String, AbilityHandler> HANDLERS = Map.of("Instant Transmission", new InstantTransmission());
+    private static final Map<String, AbilityHandler> HANDLERS = new HashMap<>();
     private static final AbilityHandler SHORTBOW = new InstantlyShoots();
+
+    static {
+        register("Instant Transmission", new InstantTransmission());
+        WeaponAbilities.register(Abilities::register);
+        UtilityAbilities.register(Abilities::register);
+    }
+
+    /** What the ability with this name does, from now on; one handler per name. */
+    private static void register(String abilityName, AbilityHandler handler) {
+        if (HANDLERS.putIfAbsent(abilityName, handler) != null) throw new IllegalStateException("Two handlers for " + abilityName);
+    }
 
     private Abilities() {
     }
