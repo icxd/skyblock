@@ -19,10 +19,10 @@ import java.util.function.DoubleFunction;
 /**
  * Tiered bonuses, whose numbers grow with how many pieces are worn (the wiki's Tiered Bonus Values;
  * items' text has the first tier's): Arachne's Faithful, Berserk and Long Tuba's stats, and the Kuudra
- * sets' stacks (Crimson's Dominus and Terror's Hydra Strike: their stats; Aurora's Arcane Energy,
- * Fervor's and Hollow's Spirit only in lore, what they do waits for magic damage, aggro and the Hollow
- * Wand). Tiered bonuses that are only text here, but whose least pieces the wiki gives, are {@link
- * LoreOnly} so their headers turn gold where they should.
+ * sets' stacks (Crimson's Dominus and Terror's Hydra Strike: their stats; Fervor's, kept for the Fervor
+ * Chestplate's Ground Pound; Aurora's Arcane Energy and Hollow's Spirit only in lore, what they do
+ * waits for abilities' magic damage and the Hollow Wand). Tiered bonuses that are only text here, but
+ * whose least pieces the wiki gives, are {@link LoreOnly} so their headers turn gold where they should.
  */
 final class TieredSets {
     /** Kuudra armor's tiers, lowest first, by their items' prefix ("" for the basic one). */
@@ -37,7 +37,7 @@ final class TieredSets {
     static List<Bonus> all() {
         return List.of(new ArachnesFaithful(), new Berserk(), new LongTuba(), new Dominus(), new HydraStrike(),
                 new LoreOnly("Arcane Energy", 2, new Grows("Every &a", new Tiers(2, 1, 0.7, 0.5))),
-                new LoreOnly("Fervor", 2, new Grows("Every &a", STACK_EVERY), new Grows("after ", STACK_LASTS)),
+                new Fervor(),
                 new LoreOnly("Spirit", 2, new Grows("Every &a", new Tiers(2, 3, 2, 1))),
                 // The least pieces of the wiki's tiered bonuses that do nothing here yet (its tiered_bonus_required_pieces).
                 new LoreOnly("Peace Treaty", 2), new LoreOnly("Fireproof", 2), new LoreOnly("Lord's Blessing", 4),
@@ -268,6 +268,64 @@ final class TieredSets {
         @Override
         public void forget(UUID player) {
             stacks.remove(player);
+        }
+    }
+
+    /**
+     * Fervor Armor's Fervor (2+ pieces): "attacking a mob grants 1 stack", at most every 1.5s (1s with 3
+     * pieces, 0.5s with 4), lost one at a time after 4s (7s, 10s) without gaining one. The stacks do
+     * nothing by themselves: the Fervor Chestplate's Ground Pound, an ability ("At 10 stacks, sneak to
+     * reset your stacks and perform a Ground Pound"), spends them through {@link SetBonuses#fervor} and
+     * {@link SetBonuses#spendFervor}. Arrows' hits count as attacks, abilities' damage doesn't come here
+     * (UNKNOWN both).
+     */
+    static final class Fervor extends Tiered {
+        private final Map<UUID, Stacks> stacks = new HashMap<>();
+
+        Fervor() {
+            super(2);
+        }
+
+        @Override
+        public String name() {
+            return "Fervor";
+        }
+
+        /** Their stacks at {@code now}, with this many pieces on. */
+        int stacks(UUID player, long now, int pieces) {
+            Stacks s = stacks.get(player);
+            return s == null ? 0 : s.at(now, STACK_LASTS.at(pieces));
+        }
+
+        /** They attacked a mob at {@code now}: a stack, if the last was long enough ago. */
+        void attacked(UUID player, long now, int pieces) {
+            stacks.computeIfAbsent(player, id -> new Stacks()).hit(now, STACK_EVERY.at(pieces), STACK_LASTS.at(pieces));
+        }
+
+        /** Their stacks are spent. */
+        void spend(UUID player) {
+            stacks.remove(player);
+        }
+
+        @Override
+        public Combat.HitBuff hit(Player player, Active active, boolean ranged, Damage.Target target) {
+            attacked(player.getUniqueId(), System.currentTimeMillis(), active.count());
+            return null;
+        }
+
+        @Override
+        public List<String> text(List<String> text, int count) {
+            return STACK_LASTS.text(STACK_EVERY.text(text, "Every &a", count, needs()), "after ", count, needs());
+        }
+
+        @Override
+        public void ended(Player player) {
+            spend(player.getUniqueId());
+        }
+
+        @Override
+        public void forget(UUID player) {
+            spend(player);
         }
     }
 

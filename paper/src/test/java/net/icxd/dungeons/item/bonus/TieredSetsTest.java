@@ -5,12 +5,13 @@ import net.icxd.dungeons.stats.Stats;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static net.icxd.dungeons.item.bonus.TestPieces.item;
 import static net.icxd.dungeons.item.bonus.TestPieces.worn;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Tiered sets: Hydra Strike's damage, the Kuudra stacks, and the numbers their lore swaps. */
+/** Tiered sets: Hydra Strike's damage, the Kuudra stacks (Fervor's kept for its chestplate), and the numbers their lore swaps. */
 class TieredSetsTest {
     private static final double EPSILON = 1e-9;
 
@@ -38,6 +39,25 @@ class TieredSetsTest {
         assertEquals(0, stacks.at(9_500, 4));
         for (int i = 0; i < 20; i++) stacks.hit(20_000 + i * 2_000L, 1.5, 4);
         assertEquals(10, stacks.at(58_000, 4));
+    }
+
+    /** Fervor's stacks, each player's: with 4 pieces one at most every 0.5s, one lost after 10s without one; spent all at once. */
+    @Test
+    void fervor() {
+        TieredSets.Fervor fervor = new TieredSets.Fervor();
+        UUID id = new UUID(0, 1);
+        fervor.attacked(id, 0, 4);
+        fervor.attacked(id, 400, 4);
+        assertEquals(1, fervor.stacks(id, 400, 4));
+        fervor.attacked(id, 500, 4);
+        assertEquals(2, fervor.stacks(id, 500, 4));
+        assertEquals(1, fervor.stacks(id, 10_500, 4));
+        assertEquals(0, fervor.stacks(new UUID(0, 2), 500, 4));
+        fervor.spend(id);
+        assertEquals(0, fervor.stacks(id, 10_500, 4));
+        List<String> text = List.of("&7Every &a1.5s&7, attacking a test grants a stack.", "&8Lose 1 stack after 4s of not gaining one.");
+        assertEquals(List.of("&7Every &a0.5s&7, attacking a test grants a stack.", "&8Lose 1 stack after 10s of not gaining one."),
+                fervor.text(text, 4));
     }
 
     /** The numbers tiered bonuses swap in their lore: Dominus's, Hydra Strike's (to one decimal), Berserk's, Long Tuba's, Arachne's. */

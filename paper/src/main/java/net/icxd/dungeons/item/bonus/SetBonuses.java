@@ -225,6 +225,23 @@ public final class SetBonuses implements Listener {
         return false;
     }
 
+    /**
+     * Their Fervor stacks now (Fervor Armor's tiered bonus; 0 without 2 of its pieces on), for the Fervor
+     * Chestplate's Ground Pound: "At 10 stacks, sneak to reset your stacks and perform a Ground Pound",
+     * which then calls {@link #spendFervor}.
+     */
+    public static int fervor(Player player) {
+        for (Bonus.Active a : active(player)) {
+            if (a.bonus() instanceof TieredSets.Fervor fervor) return fervor.stacks(player.getUniqueId(), System.currentTimeMillis(), a.count());
+        }
+        return 0;
+    }
+
+    /** Their Fervor stacks are spent (reset to none). */
+    public static void spendFervor(Player player) {
+        for (Bonus bonus : ALL) if (bonus instanceof TieredSets.Fervor fervor) fervor.spend(player.getUniqueId());
+    }
+
     private static Now now(Player player) {
         int tick = Bukkit.getCurrentTick();
         Now now = NOW.get(player.getUniqueId());
