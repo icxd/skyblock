@@ -78,7 +78,8 @@ public final class RoomLibrary {
 
         List<Path> jsons;
         try (Stream<Path> files = Files.walk(roomDir, FileVisitOption.FOLLOW_LINKS)) {
-            jsons = files.filter(p -> p.toString().endsWith(".json")).sorted().collect(Collectors.toList());
+            jsons = files.filter(p -> p.toString().endsWith(".json") && !isRoomData(roomDir.relativize(p))).sorted()
+                    .collect(Collectors.toList());
         }
         Map<String, List<RoomCapture>> byTemplate = new TreeMap<>();
         for (Path json : jsons) {
@@ -110,6 +111,17 @@ public final class RoomLibrary {
             problems.add("No capture has a normal door in it");
         }
         return new RoomLibrary(rooms, List.copyOf(doorways), List.copyOf(templates), List.copyOf(problems));
+    }
+
+    /**
+     * A file in a folder named with a leading underscore ({@code rooms/_mobs/crypt.json}): data about the
+     * rooms kept next to their captures, not a capture.
+     */
+    static boolean isRoomData(Path relative) {
+        for (Path part : relative) {
+            if (part.toString().startsWith("_")) return true;
+        }
+        return false;
     }
 
     /** The capture reaches from the bottom to the top of the doorways. */

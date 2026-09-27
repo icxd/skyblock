@@ -163,6 +163,22 @@ class PastePlanTest {
     for (RoomCapture c : library.captures("mines")) assertEquals(0, c.frameTurns());
   }
 
+  /** rooms/_mobs/ and the like hold data about the rooms, not captures: no problems for them. */
+  @Test
+  void underscoreFoldersArentCaptures(@TempDir Path other) throws IOException {
+    Path dir = Files.createDirectories(other.resolve("rooms/hall"));
+    Files.writeString(dir.resolve("hall_aaaa.json"), "{\"id\":\"hall\",\"type\":\"NORMAL\",\"shape\":\"1x1\","
+        + "\"originY\":66,\"size\":[31,40,31],\"cells\":[[0,0]],\"doors\":[{\"cell\":[0,0],\"side\":\"EAST\",\"type\":\"NORMAL\"}]}");
+    Files.createFile(dir.resolve("hall_aaaa.schem"));
+    Path data = Files.createDirectories(other.resolve("rooms/_mobs"));
+    Files.writeString(data.resolve("hall.json"), "{\"room\":\"hall\",\"mobs\":[]}");
+    RoomLibrary lib = RoomLibrary.load(other);
+    assertEquals(1, lib.captures("hall").size());
+    assertFalse(lib.problems().stream().anyMatch(p -> p.contains("_mobs")), lib.problems().toString());
+    assertTrue(RoomLibrary.isRoomData(Path.of("_secrets", "hall.json")));
+    assertFalse(RoomLibrary.isRoomData(Path.of("hall", "hall_aaaa.json")));
+  }
+
   @Test
   void capturesWithOtherDoorwaysAreDropped(@TempDir Path other) throws IOException {
     Room hall = HypixelRooms.ALL.stream().filter(r -> r.getId().equals("hall")).findFirst().orElseThrow();
