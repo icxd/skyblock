@@ -111,9 +111,12 @@ final class Undead implements DungeonMobs.Mob {
         return dead;
     }
 
-    /** "༕ Leech 20,000❤": green down to half health, then yellow. */
+    /**
+     * "༕ Leech 20,000❤": green while it's alive and yellow at 0, as the room mobs' (every recorded tag
+     * with health left is green; where Hypixel turns it yellow is UNKNOWN).
+     */
     private void updateTag() {
-        String number = (health >= maxHealth / 2 ? "&a" : "&e") + Utils.getFormattedNumber((int) Math.ceil(health));
+        String number = (health > 0 ? "&a" : "&e") + Utils.getFormattedNumber((int) Math.ceil(health));
         tag.customName(Text.line("&2" + ICON + " &6" + type.displayName + " " + number + "&c❤"));
     }
 
