@@ -90,6 +90,13 @@ class UtilityNumbersTest {
         assertEquals(0, TimedBuff.healthShare(plain("&7Grants &f+100✦ Speed &7for &a30s&7.")), 1e-9);
     }
 
+    /** "Cooldown is halved on deactivation". */
+    @Test
+    void veilCooldown() {
+        assertEquals(10_000, CreeperVeil.cooldownAfter(10_000, false));
+        assertEquals(5_000, CreeperVeil.cooldownAfter(10_000, true));
+    }
+
     /** Buffs on their hits: Soulward's halving starts only once its 5 seconds are over, and lasts 2. */
     @Test
     void dealtFactors() {

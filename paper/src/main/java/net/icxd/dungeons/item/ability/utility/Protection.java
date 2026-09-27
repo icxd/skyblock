@@ -10,6 +10,7 @@ import org.bukkit.entity.Projectile;
 
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.session.Vitality;
 
 /**
  * What abilities do to the hits players take and deal, each for a while, by what gave it: damage
@@ -31,11 +32,13 @@ final class Protection {
     private Protection() {
     }
 
-    /** On every hit's way to a player's health: immunity, then taunted mobs' less, then the saves from death. */
+    /** On every hit's way to a player's health: immunity, then taunted mobs' less, then the veil, then the saves from death. */
     static void register() {
         PlayerDamage.addShield((player, taken, by) -> immune(player) ? 0 : taken * tauntedFactor(player, by));
+        PlayerDamage.addShield(CreeperVeil::absorb);
         PlayerDamage.addShield(LastStand::left);
         Combat.addMultiplier((player, ranged) -> dealtFactor(player.getUniqueId(), System.currentTimeMillis()));
+        Vitality.addRegenPause(CreeperVeil::isUp);
     }
 
     static void immunity(Player player, String source, long millis) {
