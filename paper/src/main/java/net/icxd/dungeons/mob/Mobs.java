@@ -22,6 +22,7 @@ import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -152,11 +153,14 @@ public final class Mobs implements Listener {
             equipment.setChestplate(type.getChestplate());
             equipment.setLeggings(type.getLeggings());
             equipment.setBoots(type.getBoots());
-            equipment.setItemInMainHandDropChance(0);
-            equipment.setHelmetDropChance(0);
-            equipment.setChestplateDropChance(0);
-            equipment.setLeggingsDropChance(0);
-            equipment.setBootsDropChance(0);
+            // Only a vanilla mob has drop chances (a Mannequin throws); onDeath clears every SkyBlock mob's drops anyway.
+            if (entity instanceof Mob) {
+                equipment.setItemInMainHandDropChance(0);
+                equipment.setHelmetDropChance(0);
+                equipment.setChestplateDropChance(0);
+                equipment.setLeggingsDropChance(0);
+                equipment.setBootsDropChance(0);
+            }
         }
         Live live = new Live(type, entity);
         LIVE.put(entity.getUniqueId(), live);
