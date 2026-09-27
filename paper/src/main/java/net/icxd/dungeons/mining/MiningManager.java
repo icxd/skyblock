@@ -24,8 +24,9 @@ public class MiningManager {
         return true;
     }
 
-    public static void sendBlockDamage(Player player, Location location) {
-        player.sendBlockDamage(location, stageToProgress(getBlockBreakProgress(location)), 0);
+    /** Shows crack {@code stage} (0-9) on a block to the player mining it. */
+    public static void sendBlockDamage(Player player, Location location, int stage) {
+        player.sendBlockDamage(location, stageToProgress(stage), 0);
     }
 
     /** Shows crack {@code stage} (0-9, anything else clears it) on a block to everyone online. */
@@ -38,6 +39,7 @@ public class MiningManager {
         return stage < 0 || stage > 9 ? 0 : Math.min(1f, (stage + 0.5f) / 9f);
     }
 
+    /** The crack stage a block's next swing is due to reach: 0 for one no one has started on. */
     public static int getBlockBreakProgress(Location location) {
         return BLOCK_BREAK_PROGRESS.getOrDefault(location, 0);
     }
