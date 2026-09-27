@@ -66,11 +66,16 @@ public class ScoreboardRunnable implements Runnable {
         String clock = " &7" + time.clock();
         RunManager runs = Dungeons.getRunManager();
         DungeonRun run = runs == null ? null : runs.runOf(player);
-        // Indoors, without the sun or moon.
-        if (run != null) return run.sidebar(player, dateLine, season, clock);
+        UUID id = player.getUniqueId();
+        if (run != null) {
+            // The run's sidebar has no purse, and what they earn in it isn't a change after it: the
+            // first purse after a run shows none (research coins.md 1.2, R1 04:37.0, R2 04:04.6).
+            forget(id);
+            // Indoors, without the sun or moon.
+            return run.sidebar(player, dateLine, season, clock);
+        }
         clock += time.isDay() ? " &e\u2600" : " &b\u263d";
 
-        UUID id = player.getUniqueId();
         double coinsNow = user.getCoins();
         int bitsNow = user.getBits();
         String coins = purseLine(coinsNow, coinChanges.computeIfAbsent(id, i -> new SidebarChange()).update(coinsNow));
