@@ -39,11 +39,13 @@ public record MobDrop(List<String> itemIds, MobDropType type, double chance, int
     /**
      * The chance, in percent, that a drop this likely (before Magic Find) drops for a killer with this
      * Magic Find and Pet Luck: times 1 + Magic Find / 100, and for a pet times 1 + (Magic Find + Pet Luck)
-     * / 100 (the wiki's Magic Find and Pet Luck), Magic Find at most 900. Drops of 5% and more stay as they
-     * are: the wiki says "most", which drops are the exceptions it doesn't say, so it's all of them.
+     * / 100 (the wiki's Magic Find and Pet Luck), Magic Find at most 900. Other drops of 5% and more stay
+     * as they are: the wiki says "most", which drops are the exceptions it doesn't say, so it's all of
+     * them. Pets aren't among them: Pet Luck "increases the chance of all pets dropping from enemies" by
+     * that formula (the wiki's Pet Luck), and the 5% rule is only on the Magic Find page.
      */
     public static double withMagicFind(double base, double magicFind, double petLuck, boolean pet) {
-        if (base >= MAGIC_FIND_BELOW) return base;
+        if (!pet && base >= MAGIC_FIND_BELOW) return base;
         return base * (1 + (magicFind(magicFind) + (pet ? Math.max(0, petLuck) : 0)) / 100);
     }
 

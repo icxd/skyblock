@@ -28,4 +28,12 @@ class MobDropTest {
         assertEquals(0.2, MobDrop.withMagicFind(0.1, 100, 100, false), 1e-12);
         assertEquals(0.15, MobDrop.withMagicFind(0.1, 0, 50, true), 1e-12);
     }
+
+    /** "All pets": a pet at 5% or more still gets Magic Find and Pet Luck, where another drop that likely doesn't. */
+    @Test
+    void likelyPet() {
+        assertEquals(15, MobDrop.withMagicFind(5, 100, 100, true), 1e-12);
+        assertEquals(20, MobDrop.withMagicFind(10, 100, 0, true), 1e-12);
+        assertEquals(5, MobDrop.withMagicFind(5, 100, 100, false), 1e-12);
+    }
 }
