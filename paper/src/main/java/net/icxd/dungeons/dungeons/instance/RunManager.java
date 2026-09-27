@@ -69,6 +69,8 @@ import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
 import net.icxd.dungeons.dungeons.generation.DungeonGenerator;
+import net.icxd.dungeons.dungeons.instance.puzzle.PuzzleData;
+import net.icxd.dungeons.dungeons.instance.puzzle.PuzzleEvents;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.dungeons.paste.RoomLibrary;
 import net.icxd.dungeons.dungeons.paste.WorldEditPaster;
@@ -140,6 +142,8 @@ public final class RunManager {
     private CompletableFuture<RoomLibrary> library;
     /** Where the rooms' secrets are (see {@link SecretData}); none until it's read. */
     private CompletableFuture<SecretData> secretData = CompletableFuture.completedFuture(SecretData.empty());
+    /** Where things are in the puzzle rooms (none until it's read). */
+    private volatile PuzzleData puzzleData = PuzzleData.NONE;
     /** Everything a floor can take up, and the height of the waiting platform; known once the rooms are loaded. */
     private PastePlan.Box largest;
     private int waitingY;
@@ -181,8 +185,10 @@ public final class RunManager {
             waitingY = largest.max().y() + WAITING_ABOVE;
             prepareSpare();
         }));
+        loadPuzzles(folder.resolve("rooms"));
         Bukkit.getPluginManager().registerEvents(new Events(), plugin);
         Bukkit.getPluginManager().registerEvents(new RoomEvents(), plugin);
+        PuzzleEvents.register(plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20, 20);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickRuns, 1, 1);
         Bukkit.getPluginManager().registerEvents(new SecretEvents(this), plugin);
@@ -197,6 +203,20 @@ public final class RunManager {
         data.problems().forEach(p -> log.warning("Room mobs: " + p));
         log.info("Room mobs: " + data.rooms().size() + " rooms with data");
         RoomMobs.setData(data);
+    }
+
+    /** The puzzle rooms' data, off the main thread (it's small). */
+    private void loadPuzzles(Path rooms) {
+        CompletableFuture.runAsync(() -> {
+            List<String> problems = new ArrayList<>();
+            PuzzleData data = PuzzleData.load(rooms, problems);
+            problems.forEach(p -> log.warning("Puzzles: " + p));
+            puzzleData = data;
+        });
+    }
+
+    PuzzleData puzzleData() {
+        return puzzleData;
     }
 
     /** Ends every run; players still in one go back to the main world. */

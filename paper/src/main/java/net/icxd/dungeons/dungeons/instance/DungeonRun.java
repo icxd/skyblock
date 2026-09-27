@@ -32,6 +32,7 @@ import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
+import net.icxd.dungeons.dungeons.instance.puzzle.RunPuzzles;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
@@ -133,6 +134,7 @@ public final class DungeonRun implements ScoreCounts {
     private final RunMap runMap;
     private final RoomMobs roomMobs;
     private final DisplayCases cases;
+    private final RunPuzzles puzzleRooms;
     private Watcher watcher;
     /** From the start ({@link #start}); the blessings once one is found. */
     private RunSecrets secrets;
@@ -183,6 +185,7 @@ public final class DungeonRun implements ScoreCounts {
         this.cases = blood == null ? null : DisplayCases.place(world, layout.center(world, RunLayout.firstCell(blood)));
         PlacedRoom start = layout.roomAt(entrance);
         if (start != null) runMap.find(start);
+        this.puzzleRooms = RunPuzzleHost.puzzles(this, plugin, layout, manager.puzzleData());
     }
 
     /** Minecraft's yaw for looking along (dx, dz): 0 is south (+z), 90 west. */
@@ -295,6 +298,7 @@ public final class DungeonRun implements ScoreCounts {
         List<Player> here = players();
         doors.tick(here);
         if (secrets != null) secrets.tick(here);
+        puzzleRooms.tick(here);
         if (ticks % FIND_ROOMS_EVERY == 0) {
             for (Player player : here) {
                 PlacedRoom room = layout.roomAt(player.getLocation());
@@ -335,6 +339,18 @@ public final class DungeonRun implements ScoreCounts {
         if (blood != null && watcher == null) watcher = new Watcher(this, layout, blood, cases);
     }
 
+    // Puzzles
+
+    /** Puzzles failed, not solved yet, or never found (each costs 10 of the score). */
+    public int puzzlesNotDone() {
+        return puzzleRooms.notDone();
+    }
+
+    /** A puzzle room failed: its red cross on the map (it doesn't count as cleared). */
+    void puzzleFailed(PlacedRoom room) {
+        runMap.fail(room);
+    }
+
     /**
      * "You have proven yourself. You may pass.": the Blood Room is done, though Hypixel only counts it
      * after the end-of-run summary (see {@link #end}).
@@ -345,7 +361,7 @@ public final class DungeonRun implements ScoreCounts {
 
     // Room mobs (RoomMobs): clearing rooms, crypts, room loot
 
-    /** A room's starred mobs are all dead: it's done (its tick on the map, the sidebar's Cleared), and a RoomClearedEvent. */
+    /** A room is done (its starred mobs are all dead, or its puzzle solved): its tick on the map, the sidebar's Cleared, and a RoomClearedEvent. */
     void clearedRoom(PlacedRoom room) {
         runMap.complete(room);
         Bukkit.getPluginManager().callEvent(new RoomClearedEvent(this, room));
@@ -673,6 +689,7 @@ public final class DungeonRun implements ScoreCounts {
         if (watcher != null) watcher.dispose();
         if (secrets != null) secrets.dispose();
         if (cases != null) cases.dispose();
+        puzzleRooms.dispose();
         for (Player player : players()) takeRunItems(player);
         ScoreCard.blank(map);
     }
@@ -818,8 +835,7 @@ public final class DungeonRun implements ScoreCounts {
                     " Time: &6" + (started ? RunText.elapsed(now - startedAt) : "Soon!"),
                     "",
                     "&b&lPuzzles: &f(" + puzzles + ")");
-            // Unknown until someone finds them.
-            for (int i = 0; i < puzzles; i++) stats.add(new TabEntry(" ???: &7[&6&l✦&7]", null));
+            for (String row : puzzleRooms.tabRows()) stats.add(new TabEntry(row, null));
             return stats;
         });
 

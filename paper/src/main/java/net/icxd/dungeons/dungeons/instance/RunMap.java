@@ -51,6 +51,9 @@ final class RunMap extends MapRenderer {
     // Marks, as Hypixel draws them in an 18 pixel cell: {row, first column, last column}.
     private static final int[][] QUESTION = {{6, 7, 9}, {7, 6, 6}, {7, 10, 10}, {8, 10, 10}, {9, 9, 9}, {10, 8, 8}, {11, 8, 8}, {13, 8, 8}, {14, 8, 8}};
     private static final int[][] TICK = {{5, 12, 13}, {6, 11, 13}, {7, 10, 12}, {8, 9, 11}, {9, 5, 6}, {9, 8, 10}, {10, 5, 9}, {11, 5, 8}, {12, 6, 8}, {13, 6, 7}};
+    /** A failed puzzle's red cross (2026_09_26_08_23_40 at 04:10, Tic Tac Toe). */
+    private static final int[][] CROSS = {{3, 13, 13}, {4, 6, 7}, {4, 12, 14}, {5, 6, 8}, {5, 11, 13}, {6, 6, 8}, {6, 10, 12}, {7, 7, 12},
+            {8, 7, 11}, {9, 8, 10}, {10, 7, 11}, {11, 6, 12}, {12, 5, 8}, {12, 10, 13}, {13, 5, 7}, {13, 10, 12}, {14, 6, 6}};
 
     private final RunLayout layout;
     private final DungeonRun run;
@@ -59,6 +62,7 @@ final class RunMap extends MapRenderer {
     private final int startZ;
     private final Set<Integer> found = new HashSet<>();
     private final Set<Integer> ticked = new HashSet<>();
+    private final Set<Integer> failed = new HashSet<>();
     private final byte[] pixels = new byte[128 * 128];
     private int version;
     private final Map<Player, Integer> drawn = new WeakHashMap<>();
@@ -93,6 +97,12 @@ final class RunMap extends MapRenderer {
     void complete(PlacedRoom r) {
         found.add(r.id());
         if (ticked.add(r.id())) redraw();
+    }
+
+    /** A puzzle room was failed: a red cross instead of a tick, and it isn't counted as completed. */
+    void fail(PlacedRoom r) {
+        found.add(r.id());
+        if (!ticked.contains(r.id()) && failed.add(r.id())) redraw();
     }
 
     int foundRooms() {
@@ -168,6 +178,7 @@ final class RunMap extends MapRenderer {
             drawDoor(door, doorColor(door, parent && child, into));
         }
         for (int id : ticked) mark(RunLayout.firstCell(layout.room(id)), TICK, tickColor(layout.room(id)));
+        for (int id : failed) mark(RunLayout.firstCell(layout.room(id)), CROSS, BLOOD);
         version++;
     }
 
