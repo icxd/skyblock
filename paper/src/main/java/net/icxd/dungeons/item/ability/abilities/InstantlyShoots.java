@@ -12,10 +12,15 @@ import org.bukkit.entity.Player;
 import java.util.Locale;
 import java.util.Map;
 
-/** A shortbow's shot ("Shortbow: Instantly shoots!"): its arrows at once, fanned out 10° apart. */
+/**
+ * A shortbow's shot ("Shortbow: Instantly shoots!"): its arrows at once. With more than one (the Terminator),
+ * the middle arrow has a bow's inaccuracy and the others go out exactly 5° to either side of the crosshair
+ * (the wiki's Terminator page, in a note its editors hid as not needed).
+ */
 public class InstantlyShoots implements AbilityHandler {
     /** How many arrows a shot is, by item id (upper case, as the registry has them); 1 for the rest. */
     private static final Map<String, Integer> ARROWS = Map.of("TERMINATOR", 3);
+    private static final float SIDE_DEGREES = 5;
 
     public static int arrows(SkyBlockItem item) {
         return ARROWS.getOrDefault(item.id().toUpperCase(Locale.ROOT), 1);
@@ -27,11 +32,18 @@ public class InstantlyShoots implements AbilityHandler {
         Location location = player.getEyeLocation();
         for (int i = 0; i < arrows; i++) {
             Location l = location.clone();
-            l.setYaw(location.getYaw() + (i * 10) - (arrows * 5) + 5);
-            Arrow a = player.getWorld().spawnArrow(l.clone().add(l.getDirection().multiply(0.7)), l.getDirection(), 5, 1);
+            float offset = sideAngle(i, arrows);
+            l.setYaw(location.getYaw() + offset);
+            // A vanilla bow's inaccuracy is 1; the side arrows have none.
+            Arrow a = player.getWorld().spawnArrow(l.clone().add(l.getDirection().multiply(0.7)), l.getDirection(), 5, offset == 0 ? 1 : 0);
             a.setShooter(player);
             // A shortbow's shot is always a full draw.
             Shots.record(a, player, tag, true);
         }
+    }
+
+    /** How far arrow {@code i} of {@code arrows} goes from the crosshair, in degrees of yaw: 0 for the middle, 5 apart. */
+    static float sideAngle(int i, int arrows) {
+        return (i - (arrows - 1) / 2f) * SIDE_DEGREES;
     }
 }

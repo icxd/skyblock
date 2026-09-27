@@ -5,6 +5,7 @@ import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.skill.Skills;
@@ -41,7 +42,8 @@ public final class PlayerStats {
         Stats stats = Stats.base();
         PlayerInventory inventory = player.getInventory();
         ItemStack hand = inventory.getItemInMainHand();
-        if (countsInHand(hand)) stats.add(ItemStats.of(hand, player));
+        SkyBlockItem held = skyBlockItem(hand);
+        if (held == null || held.statsWhenHeld()) stats.add(ItemStats.of(hand, player));
         for (ItemStack armor : inventory.getArmorContents()) stats.add(ItemStats.of(armor, player));
         User user = User.ifLoaded(player.getUniqueId());
         if (user != null) {
@@ -54,13 +56,15 @@ public final class PlayerStats {
         for (BiConsumer<Player, Stats> modifier : MODIFIERS) modifier.accept(player, stats);
         DungeonRun run = RunManager.of(player);
         if (run != null) run.applyBlessings(stats);
+        // Last: the Terminator divides Crit Chance, whatever it came from.
+        if (held != null) ItemBehaviours.of(held).whileHeld(stats);
         return stats;
     }
 
-    private static boolean countsInHand(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return true;
+    /** The SkyBlock item this stack is; null for none (nothing, or a vanilla item). */
+    private static SkyBlockItem skyBlockItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return null;
         NBTTagCompound tag = ItemNBT.read(stack);
-        SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
-        return item == null || item.statsWhenHeld();
+        return tag == null ? null : ItemRegistry.get(tag.getString("id"));
     }
 }

@@ -3,6 +3,7 @@ package net.icxd.dungeons.item.behaviour;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.stats.Stats;
 
 import java.util.List;
 
@@ -26,5 +27,9 @@ public interface ItemBehaviour {
     /** Its abilities and bonuses, with this data: {@code blocks} (the item's), or a changed copy. */
     default List<ItemBlock> blocks(SkyBlockItem item, NBTTagCompound tag, List<ItemBlock> blocks) {
         return blocks;
+    }
+
+    /** What holding it does to the holder's finished stats (everything else already in them); nothing unless it says. */
+    default void whileHeld(Stats stats) {
     }
 }

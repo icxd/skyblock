@@ -47,8 +47,12 @@ public final class Shots implements Listener {
 
     private static final Map<UUID, Shot> SHOTS = new HashMap<>();
 
-    /** A player shot this projectile with this bow (its SkyBlock data; null for none); fully drawn or not. */
+    /**
+     * A player shot this projectile with this bow (its SkyBlock data; null for none); fully drawn or not. An
+     * arrow can't be picked up once it lands, as a Terminator's can't on Hypixel (the owner).
+     */
     public static void record(Projectile projectile, Player shooter, NBTTagCompound bow, boolean fullyDrawn) {
+        if (projectile instanceof AbstractArrow arrow) arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
         Damage.Attacker attacker = Combat.attacker(shooter, bow, true, 0);
         ThreadLocalRandom random = ThreadLocalRandom.current();
         boolean critical = fullyDrawn && Damage.crits(attacker.critChance(), random.nextDouble());
