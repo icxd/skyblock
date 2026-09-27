@@ -308,11 +308,6 @@ public final class Profiles {
 
     // Who may use what
 
-    /** The item browser and the commands that edit the held item: on a Sandbox profile, or for staff anywhere. */
-    public static boolean sandboxTools(Rank rank, ProfileMode mode) {
-        return mode == ProfileMode.SANDBOX || rank.isEqualOrStrongerThan(Rank.STAFF);
-    }
-
     /**
      * Whether a player may use a command that needs {@code needed}; a Sandbox tool ({@code sandbox})
      * is also free for anyone on a Sandbox profile.

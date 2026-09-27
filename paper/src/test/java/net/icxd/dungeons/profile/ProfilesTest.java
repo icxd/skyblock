@@ -270,9 +270,6 @@ class ProfilesTest {
         assertTrue(Profiles.mayUse(Rank.STAFF, ProfileMode.NORMAL, Rank.STAFF, false));
         // Everyone's commands.
         assertTrue(Profiles.mayUse(Rank.DEFAULT, ProfileMode.NORMAL, Rank.DEFAULT, false));
-        assertTrue(Profiles.sandboxTools(Rank.DEFAULT, ProfileMode.SANDBOX));
-        assertTrue(Profiles.sandboxTools(Rank.STAFF, ProfileMode.NORMAL));
-        assertFalse(Profiles.sandboxTools(Rank.YOUTUBE, ProfileMode.NORMAL));
     }
 
     @Test

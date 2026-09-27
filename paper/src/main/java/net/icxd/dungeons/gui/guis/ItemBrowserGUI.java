@@ -3,6 +3,8 @@ package net.icxd.dungeons.gui.guis;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.command.SCommand;
+import net.icxd.dungeons.command.commands.admin.ItemCommand;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.SignInput;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
@@ -11,8 +13,6 @@ import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.listeners.InventorySyncListener;
-import net.icxd.dungeons.profile.Profiles;
-import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -161,8 +161,7 @@ public final class ItemBrowserGUI extends GUI {
             return;
         }
         // Checked again here: the menu may have stayed open while they left the Sandbox profile.
-        User user = User.ifLoaded(viewer.getUniqueId());
-        if (user == null || !Profiles.sandboxTools(user.getRank(), user.mode())) {
+        if (!SCommand.allowed(viewer, ItemCommand.class)) {
             viewer.closeInventory();
             viewer.sendMessage(Text.line("&cYou can only take items on a Sandbox profile!"));
             return;

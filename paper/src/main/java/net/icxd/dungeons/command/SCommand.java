@@ -45,11 +45,19 @@ public abstract class SCommand {
         sender.send("§7" + message.replace("&", "§"));
     }
 
-    /** Players need their data loaded, and the command's rank (or a Sandbox profile, for a Sandbox tool). */
     private boolean allowed(CommandSender sender) {
-        if (!(sender instanceof Player player)) return true;
+        return !(sender instanceof Player player) || allowed(player, params);
+    }
+
+    /** Whether a player may use a command now: e.g. again from a menu it opened, which may have stayed open. */
+    public static boolean allowed(Player player, Class<? extends SCommand> command) {
+        return allowed(player, command.getAnnotation(CommandParameters.class));
+    }
+
+    /** Players need their data loaded, and the command's rank (or a Sandbox profile, for a Sandbox tool). */
+    private static boolean allowed(Player player, CommandParameters params) {
         User user = User.cached(player.getUniqueId());
-        return user != null && user.isLoaded() && Profiles.mayUse(user.getRank(), user.mode(), permission, params.sandbox());
+        return user != null && user.isLoaded() && Profiles.mayUse(user.getRank(), user.mode(), params.permission(), params.sandbox());
     }
 
     private final class Command implements BasicCommand {
