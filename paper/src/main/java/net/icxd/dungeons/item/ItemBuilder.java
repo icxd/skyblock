@@ -213,7 +213,8 @@ public final class ItemBuilder {
 
     // ---------- the name ----------
 
-    static String name(SkyBlockItem item, NBTTagCompound tag) {
+    /** "&6Fabled Hyperion &6✪✪✪✪✪": rarity colour, reforge, name and stars, as the item's name shows it. */
+    public static String name(SkyBlockItem item, NBTTagCompound tag) {
         Reforge reforge = reforge(tag);
         return rarity(item, tag).getColor() + (reforge == null ? "" : reforge.getName() + " ") + item.name() + stars(item, tag);
     }

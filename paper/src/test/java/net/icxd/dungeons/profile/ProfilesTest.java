@@ -2,11 +2,14 @@ package net.icxd.dungeons.profile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -158,6 +161,31 @@ class ProfilesTest {
     }
 
     @Test
+    void aDeletedProfileIsKeptAside() {
+        Document doc = new Document();
+        Profiles.create(doc, "a", "Apple", ProfileMode.NORMAL, new Document("coins", 9), NOW);
+        Profiles.create(doc, "b", "Banana", ProfileMode.NORMAL, new Document(), NOW);
+        assertNotNull(Profiles.delete(doc, "a", NOW + 5));
+        assertNull(Profiles.delete(doc, "a", NOW + 6));
+        assertEquals(List.of("Banana"), Profiles.names(doc));
+        Document deleted = (Document) doc.getList(Profiles.DELETED, Object.class).getFirst();
+        assertEquals("a", deleted.get("id"));
+        assertEquals(new Date(NOW + 5), deleted.get("deletedAt"));
+        assertEquals("Apple", deleted.get(Profiles.NAME));
+        assertEquals(9, deleted.get("coins"));
+
+        // Only the last ten.
+        for (int i = 0; i < 12; i++) {
+            Profiles.create(doc, "p" + i, "Kiwi", ProfileMode.NORMAL, new Document(), NOW);
+            Profiles.delete(doc, "p" + i, NOW + i);
+        }
+        List<Object> kept = doc.getList(Profiles.DELETED, Object.class);
+        assertEquals(Profiles.KEPT_DELETED, kept.size());
+        assertEquals("p2", ((Document) kept.getFirst()).get("id"));
+        assertEquals("p11", ((Document) kept.getLast()).get("id"));
+    }
+
+    @Test
     void namesAreFruitsNotInUse() {
         assertEquals(21, Profiles.NAMES.size());
         assertEquals(21, new HashSet<>(Profiles.NAMES).size());
@@ -177,6 +205,56 @@ class ProfilesTest {
         assertEquals(last, Profiles.pickName(all, random));
         all.add(last);
         assertNull(Profiles.pickName(all, random), "none left");
+    }
+
+    @Test
+    void slotsComeWithRanks() {
+        assertEquals(2, Profiles.slots(Rank.DEFAULT));
+        assertEquals(3, Profiles.slots(Rank.VIP_PLUS));
+        assertEquals(4, Profiles.slots(Rank.MVP_PLUS));
+        assertEquals(4, Profiles.slots(Rank.MVP_PLUS_PLUS));
+        assertEquals(4, Profiles.slots(Rank.YOUTUBE));
+        assertEquals(5, Profiles.slots(Rank.STAFF));
+        assertEquals(Rank.DEFAULT, Profiles.slotRank(2));
+        assertEquals(Rank.VIP_PLUS, Profiles.slotRank(3));
+        assertEquals(Rank.MVP_PLUS, Profiles.slotRank(4));
+        assertEquals(Rank.STAFF, Profiles.slotRank(5));
+    }
+
+    private static long at(int year, int month, int day, int hour) {
+        return LocalDateTime.of(year, month, day, hour, 0).toInstant(ZoneOffset.UTC).toEpochMilli();
+    }
+
+    @Test
+    void ages() {
+        long created = at(2026, 1, 10, 12);
+        assertEquals("&fLess than an hour", Profiles.age(created, created));
+        assertEquals("&fLess than an hour", Profiles.age(created, created + 59 * 60_000));
+        assertEquals("&fLess than an hour", Profiles.age(created, created - 5000), "a clock behind");
+        assertEquals("&f1 hour", Profiles.age(created, at(2026, 1, 10, 13)));
+        assertEquals("&f23 hours", Profiles.age(created, at(2026, 1, 11, 11)));
+        assertEquals("&a1 day", Profiles.age(created, at(2026, 1, 11, 12)));
+        assertEquals("&a3 days, 4 hours", Profiles.age(created, at(2026, 1, 13, 16)));
+        assertEquals("&a30 days, 23 hours", Profiles.age(created, at(2026, 2, 10, 11)));
+        assertEquals("&21 month", Profiles.age(created, at(2026, 2, 10, 12)));
+        assertEquals("&25 months, 11 days", Profiles.age(created, at(2026, 6, 21, 12)));
+        assertEquals("&211 months, 1 day", Profiles.age(created, at(2026, 12, 11, 13)));
+        assertEquals("&51 year", Profiles.age(created, at(2027, 1, 10, 12)));
+        assertEquals("&54 years, 7 months", Profiles.age(created, at(2030, 8, 20, 0)));
+    }
+
+    @Test
+    void theCooldownIsSharedAndCountsDown() {
+        Document doc = new Document();
+        assertEquals(0, Profiles.cooldownLeft(doc, NOW), "never did anything");
+        doc.put(Profiles.LAST_ACTION, new Date(NOW));
+        assertEquals(30_000, Profiles.cooldownLeft(doc, NOW));
+        assertEquals(21_000, Profiles.cooldownLeft(doc, NOW + 9_000));
+        assertEquals(0, Profiles.cooldownLeft(doc, NOW + 30_000));
+        assertEquals("00m21s", Profiles.cooldown(21_000));
+        assertEquals("00m21s", Profiles.cooldown(20_001));
+        assertEquals("00m30s", Profiles.cooldown(30_000));
+        assertEquals("01m05s", Profiles.cooldown(65_000));
     }
 
     @Test
@@ -207,4 +285,14 @@ class ProfilesTest {
         assertEquals(ProfileMode.NORMAL, Profiles.mode(null));
     }
 
+    @Test
+    void skillAndCoinLines() {
+        assertEquals(List.of("&cNo skills yet!"), Profiles.skillLines(USERS.profileDefaults()));
+        assertEquals(List.of("&cNo skills yet!"), Profiles.skillLines(new Document()));
+        assertEquals(List.of("&7Combat: &eLevel XII"), Profiles.skillLines(new Document("skills", new Document("combat", 23_000))));
+
+        assertEquals(List.of("&7Purse Coins: &60"), Profiles.coinLines(USERS.profileDefaults()));
+        assertEquals(List.of("&7Bank Coins: &61,500", "&7Purse Coins: &679,208,878.1"),
+                Profiles.coinLines(new Document("coins", 79_208_878.1).append("bank", new Document("balance", 1500))));
+    }
 }

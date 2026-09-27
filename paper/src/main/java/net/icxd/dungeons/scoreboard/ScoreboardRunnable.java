@@ -35,8 +35,15 @@ public class ScoreboardRunnable implements Runnable {
     private static final ZoneId HYPIXEL_ZONE = ZoneId.of("America/New_York");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MM/dd/yy");
     private final Map<UUID, Scoreboard> boards = new HashMap<>();
-    private final HashMap<UUID, Integer> coinsCache = new HashMap<>();
-    private final HashMap<UUID, Integer> bitsCache = new HashMap<>();
+    /** What the purse and bits said last time, to show how much they changed. Main thread. */
+    private static final HashMap<UUID, Integer> coinsCache = new HashMap<>();
+    private static final HashMap<UUID, Integer> bitsCache = new HashMap<>();
+
+    /** Their purse and bits start over (another profile's aren't a change). Main thread. */
+    public static void forget(UUID player) {
+        coinsCache.remove(player);
+        bitsCache.remove(player);
+    }
 
     @Override
     public void run() {

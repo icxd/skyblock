@@ -389,6 +389,37 @@ public final class UserStore {
     }
 
     /**
+     * Moves a player onto another of their profiles, here and now: their items go into the profile
+     * they were on, and the new one's are put on them (nothing, for a new profile). If the new one's
+     * items can't be read here (saved by a newer Minecraft version), they stay on the old one. The
+     * caller saves. Main thread.
+     */
+    public void switchProfile(Player player, User user, String id) throws StoredInventory.NewerDataException {
+        Document doc = user.getDocument();
+        String oldId = user.profileId();
+        Document old = user.profile();
+        player.closeInventory();
+        StoredInventory.rescueLooseItems(player, old);
+        // First, so an item that can't be saved stops the switch before anything has changed.
+        StoredInventory.capture(player, old);
+        doc.put(Profiles.SELECTED, id);
+        StoredInventory.clear(player);
+        try {
+            StoredInventory.restore(player, user.profile(), log);
+        } catch (StoredInventory.NewerDataException | RuntimeException e) {
+            doc.put(Profiles.SELECTED, oldId);
+            StoredInventory.clear(player);
+            try {
+                StoredInventory.restore(player, old, log);
+            } catch (StoredInventory.NewerDataException impossible) {
+                // Just saved by this server.
+                throw new IllegalStateException(impossible);
+            }
+            throw e;
+        }
+    }
+
+    /**
      * Claims a player who is already online, when the plugin (re)loads. Their inventory is the live
      * one, so it counts as restored. Main thread.
      */

@@ -17,6 +17,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionEffect;
 
 /**
  * A player's inventory, armor and off-hand, kept in the profile they play on under {@code storage}
@@ -97,6 +98,13 @@ public final class StoredInventory {
             storage.put(OVERFLOW, left);
         }
         return true;
+    }
+
+    /** Takes everything off the player: inventory, armor, off-hand, the cursor and potion effects. Main thread. */
+    static void clear(Player player) {
+        player.getInventory().clear();
+        player.setItemOnCursor(null);
+        for (PotionEffect effect : player.getActivePotionEffects()) player.removePotionEffect(effect.getType());
     }
 
     /**
