@@ -110,7 +110,7 @@ final class Ghosts {
         for (Player other : run.players()) if (!other.equals(player)) other.sendMessage(Utils.color(line));
         Ghost ghost = new Ghost();
         ghost.since = ticks;
-        ghost.mode = GameMode.SURVIVAL;
+        ghost.mode = modeToRestore(player);
         // Made one when they're back (see arrived).
         ghosts.put(player.getUniqueId(), ghost);
     }
@@ -127,9 +127,14 @@ final class Ghosts {
     private void haunt(Player player) {
         Ghost ghost = new Ghost();
         ghost.since = ticks;
-        ghost.mode = player.getGameMode() == GameMode.ADVENTURE ? GameMode.SURVIVAL : player.getGameMode();
+        ghost.mode = modeToRestore(player);
         ghosts.put(player.getUniqueId(), ghost);
         showAsGhost(player);
+    }
+
+    /** The game mode they go back to: theirs now, but survival for adventure (a ghost's). */
+    private static GameMode modeToRestore(Player player) {
+        return player.getGameMode() == GameMode.ADVENTURE ? GameMode.SURVIVAL : player.getGameMode();
     }
 
     /**

@@ -106,9 +106,10 @@ final class GhostEvents implements Listener {
     }
 
     /**
-     * Leaving while it runs makes you a ghost (MCW Ghosts); what a ghost was set to is undone for now.
-     * Revive Stones go ("When a player exits a dungeon, all Revive Stones in their inventory will be
-     * removed", FW Revive Stone), before their inventory is saved.
+     * Leaving while it runs makes you a ghost (MCW Ghosts). What a ghost was set to is undone for now,
+     * whatever the phase (a ghost can leave an ended run too), so it isn't saved with them. Revive
+     * Stones go ("When a player exits a dungeon, all Revive Stones in their inventory will be removed",
+     * FW Revive Stone), before their inventory is saved.
      */
     @EventHandler(priority = EventPriority.LOW)
     public void onQuit(PlayerQuitEvent event) {
@@ -116,8 +117,7 @@ final class GhostEvents implements Listener {
         DungeonRun run = manager.runOf(player);
         if (run == null) return;
         ReviveStones.takeAll(player);
-        if (run.phase() != DungeonRun.Phase.RUNNING) return;
-        run.ghosts().disconnected(player);
+        if (run.phase() == DungeonRun.Phase.RUNNING) run.ghosts().disconnected(player);
         run.ghosts().leaving(player);
     }
 
