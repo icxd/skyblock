@@ -35,8 +35,32 @@ public final class PlayerHealth {
         set(player, get(player) - amount);
     }
 
+    /**
+     * Health back from nobody but themselves (their regeneration, their own item): as it is. Vitality
+     * doesn't multiply healing any more (0.26.1, see {@link Vitality}); a heal from someone else goes
+     * through {@link #healFrom}.
+     */
     public static void heal(Player player, double amount) {
         set(player, get(player) + amount);
+    }
+
+    /**
+     * A heal one player gives another, times the healer's Mending / 100: "Healing received from the player
+     * is multiplied by Mending/100", the healing other players get from them (the wiki's Mending; in game
+     * "Mending increases your outgoing healing"). A heal on themselves isn't outgoing, so it's
+     * {@link #heal}; a Healer's own heals in the Catacombs get Mending too (0.26.1), once the class is
+     * here. Nothing heals another player yet: what will goes through here. Returns what it healed for.
+     */
+    public static double healFrom(Player healer, Player player, double amount) {
+        double healed = healer == null || healer.equals(player) ? Math.max(0, amount)
+                : outgoing(amount, PlayerSession.of(healer).stats().get(Stat.MENDING));
+        heal(player, healed);
+        return healed;
+    }
+
+    /** Outgoing healing with this much Mending: amount x Mending / 100. */
+    public static double outgoing(double amount, double mending) {
+        return Math.max(0, amount) * Math.max(0, mending) / 100;
     }
 
     /** Between 0 and their max, and shown; at 0 they die. */
