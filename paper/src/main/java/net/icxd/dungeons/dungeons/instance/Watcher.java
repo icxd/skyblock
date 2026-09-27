@@ -143,7 +143,8 @@ final class Watcher implements DungeonMobs.Mob {
         this.intro = intro(floor);
         Location center = layout.center(run.world, RunLayout.firstCell(room));
         this.home = center.add(0, ABOVE_FLOOR, 0);
-        this.body = run.world.spawn(home, Zombie.class, z -> {
+        // As he is: no baby or chicken jockey from vanilla's spawn randomness.
+        this.body = run.world.spawn(home, Zombie.class, false, z -> {
             z.setAI(false);
             z.setGravity(false);
             z.setSilent(true);

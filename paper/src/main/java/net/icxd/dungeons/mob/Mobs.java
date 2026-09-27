@@ -32,6 +32,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
+import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -129,8 +130,12 @@ public final class Mobs implements Listener {
         return spawn(new DataMob(kind, variant, options), location);
     }
 
+    /**
+     * A mob of this type, as it is: without vanilla's spawn randomness (a zombie's baby or chicken jockey,
+     * gear, bonus follow range).
+     */
     public static Live spawn(SkyBlockMob type, Location location) {
-        LivingEntity entity = (LivingEntity) location.getWorld().spawn(location, type.getEntityType().getEntityClass(), spawned -> {
+        LivingEntity entity = (LivingEntity) location.getWorld().spawn(location, type.getEntityType().getEntityClass(), false, spawned -> {
             spawned.setPersistent(false);
             spawned.getPersistentDataContainer().set(TYPE, PersistentDataType.STRING, type.getId());
             if (spawned instanceof LivingEntity living) type.beforeSpawn(living);
@@ -361,6 +366,12 @@ public final class Mobs implements Listener {
     @EventHandler
     public void onExplode(org.bukkit.event.entity.EntityExplodeEvent event) {
         if (attacker(event.getEntity()) != null) event.blockList().clear();
+    }
+
+    /** Vanilla doesn't turn them into anything else (a zombie drowning into a Drowned, a skeleton freezing into a Stray). */
+    @EventHandler
+    public void onTransform(EntityTransformEvent event) {
+        if (of(event.getEntity()) != null) event.setCancelled(true);
     }
 
     @EventHandler
