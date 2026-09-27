@@ -55,7 +55,7 @@ final class ScoreCard {
         }
 
         String grade = score.grade();
-        Color gradeColor = color(DungeonRun.gradeColor(grade));
+        Color gradeColor = color(Score.gradeColor(grade));
         int scale = grade.length() > 1 ? 3 : 4;
         text(pixels, 104 - width(grade, scale) / 2, 42, grade, scale, gradeColor);
         String total = String.valueOf(score.total());

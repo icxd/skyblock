@@ -1,5 +1,6 @@
 package net.icxd.dungeons.dungeons.instance;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,10 +79,6 @@ public final class DungeonRun implements ScoreCounts {
     private static final int FIND_ROOMS_EVERY = 10;
     /** How long after arriving auto ready kicks in. */
     private static final long AUTO_READY_DELAY = 40;
-    /** Ticks after the end: the re-queue link, the warning, and closing (Hypixel's +2.1, +10.1 and +20.2 seconds). */
-    private static final long REQUEUE_MESSAGE = 42;
-    private static final long CLOSE_WARNING = 202;
-    private static final long CLOSE = 404;
     /**
      * From the room's centre: where players arrive, 4 blocks towards the back and at y 76.5 (they
      * drop onto the raised back of the room, as on Hypixel), and where Mort stands, 11 towards the door.
@@ -143,7 +140,11 @@ public final class DungeonRun implements ScoreCounts {
     private int countdown;
     private long startedAt;
     private long endedAt;
-    private Score finalScore;
+    /** At the end: the chat's score, without the Blood Room, and the card's, with it (see {@link RunEnd}). */
+    private Score chatScore;
+    private Score cardScore;
+    /** The Watcher let them pass; the Blood Room counts once the summary is out. */
+    private boolean watcherPassed;
     private final SidebarScore sidebarScore = new SidebarScore();
     private boolean closed;
 
@@ -325,10 +326,12 @@ public final class DungeonRun implements ScoreCounts {
         if (blood != null && watcher == null) watcher = new Watcher(this, layout, blood, cases);
     }
 
-    /** "You have proven yourself. You may pass.": the Blood Room is done. */
+    /**
+     * "You have proven yourself. You may pass.": the Blood Room is done, though Hypixel only counts it
+     * after the end-of-run summary (see {@link #end}).
+     */
     void bloodRoomCleared() {
-        PlacedRoom blood = layout.bloodRoom();
-        if (blood != null) runMap.complete(blood);
+        watcherPassed = true;
     }
 
     // Room mobs (RoomMobs): clearing rooms, crypts, room loot
@@ -458,8 +461,9 @@ public final class DungeonRun implements ScoreCounts {
     // End
 
     /**
-     * The run is over: the score, EXTRA STATS, and off to the Dungeon Hub 20 seconds later. For
-     * now only {@code /dungeon end} does it (the bosses come later).
+     * The run is over (the Watcher let them pass, or {@code /dungeon end}): each member's summary with
+     * their experience and Bits, saved to the profile they play on; then the Blood Room counts and the
+     * map becomes the score card; and off to the Dungeon Hub 20 seconds later (see {@link RunEnd}).
      *
      * @return false if it isn't running
      */
@@ -467,29 +471,54 @@ public final class DungeonRun implements ScoreCounts {
         if (phase != Phase.RUNNING) return false;
         phase = Phase.ENDED;
         endedAt = System.currentTimeMillis();
-        finalScore = score(endedAt);
-        String grade = gradeColor(finalScore.grade()) + finalScore.grade();
-        tell(RunText.RULE);
-        tell(RunText.centered("&c" + floor.getDungeonName() + " &8- &e" + floor.getTierName()));
-        tell("");
-        tell(RunText.centered("Team Score: &a" + finalScore.total() + " &f(" + grade + "&f)"));
-        tell(RunText.centered("&c☠ &eDefeated &c" + floor.getBossName() + " &ein &a" + RunText.elapsed(endedAt - startedAt)));
-        tell(legacy(RunText.centered("&6> &e&lEXTRA STATS &6<"))
-                .clickEvent(ClickEvent.runCommand("/showextrastats"))
-                .hoverEvent(HoverEvent.showText(Component.text("Click to view extra stats!", NamedTextColor.YELLOW))));
-        tell(RunText.RULE);
-        ScoreCard.draw(map, floor, finalScore);
-        for (Player player : players()) giveMap(player, "&a&lYour Score Summary", List.of());
-        later(REQUEUE_MESSAGE, this::requeueMessage);
-        later(CLOSE_WARNING, () -> tell("&cWarning! &eThe instance will &cclose &ein &a10s&e."));
-        later(CLOSE, this::close);
+        // Before the Blood Room counts, as Hypixel's chat has it.
+        chatScore = score(endedAt);
+        rewardAndSummarize();
+        later(RunEnd.CARD, this::showScoreCard);
+        later(RunEnd.CARD_ITEM, () -> {
+            for (Player player : players()) giveMap(player, "&a&lYour Score Summary", List.of());
+        });
+        later(RunEnd.REQUEUE_MESSAGE, this::requeueMessage);
+        later(RunEnd.CLOSE_WARNING, () -> tell("&cWarning! &eThe instance will &cclose &ein &a10s&e."));
+        later(RunEnd.CLOSE, this::close);
         return true;
+    }
+
+    /** Each member here gets their experience and Bits, saved to the profile they play on, and their summary. */
+    private void rewardAndSummarize() {
+        long millis = endedAt - startedAt;
+        double secretPercent = scoreInputs(endedAt).secretPercent();
+        List<Player> here = players();
+        LocalDate today = RunEnd.today();
+        for (Player player : here) {
+            User user = User.ifLoaded(player.getUniqueId());
+            RunEnd.Outcome outcome = null;
+            if (user != null) {
+                List<DungeonClass> teammates = here.stream().filter(p -> !p.equals(player)).map(p -> classOf(p.getUniqueId())).toList();
+                outcome = RunEnd.award(user.profile(), floor, chatScore, millis, secretPercent, classOf(player.getUniqueId()), teammates, today);
+                user.save();
+            }
+            for (String line : RunEnd.summary(floor, chatScore, millis, outcome)) {
+                if (!line.equals(RunEnd.EXTRA_STATS)) player.sendMessage(Utils.color(line));
+                else player.sendMessage(legacy(line).clickEvent(ClickEvent.runCommand("/showextrastats"))
+                        .hoverEvent(HoverEvent.showText(Component.text("Click to view extra stats!", NamedTextColor.YELLOW))));
+            }
+        }
+    }
+
+    /** Half a second after the summary: the Blood Room counts, and the map shows the score with it. */
+    private void showScoreCard() {
+        PlacedRoom blood = layout.bloodRoom();
+        if (watcherPassed && blood != null) runMap.complete(blood);
+        cardScore = score(endedAt);
+        ScoreCard.draw(map, floor, cardScore);
     }
 
     private void requeueMessage() {
         tell("");
         tell(RunText.RULE);
-        tell(legacy("      &7Click &e&lHERE &7to re-queue into &a" + floor.getDungeonName() + "&7!")
+        // "§c§a" as recorded.
+        tell(legacy("      &7Click &e&lHERE &7to re-queue into &c&a" + floor.getDungeonName() + "&7!")
                 .clickEvent(ClickEvent.runCommand("/instancerequeue"))
                 .hoverEvent(HoverEvent.showText(legacy("&7Instance: &a" + floor.getDungeonName() + "\n&7Tier: &b" + floor.getTierName()))));
         tell(RunText.RULE);
@@ -511,7 +540,7 @@ public final class DungeonRun implements ScoreCounts {
                 RunText.RULE,
                 RunText.centered("&c" + floor.getDungeonName() + " &8- &e" + floor.getTierName() + " Stats"),
                 "",
-                RunText.centered("Team Score: &a" + finalScore.total() + " &f(" + gradeColor(finalScore.grade()) + finalScore.grade() + "&f)"),
+                RunText.centered("Team Score: &a" + chatScore.total() + " &f(" + Score.gradeColor(chatScore.grade()) + chatScore.grade() + "&f)"),
                 "",
                 RunText.centered("Total Damage as " + classOf(player.getUniqueId()).getDisplayName() + ": &a" + Utils.getFormattedNumber((int) me.damage)),
                 RunText.centered("Ally Healing: &a" + Utils.getFormattedNumber((int) healing)),
@@ -521,18 +550,6 @@ public final class DungeonRun implements ScoreCounts {
                 "",
                 RunText.RULE);
         for (String line : lines) player.sendMessage(Utils.color(line));
-    }
-
-    /** Hypixel's colours for B and C (from end-of-run messages); the others are a guess until we see them. */
-    static String gradeColor(String grade) {
-        return switch (grade) {
-            case "S+" -> "&6";
-            case "S" -> "&e";
-            case "A" -> "&5";
-            case "B" -> "&e";
-            case "C" -> "&6";
-            default -> "&c";
-        };
     }
 
     private static Component legacy(String text) {
@@ -601,9 +618,9 @@ public final class DungeonRun implements ScoreCounts {
                 puzzlesNotDone(), cryptsBlown(), false, false, seconds);
     }
 
-    /** The sidebar's "(N)" when it next updates: the in-run indicator, or the final score after the end. */
+    /** The sidebar's "(N)" when it next updates: the in-run indicator, or the score card's total after the end. */
     private int sidebarScore() {
-        if (phase == Phase.ENDED) return finalScore.total();
+        if (phase == Phase.ENDED) return (cardScore != null ? cardScore : chatScore).total();
         return Score.indicator(floor, scoreInputs(System.currentTimeMillis()), watcher == null ? 0 : watcher.killed());
     }
 
