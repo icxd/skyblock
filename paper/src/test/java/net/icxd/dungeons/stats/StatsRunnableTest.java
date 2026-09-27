@@ -1,0 +1,17 @@
+package net.icxd.dungeons.stats;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class StatsRunnableTest {
+    /** The recorded action bar: "§c5,238/5,238", "§a2,446§a Defense", "§b1,201/1,201 Mana"; health's fractions dropped. */
+    @Test
+    void actionBarNumbers() {
+        assertEquals("5,238/5,238", StatsRunnable.ofMax(5238.67, 5238.67));
+        assertEquals("3,944/5,238", StatsRunnable.ofMax(3944.9, 5238.67));
+        assertEquals("2,446", StatsRunnable.number(2446.4));
+        assertEquals("940/940", StatsRunnable.ofMax(940, 940));
+        assertEquals("104/104", StatsRunnable.ofMax(104, 104));
+    }
+}
