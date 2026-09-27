@@ -47,12 +47,12 @@ public final class AvatarControl {
 
     /**
      * How far a vanilla mob with this movement speed attribute walks a tick on flat ground, chasing at
-     * the goals' speed of 1: its speed squared x 0.216 / 0.546^3 a tick, with 0.546 of it kept to the next
-     * (vanilla's ground friction), which comes to about 2.92 x speed^2 (0.26 walks 0.2 blocks a tick).
+     * the goals' speed of 1. Each tick vanilla adds its speed x its forward input, which for a mob is its
+     * speed too, x 0.216 / 0.6^3 (0.6 is the ground's friction, so that's 1), and keeps 0.6 x 0.91 = 0.546
+     * of its velocity to the next: speed^2 / (1 - 0.546), about 2.2 x speed^2 (0.26 walks 0.149 blocks a tick).
      */
     public static double blocksPerTick(double speed) {
-        double friction = 0.6 * 0.91;
-        return speed * speed * 0.21600002 / (friction * friction * friction) / (1 - friction);
+        return speed * speed / (1 - 0.6 * 0.91);
     }
 
     /** It was hit, and knocked back (unless it's immune). */
@@ -66,7 +66,7 @@ public final class AvatarControl {
         if (target == null || age < staggeredUntil) return;
         Location me = body.getLocation();
         Location them = target.getLocation();
-        face(them);
+        face(body, them);
         double reach = MeleeAttackGoal.reach(body, target);
         double distanceSquared = me.distanceSquared(them);
         if (distanceSquared <= reach * reach) {
@@ -82,7 +82,7 @@ public final class AvatarControl {
             nextSkull = age + SKULL_EVERY;
             skull(target);
         }
-        move(them);
+        steer(body, them, blocksPerTick);
     }
 
     private void skull(Player at) {
@@ -99,7 +99,11 @@ public final class AvatarControl {
         });
     }
 
-    private void move(Location to) {
+    /**
+     * Steers a mob that has no goals (a Mannequin) towards a spot, this many blocks a tick, jumping onto
+     * anything a block high in the way.
+     */
+    public static void steer(LivingEntity body, Location to, double blocksPerTick) {
         Location me = body.getLocation();
         Vector direction = to.toVector().subtract(me.toVector()).setY(0);
         if (direction.lengthSquared() < 1e-6) return;
@@ -110,7 +114,8 @@ public final class AvatarControl {
         body.setVelocity(direction.multiply(blocksPerTick).setY(vy));
     }
 
-    private void face(Location at) {
+    /** Turns it to look that way, level. */
+    public static void face(LivingEntity body, Location at) {
         Location me = body.getLocation();
         float yaw = (float) Math.toDegrees(Math.atan2(-(at.getX() - me.getX()), at.getZ() - me.getZ()));
         body.setRotation(yaw, 0);

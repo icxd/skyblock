@@ -9,19 +9,18 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.mob.MobType;
+import net.icxd.dungeons.mob.goals.AvatarControl;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.utils.Text;
 
@@ -157,25 +156,12 @@ final class Undead implements DungeonMobs.Mob {
         move(to, speed);
     }
 
-    /** Steers towards a spot, jumping onto anything a block high in the way. */
     private void move(Location to, double speed) {
-        Location me = body.getLocation();
-        Vector direction = to.toVector().subtract(me.toVector()).setY(0);
-        if (direction.lengthSquared() < 1e-6) return;
-        direction.normalize();
-        Vector velocity = body.getVelocity();
-        double vy = velocity.getY();
-        Block ahead = me.clone().add(direction.clone().multiply(0.8)).getBlock();
-        if (body.isOnGround() && ahead.getType().isSolid() && !ahead.getRelative(0, 1, 0).getType().isSolid()) vy = 0.42;
-        body.setVelocity(direction.multiply(speed).setY(vy));
+        AvatarControl.steer(body, to, speed);
     }
 
     private void face(Location at) {
-        Location me = body.getLocation();
-        double dx = at.getX() - me.getX();
-        double dz = at.getZ() - me.getZ();
-        float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-        body.setRotation(yaw, 0);
+        AvatarControl.face(body, at);
     }
 
     @Override
