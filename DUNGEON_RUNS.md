@@ -13,7 +13,8 @@ party sees "Alice entered The Catacombs, Entrance!" between blue rules and goes 
 server, which builds the floor in a world of its own (players wait on a glass platform above it
 meanwhile). The leader needs Combat XV (the Catacombs Gate's "Combat Skill 15."); below it Mort
 says "Wanderer!", "Save your own skin, seek challenge elsewhere first." and "You need Combat Level
-XV before leading a dungeon." (MCW), and nobody goes.
+XV before leading a dungeon." (MCW), and nobody goes. Staff and players on a Sandbox profile lead
+in whatever their Combat level (ours: a sandbox is for trying things).
 
 **Waiting** (up to 2 minutes).
 - Everyone arrives 4 blocks from the room's centre towards the back, at y 76.5, facing the door,

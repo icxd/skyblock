@@ -150,9 +150,11 @@ public final class DungeonQueue {
 
     /**
      * Whoever leads a party into a dungeon needs Combat XV; below it Mort turns them away (see
-     * {@link DungeonEntry}). With the database unreadable, they're let through.
+     * {@link DungeonEntry}). With the database unreadable, they're let through, and so are staff and
+     * players on a Sandbox profile.
      */
     private boolean mayLead(Player leader) {
+        if (profiles.skipsCombatRequirement(leader.getUniqueId())) return true;
         Double combat = profiles.combatXp(leader.getUniqueId());
         if (combat == null || DungeonEntry.mayLead(combat)) return true;
         for (String line : DungeonEntry.MORT_REFUSAL) Chat.send(leader, line);

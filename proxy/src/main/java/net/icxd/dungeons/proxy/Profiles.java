@@ -108,6 +108,27 @@ public final class Profiles {
         }
     }
 
+    /**
+     * Staff, and players on a Sandbox profile, lead a party into a dungeon whatever their Combat level:
+     * a sandbox is for trying things (the owner's call; Hypixel has no Sandbox).
+     */
+    public boolean skipsCombatRequirement(UUID uuid) {
+        if (get(uuid).rank().isEqualOrStrongerThan(Rank.STAFF)) return true;
+        if (users == null) return false;
+        try {
+            Document account = users.find(eq("uuid", uuid.toString())).projection(Projections.include("selectedProfile")).first();
+            String selected = account == null ? null : account.getString("selectedProfile");
+            if (selected == null) return false;
+            Document doc = users.find(eq("uuid", uuid.toString())).projection(Projections.include("profiles." + selected + ".mode")).first();
+            Document all = doc == null ? null : doc.get("profiles", Document.class);
+            Document profile = all == null ? null : all.get(selected, Document.class);
+            return profile != null && "SANDBOX".equals(profile.getString("mode"));
+        } catch (RuntimeException e) {
+            logger.warn("Couldn't load {}'s profile mode: {}", uuid, e.toString());
+            return false;
+        }
+    }
+
     /** Someone the proxy has seen this session (their name and rank as of then), or a stand-in. */
     public Profile get(UUID uuid) {
         Profile profile = profiles.get(uuid);

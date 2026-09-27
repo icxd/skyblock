@@ -174,7 +174,7 @@ final class RunMap extends MapRenderer {
     /** Green for a room with nothing to find (fairy, blood) or whose secrets are all found; white for one with some left. */
     private byte tickColor(PlacedRoom r) {
         boolean nothingToFind = r.type() == RoomType.FAIRY || r.type() == RoomType.BLOOD || r.type() == RoomType.START;
-        return nothingToFind || run.allSecretsFound(r) ? GREEN : WHITE;
+        return nothingToFind || run != null && run.allSecretsFound(r) ? GREEN : WHITE;
     }
 
     private byte doorColor(Door door, boolean bothFound, PlacedRoom into) {
