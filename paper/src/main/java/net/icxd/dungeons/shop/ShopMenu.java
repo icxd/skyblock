@@ -143,7 +143,8 @@ public final class ShopMenu extends GUI {
         List<String> lore = new ArrayList<>(List.of("", "&7Cost"));
         for (Cost cost : ware.costs()) lore.add(costLine(cost));
         lore.add("");
-        lore.add("&eClick to trade!");
+        // As the wiki shows the third tier of Ophelia's (Ophelia/UI, Floor VI and VII).
+        lore.add(ware.locked() ? "&cNot unlocked!" : "&eClick to trade!");
         if (ware.amount() > 1) stack.setData(DataComponentTypes.CUSTOM_NAME, Text.line(name(item, stack) + " &8x" + ware.amount()));
         return button(slot, withLore(stack, lore), () -> buy(ware));
     }
@@ -165,7 +166,7 @@ public final class ShopMenu extends GUI {
     private void buy(Shop.Ware ware) {
         User user = customer();
         SkyBlockItem item = ItemRegistry.get(ware.item());
-        if (user == null || item == null) return;
+        if (user == null || item == null || ware.locked()) return;
         for (Cost cost : ware.costs()) {
             if (cost.canPay(viewer, user)) continue;
             tell(cost instanceof CoinCost ? Selling.NOT_ENOUGH_COINS : cost instanceof EssenceCost ? Selling.NOT_ENOUGH_ESSENCE

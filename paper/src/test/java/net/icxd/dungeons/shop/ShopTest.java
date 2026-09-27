@@ -152,15 +152,39 @@ class ShopTest {
     void opheliasWaresComeWithFloors() {
         Set<String> items = new HashSet<>();
         for (Shop.Ware ware : Shop.OPHELIA.wares()) assertTrue(items.add(ware.item()), "once each: " + ware.item());
-        List<String> atFirst = Shop.OPHELIA.wares(0).stream().map(Shop.Ware::item).toList();
-        assertEquals(List.of("SUPER_CLEAVER", "UNDEAD_BOW", "ARROW", "DARK_GOGGLES", "MENDER_HELMET", "SUPERBOOM_TNT", "STONE_CHESTPLATE",
-                "DUNGEONBREAKER"), atFirst);
-        assertTrue(Shop.OPHELIA.wares(3).stream().anyMatch(w -> w.item().equals("HYPER_CLEAVER")));
-        assertFalse(Shop.OPHELIA.wares(5).stream().anyMatch(w -> w.item().equals("GIANT_CLEAVER")));
-        assertEquals(Shop.OPHELIA.wares().size(), Shop.OPHELIA.wares(7).size());
-        Shop.Ware arrows = Shop.OPHELIA.wares(0).get(2);
+        // The wiki's Default tab (Ophelia/UI), without the Dungeon Potion; then NEU's Dungeonbreaker.
+        assertEquals(List.of("UNDEAD_BOW", "ARROW", "SUPER_CLEAVER", "STONE_CHESTPLATE", "MENDER_HELMET", "DARK_GOGGLES", "SUPERBOOM_TNT",
+                "DUNGEONBREAKER"), items(Shop.OPHELIA.wares(0)));
+        assertEquals(items(Shop.OPHELIA.wares(0)), items(Shop.OPHELIA.wares(2)));
+        // Floor III adds the second tier after Superboom TNT, Floor VI the third after that.
+        assertEquals(List.of("UNDEAD_BOW", "ARROW", "SUPER_CLEAVER", "STONE_CHESTPLATE", "MENDER_HELMET", "DARK_GOGGLES", "SUPERBOOM_TNT",
+                "SUPER_UNDEAD_BOW", "HYPER_CLEAVER", "METAL_CHESTPLATE", "MENDER_FEDORA", "SHADOW_GOGGLES", "DUNGEONBREAKER"),
+                items(Shop.OPHELIA.wares(3)));
+        assertEquals(items(Shop.OPHELIA.wares(3)), items(Shop.OPHELIA.wares(5)));
+        assertEquals(List.of("UNDEAD_BOW", "ARROW", "SUPER_CLEAVER", "STONE_CHESTPLATE", "MENDER_HELMET", "DARK_GOGGLES", "SUPERBOOM_TNT",
+                "SUPER_UNDEAD_BOW", "HYPER_CLEAVER", "METAL_CHESTPLATE", "MENDER_FEDORA", "SHADOW_GOGGLES", "DEATH_BOW", "GIANT_CLEAVER",
+                "STEEL_CHESTPLATE", "MENDER_CROWN", "WITHER_GOGGLES", "DUNGEONBREAKER"), items(Shop.OPHELIA.wares(6)));
+        assertEquals(Shop.OPHELIA.wares(), Shop.OPHELIA.wares(7));
+        Shop.Ware arrows = Shop.OPHELIA.wares(0).get(1);
         assertEquals(20, arrows.amount());
         assertEquals(200, ((CoinCost) arrows.costs().getFirst()).getAmount());
+    }
+
+    @Test
+    void opheliasThirdTierIsNotUnlocked() {
+        // The wiki shows it "Not unlocked!" on the Floor VI and VII tabs, and nothing that can be bought
+        // costs a million coins or more (where her Shop Confirmations would ask).
+        for (Shop.Ware ware : Shop.OPHELIA.wares()) {
+            boolean thirdTier = ware.costs().stream().anyMatch(c -> c instanceof CoinCost coins && coins.getAmount() >= 1_000_000);
+            assertEquals(thirdTier, ware.locked(), ware.item());
+        }
+        assertEquals(5, Shop.OPHELIA.wares().stream().filter(Shop.Ware::locked).count());
+        // The golden heads wait for 100 boss kills, which aren't counted.
+        assertTrue(Shop.OPHELIA.wares().stream().noneMatch(w -> w.item().startsWith("GOLD_")));
+    }
+
+    private static List<String> items(List<Shop.Ware> wares) {
+        return wares.stream().map(Shop.Ware::item).toList();
     }
 
     @Test
