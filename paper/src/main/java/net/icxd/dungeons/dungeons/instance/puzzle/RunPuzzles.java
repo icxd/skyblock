@@ -53,6 +53,7 @@ public final class RunPuzzles {
             case "tic_tac_toe" -> data.ticTacToe() == null ? null : new TicTacToePuzzle(host, room.id(), room.frame(), data.ticTacToe());
             case "water_board" -> data.waterBoard() == null ? null : new WaterBoardPuzzle(host, room.id(), room.frame(), data.waterBoard());
             case "three_weirdos" -> data.weirdos() == null ? null : new ThreeWeirdosPuzzle(host, room.id(), room.frame(), data.weirdos());
+            case "creeper_beams" -> data.beams() == null ? null : new CreeperBeamsPuzzle(host, room.id(), room.frame(), data.beams());
             default -> null;
         };
         if (puzzle != null) return puzzle;
