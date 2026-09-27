@@ -62,7 +62,7 @@ import net.icxd.dungeons.utils.Utils;
  *       Skeletons some seconds after their room opens, and every skeleton killed leaves one that does the
  *       same (mobs.md 1.8).</li>
  *   <li>Crypts and weak walls where their blocks are known, blown up with Superboom TNT: the tomb's
- *       Crypt Undead comes out, and the crypt counts for the score ({@link #cryptsBlown}).</li>
+ *       Crypt Undead comes out, and once it's killed the crypt counts for the score ({@link #cryptsBlown}).</li>
  * </ul>
  * Main thread; {@link DungeonRun} ticks it.
  */
@@ -124,6 +124,8 @@ final class RoomMobs {
         final RoomState room;
         final Mobs.Live live;
         final boolean starred;
+        /** A blown tomb's Crypt Undead: its crypt counts once it's dead. */
+        boolean crypt;
         boolean dead;
 
         Tracked(RoomMobs owner, RoomState room, Mobs.Live live, boolean starred) {
@@ -476,6 +478,11 @@ final class RoomMobs {
         return state != null && state.cleared;
     }
 
+    /**
+     * Crypts done: blown up and their Crypt Undead killed. That's what the bonus score counts ("killing Crypt
+     * Undeads in blown up Crypts", the wiki's Dungeon Score) and when the tab's Crypts went up (R1: still 0
+     * right after the blast, 1 after the kill).
+     */
     int cryptsBlown() {
         return cryptsBlown;
     }
@@ -522,12 +529,16 @@ final class RoomMobs {
         return t;
     }
 
-    /** A mob that spawns awake in an open room (an Undead Skeleton, a Crypt Undead): never starred, never room-scaled. */
-    private void spawnAwake(RoomState room, MobKind kind, Location at) {
+    /**
+     * A mob that spawns awake in an open room (an Undead Skeleton, a Crypt Undead): never starred, never
+     * room-scaled. Null if it couldn't be.
+     */
+    private Tracked spawnAwake(RoomState room, MobKind kind, Location at) {
         try {
-            track(room, Mobs.spawn(kind, floor, SpawnOptions.NONE, at), false);
+            return track(room, Mobs.spawn(kind, floor, SpawnOptions.NONE, at), false);
         } catch (IllegalArgumentException e) {
             log.warning(e.getMessage());
+            return null;
         }
     }
 
@@ -552,11 +563,11 @@ final class RoomMobs {
         }
     }
 
-    /** Starred mobs that went without dying (fell out of the world, say) count as dead where they were last. */
+    /** Starred mobs and Crypt Undead that went without dying (fell out of the world, say) count as dead where they were last. */
     private void sweep() {
         for (RoomState state : rooms.values()) {
-            if (state.cleared) continue;
             for (Tracked t : List.copyOf(state.mobs)) {
+                if (state.cleared && !t.crypt) continue;
                 if (!t.dead && !t.live.entity().isValid() && Mobs.of(t.live.entity()) == null) died(t, t.live.entity().getLocation());
             }
         }
@@ -580,6 +591,7 @@ final class RoomMobs {
             skulls.add(skull);
             rise(skull, SKULL_AGAIN_MIN, SKULL_AGAIN_MAX);
         }
+        if (t.crypt) cryptsBlown++;
         if (!t.starred) return;
         state.starredDead++;
         if (!state.cleared && state.starredDead >= state.starredPlanned && toSpawnFor(state) == 0) clear(state, at);
@@ -701,7 +713,8 @@ final class RoomMobs {
      * A Superboom TNT goes off at this block (where it was placed, against the block clicked): it blows up
      * every tomb and weak wall within {@link #BLAST_REACH}, as recorded (research critic.md 3.3): the
      * explosion sound (master, at the TNT), squid ink over the blocks as they go, and for a tomb a second
-     * explosion (blocks, quieter) and angry villagers where its Crypt Undead comes out. Blown walls stay open.
+     * explosion (blocks, quieter) and angry villagers where its Crypt Undead comes out, which has to be
+     * killed for the crypt to count. Blown walls stay open.
      */
     void superboom(Block at) {
         Location middle = at.getLocation().add(0.5, 0.5, 0.5);
@@ -711,10 +724,12 @@ final class RoomMobs {
             blow(crypt);
             world.playSound(middleOf(crypt.blocks), Sound.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 0.5f, 1);
             world.spawnParticle(Particle.ANGRY_VILLAGER, crypt.undead, 4, 0.4, 0.4, 0.4, 0);
-            cryptsBlown++;
             // Its room is open by now: someone is standing in it.
             open(crypt.room.room);
-            spawnAwake(crypt.room, MobKinds.CRYPT_UNDEAD, crypt.undead);
+            Tracked undead = spawnAwake(crypt.room, MobKinds.CRYPT_UNDEAD, crypt.undead);
+            // Counted when it dies; with no Crypt Undead to kill (none on this floor), when it's blown.
+            if (undead != null) undead.crypt = true;
+            else cryptsBlown++;
         }
         for (Blast wall : walls) {
             if (!wall.blown && wall.near(at)) blow(wall);

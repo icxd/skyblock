@@ -343,7 +343,7 @@ public final class DungeonRun {
         return roomMobs.isCleared(room);
     }
 
-    /** How many crypts have been blown up (the bonus score counts at most 5). */
+    /** How many crypts are done: blown up and their Crypt Undead killed (the bonus score counts at most 5). */
     public int cryptsBlown() {
         return roomMobs.cryptsBlown();
     }

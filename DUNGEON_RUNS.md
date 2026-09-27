@@ -94,9 +94,10 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   Undead Skeletons 6 to 28 seconds after their room opens; a killed skeleton leaves one that does
   the same 15 to 23 seconds later.
 - Superboom TNT (right click on a block) blows up the tombs and weak walls next to where it goes
-  off: the recorded explosion sounds and squid ink, the tomb's Crypt Undead, and the crypt counts
-  (`cryptsBlown()`, the tab's Crypts). Tombs are known where they were recorded or Skyblocker marks
-  them; weak walls are the cracked stone bricks at Skyblocker's superboom marks.
+  off: the recorded explosion sounds and squid ink, and the tomb's Crypt Undead; once that's killed
+  the crypt counts (`cryptsBlown()`, the tab's Crypts), as the bonus score does on Hypixel. Tombs
+  are known where they were recorded or Skyblocker marks them; weak walls are the cracked stone
+  bricks at Skyblocker's superboom marks.
 - Dungeon mobs' drops go into the inventory, and what doesn't fit into the item stash
   (`ItemStash`, `/pickupstash`, with Hypixel's messages and the reminder every minute). Essence
   (Crypt Undead, Lost Adventurer, Angry Archaeologist) goes onto the profile's
