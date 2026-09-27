@@ -558,6 +558,11 @@ final class RunClasses {
 
         private void tick() {
             if (!stand.isValid()) return;
+            // Its thrower died (or left) since: it's gone.
+            if (!abilities.canStillHit(thrower)) {
+                remove();
+                return;
+            }
             age++;
             Location at = stand.getLocation().add(step);
             Location item = at.clone().add(0, HAND_HEIGHT, 0);

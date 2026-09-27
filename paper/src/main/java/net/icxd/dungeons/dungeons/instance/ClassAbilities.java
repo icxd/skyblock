@@ -103,7 +103,7 @@ final class ClassAbilities {
     void rapidFire(Player player, double damage, int seconds) {
         for (int t = 0; t < seconds * 20; t += RAPID_EVERY) {
             run.later(t, () -> {
-                if (!player.isOnline() || !player.getWorld().equals(run.world) || run.ghosts().isGhost(player.getUniqueId())) return;
+                if (!canStillHit(player)) return;
                 shoot(player, player.getEyeLocation().getDirection(), damage, false);
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1, 1.2f);
             });
@@ -128,7 +128,7 @@ final class ClassAbilities {
         flying.remove(projectile);
         Location at = projectile.getLocation();
         projectile.remove();
-        if (!head.shooter().isOnline()) return true;
+        if (!canStillHit(head.shooter())) return true;
         if (head.explodes()) {
             at.getWorld().spawnParticle(Particle.EXPLOSION, at, 1);
             at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
@@ -156,7 +156,7 @@ final class ClassAbilities {
                 if (ground.getType().isSolid()) {
                     at.getWorld().spawnParticle(Particle.BLOCK, at, 20, 0.4, 0.1, 0.4, ground.getBlockData());
                 }
-                if (!player.isOnline()) return;
+                if (!canStillHit(player)) return;
                 for (Entity entity : at.getWorld().getNearbyEntities(at, WAVE_REACH, WAVE_REACH, WAVE_REACH)) {
                     if (!struck.contains(entity.getUniqueId()) && hurt(entity, player, damage)) struck.add(entity.getUniqueId());
                 }
@@ -192,6 +192,16 @@ final class ClassAbilities {
         }
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1.5f);
         return low;
+    }
+
+    /**
+     * Whether an ability of theirs still going (an arrow in flight, a wave, a thrown axe) may hit: they're
+     * still here and alive, and the run still on. A ghost's don't (it can't touch the world, and its
+     * kills' drops would go into its inventory).
+     */
+    boolean canStillHit(Player caster) {
+        return caster.isOnline() && caster.getWorld().equals(run.world) && run.phase() == DungeonRun.Phase.RUNNING
+                && !run.ghosts().isGhost(caster.getUniqueId());
     }
 
     /** Hurts one of our mobs that can be hurt (not a crit: abilities' numbers are grey); false for anything else. */
