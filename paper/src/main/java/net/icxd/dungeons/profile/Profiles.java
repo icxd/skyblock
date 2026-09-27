@@ -162,8 +162,9 @@ public final class Profiles {
     }
 
     /**
-     * Takes a profile off the document into {@code deletedProfiles}, with its id and when, so staff can
-     * still bring it back (the last {@link #KEPT_DELETED} of them).
+     * Takes a profile off the document into {@code deletedProfiles}, with its id and when, so it isn't
+     * lost (the last {@link #KEPT_DELETED} of them). Nothing brings one back yet but editing the
+     * database.
      *
      * @return the profile, or null if there's none by that id
      */
@@ -225,7 +226,7 @@ public final class Profiles {
 
     /** How many profiles a rank may have: 2, a 3rd with VIP+, a 4th with MVP+ (the fandom wiki's), and all 5 for staff. */
     public static int slots(Rank rank) {
-        if (rank.isEqualOrStrongerThan(Rank.STAFF)) return 5;
+        if (rank.isEqualOrStrongerThan(Rank.STAFF)) return MAX_SLOTS;
         if (rank.isEqualOrStrongerThan(Rank.MVP_PLUS)) return 4;
         if (rank.isEqualOrStrongerThan(Rank.VIP_PLUS)) return 3;
         return 2;

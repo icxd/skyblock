@@ -80,7 +80,8 @@ public class SandboxStorage implements Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onUseEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
-        if (player.getInventory().getItem(event.getHand()).isEmpty() || !SandboxDrops.onSandbox(player) || !keepsItems(event.getRightClicked())) return;
+        if (player.getInventory().getItem(event.getHand()).isEmpty() || !SandboxDrops.onSandbox(player)
+                || !keepsItems(event.getRightClicked())) return;
         event.setCancelled(true);
         if (event.getHand() == EquipmentSlot.HAND) player.sendMessage(Text.line(NO_STORAGE));
     }
@@ -119,14 +120,16 @@ public class SandboxStorage implements Listener {
 
     /** An item frame, or a creature or vehicle with an inventory; not a player, nor a villager (trading takes, it doesn't keep). */
     private static boolean keepsItems(Entity entity) {
-        return entity instanceof ItemFrame || entity instanceof InventoryHolder && !(entity instanceof HumanEntity) && !(entity instanceof AbstractVillager);
+        return entity instanceof ItemFrame
+                || entity instanceof InventoryHolder && !(entity instanceof HumanEntity) && !(entity instanceof AbstractVillager);
     }
 
     /** A block's or a creature's inventory that stays in the world when it's closed; not one of the plugin's menus (a player's). */
     private static boolean keepsItems(Inventory inventory) {
         if (GIVES_BACK.contains(inventory.getType())) return false;
         InventoryHolder holder = inventory.getHolder(false);
-        return holder instanceof BlockInventoryHolder || holder instanceof DoubleChest || holder instanceof Entity && !(holder instanceof HumanEntity);
+        return holder instanceof BlockInventoryHolder || holder instanceof DoubleChest
+                || holder instanceof Entity && !(holder instanceof HumanEntity);
     }
 
     private static boolean staff(Player player) {

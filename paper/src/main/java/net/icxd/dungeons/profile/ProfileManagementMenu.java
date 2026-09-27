@@ -30,7 +30,7 @@ public final class ProfileManagementMenu extends Menu {
     void items(User user) {
         fill(filler());
         List<Profiles.Entry> profiles = Profiles.ordered(user.getDocument());
-        int unlocked = Math.min(Profiles.MAX_SLOTS, Profiles.slots(user.getRank()));
+        int unlocked = Profiles.slots(user.getRank());
         for (int i = 0; i < Profiles.MAX_SLOTS; i++) {
             int slot = FIRST + i;
             if (i < profiles.size()) {
@@ -114,7 +114,6 @@ public final class ProfileManagementMenu extends Menu {
         return switch (rank) {
             case VIP_PLUS -> "&aVIP&6+";
             case MVP_PLUS -> "&bMVP&6+";
-            case MVP_PLUS_PLUS -> "&6MVP&f++";
             case STAFF -> "&cSTAFF";
             default -> "&7" + rank.name();
         };

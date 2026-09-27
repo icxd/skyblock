@@ -108,7 +108,7 @@ public class PlayerListener implements Listener {
         }
         // Items made before an update to how items look (or are stored) are brought up to date.
         ItemBuilder.refreshInventory(player);
-        if (user.getRank() == Rank.STAFF) player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
+        if (user.getRank().isEqualOrStrongerThan(Rank.STAFF)) player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
         // As Hypixel, a moment after joining any server.
         Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
             if (player.isOnline() && User.ifLoaded(player.getUniqueId()) == user) ProfileActions.announce(player, user);

@@ -67,7 +67,7 @@ public final class ProfileActions {
         User user = User.ifLoaded(player.getUniqueId());
         if (!refuse(player, user, "creation")) return;
         Document doc = user.getDocument();
-        if (Profiles.ordered(doc).size() >= Math.min(Profiles.MAX_SLOTS, Profiles.slots(user.getRank()))) {
+        if (Profiles.ordered(doc).size() >= Profiles.slots(user.getRank())) {
             player.closeInventory();
             say(player, "&cYou don't have a free profile slot!");
             return;
