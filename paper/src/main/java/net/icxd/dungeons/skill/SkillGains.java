@@ -2,6 +2,7 @@ package net.icxd.dungeons.skill;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.economy.Purse;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
@@ -92,11 +93,8 @@ public final class SkillGains implements Listener {
         StatsRunnable.sendActionBar(player);
     }
 
-    /**
-     * A level's coins, into the purse of the profile they play on. The one place skills pay coins:
-     * when the purse has its own API, this goes through it.
-     */
+    /** A level's coins, into the purse of the profile they play on: the one place skills pay coins. */
     static void payCoins(User user, int coins) {
-        if (coins > 0) user.setCoins(user.getCoins() + coins);
+        if (coins > 0) Purse.add(user, coins);
     }
 }
