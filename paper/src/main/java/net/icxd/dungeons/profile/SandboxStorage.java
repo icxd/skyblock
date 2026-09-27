@@ -38,8 +38,9 @@ import net.icxd.dungeons.utils.Text;
  * Items don't go from a Sandbox profile to a Normal one through the world either: a player on a
  * Sandbox profile can't put anything into what keeps items there (a chest, a furnace, a jukebox, a
  * flower pot, an item frame, an armor stand, a chest minecart...), where anyone could take it out.
- * Only staff place such things (see WorldListener), so these are the map's. Taking from them is still
- * allowed: Normal items may go onto a Sandbox profile.
+ * Only staff place such things (see WorldListener), so these are the map's. Taking from a frame or a
+ * stand is still allowed (Normal items may go onto a Sandbox profile); a container's menu can't tell
+ * a take from a put, so it doesn't open for them at all.
  *
  * <p>The vanilla ender chest is one per player (and one per server), not one per profile, so it's
  * closed to everyone but staff: what's in it may be from a Sandbox profile, or from before profiles
