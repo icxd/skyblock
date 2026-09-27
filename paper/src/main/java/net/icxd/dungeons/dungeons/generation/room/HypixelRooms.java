@@ -20,7 +20,8 @@ import net.icxd.dungeons.dungeons.generation.utils.Direction;
  * has exactly one door. Multi-cell rooms have no recorded door layout, so they allow a door on
  * any outside wall.
  *
- * <p>Puzzle floors are from the wiki's puzzle table (Bomb Defuse was removed in 0.20.5).
+ * <p>Puzzle floors are from the wiki's puzzle table (Bomb Defuse was removed in 0.20.5), except the
+ * Teleport Maze's (see there).
  */
 public final class HypixelRooms {
     private HypixelRooms() {
@@ -40,7 +41,9 @@ public final class HypixelRooms {
             room("ice_fill", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 7),
             room("ice_path", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 3),
             room("quiz", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 4),
-            room("teleport_maze", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 0),
+            // The wiki's two tables disagree (All; "1 and Above"). It was never captured, so it can't be
+            // pasted: kept off the Entrance, which has enough puzzles without it.
+            room("teleport_maze", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 1),
             room("three_weirdos", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 0),
             room("tic_tac_toe", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 0),
             room("water_board", RoomType.PUZZLE, RoomShape.ONE_BY_ONE, "1000", 0),
