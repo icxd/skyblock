@@ -115,32 +115,24 @@ final class RunSecrets {
         }
     }
 
-    /** A room with secrets: its waypoints in the world, and how many of its secrets the team has found. */
+    /** A room with secrets: its waypoints in the world, and which of its secrets the team has found. */
     private static final class RoomState {
-        final SecretData.Room data;
         final List<Spot> spots = new ArrayList<>();
+        final SecretCount count;
         boolean out;
-        int found;
         /** Its Redstone Key's head has been taken (since 0.18.4 it's the team's, not an item). */
         boolean keyTaken;
 
         RoomState(SecretData.Room data) {
-            this.data = data;
-        }
-
-        int total() {
-            return data.secrets();
-        }
-
-        /** Counted, never more than Hypixel says the room has (Golden Oasis shows 1 but has two chests and a key). */
-        int shown() {
-            return Math.min(found, total());
+            this.count = new SecretCount(data.secrets());
         }
     }
 
     /** One waypoint in the world. */
     private static final class Spot {
         final RoomState room;
+        /** Its index in the room's waypoints (what {@link SecretCount} knows it by). */
+        final int index;
         final SecretData.Waypoint waypoint;
         final Block block;
         /** A chest's facing in the world; null if never recorded. */
@@ -153,8 +145,9 @@ final class RunSecrets {
         Mobs.Live bat;
         Item item;
 
-        Spot(RoomState room, SecretData.Waypoint waypoint, Block block, Direction facing, List<int[]> wall, int turns) {
+        Spot(RoomState room, int index, SecretData.Waypoint waypoint, Block block, Direction facing, List<int[]> wall, int turns) {
             this.room = room;
+            this.index = index;
             this.waypoint = waypoint;
             this.block = block;
             this.facing = facing;
@@ -223,7 +216,8 @@ final class RunSecrets {
             List<SecretData.Waypoint> keys = secrets.waypoints().stream().filter(w -> w.kind() == SecretData.Kind.KEY).toList();
             // UNKNOWN which one Hypixel uses where a room has two places for its key's head: one of them.
             SecretData.Waypoint key = keys.isEmpty() ? null : keys.get(ThreadLocalRandom.current().nextInt(keys.size()));
-            for (SecretData.Waypoint w : secrets.waypoints()) {
+            for (int i = 0; i < secrets.waypoints().size(); i++) {
+                SecretData.Waypoint w = secrets.waypoints().get(i);
                 if (w.kind() == SecretData.Kind.OTHER || (w.kind() == SecretData.Kind.KEY && w != key)) continue;
                 PastePlan.Block at = frame.block(w.x(), w.y(), w.z());
                 List<int[]> wall = new ArrayList<>();
@@ -232,7 +226,7 @@ final class RunSecrets {
                     wall.add(new int[]{moved.x(), moved.y(), moved.z()});
                 }
                 Direction facing = w.facing() == null ? null : w.facing().rotateClockwise(frame.turns());
-                Spot spot = new Spot(state, w, world.getBlockAt(at.x(), at.y(), at.z()), facing, wall, frame.turns());
+                Spot spot = new Spot(state, i, w, world.getBlockAt(at.x(), at.y(), at.z()), facing, wall, frame.turns());
                 state.spots.add(spot);
                 switch (w.kind()) {
                     case CHEST, WITHER, LEVER, KEY -> blocks.put(Pos.of(spot.block), spot);
@@ -252,30 +246,30 @@ final class RunSecrets {
 
     /** Every secret on the floor, as Hypixel counts them room by room. */
     int total() {
-        return rooms.values().stream().mapToInt(RoomState::total).sum();
+        return rooms.values().stream().mapToInt(r -> r.count.total()).sum();
     }
 
     /** The team's. */
     int found() {
-        return rooms.values().stream().mapToInt(RoomState::shown).sum();
+        return rooms.values().stream().mapToInt(r -> r.count.shown()).sum();
     }
 
     /** Whether the team has found all of a room's secrets (a room without any has). */
     boolean allFound(PlacedRoom room) {
         RoomState state = rooms.get(room.id());
-        return state == null || state.shown() >= state.total();
+        return state == null || state.count.allFound();
     }
 
     /** "          &72/5 Secrets" after the mana for the room they're in, if it has secrets. */
     String actionBar(Player player) {
         PlacedRoom room = layout.roomAt(player.getLocation());
         RoomState state = room == null ? null : rooms.get(room.id());
-        return state == null ? "" : SecretText.actionBar(state.shown(), state.total());
+        return state == null ? "" : SecretText.actionBar(state.count.shown(), state.count.total());
     }
 
     private void count(Player finder, Spot spot) {
         spot.done = true;
-        spot.room.found++;
+        if (!spot.room.count.find(spot.index)) return;
         DungeonRun.Member member = run.member(finder.getUniqueId());
         if (member != null) member.secrets++;
         // At once, as Hypixel's action bar does (0.2-0.3 s after), for everyone (it's the team's count).
@@ -315,9 +309,9 @@ final class RunSecrets {
             if (spot.done) continue;
             switch (spot.kind()) {
                 case CHEST -> placeChest(spot);
-                case WITHER -> placeHead(spot.block, ESSENCE_PROFILE, DungeonTextures.get("Wither Key"), ESSENCE_ROTATION + 4 * spot.turns);
+                case WITHER -> placeHead(spot.block, ESSENCE_PROFILE, DungeonTextures.get("Wither Key"), headFacing(ESSENCE_ROTATION, spot.turns));
                 // UNKNOWN which way Hypixel turns a Redstone Key's head: as the room.
-                case KEY -> placeHead(spot.block, KEY_PROFILE, keyTexture(), 4 * spot.turns);
+                case KEY -> placeHead(spot.block, KEY_PROFILE, keyTexture(), headFacing(0, spot.turns));
                 case ITEM -> dropItem(spot);
                 case BAT -> spawnBat(spot);
                 default -> {
@@ -353,11 +347,20 @@ final class RunSecrets {
         };
     }
 
-    /** A player head with this profile, as the Wither Essence one was recorded (R1 00:35.6); {@code rotation} 0 is south, 4 west. */
-    private static void placeHead(Block block, UUID id, ProfileProperty texture, int rotation) {
+    /**
+     * Which way a head faces in the world: {@code rotation} is its rotation in the capture frame (sixteenths
+     * of a turn, 0 south, 4 west), and each of the room's quarter turns clockwise adds 4 (R1's Pirate
+     * Wither Essence: 3 in the frame, 11 with the room turned twice).
+     */
+    static BlockFace headFacing(int rotation, int turns) {
+        return SIXTEEN[Math.floorMod(rotation + 4 * turns, 16)];
+    }
+
+    /** A player head with this profile, as the Wither Essence one was recorded (R1 00:35.6). */
+    private static void placeHead(Block block, UUID id, ProfileProperty texture, BlockFace facing) {
         if (!block.isReplaceable()) return;
         BlockData head = Material.PLAYER_HEAD.createBlockData();
-        if (head instanceof Rotatable rotatable) rotatable.setRotation(SIXTEEN[Math.floorMod(rotation, 16)]);
+        if (head instanceof Rotatable rotatable) rotatable.setRotation(facing);
         block.setBlockData(head, false);
         if (block.getState() instanceof Skull skull) {
             ResolvableProfile.Builder profile = ResolvableProfile.resolvableProfile().uuid(id);
@@ -444,7 +447,7 @@ final class RunSecrets {
             case NODE -> {
                 // UNKNOWN what Hypixel says without the key, or when it's put down.
                 if (spot.done || !spot.room.keyTaken) return true;
-                placeHead(spot.block, KEY_PROFILE, keyTexture(), 4 * spot.turns);
+                placeHead(spot.block, KEY_PROFILE, keyTexture(), headFacing(0, spot.turns));
                 count(player, spot);
             }
             default -> {
