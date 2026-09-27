@@ -265,20 +265,38 @@ public final class UserStore {
     /**
      * A document this server now holds, made ready to use: one from before profiles gets its first
      * (see {@link Profiles#migrate}), which is saved right away, while it's still held here; then
-     * fields added to the defaults since it was made, and a profile to play on.
+     * fields added to the defaults since it was made, and a profile to play on. If that fails, it's
+     * let go again, or they couldn't join any other server until this one restarts.
      */
     private Document prepare(Document doc, String name) {
-        long now = System.currentTimeMillis();
-        boolean migrated = Profiles.migrate(doc, random, now);
-        Profiles.withDefaults(doc, defaults.get(), profileDefaults);
-        boolean repaired = Profiles.repair(doc, profileDefaults, random, now);
+        String id = doc.getString("uuid");
+        boolean migrated;
+        boolean repaired;
+        try {
+            long now = System.currentTimeMillis();
+            migrated = Profiles.migrate(doc, random, now);
+            Profiles.withDefaults(doc, defaults.get(), profileDefaults);
+            repaired = Profiles.repair(doc, profileDefaults, random, now);
+        } catch (RuntimeException e) {
+            try {
+                users.updateOne(and(eq("uuid", id), eq("session.server", server)), set("session", null));
+            } catch (RuntimeException release) {
+                e.addSuppressed(release);
+            }
+            throw e;
+        }
         if (migrated) {
             log.info("Moved " + name + "'s data into their first profile, " + Profiles.selected(doc).getString(Profiles.NAME) + " (Sandbox)");
         } else if (repaired) {
             log.warning(name + "'s selected profile was missing; now on " + Profiles.selected(doc).getString(Profiles.NAME));
         }
         if (migrated || repaired) {
-            users.replaceOne(and(eq("uuid", doc.getString("uuid")), eq("session.server", server)), doc);
+            try {
+                users.replaceOne(and(eq("uuid", id), eq("session.server", server)), doc);
+            } catch (RuntimeException e) {
+                // Not lost: their first save writes the whole document, and till then the old one migrates again.
+                log.log(Level.WARNING, "Couldn't save " + name + "'s " + (migrated ? "first profile" : "profile") + " right away", e);
+            }
         }
         return doc;
     }
