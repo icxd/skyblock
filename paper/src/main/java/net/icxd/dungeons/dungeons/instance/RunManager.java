@@ -46,7 +46,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -189,6 +188,7 @@ public final class RunManager {
         Bukkit.getPluginManager().registerEvents(new Events(), plugin);
         Bukkit.getPluginManager().registerEvents(new RoomEvents(), plugin);
         PuzzleEvents.register(plugin);
+        Bukkit.getPluginManager().registerEvents(new GhostEvents(this, plugin), plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20, 20);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickRuns, 1, 1);
         Bukkit.getPluginManager().registerEvents(new SecretEvents(this), plugin);
@@ -742,18 +742,12 @@ public final class RunManager {
             if (run != null) run.killed(killer.getUniqueId());
         }
 
-        /** Until there are ghosts, dying in a run brings you back in its entrance room rather than out of the run. */
+        /** Dying before it starts or after it ends brings you back in its entrance room (while it runs, you're a ghost: GhostEvents). */
         @EventHandler
         public void onRespawn(PlayerRespawnEvent event) {
             if (event.getRespawnReason() != PlayerRespawnEvent.RespawnReason.DEATH) return;
             Run run = byMember.get(event.getPlayer().getUniqueId());
             if (run != null && !run.ended && run.lifecycle != null && run.entrance != null) event.setRespawnLocation(run.entrance);
-        }
-
-        @EventHandler(priority = EventPriority.MONITOR)
-        public void onDeath(PlayerDeathEvent event) {
-            DungeonRun run = runOf(event.getEntity());
-            if (run != null) run.died(event.getEntity().getUniqueId());
         }
 
         private Player playerBehind(Entity damager) {

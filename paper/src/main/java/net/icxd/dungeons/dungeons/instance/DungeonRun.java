@@ -139,6 +139,9 @@ public final class DungeonRun implements ScoreCounts {
     /** From the start ({@link #start}); the blessings once one is found. */
     private RunSecrets secrets;
     private RunBlessings blessings;
+    private final Ghosts ghosts;
+    private Fairies fairies;
+    private boolean failed;
     private int ticks;
     private final MapView map;
     private Phase phase = Phase.WAITING;
@@ -179,6 +182,7 @@ public final class DungeonRun implements ScoreCounts {
         this.mort = Mort.spawn(new Location(world, cx + 0.5 + MORT_FORWARD * door.dx, center.y(), cz + 0.5 + MORT_FORWARD * door.dy,
                 yaw(-door.dx, -door.dy), 0));
         this.doors = new RunDoors(this, plugin, world, layout);
+        this.ghosts = new Ghosts(this, plugin);
         this.runMap = new RunMap(this, layout);
         this.roomMobs = new RoomMobs(this, world, layout, doors, floor, plugin.getLogger());
         PlacedRoom blood = layout.bloodRoom();
@@ -239,6 +243,7 @@ public final class DungeonRun implements ScoreCounts {
         member.name = player.getName();
         player.teleport(phase == Phase.WAITING || phase == Phase.STARTING ? arrival : entrance);
         if (member.arrived && phase == Phase.ENDED) backAfterTheEnd(player);
+        ghosts.arrived(player);
         if (member.arrived) return;
         member.arrived = true;
         // The score card of the run they re-queued from.
@@ -310,13 +315,15 @@ public final class DungeonRun implements ScoreCounts {
         }
         roomMobs.tick(here);
         if (watcher != null) watcher.tick();
+        ghosts.tick();
+        if (fairies != null) fairies.tick();
     }
 
     // Doors, keys and the map
 
     /** A right-click on a block; true if it was a shut door (and taken care of). */
     boolean clickBlock(Player player, Block block) {
-        return phase == Phase.RUNNING && doors.click(player, block);
+        return phase == Phase.RUNNING && !ghosts.isGhost(player.getUniqueId()) && doors.click(player, block);
     }
 
     boolean isShut(Door door) {
@@ -410,7 +417,17 @@ public final class DungeonRun implements ScoreCounts {
                 if (countdown <= 0) start();
                 else tell("&aStarting in " + countdown + (countdown == 1 ? " second." : " seconds."));
             }
-            case RUNNING, ENDED -> sidebarScore.tick(now, this::sidebarScore);
+            case RUNNING -> {
+                sidebarScore.tick(now, this::sidebarScore);
+                int here = 0;
+                int ghostsHere = 0;
+                for (Player player : players()) {
+                    here++;
+                    if (ghosts.isGhost(player.getUniqueId())) ghostsHere++;
+                }
+                if (DeathRules.failed(here, ghostsHere, now - startedAt)) fail();
+            }
+            case ENDED -> sidebarScore.tick(now, this::sidebarScore);
         }
     }
 
@@ -420,6 +437,7 @@ public final class DungeonRun implements ScoreCounts {
         phase = Phase.RUNNING;
         startedAt = System.currentTimeMillis();
         sidebarScore.start(startedAt);
+        fairies = Fairies.spawn(this, layout, world);
         mortSays("Here, I found this map when I first entered the dungeon.");
         runMap.show(map);
         for (Player player : players()) giveMap(player, "&bMagical Map", List.of("&7Shows the layout of the Dungeon as", "&7it is explored and completed."));
@@ -464,12 +482,13 @@ public final class DungeonRun implements ScoreCounts {
         inventory.setItem(8, item);
     }
 
-    /** Takes run items (the map) off a player who's leaving. */
+    /** Takes run items (the map, Revive Stones) off a player who's leaving. */
     static void takeRunItems(Player player) {
         PlayerInventory inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             if (StoredInventory.isNotSaved(inventory.getItem(slot))) inventory.setItem(slot, null);
         }
+        ReviveStones.takeAll(player);
     }
 
     // Secrets and blessings (RunSecrets, RunBlessings)
@@ -598,11 +617,13 @@ public final class DungeonRun implements ScoreCounts {
         // Handed off (a warp, or a transfer waiting to be reclaimed): nothing given here would be saved.
         if (user != null && !user.isReleased()) {
             List<DungeonClass> teammates = here.stream().filter(p -> !p.equals(player)).map(p -> classOf(p.getUniqueId())).toList();
-            outcome = RunEnd.award(user.profile(), floor, chatScore, millis, endSecretPercent, classOf(player.getUniqueId()), teammates,
+            outcome = failed
+                    ? RunEnd.awardFailed(user.profile(), floor, chatScore, endSecretPercent, classOf(player.getUniqueId()), teammates)
+                    : RunEnd.award(user.profile(), floor, chatScore, millis, endSecretPercent, classOf(player.getUniqueId()), teammates,
                     RunEnd.today());
             user.save();
         }
-        for (String line : RunEnd.summary(floor, chatScore, millis, outcome)) {
+        for (String line : RunEnd.summary(floor, chatScore, millis, outcome, failed)) {
             if (!line.equals(RunEnd.EXTRA_STATS)) player.sendMessage(Utils.color(line));
             else player.sendMessage(legacy(line).clickEvent(ClickEvent.runCommand("/showextrastats"))
                     .hoverEvent(HoverEvent.showText(Component.text("Click to view extra stats!", NamedTextColor.YELLOW))));
@@ -624,6 +645,20 @@ public final class DungeonRun implements ScoreCounts {
         if (watcherPassed && blood != null) runMap.complete(blood);
         cardScore = score(endedAt);
         ScoreCard.draw(map, floor, cardScore);
+    }
+
+    /**
+     * Everyone left is a ghost, or it has gone on for an hour (see {@link DeathRules#failed}): it ends
+     * as a failed run, its score cut by 30%.
+     */
+    private void fail() {
+        failed = true;
+        end();
+    }
+
+    /** Whether it ended without the boss beaten. */
+    public boolean failed() {
+        return failed;
     }
 
     private void requeueMessage() {
@@ -686,6 +721,8 @@ public final class DungeonRun implements ScoreCounts {
         mort.remove();
         doors.dispose();
         roomMobs.dispose();
+        ghosts.dispose();
+        if (fairies != null) fairies.dispose();
         if (watcher != null) watcher.dispose();
         if (secrets != null) secrets.dispose();
         if (cases != null) cases.dispose();
@@ -703,12 +740,33 @@ public final class DungeonRun implements ScoreCounts {
     /** For EXTRA STATS and the tab list: how much damage a member has dealt, and how many kills. */
     public void damageDealt(UUID member, double damage) {
         Member m = members.get(member);
-        if (m != null && phase == Phase.RUNNING) m.damage += damage;
+        if (m == null || phase != Phase.RUNNING) return;
+        m.damage += damage;
     }
 
     public void killed(UUID member) {
         Member m = members.get(member);
-        if (m != null && phase == Phase.RUNNING) m.kills++;
+        if (m == null || phase != Phase.RUNNING) return;
+        m.kills++;
+    }
+
+    /** Deaths so far, everyone's (for the score and the tab list). */
+    public int deaths() {
+        return members.values().stream().mapToInt(m -> m.deaths).sum();
+    }
+
+    // Ghosts and fairies
+
+    Ghosts ghosts() {
+        return ghosts;
+    }
+
+    boolean isFairy(org.bukkit.entity.Entity entity) {
+        return fairies != null && fairies.is(entity);
+    }
+
+    void fairyKilled(org.bukkit.entity.Entity entity, Player killer) {
+        if (fairies != null) fairies.killed(entity, killer);
     }
 
     void died(UUID member) {
@@ -723,7 +781,8 @@ public final class DungeonRun implements ScoreCounts {
 
     /** The score as it stands (rooms done, secrets, puzzles, crypts, deaths and time). */
     Score score(long now) {
-        return Score.of(floor, scoreInputs(now));
+        Score score = Score.of(floor, scoreInputs(now));
+        return failed ? DeathRules.failedScore(score) : score;
     }
 
     /**
@@ -798,10 +857,13 @@ public final class DungeonRun implements ScoreCounts {
         column(out, "         &b&lParty &f(" + members.size() + ")", () -> {
             List<TabEntry> party = new ArrayList<>();
             for (Member m : members.values()) {
-                String what = started ? "&d" + classOf(m.id).getDisplayName() + " " + DungeonLevels.roman(classLevel(m.id)) : "&7EMPTY";
+                // A ghost's is "DEAD" (Skytils' tab pattern).
+                String what = !started ? "&7EMPTY" : ghosts.isGhost(m.id) ? "&cDEAD"
+                        : "&d" + classOf(m.id).getDisplayName() + " " + DungeonLevels.roman(classLevel(m.id));
                 party.add(new TabEntry("&8[" + skyBlockLevel(m.id) + "&8] " + m.rankColor + m.name + " &f(" + what + "&f)", m.id));
                 party.add(new TabEntry(" Ultimate: " + (started ? "&aReady" : "&cN/A"), null));
-                party.add(new TabEntry(" Revive Stones: &c0", null));
+                Player online = Bukkit.getPlayer(m.id);
+                party.add(new TabEntry(" Revive Stones: &c" + (online == null ? 0 : ReviveStones.count(online)), null));
                 party.add(new TabEntry("", null));
             }
             return party;
@@ -811,10 +873,11 @@ public final class DungeonRun implements ScoreCounts {
         double damage = members.values().stream().mapToDouble(m -> m.damage).sum();
         double healing = members.values().stream().mapToDouble(m -> m.healing).sum();
         int secrets = members.values().stream().mapToInt(m -> m.secrets).sum();
+        List<String> downed = ghosts.tabLines();
         column(out, "       &2&lPlayer Stats", () -> texts(
-                "&a&lDowned: &7NONE",
-                " Time: &eN/A",
-                " Revive: &cN/A",
+                downed.get(0),
+                downed.get(1),
+                downed.get(2),
                 "",
                 "&a&lTeam Deaths: &f" + deaths,
                 " Team Damage Dealt: &c" + RunText.compact(damage) + "❤",

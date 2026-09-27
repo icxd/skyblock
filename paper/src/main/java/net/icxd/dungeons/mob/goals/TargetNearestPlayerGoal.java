@@ -34,9 +34,9 @@ public class TargetNearestPlayerGoal implements Goal<Mob> {
         this.sight = sight;
     }
 
-    /** A player it may go for: alive, in survival or adventure, in its world and in range. */
+    /** A player it may go for: alive, not invulnerable (a dungeon ghost), in survival or adventure, in its world and in range. */
     public static boolean fair(LivingEntity from, Player player, double range) {
-        return player.isValid() && (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE)
+        return player.isValid() && !player.isInvulnerable() && (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE)
                 && player.getWorld().equals(from.getWorld()) && player.getLocation().distanceSquared(from.getLocation()) <= range * range;
     }
 

@@ -71,12 +71,33 @@ final class RunEnd {
     }
 
     /**
+     * A failed run's experience (MCW Dungeoneering: players "complete or fail Dungeon runs" for
+     * Catacombs experience): the same formulas with the failed score, but it isn't a completion (no
+     * count, records or day's run) and "failed runs do not count towards" the day's 40% bonus. Bits
+     * are for finishing a floor (FW Bits), so none. The caller saves.
+     */
+    static Outcome awardFailed(Document profile, DungeonFloor floor, Score score, double secretPercent,
+                               DungeonClass own, Collection<DungeonClass> teammates) {
+        int completions = DungeonRecords.completions(profile, floor);
+        RunRewards.Reward full = RunRewards.reward(floor, score.total(), completions, RunRewards.DAILY_RUNS, secretPercent, own, teammates);
+        RunRewards.Reward reward = new RunRewards.Reward(full.catacombs(), full.classes(), 0);
+        DungeonProfile.addCatacombsXp(profile, reward.catacombs());
+        for (Map.Entry<DungeonClass, Double> e : reward.classes().entrySet()) DungeonProfile.addClassXp(profile, e.getKey(), e.getValue());
+        return new Outcome(reward, new DungeonRecords.Completion(completions, 0, false, false));
+    }
+
+    /**
      * One member's summary, between the bold green rules: the floor, the Team Score and grade, the
      * boss and the time, EXTRA STATS, then their Bits and experience (R1 04:28.4, spaces as
      * recorded). Their own class comes first; the lines for the others' classes (their team bonus)
      * are UNKNOWN on Hypixel and look like it here. With no outcome (their data isn't here), no rewards.
+     * A failed run's summary is UNKNOWN (none recorded): the same, without the boss line, and no Bits.
      */
     static List<String> summary(DungeonFloor floor, Score score, long millis, Outcome outcome) {
+        return summary(floor, score, millis, outcome, false);
+    }
+
+    static List<String> summary(DungeonFloor floor, Score score, long millis, Outcome outcome, boolean failed) {
         boolean bestScore = outcome != null && outcome.completion().bestScore();
         boolean fastest = outcome != null && outcome.completion().fastest();
         List<String> lines = new ArrayList<>();
@@ -85,12 +106,14 @@ final class RunEnd {
         lines.add("");
         lines.add(RunText.centered("Team Score: &a" + score.total() + " &f(" + Score.gradeColor(score.grade()) + score.grade() + "&f)"
                 + (bestScore ? NEW_RECORD : "")));
-        lines.add(RunText.centered("&c☠ &eDefeated &c" + floor.getBossName() + " &ein &a" + RunText.elapsed(millis)
-                + (fastest ? NEW_RECORD : "")));
+        if (!failed) {
+            lines.add(RunText.centered("&c☠ &eDefeated &c" + floor.getBossName() + " &ein &a" + RunText.elapsed(millis)
+                    + (fastest ? NEW_RECORD : "")));
+        }
         lines.add(EXTRA_STATS);
         if (outcome != null) {
             RunRewards.Reward reward = outcome.reward();
-            lines.add(RunText.centered("&8+&b" + reward.bits() + " Bits"));
+            if (reward.bits() > 0) lines.add(RunText.centered("&8+&b" + reward.bits() + " Bits"));
             lines.add(RunText.centered("&8+&3" + RunRewards.format(reward.catacombs()) + " Catacombs Experience"));
             for (Map.Entry<DungeonClass, Double> e : reward.classes().entrySet()) {
                 lines.add(RunText.centered("&8+&3" + RunRewards.format(e.getValue()) + " " + e.getKey().getDisplayName() + " Experience"));

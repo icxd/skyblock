@@ -374,7 +374,7 @@ final class Watcher implements DungeonMobs.Mob {
     // Who's in the fight
 
     private boolean fighting(Player player) {
-        return !player.isDead() && player.getGameMode() != GameMode.SPECTATOR && player.getGameMode() != GameMode.CREATIVE
+        return !player.isDead() && !player.isInvulnerable() && player.getGameMode() != GameMode.SPECTATOR && player.getGameMode() != GameMode.CREATIVE
                 && layout.inside(room, player.getLocation());
     }
 

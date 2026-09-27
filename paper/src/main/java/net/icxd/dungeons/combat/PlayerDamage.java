@@ -56,10 +56,12 @@ public final class PlayerDamage {
     /**
      * Hits a player. {@code by} is what they're knocked away from (null for no knockback), and
      * {@code knockback} how much of the usual knockback they get. Returns the health it took (0 if they
-     * can't be hurt: dead, or in creative or spectator).
+     * can't be hurt: dead, invulnerable (a dungeon ghost), or in creative or spectator).
      */
     public static double hit(Player player, double amount, Kind kind, Entity by, double knockback) {
-        if (player.isDead() || player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) return 0;
+        if (player.isDead() || player.isInvulnerable() || player.getGameMode() == GameMode.CREATIVE
+                || player.getGameMode() == GameMode.SPECTATOR) return 0;
+        LastHit.record(player, by, kind);
         Stats stats = PlayerSession.of(player).stats();
         double taken = taken(amount, kind, stats.get(Stat.DEFENSE), stats.get(Stat.TRUE_DEFENSE), PlayerHealth.max(player));
         PlayerHealth.damage(player, taken);
