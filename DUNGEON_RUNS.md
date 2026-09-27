@@ -99,8 +99,7 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
 - The action bar shows `N/M Secrets` for the room you're in (ten spaces after the mana), the tab
   list the team's secrets, Discoveries (secrets and crypts) and the share of the floor's secrets
   (19%, 4.8%), and EXTRA STATS the secrets found. `totalSecrets()` and `secretsFound()` are the
-  run's `ScoreCounts` for the score, which doesn't read them yet: it still counts the members'
-  secrets against a total of 0, so secrets add nothing to it.
+  run's `ScoreCounts`: the score's explore part and the experience over the floor's share read them.
 
 **Blessings** (`Blessing`, `RunBlessings`). Power, Wisdom, Stone, Life (and Time, from the Quiz on
 later floors): each level adds a flat amount and multiplies the stat (Stone I: +4 and x1.02
@@ -231,8 +230,9 @@ Hypixel's in-run indicator, worked out every 10 seconds from the start: skill wi
 explore, the cleared share, the bonus and 2.2 per Watcher undead killed (fitted to all 21
 recorded values).
 
-Secrets, crypts and puzzles reach the score through `ScoreCounts`: crypts are counted (room mobs),
-secrets and puzzles are 0 until the code counting them is in; deaths are the members' own count.
+Secrets, crypts and puzzles reach the score through `ScoreCounts`: secrets and crypts are counted
+(`RunSecrets`, room mobs), puzzles are 0 until the code counting them is in; deaths are the members'
+own count.
 
 Experience (`RunRewards`) follows the chat's score: the floor's base at 300 (55 on the Entrance)
 x score/300, with 300 more score for the first five completions of a floor and 40% more for the
@@ -244,7 +244,7 @@ Those multipliers are community reverse-engineering, unverified.
 
 ## Not yet
 
-- Secrets and puzzles, the bosses, the boss bar compass. Unstarred mobs in the hidden parts of
+- Puzzles, the bosses, the boss bar compass. Unstarred mobs in the hidden parts of
   rooms nobody recorded; crypts where no tomb is known; the Dungeon Sack. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
   his real icons (placeholders for now).
 - Deaths as ghosts, revives.

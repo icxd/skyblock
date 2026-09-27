@@ -366,18 +366,6 @@ public final class DungeonRun implements ScoreCounts {
         roomMobs.superboom(at);
     }
 
-    /**
-     * Someone picked up a blessing a room dropped ("Name has obtained Blessing of Wisdom!" has been said):
-     * the team gets it at this level. The blessings themselves (their stats and chat) aren't here.
-     */
-    void blessingFound(Player player, String blessing, int level) {
-    }
-
-    /** Whether all of a room's secrets are found, for its tick's colour on the map; until secrets are counted, never. */
-    boolean allSecretsFound(PlacedRoom room) {
-        return false;
-    }
-
     // Every second
 
     void second() {
