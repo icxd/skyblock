@@ -87,7 +87,8 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
   open, five harp notes play, a second later its name floats over it and "DUNGEON BUFF! You found a
   Blessing of Stone I!" follows. Otherwise it's a plain "Chest" menu with a dungeon item in the
   middle, that only gives; what's left in it falls out when it closes. Opened again: "This chest
-  has already been searched!".
+  has already been searched!". On the Entrance every item secret is a Defuse Kit, as the three
+  recorded were; other floors pick one of the wiki's evenly.
 - An item counts when it's picked up ("You don't have enough space in your inventory to pick up
   this item!" if it doesn't fit); a Wither Essence when it's right-clicked (an essence for everyone,
   on the profile they play on); a bat when it's killed (a blessing or an item for the killer); a

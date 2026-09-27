@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 import net.icxd.dungeons.common.DungeonFloor;
@@ -48,11 +51,21 @@ class SecretTextTest {
                 assertTrue(reward.level() == 1 || reward.level() == 2);
                 assertTrue(Blessing.FOUND.contains(reward.blessing()));
             } else {
-                assertTrue(SecretRewards.items(SecretRewards.Source.CHEST, DungeonFloor.ENTRANCE).contains(reward.item()));
+                // The Entrance's item secrets are Defuse Kits, as all three recorded were.
+                assertEquals("DEFUSE_KIT", reward.item());
             }
-            assertFalse(SecretRewards.roll(SecretRewards.Source.ITEM, DungeonFloor.ENTRANCE, random).isBlessing());
+            assertEquals("DEFUSE_KIT", SecretRewards.roll(SecretRewards.Source.ITEM, DungeonFloor.ENTRANCE, random).item());
         }
         assertEquals(0.75, blessings / 4_000.0, 0.03);
+        // Other floors: any of the source's.
+        Set<String> floorOne = new HashSet<>();
+        for (int i = 0; i < 400; i++) {
+            SecretRewards.Reward reward = SecretRewards.roll(SecretRewards.Source.ITEM, DungeonFloor.FLOOR_1, random);
+            assertFalse(reward.isBlessing());
+            assertTrue(SecretRewards.items(SecretRewards.Source.ITEM, DungeonFloor.FLOOR_1).contains(reward.item()));
+            floorOne.add(reward.item());
+        }
+        assertEquals(SecretRewards.items(SecretRewards.Source.ITEM, DungeonFloor.FLOOR_1).size(), floorOne.size());
         // The Dungeon Chest Key and the Treasure Talisman only from Floor IV; a bat never has a Candycomb or a First Draft.
         assertFalse(SecretRewards.items(SecretRewards.Source.CHEST, DungeonFloor.ENTRANCE).contains("DUNGEON_CHEST_KEY"));
         assertTrue(SecretRewards.items(SecretRewards.Source.ITEM, DungeonFloor.FLOOR_4).contains("TREASURE_TALISMAN"));
