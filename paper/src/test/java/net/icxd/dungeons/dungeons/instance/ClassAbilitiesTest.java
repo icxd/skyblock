@@ -21,11 +21,6 @@ class ClassAbilitiesTest {
         assertEquals(20_000, ClassAbilities.seismicWaveDamage(49), 1e-6);
         assertEquals(22_000, ClassAbilities.seismicWaveDamage(50), 1e-6);
         assertEquals(40_000, ClassAbilities.seismicWaveDamage(500), 1e-6);
-        // 70% less of what a hit does through this Defense: 100 / (100 + D) becomes 30% of it.
-        double defense = 400;
-        double before = 100 / (100 + defense);
-        double after = 100 / (100 + ClassAbilities.castleOfStoneDefense(defense));
-        assertEquals(0.3 * before, after, 1e-12);
     }
 
     @Test

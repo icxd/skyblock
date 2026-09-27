@@ -72,6 +72,28 @@ class RunClassesTest {
     }
 
     @Test
+    void castleOfStoneCutsDamageTakenNotDefense() {
+        RunClasses.State s = new RunClasses.State(DungeonClass.TANK, 14, false);
+        Stats before = new Stats().set(Stat.DEFENSE, 300);
+        RunClasses.classStats(s, before, NOW);
+        assertEquals(1, RunClasses.damageTakenFactor(s, NOW), EPSILON);
+
+        s.ultimateUntil = NOW + 20_000;
+        Stats during = new Stats().set(Stat.DEFENSE, 300);
+        RunClasses.classStats(s, during, NOW);
+        // Its Defense (and so Seismic Wave's damage) is as without it; what hits take is 30%.
+        assertEquals(before.get(Stat.DEFENSE), during.get(Stat.DEFENSE), EPSILON);
+        assertEquals(ClassAbilities.seismicWaveDamage(before.get(Stat.DEFENSE)), ClassAbilities.seismicWaveDamage(during.get(Stat.DEFENSE)), EPSILON);
+        assertEquals(0.3, RunClasses.damageTakenFactor(s, NOW), EPSILON);
+        assertEquals(1, RunClasses.damageTakenFactor(s, NOW + 20_000), EPSILON);
+
+        // Only a Tank's.
+        RunClasses.State berserk = new RunClasses.State(DungeonClass.BERSERK, 20, false);
+        berserk.ultimateUntil = NOW + 1;
+        assertEquals(1, RunClasses.damageTakenFactor(berserk, NOW), EPSILON);
+    }
+
+    @Test
     void healerRenewMultipliesAllTheirMending() {
         RunClasses.State s = new RunClasses.State(DungeonClass.HEALER, 15, false);
         Stats stats = new Stats().set(Stat.MENDING, 100).set(Stat.VITALITY, 100);

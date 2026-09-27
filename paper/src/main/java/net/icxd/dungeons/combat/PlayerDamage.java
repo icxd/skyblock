@@ -13,7 +13,10 @@ import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.function.ToDoubleFunction;
 
 /**
  * SkyBlock damage to players: taken from their SkyBlock health directly (vanilla armor doesn't count
@@ -35,8 +38,21 @@ public final class PlayerDamage {
     private static final double KNOCKBACK_UP = 0.36;
     private static final ThreadLocal<DecimalFormat> ONE_DECIMAL =
             ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.#", DecimalFormatSymbols.getInstance(Locale.US)));
+    /** What else changes the damage players take (a Tank's Castle of Stone), as factors. */
+    private static final List<ToDoubleFunction<Player>> TAKEN = new ArrayList<>();
 
     private PlayerDamage() {
+    }
+
+    /** Adds a factor on what every hit takes from a player, after their Defense (0.3 for 70% less). */
+    public static void addTakenMultiplier(ToDoubleFunction<Player> factor) {
+        TAKEN.add(factor);
+    }
+
+    private static double takenMultiplier(Player player) {
+        double product = 1;
+        for (ToDoubleFunction<Player> factor : TAKEN) product *= factor.applyAsDouble(player);
+        return product;
     }
 
     /** What a hit of this kind takes from a player with these stats and max health. */
@@ -63,7 +79,8 @@ public final class PlayerDamage {
                 || player.getGameMode() == GameMode.SPECTATOR) return 0;
         LastHit.record(player, by, kind);
         Stats stats = PlayerSession.of(player).stats();
-        double taken = taken(amount, kind, stats.get(Stat.DEFENSE), stats.get(Stat.TRUE_DEFENSE), PlayerHealth.max(player));
+        double taken = taken(amount, kind, stats.get(Stat.DEFENSE), stats.get(Stat.TRUE_DEFENSE), PlayerHealth.max(player))
+                * takenMultiplier(player);
         PlayerHealth.damage(player, taken);
         DamageIndicators.show(player, taken, false);
         if (player.isDead()) return taken;

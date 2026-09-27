@@ -25,6 +25,7 @@ import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.dungeons.classes.ClassBonus;
 import net.icxd.dungeons.item.ItemBuilder;
@@ -49,8 +50,9 @@ import net.icxd.dungeons.utils.Utils;
  * of Stone and the Healer's Wish follow their lore ({@link ClassAbilities}), with the Berserk's
  * messages; the Healer's Healing Circle and the Mage's aren't built.
  *
- * <p>Stats go in through {@link PlayerStats#addModifier} and damage through {@link Combat#addMultiplier}
- * (see {@link #register}). Main thread.
+ * <p>Stats go in through {@link PlayerStats#addModifier}, damage dealt through {@link
+ * Combat#addMultiplier} and damage taken through {@link PlayerDamage#addTakenMultiplier} (see {@link
+ * #register}). Main thread.
  */
 final class RunClasses {
     /** Ragnarok's first "ready to use" (RUN1 23.4 s, RUN2 23.2 s after the start), then every 30 s while unused. */
@@ -135,7 +137,7 @@ final class RunClasses {
         };
     }
 
-    /** Stats and damage for everyone in a run, from their class (once, when the server starts runs). */
+    /** Stats and damage dealt and taken for everyone in a run, from their class (once, when the server starts runs). */
     static void register() {
         Combat.addMultiplier((player, ranged) -> {
             DungeonRun run = RunManager.of(player);
@@ -144,6 +146,10 @@ final class RunClasses {
         PlayerStats.addModifier((player, stats) -> {
             DungeonRun run = RunManager.of(player);
             if (run != null) run.classes().stats(player, stats);
+        });
+        PlayerDamage.addTakenMultiplier(player -> {
+            DungeonRun run = RunManager.of(player);
+            return run == null ? 1 : run.classes().damageTaken(player);
         });
     }
 
@@ -251,9 +257,8 @@ final class RunClasses {
                 stats.add(Stat.HEALTH, s.value(ClassBonus.TANK_HEALTH));
                 stats.add(Stat.DEFENSE, s.value(ClassBonus.TANK_DEFENSE));
                 stats.add(Stat.VITALITY, s.value(ClassBonus.TANK_VITALITY));
-                // Protective Barrier: "Grants 1.3x Defense".
+                // Protective Barrier: "Grants 1.3x Defense". (Castle of Stone is no Defense: see damageTaken.)
                 stats.set(Stat.DEFENSE, stats.get(Stat.DEFENSE) * (1 + s.value(ClassBonus.TANK_PROTECTIVE_BARRIER) / 100));
-                if (now < s.ultimateUntil) stats.set(Stat.DEFENSE, ClassAbilities.castleOfStoneDefense(stats.get(Stat.DEFENSE)));
             }
         }
     }
@@ -282,6 +287,20 @@ final class RunClasses {
             case ARCHER -> 1 + (ranged ? s.value(ClassBonus.ARCHER_ARROW_DAMAGE) : s.value(ClassBonus.ARCHER_MELEE_DAMAGE)) / 100;
             default -> 1;
         };
+    }
+
+    /** The factor on what hits take from them: 0.3 in Castle of Stone (see {@link #damageTakenFactor}). */
+    double damageTaken(Player player) {
+        State s = active(player);
+        return s == null ? 1 : damageTakenFactor(s, System.currentTimeMillis());
+    }
+
+    /**
+     * Castle of Stone's "reducing the damage you take by 70%", as a factor on what hits take after their
+     * Defense (rather than as more Defense, which Seismic Wave's damage and the stats shown would count).
+     */
+    static double damageTakenFactor(State s, long now) {
+        return s.dungeonClass == DungeonClass.TANK && now < s.ultimateUntil ? ClassAbilities.CASTLE_OF_STONE_TAKEN : 1;
     }
 
     /** Whether this member is a Tank in Castle of Stone now, alive (the undead go for them). */

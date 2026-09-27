@@ -45,6 +45,11 @@ final class ClassAbilities {
     private static final double WAVE_REACH = 1.5;
     /** Castle of Stone: "aggros all enemies in a 10 block radius". */
     static final double AGGRO = 10;
+    /**
+     * Castle of Stone: "reducing the damage you take by 70%", on every SkyBlock hit (whether traps and
+     * true damage count too is UNKNOWN: they do here; vanilla damage, a fall say, doesn't).
+     */
+    static final double CASTLE_OF_STONE_TAKEN = 0.3;
     /** Wish: 10 seconds off its cooldown "for every player below 25% health". */
     private static final double WISH_LOW = 0.25;
 
@@ -75,15 +80,6 @@ final class ClassAbilities {
     /** "Deals 20,000 +10% every +50 Defense in damage". */
     static double seismicWaveDamage(double defense) {
         return 20_000 * (1 + 0.1 * Math.floor(Math.max(0, defense) / 50));
-    }
-
-    /**
-     * Castle of Stone's "reducing the damage you take by 70%", as Defense: hits are cut to 100 / (100 +
-     * Defense), so this much Defense lets 30% of what the old Defense did through. (Only hits Defense
-     * reduces; true damage and traps are unchanged.)
-     */
-    static double castleOfStoneDefense(double defense) {
-        return (100 + Math.max(0, defense)) / 0.3 - 100;
     }
 
     /** Wish's cooldown, 120 seconds, 10 less for each teammate below 25% health. */
@@ -170,7 +166,7 @@ final class ClassAbilities {
     }
 
     /**
-     * Tank, left click (the Defense is in {@link RunClasses#stats}): every mob around goes for them. The
+     * Tank, left click (the damage cut is {@link RunClasses#damageTaken}): every mob around goes for them. The
      * Blood Room's undead aren't vanilla mobs: they choose for themselves ({@link Watcher#targetFor}).
      */
     void castleOfStone(Player player) {
