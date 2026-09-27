@@ -5,11 +5,14 @@ import net.icxd.dungeons.item.ability.abilities.InstantlyShoots;
 import net.icxd.dungeons.item.ability.utility.UtilityAbilities;
 import net.icxd.dungeons.item.ability.weapons.WeaponAbilities;
 import net.icxd.dungeons.item.data.ItemBlock;
+import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 
 /**
  * What items' abilities do, by ability name: an item's ABILITY blocks are text from data, and the ones with a
@@ -19,6 +22,7 @@ import java.util.function.Predicate;
 public final class Abilities {
     private static final Map<String, AbilityHandler> HANDLERS = new HashMap<>();
     private static final AbilityHandler SHORTBOW = new InstantlyShoots();
+    private static final List<ToDoubleFunction<Player>> COST_FACTORS = new ArrayList<>();
 
     static {
         register("Instant Transmission", new InstantTransmission());
@@ -65,6 +69,22 @@ public final class Abilities {
     /** What using the block costs: its mana, and its share of the player's max mana. */
     public static int manaCost(ItemBlock block, int maxMana) {
         return (int) Math.round(block.mana() + block.manaPercent() * maxMana / 100);
+    }
+
+    /**
+     * Adds what makes a player's abilities cost less mana, as a factor (Wise Dragon Armor's 2/3): "All
+     * abilities that reduce Mana cost of items are multiplicative with each other" (the wiki's Wise
+     * Dragon Armor).
+     */
+    public static void addManaCostFactor(ToDoubleFunction<Player> factor) {
+        COST_FACTORS.add(factor);
+    }
+
+    /** What using the block costs this player: {@link #manaCost(ItemBlock, int)} times their factors, rounded. */
+    public static int manaCost(ItemBlock block, int maxMana, Player player) {
+        double factor = 1;
+        for (ToDoubleFunction<Player> f : COST_FACTORS) factor *= f.applyAsDouble(player);
+        return (int) Math.round((block.mana() + block.manaPercent() * maxMana / 100) * factor);
     }
 
     /** Whole seconds left on a cooldown, as "on cooldown for 17s" shows 16.9 (UNKNOWN whether it rounds up or to nearest). */

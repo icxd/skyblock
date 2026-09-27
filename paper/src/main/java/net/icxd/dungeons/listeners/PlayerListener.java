@@ -241,7 +241,8 @@ public class PlayerListener implements Listener {
      * Cooldown, then mana, then Vitality, then whether it can happen at all (see
      * {@link AbilityHandler#usable}): a cast that fails for any of them doesn't start the cooldown
      * (cooldowns are per ability) or take anything. Its mana cost is what it says, and its share of their
-     * max mana; its Vitality cost what it says. Too little Vitality is recorded once: Wither Impact still
+     * max mana, less what makes their abilities cheaper (see {@link Abilities#addManaCostFactor}); its
+     * Vitality cost what it says. Too little Vitality is recorded once: Wither Impact still
      * casts, without the Wither Shield its 50 Vitality pays for (0.26.1's release notes, and its June 10
      * alpha), so a handler can say its Vitality part is optional ({@link AbilityHandler#vitalityOptional})
      * and it casts without it, spending none. For the rest "Vitality is now a resource akin to Mana" (the
@@ -257,7 +258,7 @@ public class PlayerListener implements Listener {
         }
 
         int mana = Math.max(0, session.getMana());
-        int cost = Abilities.manaCost(ability, session.maxMana());
+        int cost = Abilities.manaCost(ability, session.maxMana(), player);
         if (mana < cost) {
             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));

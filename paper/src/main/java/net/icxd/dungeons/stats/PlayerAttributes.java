@@ -7,6 +7,10 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.ToDoubleFunction;
+
 /**
  * What a player's stats do to their vanilla attributes, set from their stats every second (see
  * {@link StatsRunnable}) and put back when a stat drops: Speed is their walk speed, Swing Range their
@@ -14,15 +18,16 @@ import org.bukkit.entity.Player;
  */
 public final class PlayerAttributes {
     /**
-     * "Speed is capped at 400% normally" (the wiki's Speed). What raises the cap (Young Dragon Armor, a
-     * Racing Helmet, a Black Cat pet, ...) isn't in the plugin yet.
+     * "Speed is capped at 400% normally" (the wiki's Speed); what raises it (Young Dragon Armor's "+100 Walk
+     * Speed Cap") comes in through {@link #addSpeedCap}.
      */
     static final double SPEED_CAP = 400;
+    private static final List<ToDoubleFunction<Player>> SPEED_CAPS = new ArrayList<>();
     /**
      * The fastest walk speed can make a player: vanilla's walk speed of 1, five times its 0.2. That's
      * vanilla's limit, not Hypixel's, whose Speed goes past 500 ("Fixed Speed Cap past 500 not actually
-     * doing anything", the wiki's Speed, 0.24.4); nothing raises the cap past 400 yet, and once something
-     * does, Speed past 500% will need the MOVEMENT_SPEED attribute as well.
+     * doing anything", the wiki's Speed, 0.24.4); nothing raises the cap past 500 yet (Young Dragon Armor
+     * takes it to 500), and once something does, Speed past 500% will need the MOVEMENT_SPEED attribute as well.
      */
     static final double SPEED_LIMIT = 500;
     /** Vanilla's melee reach, and SkyBlock's base Swing Range (the wiki's Swing Range: "a base value of 3"). */
@@ -35,8 +40,23 @@ public final class PlayerAttributes {
     private PlayerAttributes() {
     }
 
+    /**
+     * Adds what raises a player's Speed cap, by how much: the most of them counts, they don't add up
+     * ("The Speed cap increase does not stack with a Black Cat Pet", the wiki's Young Dragon Armor).
+     */
+    public static void addSpeedCap(ToDoubleFunction<Player> raise) {
+        SPEED_CAPS.add(raise);
+    }
+
+    /** Their Speed cap: 400, and the most that raises it. */
+    static double speedCap(Player player) {
+        double raise = 0;
+        for (ToDoubleFunction<Player> cap : SPEED_CAPS) raise = Math.max(raise, cap.applyAsDouble(player));
+        return SPEED_CAP + raise;
+    }
+
     public static void apply(Player player, Stats stats) {
-        float walkSpeed = walkSpeed(speed(stats.get(Stat.SPEED), SPEED_CAP, RunManager.inRun(player)));
+        float walkSpeed = walkSpeed(speed(stats.get(Stat.SPEED), speedCap(player), RunManager.inRun(player)));
         if (player.getWalkSpeed() != walkSpeed) player.setWalkSpeed(walkSpeed);
         setBonus(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE), SWING_RANGE, reachBonus(stats.get(Stat.SWING_RANGE)));
         int maxAir = maxAir(stats.get(Stat.RESPIRATION));
