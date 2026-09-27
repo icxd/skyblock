@@ -140,6 +140,7 @@ public final class DungeonRun implements ScoreCounts {
     private RunSecrets secrets;
     private RunBlessings blessings;
     private final Ghosts ghosts;
+    private final RunClasses classes;
     private Fairies fairies;
     private boolean failed;
     private int ticks;
@@ -183,6 +184,7 @@ public final class DungeonRun implements ScoreCounts {
                 yaw(-door.dx, -door.dy), 0));
         this.doors = new RunDoors(this, plugin, world, layout);
         this.ghosts = new Ghosts(this, plugin);
+        this.classes = new RunClasses(this);
         this.runMap = new RunMap(this, layout);
         this.roomMobs = new RoomMobs(this, world, layout, doors, floor, plugin.getLogger());
         PlacedRoom blood = layout.bloodRoom();
@@ -246,6 +248,7 @@ public final class DungeonRun implements ScoreCounts {
         ghosts.arrived(player);
         if (member.arrived) return;
         member.arrived = true;
+        RunClasses.claimOrb(this, player);
         // The score card of the run they re-queued from.
         takeRunItems(player);
         // Hypixel pauses potion effects in dungeons. Here they're per server anyway: the ones they had
@@ -316,6 +319,7 @@ public final class DungeonRun implements ScoreCounts {
         roomMobs.tick(here);
         if (watcher != null) watcher.tick();
         ghosts.tick();
+        classes.tick();
         if (fairies != null) fairies.tick();
     }
 
@@ -437,6 +441,7 @@ public final class DungeonRun implements ScoreCounts {
         phase = Phase.RUNNING;
         startedAt = System.currentTimeMillis();
         sidebarScore.start(startedAt);
+        classes.start(members());
         fairies = Fairies.spawn(this, layout, world);
         mortSays("Here, I found this map when I first entered the dungeon.");
         runMap.show(map);
@@ -722,6 +727,7 @@ public final class DungeonRun implements ScoreCounts {
         doors.dispose();
         roomMobs.dispose();
         ghosts.dispose();
+        classes.dispose();
         if (fairies != null) fairies.dispose();
         if (watcher != null) watcher.dispose();
         if (secrets != null) secrets.dispose();
@@ -742,12 +748,14 @@ public final class DungeonRun implements ScoreCounts {
         Member m = members.get(member);
         if (m == null || phase != Phase.RUNNING) return;
         m.damage += damage;
+        classes.hit(member, damage);
     }
 
     public void killed(UUID member) {
         Member m = members.get(member);
         if (m == null || phase != Phase.RUNNING) return;
         m.kills++;
+        classes.kill(member);
     }
 
     /** Deaths so far, everyone's (for the score and the tab list). */
@@ -755,10 +763,14 @@ public final class DungeonRun implements ScoreCounts {
         return members.values().stream().mapToInt(m -> m.deaths).sum();
     }
 
-    // Ghosts and fairies
+    // Ghosts, fairies and classes
 
     Ghosts ghosts() {
         return ghosts;
+    }
+
+    RunClasses classes() {
+        return classes;
     }
 
     boolean isFairy(org.bukkit.entity.Entity entity) {
@@ -861,7 +873,7 @@ public final class DungeonRun implements ScoreCounts {
                 String what = !started ? "&7EMPTY" : ghosts.isGhost(m.id) ? "&cDEAD"
                         : "&d" + classOf(m.id).getDisplayName() + " " + DungeonLevels.roman(classLevel(m.id));
                 party.add(new TabEntry("&8[" + skyBlockLevel(m.id) + "&8] " + m.rankColor + m.name + " &f(" + what + "&f)", m.id));
-                party.add(new TabEntry(" Ultimate: " + (started ? "&aReady" : "&cN/A"), null));
+                party.add(new TabEntry(" Ultimate: " + (started ? classes.ultimateTab(m.id) : "&cN/A"), null));
                 Player online = Bukkit.getPlayer(m.id);
                 party.add(new TabEntry(" Revive Stones: &c" + (online == null ? 0 : ReviveStones.count(online)), null));
                 party.add(new TabEntry("", null));

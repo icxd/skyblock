@@ -19,18 +19,18 @@ import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.dungeons.DungeonProfile;
+import net.icxd.dungeons.dungeons.classes.ClassBonus;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.RefreshingGUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.utils.Utils;
 
 /**
  * Mort's menu before a run starts, as on Hypixel: the party along the top (ready or not), the
- * ready toggle, the five classes with how many picked each, and the auto ready up toggle. It
- * reopens after every click, like Hypixel's, and keeps up with the rest of the party.
- *
- * <p>Left out until the class system: each class's stats, the Class Details menu (right click) and
- * the Dungeon Orb.
+ * ready toggle, the five classes with their stats at the viewer's levels and how many picked each
+ * (a right click on one opens its {@link ClassDetailsMenu}), the Dungeon Orb and the auto ready up
+ * toggle. It reopens after every click, like Hypixel's, and keeps up with the rest of the party.
  */
 final class ReadyUpMenu extends GUI implements RefreshingGUI {
     private static final int READY = 13;
@@ -39,6 +39,7 @@ final class ReadyUpMenu extends GUI implements RefreshingGUI {
     private static final int FIRST_CLASS = 29;
     /** Under each class, how many picked it. */
     private static final int FIRST_COUNT = 38;
+    private static final int ORB = 45;
     private static final List<String> DOUBLED = List.of("&aAll positive bonus stats are doubled if only 1",
             "&aplayer uses this class in a dungeon.");
 
@@ -78,11 +79,10 @@ final class ReadyUpMenu extends GUI implements RefreshingGUI {
         DungeonClass[] classes = DungeonClass.values();
         for (int i = 0; i < classes.length; i++) {
             DungeonClass dungeonClass = classes[i];
-            set(button(FIRST_CLASS + i, classItem(dungeonClass, dungeonClass == mine), event -> {
-                if (event.getClick() == ClickType.LEFT || event.getClick() == ClickType.SHIFT_LEFT) run.selectClass(viewer, dungeonClass);
-            }));
+            set(classButton(FIRST_CLASS + i, dungeonClass, dungeonClass == mine));
             set(FIRST_COUNT + i, countItem(dungeonClass, members));
         }
+        set(orb());
 
         set(GUIClickableItem.close(CLOSE));
 
@@ -105,7 +105,8 @@ final class ReadyUpMenu extends GUI implements RefreshingGUI {
     }
 
     private ItemStack classItem(DungeonClass dungeonClass, boolean selected) {
-        List<String> lore = new ArrayList<>();
+        List<String> lore = new ArrayList<>(ClassBonus.readyUpLines(dungeonClass, levelOf(dungeonClass)));
+        lore.add("");
         lore.add("&f&lClass Passives");
         for (String passive : dungeonClass.getPassives()) lore.add("&8∙ &a" + passive);
         lore.add("");
@@ -118,6 +119,7 @@ final class ReadyUpMenu extends GUI implements RefreshingGUI {
         lore.addAll(DOUBLED);
         lore.add("");
         lore.add("&eLeft click to select!");
+        lore.add("&eRight click for more details!");
         ItemStack item = item(dungeonClass.getIcon(), "&7[Lvl " + levelOf(dungeonClass) + "] &a" + dungeonClass.getDisplayName(),
                 lore.toArray(String[]::new));
         if (item.getItemMeta() instanceof PotionMeta potion) {
@@ -148,6 +150,50 @@ final class ReadyUpMenu extends GUI implements RefreshingGUI {
         ItemStack item = item(Material.LIME_DYE, "&a" + picked.size() + " Player(s)", lore.toArray(String[]::new));
         item.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
         return item;
+    }
+
+    /** A class: a left click picks it (and the menu opens again), a right click shows its Class Details. */
+    private GUIClickableItem classButton(int slot, DungeonClass dungeonClass, boolean selected) {
+        ItemStack stack = classItem(dungeonClass, selected);
+        GUIClickableItem select = button(slot, stack, event -> {
+            if (event.getClick() == ClickType.LEFT || event.getClick() == ClickType.SHIFT_LEFT) run.selectClass(viewer, dungeonClass);
+        });
+        return new GUIClickableItem() {
+            @Override
+            public void run(InventoryClickEvent event) {
+                if (event.getClick() != ClickType.RIGHT && event.getClick() != ClickType.SHIFT_RIGHT) {
+                    select.run(event);
+                    return;
+                }
+                Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
+                    if (viewer.isOnline()) new ClassDetailsMenu(run, viewer, dungeonClass, levelOf(dungeonClass)).open(viewer);
+                });
+            }
+
+            @Override
+            public int slot() {
+                return slot;
+            }
+
+            @Override
+            public ItemStack stack() {
+                return stack;
+            }
+        };
+    }
+
+    /**
+     * The Dungeon Orb, as recorded ("Already claimed!" with one in the inventory). Without one it can be
+     * claimed here (MCW Dungeon Orb); that item's last line is UNKNOWN.
+     */
+    private GUIClickableItem orb() {
+        boolean claimed = RunClasses.hasOrb(viewer);
+        ItemStack stack = item(Material.PLAYER_HEAD, "&6Dungeon Orb", "&7When entering a Dungeon, this stone", "&7adapts to its user and allows them to",
+                "&7use their class abilities.", "", "&6&lLEGENDARY DUNGEON ITEM", "", claimed ? "&cAlready claimed!" : "&eClick to claim!");
+        Utils.skull(stack, Utils.texture(RunClasses.ORB_TEXTURE));
+        return button(ORB, stack, event -> {
+            if (!RunClasses.hasOrb(viewer)) RunClasses.claimOrb(run, viewer);
+        });
     }
 
     /** Does something, then opens the menu again (as Hypixel's does). */

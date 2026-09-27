@@ -188,7 +188,7 @@ public final class RunManager {
         Bukkit.getPluginManager().registerEvents(new Events(), plugin);
         Bukkit.getPluginManager().registerEvents(new RoomEvents(), plugin);
         PuzzleEvents.register(plugin);
-        Bukkit.getPluginManager().registerEvents(new GhostEvents(this, plugin), plugin);
+        registerGhostsAndClasses();
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20, 20);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickRuns, 1, 1);
         Bukkit.getPluginManager().registerEvents(new SecretEvents(this), plugin);
@@ -217,6 +217,15 @@ public final class RunManager {
 
     PuzzleData puzzleData() {
         return puzzleData;
+    }
+
+    /** Deaths make ghosts; classes have their stats and abilities (see {@link Ghosts}, {@link RunClasses}). */
+    private void registerGhostsAndClasses() {
+        Bukkit.getPluginManager().registerEvents(new GhostEvents(this, plugin), plugin);
+        ClassEvents classEvents = new ClassEvents(this, plugin);
+        Bukkit.getPluginManager().registerEvents(classEvents, plugin);
+        classEvents.watchDropKeys();
+        RunClasses.register();
     }
 
     /** Ends every run; players still in one go back to the main world. */
