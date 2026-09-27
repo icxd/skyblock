@@ -123,6 +123,11 @@ final class RunDoors {
         };
     }
 
+    /** Whether doors of this type are shut until opened (the entrance door, wither doors, the Blood Door). */
+    static boolean startsShut(DoorType type) {
+        return look(type) != null;
+    }
+
     boolean isShut(Door door) {
         return shut.contains(door);
     }

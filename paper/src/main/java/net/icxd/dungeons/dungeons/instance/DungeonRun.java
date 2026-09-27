@@ -710,7 +710,7 @@ public final class DungeonRun implements ScoreCounts {
         column(out, "       &3&lDungeon Stats", () -> {
             List<TabEntry> stats = texts(
                     "&b&lDungeon: &7Catacombs",
-                    " Opened Rooms: &5" + runMap.foundCells(),
+                    " Opened Rooms: &5" + runMap.openedCells(doors::isShut),
                     " Completed Rooms: &d" + runMap.completedCells(),
                     " Secrets Found: &e0%",
                     " Time: &6" + (started ? RunText.elapsed(now - startedAt) : "Soon!"),

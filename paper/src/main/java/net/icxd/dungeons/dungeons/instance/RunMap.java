@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.Predicate;
 
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
@@ -110,9 +111,20 @@ final class RunMap extends MapRenderer {
         return cells(ticked);
     }
 
-    /** Cells of the rooms found. */
-    int foundCells() {
-        return cells(found);
+    /**
+     * Cells of the rooms opened, as the tab's "Opened Rooms" counts them: a room behind a door that
+     * starts shut counts once that door opens, any other once someone walks in. Both recorded runs
+     * (research0/srscore): 3 as the entrance door opens, +1 or +3 within a second of each wither door
+     * and the Blood Door, and the fairy room and rooms behind normal doors only when walked into.
+     *
+     * @param shut whether a door is still shut
+     */
+    int openedCells(Predicate<Door> shut) {
+        Set<Integer> opened = new HashSet<>(found);
+        for (Door door : layout.doors()) {
+            if (RunDoors.startsShut(door.type()) && !shut.test(door)) opened.add(door.child());
+        }
+        return cells(opened);
     }
 
     /** Cells of every room on the floor. */

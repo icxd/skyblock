@@ -45,7 +45,9 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
 - Sidebar: Keys (`■ ✓/✗` for the Blood Key, `■ 1x` for Wither Keys), Time Elapsed, Cleared (the
   share of the floor completed, with Hypixel's in-run score; see Score), then the other members
   (`[B] Name 1,234❤`) or "Solo". The tab list shows each member's class and level, and Opened and
-  Completed Rooms from the map (in cells, as the score counts them).
+  Completed Rooms in cells, as the score counts them. A room behind the entrance door, a wither
+  door or the Blood Door is opened when that door opens (3 as the run starts), any other when
+  someone walks in, as both recordings have it.
 - Damage dealt, kills and deaths are counted for EXTRA STATS and the tab list.
 - Until there are ghosts, dying brings you back in the entrance room, with everything you had
   (run worlds keep inventories).
