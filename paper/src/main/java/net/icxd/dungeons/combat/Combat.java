@@ -84,8 +84,9 @@ public final class Combat {
     }
 
     /**
-     * A player's hit (or arrow) on an entity. On one of SkyBlock's mobs it does SkyBlock damage; a
-     * SkyBlock item's hit on anything else does nothing, and other hits stay vanilla.
+     * A player's hit (or arrow) on an entity. On one of SkyBlock's mobs it does SkyBlock damage, and
+     * anything else they throw at one (a snowball, an egg, a pearl) does nothing; a SkyBlock item's hit
+     * on anything else does nothing, and other hits stay vanilla.
      */
     public static void playerHit(EntityDamageByEntityEvent event) {
         Player player = playerBehind(event.getDamager());
@@ -93,9 +94,13 @@ public final class Combat {
         DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
         Mobs.Live mob = dungeonMob == null ? Mobs.of(target) : null;
         Projectile projectile = event.getDamager() instanceof Projectile p ? p : null;
+        Shots.Shot shot = projectile == null ? null : Shots.take(projectile);
         if (dungeonMob == null && mob == null) {
             if (skyBlockData(player.getInventory().getItemInMainHand()) != null) event.setCancelled(true);
-            if (projectile != null) Shots.take(projectile);
+            return;
+        }
+        if (projectile != null && shot == null && !Shots.hits(projectile)) {
+            event.setCancelled(true);
             return;
         }
 
@@ -105,7 +110,6 @@ public final class Combat {
                 : mob.target();
         Damage.Attacker attacker;
         boolean critical;
-        Shots.Shot shot = projectile == null ? null : Shots.take(projectile);
         if (shot != null) {
             attacker = shot.attacker(projectile.getLocation());
             critical = shot.critical();

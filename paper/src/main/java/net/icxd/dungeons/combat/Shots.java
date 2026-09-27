@@ -5,6 +5,7 @@ import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.Mobs;
 import org.bukkit.Location;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -52,6 +53,15 @@ public final class Shots implements Listener {
         return SHOTS.remove(projectile.getUniqueId());
     }
 
+    /**
+     * Whether a player's projectile is a hit when it lands on a mob: an arrow is (one that wasn't
+     * recorded, as a piercing bolt is on its second mob, hits with their stats now), a snowball, egg or
+     * ender pearl isn't.
+     */
+    static boolean hits(Projectile projectile) {
+        return projectile instanceof AbstractArrow;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onShoot(EntityShootBowEvent event) {
         if (!(event.getEntity() instanceof Player player) || !(event.getProjectile() instanceof Projectile projectile)) return;
@@ -68,7 +78,8 @@ public final class Shots implements Listener {
             SHOTS.remove(event.getEntity().getUniqueId());
             return;
         }
-        if (!(event.getHitEntity() instanceof LivingEntity target) || !(event.getEntity().getShooter() instanceof Player player)) return;
+        if (!hits(event.getEntity()) || !(event.getHitEntity() instanceof LivingEntity target)
+                || !(event.getEntity().getShooter() instanceof Player player)) return;
         if ((Mobs.of(target) != null || DungeonMobs.of(target) != null) && RunManager.inRun(player)) target.setNoDamageTicks(0);
     }
 
