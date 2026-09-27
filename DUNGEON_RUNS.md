@@ -11,7 +11,9 @@ otherwise. The code is in `paper/src/main/java/net/icxd/dungeons/dungeons/instan
 **Entering.** `/joininstance CATACOMBS_ENTRANCE` (or `/joindungeon e`) from the party leader. The
 party sees "Alice entered The Catacombs, Entrance!" between blue rules and goes to a dungeon
 server, which builds the floor in a world of its own (players wait on a glass platform above it
-meanwhile).
+meanwhile). The leader needs Combat XV (the Catacombs Gate's "Combat Skill 15."); below it Mort
+says "Wanderer!", "Save your own skin, seek challenge elsewhere first." and "You need Combat Level
+XV before leading a dungeon." (MCW), and nobody goes.
 
 **Waiting** (up to 2 minutes).
 - Everyone arrives 4 blocks from the room's centre towards the back, at y 76.5, facing the door,
@@ -41,8 +43,9 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
   never saved to the player's stored inventory.
 - The entrance door opens 0.2 s after the start (see Doors).
 - Sidebar: Keys (`■ ✓/✗` for the Blood Key, `■ 1x` for Wither Keys), Time Elapsed, Cleared (the
-  share of rooms completed, with the score), then the other members (`[B] Name 1,234❤`) or "Solo".
-  The tab list shows each member's class and level, and Opened and Completed Rooms from the map.
+  share of the floor completed, with Hypixel's in-run score; see Score), then the other members
+  (`[B] Name 1,234❤`) or "Solo". The tab list shows each member's class and level, and Opened and
+  Completed Rooms from the map (in cells, as the score counts them).
 - Damage dealt, kills and deaths are counted for EXTRA STATS and the tab list.
 - Until there are ghosts, dying brings you back in the entrance room, with everything you had
   (run worlds keep inventories).
@@ -71,7 +74,7 @@ with 4 between, centred. A room shows once someone walks into it (the entrance f
 and each room behind its doors as a grey cell with a question mark. Doors are 7 pixels wide in the
 gap, in the colour of the room they lead into (black for a shut wither door, red for the Blood
 Door). Rooms with nothing to clear get their green tick when found (the fairy room), and the Blood
-Room when the Watcher is done. A cleared room gets a white tick, green once its secrets are all
+Room once the Watcher is done and the run's summary is out (see Ending). A cleared room gets a white tick, green once its secrets are all
 found (the wiki). You're a green arrow, the others blue.
 
 **Room mobs** (`RoomMobs`; research mobs.md, critic.md 3.3-3.4). The rooms' data is Hypixel's, so
@@ -149,24 +152,51 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   ends (there are no bosses yet).
 
 **Ending** (when the Watcher lets you pass, or `/dungeon end`, staff):
-- The summary between bold green rules: "The Catacombs - Entrance", "Team Score: 84 (D)",
-  "☠ Defeated The Watcher in 01m 49s", and "> EXTRA STATS <" (click: `/showextrastats`). Lines
-  are centred the way Hypixel does it (the vanilla font's widths around 160 pixels).
-- The map becomes "Your Score Summary": skill, explore, speed and bonus, the grade and the total.
-- +2.1 s: "Click HERE to re-queue into The Catacombs!" (`/instancerequeue`, which queues the
+- Each member's summary between bold green rules: "The Catacombs - Entrance", "Team Score: 182
+  (B)", "☠ Defeated The Watcher in 03m 55s", "> EXTRA STATS <" (click: `/showextrastats`), then
+  "+3 Bits", "+131.1 Catacombs Experience" and "+126.2 Berserk Experience" (their class first,
+  then a quarter of it in each other class in the party). A best score or fastest time gets
+  "(NEW RECORD!)". Lines are centred the way Hypixel does it (the vanilla font's widths around
+  160 pixels).
+- The experience and Bits go to the profile they play on, which also counts the floor's
+  completions, its best score and fastest times (S and S+ too), the runs completed today and
+  the highest floor completed.
+- +0.5 s: the Blood Room counts (only now, as on Hypixel), and the map becomes "Your Score
+  Summary" (the item at +0.6 s): skill, explore, speed and bonus, the grade and the total. With
+  the Blood Room in it, it's more than the chat said (182 and 189 in one recording).
+- +2.0 s: "Click HERE to re-queue into The Catacombs!" (`/instancerequeue`, which queues the
   party for the same floor). +10.1 s: "Warning! The instance will close in 10s." +20.2 s: everyone
-  to the Dungeon Hub (a hub if there's no `DUNGEON_HUB` server). The sidebar stops at the end.
+  to the Dungeon Hub (a hub if there's no `DUNGEON_HUB` server). The sidebar's time stops at the
+  end, and its score turns into the card's at its next update.
 
 ## Score
 
-Skytils' formulas (`Score`), which the mods use to predict Hypixel's: skill 20 + 80 x rooms
-cleared, minus deaths and unfinished puzzles; explore 60 x rooms + 40 x secrets (of the share the
-floor asks for); speed 100 until the floor's time limit; bonus for crypts, the mimic and Paul. On
-the Entrance each part counts 70%. Grades: D under 100, C 100, B 160, A 230, S 270, S+ 300.
+Hypixel's formulas (`Score`), which give all four recorded Entrance numbers (chat 182 and 109,
+cards 189 and 116, each part as the card shows it):
+- Rooms are map cells, and the Entrance room's don't count (11 rooms on 16 cells count 15).
+- Skill: 20 + 80 x the share of cells done, minus 10 per puzzle failed or never found and 2 per
+  death. Explore: 60 x the share of cells + 40 x the percentage of secrets found divided by the
+  percentage the floor asks for (30% on the Entrance), at most 40. Speed: 100 until the floor's
+  time limit (20 minutes on the Entrance, as the mods have it), then the wiki's curve. Bonus: a
+  point per crypt (up to 5), 2 for the Mimic, 10 with Paul.
+- On the Entrance each part is 70% of that, rounded, so it tops out at 214 (B). Grades: D under
+  100, C 100, B 160, A 230, S 270, S+ 300.
+- The chat's score comes before the Blood Room counts, the card's after (see Ending).
 
-Hypixel's own numbers don't match these exactly (its sidebar shows 0 at the start; ours shows 84
-on the Entrance, the base skill plus full speed). Cleared rooms count; secrets, puzzles and
-crypts aren't fed in yet.
+The sidebar's "Cleared: 87% (227)" is the share of cells done, rounded, red, gold or green, and
+Hypixel's in-run indicator, worked out every 10 seconds from the start: skill without its 20,
+explore, the cleared share, the bonus and 2.2 per Watcher undead killed (fitted to all 21
+recorded values).
+
+Secrets, crypts, puzzles and deaths reach the score through `ScoreCounts`: crypts (room mobs) and
+deaths are counted; secrets and puzzles are 0 until the code counting them is in.
+
+Experience (`RunRewards`) follows the chat's score: the floor's base at 300 (55 on the Entrance)
+x score/300, with 300 more score for the first five completions of a floor and 40% more for the
+first five runs of the day. Repeat completions add Catacombs experience (up to 76 of them below
+Floor VI), and so do secrets over the floor's share (0.5% a percent, up to Floor VI). Class
+experience is the base x 1.1, and the others in the party get a quarter of it in their classes.
+Those multipliers are community reverse-engineering, unverified.
 
 ## Not yet
 
@@ -176,5 +206,5 @@ crypts aren't fed in yet.
 - Deaths as ghosts, revives.
 - Classes beyond picking one: their stats in the Ready Up menu, Class Details (right click), the
   Dungeon Orb, "stats are doubled because you are the only player using this class".
-- XP and Bits at the end, stars on the score card, the "Creating instance..." and "Undersized
-  party!" menus, the Catacombs Gate menu in the Dungeon Hub.
+- Stars on the score card, Catacombs and class level-up messages, the "Creating instance..." and
+  "Undersized party!" menus, the Catacombs Gate menu in the Dungeon Hub.
