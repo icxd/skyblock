@@ -1,6 +1,7 @@
 package net.icxd.dungeons.dungeons.instance;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -38,23 +40,35 @@ import io.github.retrooper.packetevents.util.SpigotConversionUtil;
  */
 final class DoorAnimation {
     private static final double BAT_BELOW = 0.65625;
-    private static final double SINK_PER_TICK = 0.3125;
-    private static final int SINK_FROM = 5;
-    private static final int BARRIER_GONE = 12;
-    private static final int ENTITIES_GONE = 22;
     private static final byte INVISIBLE = 0x20;
+
+    /**
+     * When the entities start sinking and how fast (blocks a tick), when the barrier goes and when the
+     * entities do, in ticks from the start.
+     */
+    record Timing(int sinkFrom, double sinkPerTick, int barrierGone, int entitiesGone) {
+    }
+
+    /** A door's. */
+    static final Timing DOOR = new Timing(5, 0.3125, 12, 22);
 
     private DoorAnimation() {
     }
 
     /** Opens a door: {@code blocks} are its x, y, z, {@code look} what it's made of, {@code viewers} who see it. */
     static void play(Plugin plugin, World world, List<int[]> blocks, Material look, List<Player> viewers) {
+        play(plugin, world, blocks, Collections.nCopies(blocks.size(), look.createBlockData()), viewers, DOOR);
+    }
+
+    /** Moves blocks away the same way, each one looking as {@code looks} says, with its own timing (a lever's wall). */
+    static void play(Plugin plugin, World world, List<int[]> blocks, List<BlockData> looks, List<Player> viewers, Timing timing) {
         boolean packets = Bukkit.getPluginManager().isPluginEnabled("packetevents");
         List<Integer> bats = new ArrayList<>();
         List<Integer> all = new ArrayList<>();
         if (packets) {
-            int state = SpigotConversionUtil.fromBukkitBlockData(look.createBlockData()).getGlobalId();
-            for (int[] b : blocks) {
+            for (int i = 0; i < blocks.size(); i++) {
+                int[] b = blocks.get(i);
+                int state = SpigotConversionUtil.fromBukkitBlockData(looks.get(i)).getGlobalId();
                 int bat = Bukkit.getUnsafe().nextEntityId(world);
                 int block = Bukkit.getUnsafe().nextEntityId(world);
                 Vector3d at = new Vector3d(b[0] + 0.5, b[1] - BAT_BELOW, b[2] + 0.5);
@@ -76,13 +90,13 @@ final class DoorAnimation {
         int[] tick = {0};
         task[0] = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             tick[0]++;
-            if (packets && tick[0] >= SINK_FROM && tick[0] < ENTITIES_GONE) {
-                for (int bat : bats) send(viewers, new WrapperPlayServerEntityRelativeMove(bat, 0, -SINK_PER_TICK, 0, false));
+            if (packets && tick[0] >= timing.sinkFrom() && tick[0] < timing.entitiesGone()) {
+                for (int bat : bats) send(viewers, new WrapperPlayServerEntityRelativeMove(bat, 0, -timing.sinkPerTick(), 0, false));
             }
-            if (tick[0] == BARRIER_GONE) {
+            if (tick[0] == timing.barrierGone()) {
                 for (int[] b : blocks) world.getBlockAt(b[0], b[1], b[2]).setType(Material.AIR, false);
             }
-            if (tick[0] >= ENTITIES_GONE) {
+            if (tick[0] >= timing.entitiesGone()) {
                 if (packets) send(viewers, new WrapperPlayServerDestroyEntities(ids));
                 task[0].cancel();
             }
