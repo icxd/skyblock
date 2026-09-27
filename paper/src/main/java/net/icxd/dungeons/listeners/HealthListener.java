@@ -59,13 +59,23 @@ public class HealthListener implements Listener {
 
     /**
      * Back with full health, and half their mana: "Upon respawning, 50% of max Mana is returned" (the
-     * wiki's Mana, 0.11.3), so that's what they have, rounded down, whatever they had when they died.
+     * wiki's Mana, 0.11.3), so that's what they have, rounded down, whatever they had when they died. Not
+     * after the End's exit portal, which is a respawn without a death (see {@link #afterDeath}).
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
+        if (!afterDeath(event.getRespawnReason())) return;
         PlayerHealth.refill(event.getPlayer());
         PlayerSession session = PlayerSession.of(event.getPlayer());
         session.setMana(respawnMana(session.maxMana()));
+    }
+
+    /**
+     * Whether a respawn follows a death: all but the End's exit portal's, where vanilla keeps everything.
+     * A plugin's respawn is one too (Paper's {@code Player.Spigot#respawn} only brings back the dead).
+     */
+    static boolean afterDeath(PlayerRespawnEvent.RespawnReason reason) {
+        return reason != PlayerRespawnEvent.RespawnReason.END_PORTAL;
     }
 
     /** Half the pool, rounded down. */
