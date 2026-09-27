@@ -24,24 +24,26 @@ import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerHealth;
 
 /**
- * What the utility abilities need besides their clicks: every tick their heals, veils and glides; what
- * immunity does to vanilla damage (SkyBlock hits go through {@link Protection}'s shields); hits from players
- * who can't attack now; a Spirit Leap's immunity ending with a hit; Shadowstep ready again on a kill; the
- * Creeper Veil taken down with a right click; Spirit Glide on sneaking; and what a player who leaves had
- * going. Registered by {@link Dungeons}, which is when the shields and stat hooks go in.
+ * What the utility abilities need besides their clicks: every tick their heals, veils, deployables and
+ * glides; what immunity does to vanilla damage (SkyBlock hits go through {@link Protection}'s shields); hits
+ * from players who can't attack now; a Spirit Leap's immunity ending with a hit; Shadowstep ready again on a
+ * kill; the Creeper Veil taken down with a right click; Spirit Glide on sneaking; and what a player who
+ * leaves had going. Registered by {@link Dungeons}, which is when the shields and stat hooks go in.
  */
 public final class UtilityListener implements Listener {
-    /** On what abilities put in the world (a veil's creepers): not a mob, and never hit. */
+    /** On what abilities put in the world (a veil's creepers, an orb's stand): not a mob, and never hit. */
     static final String NOT_A_MOB = "skyblock_ability_prop";
 
     public UtilityListener() {
         Protection.register();
+        Deployables.register();
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), UtilityListener::tick, 1, 1);
     }
 
     private static void tick() {
         Heals.tick();
         CreeperVeil.tick();
+        Deployables.tick();
         SpiritGlide.tick();
     }
 
@@ -128,12 +130,14 @@ public final class UtilityListener implements Listener {
         Player player = event.getPlayer();
         Protection.forget(player.getUniqueId());
         CreeperVeil.forget(player.getUniqueId());
+        Deployables.forget(player.getUniqueId());
         SpiritGlide.forget(player);
     }
 
     @EventHandler
     public void onDisable(PluginDisableEvent event) {
         if (event.getPlugin() != Dungeons.getInstance()) return;
+        Deployables.removeAll();
         for (Player player : Bukkit.getOnlinePlayers()) {
             CreeperVeil.forget(player.getUniqueId());
             SpiritGlide.forget(player);

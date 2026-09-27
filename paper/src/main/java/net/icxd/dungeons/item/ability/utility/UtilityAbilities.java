@@ -27,10 +27,11 @@ public final class UtilityAbilities {
         InstantHeal instant = new InstantHeal();
         to.accept("Instant Heal", instant);
         to.accept("Extreme Measures", instant);
-        // Buffs and taunts
+        // Buffs, deployables and taunts
         to.accept("Speed Boost", new TimedBuff(TimedBuff.Who.SELF, "entity.bat.takeoff"));
         to.accept("Howl", new TimedBuff(TimedBuff.Who.YOU_AND_NEARBY, "block.note_block.didgeridoo"));
         to.accept("Life Blood", new TimedBuff(TimedBuff.Who.ALLIES_FOR_HEALTH, "entity.player.hurt"));
+        to.accept("Deploy", new Deployables());
         to.accept(Soulward.NAME, new Soulward());
         to.accept("Enrage", new Taunt("entity.ravager.roar"));
         to.accept("Jingle Bells", new Taunt("block.note_block.bell"));

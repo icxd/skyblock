@@ -49,7 +49,7 @@ class UtilityAbilitiesTest {
     @Test
     void theDungeonOnesAreThere() {
         Map<String, AbilityHandler> handlers = registered();
-        for (String name : List.of("Spirit Leap", "Creeper Veil", "Shadowstep", "Howl", "Small Heal", "Huge Heal", "Speed Boost")) {
+        for (String name : List.of("Spirit Leap", "Creeper Veil", "Shadowstep", "Deploy", "Howl", "Small Heal", "Huge Heal", "Speed Boost")) {
             assertTrue(handlers.containsKey(name), name);
         }
         // Done by the run itself (a Revive Stone's right click is the run's).
