@@ -14,5 +14,11 @@ public @interface CommandParameters {
     public String aliases() default "";
 
     public Rank permission() default Rank.DEFAULT;
+
+    /**
+     * A Sandbox tool: free for anyone on a Sandbox profile, else it needs {@link #permission}. For
+     * commands that only give items or change the one held.
+     */
+    public boolean sandbox() default false;
 }
 

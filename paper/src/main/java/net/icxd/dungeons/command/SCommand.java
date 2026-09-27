@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.Rank;
+import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.user.User;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -17,7 +18,8 @@ import java.util.List;
  * A command: its name is the class's without "Command" ("ItemCommand" is /item), the rest is in its
  * {@link CommandParameters}. Registered with Paper's command registrar (see {@link #register}), so a
  * player who may not use it (their rank is too low, or their data isn't loaded) doesn't see it at all:
- * not in suggestions, not in the command list. The console can run anything.
+ * not in suggestions, not in the command list. Which Sandbox tools they may use changes with their
+ * profile, so a profile switch sends them the command list again. The console can run anything.
  */
 public abstract class SCommand {
     protected static final Dungeons instance = Dungeons.getInstance();
@@ -43,11 +45,11 @@ public abstract class SCommand {
         sender.send("§7" + message.replace("&", "§"));
     }
 
-    /** Players need the command's rank, and their data loaded. */
+    /** Players need their data loaded, and the command's rank (or a Sandbox profile, for a Sandbox tool). */
     private boolean allowed(CommandSender sender) {
         if (!(sender instanceof Player player)) return true;
         User user = User.cached(player.getUniqueId());
-        return user != null && user.isLoaded() && user.getRank().isEqualOrStrongerThan(permission);
+        return user != null && user.isLoaded() && Profiles.mayUse(user.getRank(), user.mode(), permission, params.sandbox());
     }
 
     private final class Command implements BasicCommand {
@@ -55,7 +57,8 @@ public abstract class SCommand {
         public void execute(CommandSourceStack stack, String[] args) {
             CommandSender from = stack.getSender();
             if (!allowed(from)) {
-                from.sendMessage("§cYou need " + permission.name() + " or above to do this command");
+                from.sendMessage(params.sandbox() ? "§cYou can only do this command on a Sandbox profile!"
+                        : "§cYou need " + permission.name() + " or above to do this command");
                 return;
             }
             sender = new CommandSource(from);

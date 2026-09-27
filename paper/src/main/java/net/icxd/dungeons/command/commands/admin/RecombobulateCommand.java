@@ -12,7 +12,7 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-@CommandParameters(description = "Recombobulates an item.", usage = "/<command>", permission = Rank.STAFF)
+@CommandParameters(description = "Recombobulates an item.", usage = "/<command>", permission = Rank.STAFF, sandbox = true)
 public class RecombobulateCommand extends SCommand {
 
     @Override

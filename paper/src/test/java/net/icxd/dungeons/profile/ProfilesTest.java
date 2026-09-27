@@ -18,6 +18,7 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.junit.jupiter.api.Test;
 
+import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.database.collections.UserCollection;
 
 class ProfilesTest {
@@ -176,6 +177,24 @@ class ProfilesTest {
         assertEquals(last, Profiles.pickName(all, random));
         all.add(last);
         assertNull(Profiles.pickName(all, random), "none left");
+    }
+
+    @Test
+    void sandboxToolsAreForSandboxProfilesOrStaff() {
+        // A Sandbox tool (/item): anyone on a Sandbox profile, staff anywhere.
+        assertFalse(Profiles.mayUse(Rank.DEFAULT, ProfileMode.NORMAL, Rank.STAFF, true));
+        assertFalse(Profiles.mayUse(Rank.MVP_PLUS_PLUS, ProfileMode.NORMAL, Rank.STAFF, true));
+        assertTrue(Profiles.mayUse(Rank.DEFAULT, ProfileMode.SANDBOX, Rank.STAFF, true));
+        assertTrue(Profiles.mayUse(Rank.STAFF, ProfileMode.NORMAL, Rank.STAFF, true));
+        assertTrue(Profiles.mayUse(Rank.STAFF, ProfileMode.SANDBOX, Rank.STAFF, true));
+        // A staff command that isn't one (/playerdata, /dungeon): staff only, whatever the profile.
+        assertFalse(Profiles.mayUse(Rank.DEFAULT, ProfileMode.SANDBOX, Rank.STAFF, false));
+        assertTrue(Profiles.mayUse(Rank.STAFF, ProfileMode.NORMAL, Rank.STAFF, false));
+        // Everyone's commands.
+        assertTrue(Profiles.mayUse(Rank.DEFAULT, ProfileMode.NORMAL, Rank.DEFAULT, false));
+        assertTrue(Profiles.sandboxTools(Rank.DEFAULT, ProfileMode.SANDBOX));
+        assertTrue(Profiles.sandboxTools(Rank.STAFF, ProfileMode.NORMAL));
+        assertFalse(Profiles.sandboxTools(Rank.YOUTUBE, ProfileMode.NORMAL));
     }
 
     @Test

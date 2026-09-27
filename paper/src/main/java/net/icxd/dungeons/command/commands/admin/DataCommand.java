@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 
-@CommandParameters(permission = Rank.STAFF)
+@CommandParameters(permission = Rank.STAFF, sandbox = true)
 public class DataCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {

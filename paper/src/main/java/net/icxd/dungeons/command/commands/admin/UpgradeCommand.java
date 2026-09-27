@@ -17,7 +17,7 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-@CommandParameters(aliases = "upgrade", description = "Upgrade an item", permission = Rank.STAFF)
+@CommandParameters(aliases = "upgrade", description = "Upgrade an item", permission = Rank.STAFF, sandbox = true)
 public class UpgradeCommand extends SCommand {
     @Override
     public void run(CommandSource source, String[] args) {

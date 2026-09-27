@@ -12,6 +12,8 @@ import java.util.function.Supplier;
 
 import org.bson.Document;
 
+import net.icxd.dungeons.common.Rank;
+
 /**
  * SkyBlock profiles in a user document, as plain functions on it (no server needed). Everything a
  * server saves for a player stays in their one document, so it's still claimed, saved and handed
@@ -180,6 +182,21 @@ public final class Profiles {
     /** The names of their profiles now (deleted ones are free again). */
     public static List<String> names(Document doc) {
         return ordered(doc).stream().map(Entry::name).filter(n -> n != null).toList();
+    }
+
+    // Who may use what
+
+    /** The item browser and the commands that edit the held item: on a Sandbox profile, or for staff anywhere. */
+    public static boolean sandboxTools(Rank rank, ProfileMode mode) {
+        return mode == ProfileMode.SANDBOX || rank.isEqualOrStrongerThan(Rank.STAFF);
+    }
+
+    /**
+     * Whether a player may use a command that needs {@code needed}; a Sandbox tool ({@code sandbox})
+     * is also free for anyone on a Sandbox profile.
+     */
+    public static boolean mayUse(Rank rank, ProfileMode mode, Rank needed, boolean sandbox) {
+        return rank.isEqualOrStrongerThan(needed) || (sandbox && mode == ProfileMode.SANDBOX);
     }
 
     /** A time stored as a Date or as milliseconds; {@code otherwise} if it's neither. */

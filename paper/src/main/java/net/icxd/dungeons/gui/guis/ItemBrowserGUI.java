@@ -11,6 +11,8 @@ import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.listeners.InventorySyncListener;
+import net.icxd.dungeons.profile.Profiles;
+import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -35,7 +37,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Every SkyBlock item, to look through and take (/item, for staff): 45 a page, each as players get
+ * Every SkyBlock item, to look through and take (/item: a Sandbox tool, for anyone on a Sandbox profile
+ * and for staff anywhere): 45 a page, each as players get
  * it, with the page arrows, a sort, rarity and type filters and a search along the bottom, in the
  * style of Hypixel's auction house. Left click takes one, shift click a stack, right click puts the
  * id in chat to copy. The menu opens again after each change, as Hypixel's do, and each player's
@@ -155,6 +158,13 @@ public final class ItemBrowserGUI extends GUI {
     private void give(SkyBlockItem item, boolean stack) {
         if (InventorySyncListener.frozen(viewer)) {
             viewer.sendMessage(Text.line("&cYou can't take items right now."));
+            return;
+        }
+        // Checked again here: the menu may have stayed open while they left the Sandbox profile.
+        User user = User.ifLoaded(viewer.getUniqueId());
+        if (user == null || !Profiles.sandboxTools(user.getRank(), user.mode())) {
+            viewer.closeInventory();
+            viewer.sendMessage(Text.line("&cYou can only take items on a Sandbox profile!"));
             return;
         }
         ItemStack given = ItemBuilder.build(item);

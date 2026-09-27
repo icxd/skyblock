@@ -16,8 +16,11 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.stream.Stream;
 
-/** "/item" (or "/item list") opens the item browser; "/item HYPERION" gives one. */
-@CommandParameters(permission = Rank.STAFF)
+/**
+ * "/item" (or "/item list") opens the item browser; "/item HYPERION" gives one. A Sandbox tool: anyone
+ * on a Sandbox profile may use it, staff anywhere.
+ */
+@CommandParameters(permission = Rank.STAFF, sandbox = true)
 public class ItemCommand extends SCommand {
     /** At most this many ids are suggested: there are thousands. */
     private static final int SUGGESTIONS = 200;
