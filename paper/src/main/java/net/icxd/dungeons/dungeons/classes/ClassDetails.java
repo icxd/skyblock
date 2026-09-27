@@ -8,9 +8,10 @@ import net.icxd.dungeons.dungeons.DungeonClass;
 /**
  * The Class Details menu's three items for a class (right click on it in Ready Up): its passives,
  * its Dungeon Orb abilities and its ghost abilities, verbatim as recorded (RUN2 00:57.6 to 01:04.3,
- * at Healer 15, Mage 15, Berserk 20, Archer 16 and Tank 14). Numbers that {@link ClassBonus} or the
- * wiki give per level follow the level; the rest are the recorded ones at every level (no second
- * level was recorded to tell them apart).
+ * at Healer 15, Mage 15, Berserk 20, Archer 16 and Tank 14), with the resource pack's stat glyphs as
+ * the classic symbols (we ship no pack): ☄ Mending, ❈ Defense, ❤ Health, ⚔ Attack Speed, ✦ Speed,
+ * ❁ Strength. Numbers that {@link ClassBonus} or the wiki give per level follow the level; the rest
+ * are the recorded ones at every level (no second level was recorded to tell them apart).
  */
 public final class ClassDetails {
     /** What each of the three items is: its name, then its lore. */
@@ -47,10 +48,10 @@ public final class ClassDetails {
         List<String> lore = switch (dungeonClass) {
             case HEALER -> List.of(
                     "&8∙ &6Class Passive: Renew",
-                    "&7Grants &a" + ClassBonus.multiplier(1 + ClassBonus.HEALER_RENEW.value(l, false) / 100) + "x  Mending&7, which increases your",
+                    "&7Grants &a" + ClassBonus.multiplier(1 + ClassBonus.HEALER_RENEW.value(l, false) / 100) + "x ☄ Mending&7, which increases your",
                     "&7healing on others.",
                     "",
-                    "&7While playing Healer, &a Mending &7also boosts",
+                    "&7While playing Healer, &a☄ Mending &7also boosts",
                     "&7healing on &7&oyourself&7.",
                     "",
                     "&8∙ &aClass Passive: Healing Aura",
@@ -131,7 +132,7 @@ public final class ClassDetails {
                     "&8Cooldown: &a15s");
             case TANK -> List.of(
                     "&8∙ &aClass Passive: Protective Barrier",
-                    "&7Grants &a" + ClassBonus.multiplier(1 + ClassBonus.TANK_PROTECTIVE_BARRIER.value(l, false) / 100) + "x  Defense&7.",
+                    "&7Grants &a" + ClassBonus.multiplier(1 + ClassBonus.TANK_PROTECTIVE_BARRIER.value(l, false) / 100) + "x ❈ Defense&7.",
                     "&7Upon falling below &a50% &7health, gain a &e10% &7health",
                     "&7absorption shield.",
                     "&8Cooldown: &a90s",
@@ -191,7 +192,7 @@ public final class ClassDetails {
                     "&8Cooldown: &a10s",
                     "",
                     "&8∙ &6Ability: Ragnarok  &e&lRIGHT CLICK",
-                    "&7Grants &e100 Attack Speed&7, &f400",
+                    "&7Grants &e100⚔ Attack Speed&7, &f400✦",
                     "&fSpeed &7and &c1.5x &7melee damage",
                     "&7increase for &b15 &7seconds. Also",
                     "&7summons &a3&7 Zombie minions to aid you",
@@ -218,7 +219,7 @@ public final class ClassDetails {
                     "&7A Seismic Wave emerges from",
                     "&7underneath you and travels in a",
                     "&7straight line. Deals &c20,000 +10%",
-                    "&7every &a+50 Defense &7in damage to",
+                    "&7every &a+50❈ Defense &7in damage to",
                     "&7any enemy in its path.",
                     "&8Acts as Superboom TNT!",
                     "&8Cooldown: &a15s",
@@ -240,7 +241,7 @@ public final class ClassDetails {
                     "&8∙ &fGhost Ability: Healing Potion",
                     "&7Throw a potion which heals all teammates in a &a10",
                     "&7block radius for &a10%&7 of their max health and",
-                    "&c+100 Health&7.",
+                    "&c+100❤ Health&7.",
                     "",
                     "&8∙ &fGhost Ability: Revive",
                     "&7Revive yourself after 50 seconds.");
@@ -255,7 +256,7 @@ public final class ClassDetails {
             case BERSERK -> List.of(
                     "&8∙ &fGhost Ability: Buff Potion",
                     "&7Throw a potion which temporarily gives all",
-                    "&7teammates in a &a10&7 block radius &c+30 Strength&7.",
+                    "&7teammates in a &a10&7 block radius &c+30❁ Strength&7.",
                     "",
                     "&8∙ &fGhost Ability: Ghost Axe",
                     "&7Throw an Axe, dealing damage based on your",
@@ -270,7 +271,7 @@ public final class ClassDetails {
                     "&8∙ &fGhost Ability: Healing Bow",
                     "&7Shoot a teammate to heal them for",
                     "&a10%&7 of their max HP and grant them",
-                    "&c+50 Strength&7 for 10 seconds.",
+                    "&c+50❁ Strength&7 for 10 seconds.",
                     "&8Cooldown: &a10s");
             case TANK -> List.of(
                     "&8∙ &fGhost Ability: Stun Potion",

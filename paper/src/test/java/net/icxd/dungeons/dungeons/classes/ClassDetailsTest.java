@@ -45,7 +45,9 @@ class ClassDetailsTest {
     @Test
     void levelNumbersOfTheOtherClassesAsRecorded() {
         List<String> healer = ClassDetails.passives(DungeonClass.HEALER, 15, 0).lore();
-        assertTrue(healer.contains("&7Grants &a1.6x  Mending&7, which increases your"));
+        // The pack's glyphs (\ue014 and so on) as the classic symbols.
+        assertTrue(healer.contains("&7Grants &a1.6x ☄ Mending&7, which increases your"));
+        assertTrue(healer.contains("&7While playing Healer, &a☄ Mending &7also boosts"));
         assertTrue(healer.contains("&7block radius for &a1.3% &7HP per second."));
         assertTrue(healer.contains("&7Vanishes for &e85 &7seconds after reviving a player."));
         assertTrue(healer.contains("&7the healing into an absorption shield up to &a26% &7of"));
@@ -61,6 +63,11 @@ class ClassDetailsTest {
         assertTrue(archerOrb.contains("&8Cooldown: &a34s"));
         assertTrue(archerOrb.contains("&7Shoots &a5&7 Arrows per second for &a5"));
 
-        assertTrue(ClassDetails.passives(DungeonClass.TANK, 14, 0).lore().contains("&7Grants &a1.3x  Defense&7."));
+        assertTrue(ClassDetails.passives(DungeonClass.TANK, 14, 0).lore().contains("&7Grants &a1.3x ❈ Defense&7."));
+        assertTrue(ClassDetails.orbAbilities(DungeonClass.TANK, 14).lore().contains("&7every &a+50❈ Defense &7in damage to"));
+        assertTrue(ClassDetails.orbAbilities(DungeonClass.BERSERK, 20).lore().contains("&7Grants &e100⚔ Attack Speed&7, &f400✦"));
+        assertTrue(ClassDetails.ghostAbilities(DungeonClass.HEALER).lore().contains("&c+100❤ Health&7."));
+        assertTrue(ClassDetails.ghostAbilities(DungeonClass.BERSERK).lore().contains("&7teammates in a &a10&7 block radius &c+30❁ Strength&7."));
+        assertTrue(ClassDetails.ghostAbilities(DungeonClass.ARCHER).lore().contains("&c+50❁ Strength&7 for 10 seconds."));
     }
 }
