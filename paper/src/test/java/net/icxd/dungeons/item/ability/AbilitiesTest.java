@@ -107,6 +107,15 @@ class AbilitiesTest {
         assertEquals(3, InstantlyShoots.arrows(lowerCase));
     }
 
+    /** "This ability is on cooldown for 17s." with 16.9 seconds left. */
+    @Test
+    void cooldownSeconds() {
+        assertEquals(17, Abilities.cooldownSeconds(16_900));
+        assertEquals(10, Abilities.cooldownSeconds(10_000));
+        assertEquals(1, Abilities.cooldownSeconds(1));
+        assertEquals(0, Abilities.cooldownSeconds(-5));
+    }
+
     @Test
     void handlers() {
         assertNotNull(Abilities.get("Instant Transmission"));

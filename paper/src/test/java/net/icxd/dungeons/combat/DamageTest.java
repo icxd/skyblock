@@ -196,9 +196,23 @@ class DamageTest {
     void attackSpeed() {
         assertEquals(10, Damage.invulnerabilityTicks(0));
         assertEquals(10, Damage.invulnerabilityTicks(5));
+        assertEquals(9, Damage.invulnerabilityTicks(6));
+        assertEquals(6, Damage.invulnerabilityTicks(81));
         assertEquals(5, Damage.invulnerabilityTicks(82));
         assertEquals(5, Damage.invulnerabilityTicks(100));
         assertEquals(5, Damage.invulnerabilityTicks(400));
+    }
+
+    /** A 0.5 s shortbow: ceil(10 / (1 + Attack Speed / 100)) ticks a shot, the wiki's table (lowest and highest of each row). */
+    @Test
+    void shortbowAttackSpeed() {
+        int[][] rows = {{10, 0, 11}, {9, 12, 24}, {8, 25, 42}, {7, 43, 66}, {6, 67, 99}, {5, 100, 149}};
+        for (int[] row : rows) {
+            assertEquals(row[0], Damage.shotCooldownTicks(0.5, row[1]), "Attack Speed " + row[1]);
+            assertEquals(row[0], Damage.shotCooldownTicks(0.5, row[2]), "Attack Speed " + row[2]);
+        }
+        assertEquals(10, Damage.shotCooldownTicks(0.5, -20));
+        assertEquals(20, Damage.shotCooldownTicks(1, 0));
     }
 
     /**
@@ -230,13 +244,5 @@ class DamageTest {
         assertEquals(7.92, Damage.initialAbility(1, 1, 692, 0), 1e-9);
         // Giant's Slam: 100,000 base, 0.05 scaling; 1,000 Intelligence makes it 150,000.
         assertEquals(150_000, Damage.initialAbility(100_000, 0.05, 1000, 0), 1e-6);
-    }
-
-    /** "This ability is on cooldown for 17s." with 16.9 seconds left. */
-    @Test
-    void cooldownSeconds() {
-        assertEquals(17, Damage.cooldownSeconds(16_900));
-        assertEquals(10, Damage.cooldownSeconds(10_000));
-        assertEquals(1, Damage.cooldownSeconds(1));
     }
 }

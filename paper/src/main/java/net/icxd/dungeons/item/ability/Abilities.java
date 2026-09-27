@@ -52,4 +52,9 @@ public final class Abilities {
     public static int manaCost(ItemBlock block, int maxMana) {
         return (int) Math.round(block.mana() + block.manaPercent() * maxMana / 100);
     }
+
+    /** Whole seconds left on a cooldown, as "on cooldown for 17s" shows 16.9 (UNKNOWN whether it rounds up or to nearest). */
+    public static long cooldownSeconds(long millis) {
+        return (long) Math.ceil(Math.max(0, millis) / 1000.0);
+    }
 }

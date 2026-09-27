@@ -220,11 +220,22 @@ public final class Damage {
      * 10 / (1 + Attack Speed / 100), rounded.
      */
     public static int invulnerabilityTicks(double attackSpeed) {
-        return (int) Math.round(10 / (1 + Math.max(0, Math.min(attackSpeed, 100)) / 100));
+        return (int) Math.round(10 / (1 + attackSpeedShare(attackSpeed)));
     }
 
-    /** Whole seconds left on a cooldown, as "on cooldown for 17s" shows 16.9 (UNKNOWN whether it rounds up or to nearest). */
-    public static long cooldownSeconds(long millis) {
-        return (long) Math.ceil(Math.max(0, millis) / 1000.0);
+    /**
+     * How many ticks a shortbow with this shot cooldown (in seconds) waits between shots, with this much
+     * Attack Speed (at most 100): its ticks / (1 + Attack Speed / 100), rounded up, so a 0.5 s one fires
+     * every 10 ticks to 11 Attack Speed, 9 from 12 and 5 only at 100 (the wiki's Attack Speed). The wiki
+     * gives it for 10 ticks; that other cooldowns shorten the same way is an approximation.
+     */
+    public static int shotCooldownTicks(double seconds, double attackSpeed) {
+        // Less a hair, so a whole number of ticks that doubles don't quite hit exactly isn't rounded up past it.
+        return (int) Math.ceil(Math.max(0, seconds) * 20 / (1 + attackSpeedShare(attackSpeed)) - 1e-9);
+    }
+
+    /** Attack Speed as a share (0.25 for 25), between 0 and its cap of 100. */
+    private static double attackSpeedShare(double attackSpeed) {
+        return Math.max(0, Math.min(attackSpeed, 100)) / 100;
     }
 }

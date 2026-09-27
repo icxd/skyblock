@@ -8,6 +8,7 @@ import net.icxd.dungeons.profile.ProfileActions;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
@@ -232,7 +233,7 @@ public class PlayerListener implements Listener {
         String cooldown = "ability:" + ability.name();
         long left = session.cooldownLeft(cooldown);
         if (left > 0) {
-            player.sendMessage("§cThis ability is on cooldown for " + Damage.cooldownSeconds(left) + "s.");
+            player.sendMessage("§cThis ability is on cooldown for " + Abilities.cooldownSeconds(left) + "s.");
             return;
         }
 
@@ -254,11 +255,17 @@ public class PlayerListener implements Listener {
         }
     }
 
-    /** A shortbow's shot, at most one per its shot cooldown (whichever shortbow they shot last). */
+    /**
+     * A shortbow's shot, at most one per its shot cooldown (whichever shortbow they shot last), which their
+     * Attack Speed shortens.
+     */
     private void shoot(Player player, SkyBlockItem sbItem, NBTTagCompound tag, ItemBlock shortbow) {
         PlayerSession session = PlayerSession.of(player);
         if (session.cooldownLeft("shortbow") > 0) return;
-        if (sbItem.shotCooldown() > 0) session.startCooldown("shortbow", (long) (sbItem.shotCooldown() * 1000));
+        if (sbItem.shotCooldown() > 0) {
+            int ticks = Damage.shotCooldownTicks(sbItem.shotCooldown(), session.stats().get(Stat.ATTACK_SPEED));
+            session.startCooldown("shortbow", ticks * 50L);
+        }
         Abilities.handler(shortbow).use(player, sbItem, tag, shortbow);
     }
 
