@@ -159,10 +159,11 @@ final class RoomMobs {
         final List<Tracked> mobs = new ArrayList<>();
         /** The doors whose keys this room drops. */
         final List<Door> keys = new ArrayList<>();
-        int starredPlanned;
-        int starredDead;
+        /** Its starred mobs, and so whether it's cleared. */
+        final RoomTally tally = new RoomTally();
+        /** Where its last starred mob died, for its loot. */
+        Location lastDeath;
         boolean opened;
-        boolean cleared;
         double multiplier = 1;
 
         RoomState(PlacedRoom room, RoomFrame frame) {
@@ -272,9 +273,17 @@ final class RoomMobs {
         // A key drops with its room's loot; a key room with nothing starred has it waiting from the start.
         for (Door door : doors.keyDoors()) {
             RoomState keyRoom = rooms.get(layout.keyRoom(door).id());
-            if (keyRoom != null && keyRoom.hasMobs && keyRoom.starredPlanned > 0) keyRoom.keys.add(door);
+            if (keyRoom != null && keyWithLoot(keyRoom.hasMobs, keyRoom.tally)) keyRoom.keys.add(door);
             else doors.placeKey(door);
         }
+    }
+
+    /**
+     * Whether a key room's key drops with its loot, when its last starred mob dies; if not, it's waiting in
+     * the room from the start. (If the starred mobs it was to have all fail to spawn, it's put there then.)
+     */
+    static boolean keyWithLoot(boolean hasMobs, RoomTally tally) {
+        return hasMobs && tally.planned() > 0;
     }
 
     /** Normal (and rare, a normal room's dead-end kind) and champion rooms have mobs; puzzles, traps and the rest none. */
@@ -303,7 +312,7 @@ final class RoomMobs {
             fallback(state, mine);
         }
         for (Planned p : mine) {
-            if (p.options().starred()) state.starredPlanned++;
+            if (p.options().starred()) state.tally.plan();
         }
         out.addAll(mine);
     }
@@ -465,7 +474,7 @@ final class RoomMobs {
             if (skull.room == state && skull.riseAt < 0) rise(skull, SKULL_RISE_MIN, SKULL_RISE_MAX);
         }
         // Nothing starred in it (none planned, or none could stand anywhere): done as soon as it's open.
-        if (state.hasMobs && state.starredPlanned == 0 && !state.cleared) clear(state, null);
+        if (state.hasMobs && state.tally.open()) clear(state, state.lastDeath);
     }
 
     private void wake(Tracked t) {
@@ -484,7 +493,7 @@ final class RoomMobs {
     /** Whether its starred mobs are all dead (a room with no mobs to clear never is, here). */
     boolean isCleared(PlacedRoom room) {
         RoomState state = rooms.get(room.id());
-        return state != null && state.cleared;
+        return state != null && state.tally.cleared();
     }
 
     /**
@@ -523,9 +532,11 @@ final class RoomMobs {
             live = Mobs.spawn(p.kind(), floor, p.options(), p.at());
         } catch (IllegalArgumentException e) {
             log.warning("Room " + p.room().room.template().getId() + ": " + e.getMessage());
-            if (p.options().starred()) p.room().starredPlanned--;
+            // One less to kill, which may have been the last one it was waiting for.
+            if (p.options().starred() && p.room().tally.failed()) clear(p.room(), p.room().lastDeath);
             return;
         }
+        if (p.options().starred()) p.room().tally.spawned();
         Tracked t = track(p.room(), live, p.options().starred());
         if (p.room().opened) wake(t);
         else t.mob().setDormant(live.entity(), true);
@@ -579,7 +590,7 @@ final class RoomMobs {
     private void sweep() {
         for (RoomState state : rooms.values()) {
             for (Tracked t : List.copyOf(state.mobs)) {
-                if (state.cleared && !t.crypt) continue;
+                if (state.tally.cleared() && !t.crypt) continue;
                 if (!t.dead && !t.live.entity().isValid() && Mobs.of(t.live.entity()) == null) died(t, t.live.entity().getLocation());
             }
         }
@@ -605,8 +616,8 @@ final class RoomMobs {
         }
         if (t.crypt) cryptsBlown++;
         if (!t.starred) return;
-        state.starredDead++;
-        if (!state.cleared && state.starredDead >= state.starredPlanned && toSpawnFor(state) == 0) clear(state, at);
+        state.lastDeath = at;
+        if (state.tally.died()) clear(state, at);
     }
 
     /** Skeletons (and Undead Skeletons) leave a skull that becomes an Undead Skeleton. */
@@ -614,17 +625,11 @@ final class RoomMobs {
         return kind == MobKinds.SKELETON_GRUNT || kind == MobKinds.SCARED_SKELETON || kind == MobKinds.UNDEAD_SKELETON;
     }
 
-    private int toSpawnFor(RoomState state) {
-        int n = 0;
-        for (Planned p : toSpawn) {
-            if (p.room() == state && p.options().starred()) n++;
-        }
-        return n;
-    }
-
-    /** The room's starred mobs are all dead: its loot where the last one died ({@code at}; none if null), and it's done. */
+    /**
+     * The room's starred mobs are all dead ({@link RoomTally} said so): its loot where the last one died
+     * ({@code at}; if none did, no loot, and its keys are put in the room), and it's done.
+     */
     private void clear(RoomState state, Location at) {
-        state.cleared = true;
         if (at != null) dropLoot(state, at);
         else for (Door door : state.keys) doors.placeKey(door);
         run.clearedRoom(state.room);
