@@ -10,16 +10,18 @@ import org.bukkit.inventory.ItemStack;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
+import net.icxd.dungeons.menu.SkyBlockMenu;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
 
 /**
  * "Profile Management" ({@code /profiles}): the five profile slots, as Hypixel's. Profiles come first,
- * oldest first, then the empty slots their rank has, then the locked ones. Left out: the Go Back
- * button (to the SkyBlock Menu, which this plugin doesn't have yet) and the co-op lines.
+ * oldest first, then the empty slots their rank has, then the locked ones; Go Back is to the SkyBlock
+ * Menu. Left out: the co-op lines.
  */
 public final class ProfileManagementMenu extends Menu {
     private static final int FIRST = 11;
+    private static final int BACK = 30;
     private static final int CLOSE = 31;
 
     public ProfileManagementMenu(Player viewer) {
@@ -50,6 +52,7 @@ public final class ProfileManagementMenu extends Menu {
                 set(slot, lockedSlot(i + 1));
             }
         }
+        set(button(BACK, item(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu"), () -> new SkyBlockMenu(viewer).open(viewer)));
         set(GUIClickableItem.close(CLOSE));
     }
 

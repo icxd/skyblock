@@ -5,6 +5,7 @@ import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
+import net.icxd.dungeons.menu.SkyBlockMenu;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import org.bson.Document;
@@ -21,9 +22,9 @@ import java.util.function.Consumer;
 
 /**
  * "Your Skills" ({@code /skills}), as recorded (research skills.md 1.2): every skill with its level,
- * progress and the next level's rewards; clicking one opens its own menu ({@link SkillMenu}). Hypixel's
- * "Go Back" to the SkyBlock Menu isn't here (this plugin has no SkyBlock Menu yet), and neither is a
- * Dungeoneering menu (never recorded) or the skill rankings display. Main thread.
+ * progress and the next level's rewards; clicking one opens its own menu ({@link SkillMenu}), and Go
+ * Back the SkyBlock Menu. There's no Dungeoneering menu (never recorded) or skill rankings display.
+ * Main thread.
  */
 public final class SkillsMenu extends GUI {
     /** Where each skill goes, in {@link Skill}'s order (slot 31 stays empty, as recorded). */
@@ -59,6 +60,7 @@ public final class SkillsMenu extends GUI {
                 "&7Requires &bCombat Level 15 &7to enter a", "&7Dungeon.", "", "&eClick to view!"));
         Utils.skull(head, Utils.texture(DUNGEONEERING_HEAD));
         set(34, head);
+        set(button(48, item(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu"), () -> new SkyBlockMenu(viewer).open(viewer)));
         set(GUIClickableItem.close(49));
         set(53, menuItem(Material.OAK_SIGN, "&aShow Skill Rankings", List.of("&7Show the rankings display for your", "&7Skills.", "",
                 "&eClick to show!")));
