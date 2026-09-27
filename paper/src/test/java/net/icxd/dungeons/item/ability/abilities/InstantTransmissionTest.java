@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item.ability.abilities;
 
+import org.bukkit.Material;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.Test;
 
@@ -7,7 +8,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Where Instant Transmission lands, in made-up worlds: a floor at y 68 (so feet at 69, eyes at 70.62)
@@ -91,5 +94,15 @@ class InstantTransmissionTest {
         assertEquals(new InstantTransmission.Landing(0, 77, 0, false), land(new Vector(0, 1, 0)));
         block(0, 76, 0);
         assertEquals(new InstantTransmission.Landing(0, 73, 0, true), land(new Vector(0, 1, 0)));
+    }
+
+    /** Skyblocker's list of Hypixel's: moss carpet and snow up to 3 layers don't stop it; deeper snow does. */
+    @Test
+    void throughThinShapes() {
+        assertTrue(InstantTransmission.throughAnyway(Material.SNOW, 1));
+        assertTrue(InstantTransmission.throughAnyway(Material.SNOW, 3));
+        assertFalse(InstantTransmission.throughAnyway(Material.SNOW, 4));
+        assertFalse(InstantTransmission.throughAnyway(Material.SNOW, 8));
+        assertTrue(InstantTransmission.throughAnyway(Material.MOSS_CARPET, 0));
     }
 }

@@ -11,10 +11,12 @@ import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.type.Snow;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -36,6 +38,8 @@ public class InstantTransmission implements AbilityHandler {
     /** Finer than a block, so the line can't slip past a corner. */
     private static final double STEP = 0.25;
     static final String BLOCKED = "§cThere are blocks in the way!";
+    /** The most snow layers a teleport goes through (Skyblocker's "3 or less snow layers"). */
+    static final int MAX_SNOW_LAYERS = 3;
 
     /** Whether a block can be teleported through, by its coordinates. */
     @FunctionalInterface
@@ -90,11 +94,20 @@ public class InstantTransmission implements AbilityHandler {
     }
 
     /**
-     * Air and what has nothing to bump into, and (as the Skyblocker mod has Hypixel's) carpets and flower
-     * pots, whose little shapes don't stop a teleport.
+     * What a teleport goes through, as the Skyblocker mod has Hypixel's ({@code canTeleportThrough}: "Air,
+     * non-collidable blocks, carpets, pots, 3 or less snow layers"): air and what has nothing to bump into
+     * (cobwebs among them), carpets (wool and moss, its CarpetBlocks), flower pots, and snow up to 3
+     * layers, whose little shapes don't stop it.
      */
     private static boolean passable(Block block) {
-        return block.isPassable() || Tag.WOOL_CARPETS.isTagged(block.getType()) || Tag.FLOWER_POTS.isTagged(block.getType());
+        Material type = block.getType();
+        return block.isPassable() || throughAnyway(type, type == Material.SNOW ? ((Snow) block.getBlockData()).getLayers() : 0);
+    }
+
+    /** The blocks with a shape that a teleport still goes through; {@code snowLayers} counts for snow. */
+    static boolean throughAnyway(Material type, int snowLayers) {
+        if (type == Material.SNOW) return snowLayers <= MAX_SNOW_LAYERS;
+        return type == Material.MOSS_CARPET || Tag.WOOL_CARPETS.isTagged(type) || Tag.FLOWER_POTS.isTagged(type);
     }
 
     /**
