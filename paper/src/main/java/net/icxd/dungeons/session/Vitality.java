@@ -1,14 +1,9 @@
 package net.icxd.dungeons.session;
 
-import net.icxd.dungeons.item.ItemRegistry;
-import net.icxd.dungeons.item.SkyBlockItem;
-import net.icxd.dungeons.item.behaviour.ItemBehaviours;
-import net.icxd.dungeons.item.data.ItemBlock;
-import net.icxd.dungeons.item.nbt.ItemNBT;
-import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.stats.Stat;
+import net.icxd.dungeons.user.User;
+import org.bson.Document;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * A player's Vitality: since the Healing Revamp (0.26.1) a pool that healing abilities spend, as other
@@ -20,6 +15,8 @@ import org.bukkit.inventory.ItemStack;
 public final class Vitality {
     /** "Vitality regenerates at a rate of 5% per second, based on your Vitality stat." */
     static final double REGEN_SHARE = 0.05;
+    /** The profile's flag: they've used an item that costs Vitality, so the action bar shows it (see {@link #shown}). */
+    static final String SHOWN = "vitalityShown";
 
     private Vitality() {
     }
@@ -47,6 +44,8 @@ public final class Vitality {
         double vitality = get(player);
         if (vitality < cost) return false;
         PlayerSession.of(player).setVitality(vitality - cost);
+        User user = User.ifLoaded(player.getUniqueId());
+        if (user != null) markShown(user.profile());
         return true;
     }
 
@@ -62,21 +61,23 @@ public final class Vitality {
     }
 
     /**
-     * Whether the action bar shows Vitality in mana's place: "Vitality replaces Mana in your action bar
-     * when holding an item that consumes Vitality" (the June 10 changelog), one with an ability that costs it.
+     * Whether the action bar shows their Vitality: "Vitality is now permanently displayed after you first
+     * use an item that costs Vitality" (0.26.1's release candidate, July 15, in place of the June 10 alpha's
+     * "replaces Mana in your action bar when holding an item that consumes Vitality"; the wiki's Vitality:
+     * "After using any healing ability for the first time, a Vitality display appears on the Player's action
+     * bar"). "Permanently" is taken as kept on their profile.
      */
     public static boolean shown(Player player) {
-        return consumesVitality(player.getInventory().getItemInMainHand());
+        User user = User.ifLoaded(player.getUniqueId());
+        return user != null && shown(user.profile());
     }
 
-    private static boolean consumesVitality(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return false;
-        NBTTagCompound tag = ItemNBT.read(stack);
-        SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
-        if (item == null) return false;
-        for (ItemBlock block : ItemBehaviours.of(item).blocks(item, tag, item.blocks())) {
-            if (block.vitality() > 0) return true;
-        }
-        return false;
+    static boolean shown(Document profile) {
+        return profile != null && Boolean.TRUE.equals(profile.getBoolean(SHOWN));
+    }
+
+    /** From now on their action bar shows Vitality (they've spent some). */
+    static void markShown(Document profile) {
+        if (profile != null && !shown(profile)) profile.put(SHOWN, true);
     }
 }

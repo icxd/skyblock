@@ -14,4 +14,11 @@ class StatsRunnableTest {
         assertEquals("940/940", StatsRunnable.ofMax(940, 940));
         assertEquals("104/104", StatsRunnable.ofMax(104, 104));
     }
+
+    /** Vitality after mana, as mana reads, in its own colour and symbol. */
+    @Test
+    void vitality() {
+        assertEquals("&4104/104♨ Vitality", StatsRunnable.vitality(104, 104));
+        assertEquals("&479/104♨ Vitality", StatsRunnable.vitality(79.2, 104));
+    }
 }

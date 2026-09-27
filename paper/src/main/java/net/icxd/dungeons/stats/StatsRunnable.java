@@ -37,11 +37,12 @@ public class StatsRunnable implements Runnable {
     }
 
     /**
-     * Health, Defense (or what's shown in its place for a moment, like a skill's XP gain) and mana, or
-     * Vitality while they hold an item that spends it (see {@link Vitality#shown}: how Hypixel's reads
-     * isn't recorded, so it's mana's, in Vitality's colour and symbol). Sent every second, and at once when
-     * what's in Defense's place changes. Numbers are rounded down and grouped in thousands, as recorded
-     * ("§c5,238/5,238❤     §a2,446§a❈ Defense     §b1,201/1,201✎ Mana", with Hypixel's own symbols).
+     * Health, Defense (or what's shown in its place for a moment, like a skill's XP gain) and mana, and
+     * after it Vitality once they've used an item that spends it (see {@link Vitality#shown}; where
+     * Hypixel puts it and how it reads isn't recorded, so it's mana's look, in Vitality's colour and
+     * symbol, after mana). Sent every second, and at once when what's in Defense's place changes. Numbers
+     * are rounded down and grouped in thousands, as recorded ("§c5,238/5,238❤     §a2,446§a❈ Defense
+     * §b1,201/1,201✎ Mana", with Hypixel's own symbols).
      */
     public static void sendActionBar(Player player) {
         PlayerSession session = PlayerSession.of(player);
@@ -50,9 +51,13 @@ public class StatsRunnable implements Runnable {
         Replacement manaText = session.getManaReplacement();
         Utils.sendActionText(player, "&c" + ofMax(PlayerHealth.get(player), PlayerHealth.max(player)) + "❤     &a" +
                 (defense == null ? (stats.has(Stat.DEFENSE) ? number(stats.get(Stat.DEFENSE)) + "❈ Defense     " : "") : defense.text() + "     ") +
-                (manaText != null ? manaText.text()
-                        : Vitality.shown(player) ? "&4" + ofMax(Vitality.get(player), Vitality.max(player)) + "♨ Vitality"
-                        : "&b" + ofMax(session.getMana(), session.maxMana()) + "✎ Mana"));
+                (manaText != null ? manaText.text() : "&b" + ofMax(session.getMana(), session.maxMana()) + "✎ Mana") +
+                (Vitality.shown(player) ? "     " + vitality(Vitality.get(player), Vitality.max(player)) : ""));
+    }
+
+    /** "&4100/100♨ Vitality". */
+    static String vitality(double vitality, double max) {
+        return "&4" + ofMax(vitality, max) + "♨ Vitality";
     }
 
     /** "5,238/5,238". */
