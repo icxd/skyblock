@@ -28,7 +28,7 @@ public final class PlayerStats {
         User user = User.ifLoaded(player.getUniqueId());
         if (user != null) {
             for (Perk perk : Perk.values()) {
-                Integer level = user.get("dwarvenMines.hotm.tree." + perk.name(), Integer.class);
+                Integer level = user.profileValue("dwarvenMines.hotm.tree." + perk.name(), Integer.class);
                 if (level != null && level > 0) stats.add(perk.getStats().apply(level));
             }
         }

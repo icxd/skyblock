@@ -23,7 +23,7 @@ public class DungeonTierRequirement extends Requirement {
         return (player) -> {
             User user = User.ifLoaded(player.getUniqueId());
             Integer highest = user == null ? null
-                    : user.get(dungeonType == DungeonType.MASTER_CATACOMBS ? "dungeons.floors.masterHighest" : "dungeons.floors.highest", Integer.class);
+                    : user.profileValue(dungeonType == DungeonType.MASTER_CATACOMBS ? "dungeons.floors.masterHighest" : "dungeons.floors.highest", Integer.class);
             return highest != null && highest >= tier;
         };
     }

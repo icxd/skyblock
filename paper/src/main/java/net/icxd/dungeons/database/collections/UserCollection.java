@@ -15,6 +15,7 @@ public class UserCollection implements ICollection {
         return "users";
     }
 
+    /** An account's fields: what isn't any one profile's (see Profiles). A new player gets their first profile when they're added. */
     @Override
     public Document defaultDocument() {
         return new Document()
@@ -22,9 +23,20 @@ public class UserCollection implements ICollection {
                 .append("username", "")
                 .append("ip", "")
                 .append("rank", Rank.DEFAULT.name())
+                .append("gems", 0)
+                .append("settings", new Document()
+                        .append("autoReadyUp", false))
+                .append("lastProfileAction", null)
+                .append("deletedProfiles", new ArrayList<Document>())
+                .append("firstLogin", System.currentTimeMillis())
+                .append("lastLogin", System.currentTimeMillis());
+    }
+
+    /** A profile's fields, as a new profile starts (its name, mode and when it was made come on top). */
+    public Document profileDefaults() {
+        return new Document()
                 .append("coins", 0)
                 .append("bits", 0)
-                .append("gems", 0)
                 .append("skills", new Document()
                         .append("combat", 0))
                 .append("dungeons", new Document()
@@ -46,8 +58,7 @@ public class UserCollection implements ICollection {
                                 .append("BERSERK", 0)
                                 .append("ARCHER", 0)
                                 .append("TANK", 0))
-                        .append("selectedClass", "HEALER")
-                        .append("autoReadyUp", false))
+                        .append("selectedClass", "HEALER"))
                 .append("crimsonIsle", new Document()
                         .append("factions", new Document()
                                 .append("barbarian", new Document()
@@ -86,8 +97,6 @@ public class UserCollection implements ICollection {
                         .append("offhand", null))
                 .append("minions", new Document()
                         .append("craftedMinions", new ArrayList<Document>())
-                        .append("minions", new ArrayList<Document>()))
-                .append("firstLogin", System.currentTimeMillis())
-                .append("lastLogin", System.currentTimeMillis());
+                        .append("minions", new ArrayList<Document>()));
     }
 }

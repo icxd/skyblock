@@ -14,7 +14,13 @@ public class EssenceCost extends Cost {
     private final int amount;
 
     private Document essence(User user) {
-        return user.getDocument().get("dungeons", Document.class).get("essence", Document.class);
+        Document dungeons = user.profile().get("dungeons", Document.class);
+        Document essence = dungeons.get("essence", Document.class);
+        if (essence == null) {
+            essence = new Document();
+            dungeons.put("essence", essence);
+        }
+        return essence;
     }
 
     // An essence added since the player's data was made (Forest) isn't in it yet: they have none of it.

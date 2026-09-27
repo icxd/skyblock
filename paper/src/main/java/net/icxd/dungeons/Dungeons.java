@@ -28,7 +28,6 @@ import net.icxd.dungeons.listeners.WorldListener;
 import net.icxd.dungeons.mining.BlockListener;
 import net.icxd.dungeons.region.MovementListener;
 import net.icxd.dungeons.command.SCommand;
-import net.icxd.dungeons.database.ICollection;
 import net.icxd.dungeons.database.collections.UserCollection;
 import net.icxd.dungeons.database.mongo.Settings;
 import net.icxd.dungeons.common.Runs;
@@ -53,7 +52,7 @@ import java.util.List;
 public class Dungeons extends JavaPlugin {
     @Getter private static Dungeons instance;
     @Getter private static MongoClient mongoClient;
-    @Getter private static ICollection userCollection;
+    @Getter private static UserCollection userCollection;
     @Getter private static UserStore userStore;
     @Getter private static ProxyLink proxyLink;
     /** Dungeon runs, on DUNGEONS servers; null elsewhere. */
@@ -77,7 +76,8 @@ public class Dungeons extends JavaPlugin {
 
         skyBlockServer = new SkyBlockServer(getConfig());
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
-                mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection::defaultDocument);
+                mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection::defaultDocument,
+                userCollection::profileDefaults);
         userStore.start();
         proxyLink = new ProxyLink(this, userStore);
         if (skyBlockServer.getServerType() == ServerType.DUNGEONS) {

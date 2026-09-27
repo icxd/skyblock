@@ -4,6 +4,7 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.mob.Mobs;
+import net.icxd.dungeons.profile.ProfileActions;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.session.PlayerSession;
@@ -52,6 +53,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class PlayerListener implements Listener {
+    /** Hypixel says which profile you're on about 3 seconds after you join. */
+    private static final long PROFILE_MESSAGE_DELAY = 3 * 20;
 
     /** Loads the player's data before they join, waiting for another server to let go of it (see UserStore). */
     @EventHandler(priority = EventPriority.HIGH)
@@ -105,7 +108,11 @@ public class PlayerListener implements Listener {
         }
         // Items made before an update to how items look (or are stored) are brought up to date.
         ItemBuilder.refreshInventory(player);
-        player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
+        if (user.getRank() == Rank.STAFF) player.sendMessage(Utils.color("&aSuccessfully loaded player data. &8(took " + user.getLoadMillis() + "ms)"));
+        // As Hypixel, a moment after joining any server.
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
+            if (player.isOnline() && User.ifLoaded(player.getUniqueId()) == user) ProfileActions.announce(player, user);
+        }, PROFILE_MESSAGE_DELAY);
     }
 
     /** Last, so every other quit handler still has the player's data. */

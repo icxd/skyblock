@@ -32,6 +32,7 @@ import net.icxd.dungeons.command.CommandParameters;
 import net.icxd.dungeons.command.CommandSource;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.common.Rank;
+import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
@@ -106,7 +107,7 @@ public class PlayerDataCommand extends SCommand {
             case "inv" -> {
                 PlayerInventory inventory = player.getInventory();
                 showItems(sender, name, "live", inventory.getStorageContents(), inventory.getArmorContents(), inventory.getItemInOffHand(),
-                        StoredInventory.stored(doc, "overflow", 4));
+                        StoredInventory.stored(user.profile(), "overflow", 4));
             }
             case "get" -> show(sender, name, doc, path(args));
             case "set" -> {
@@ -162,14 +163,16 @@ public class PlayerDataCommand extends SCommand {
             case "get" -> show(sender, name, doc, path(args));
             case "inv" -> {
                 String who = name;
+                Document profile = Profiles.selected(doc);
                 // Items are read on the main thread.
                 Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
-                    if (StoredInventory.isEmpty(doc)) {
+                    if (profile == null || StoredInventory.isEmpty(profile)) {
                         error(sender, "No items stored for " + who + " yet.");
                         return;
                     }
-                    showItems(sender, who, holder == null ? "stored" : "stored, " + holder + " has newer", StoredInventory.stored(doc, "inventory", 36),
-                            StoredInventory.stored(doc, "armor", 4), StoredInventory.stored(doc, "offhand", 1)[0], StoredInventory.stored(doc, "overflow", 4));
+                    showItems(sender, who, holder == null ? "stored" : "stored, " + holder + " has newer", StoredInventory.stored(profile, "inventory", 36),
+                            StoredInventory.stored(profile, "armor", 4), StoredInventory.stored(profile, "offhand", 1)[0],
+                            StoredInventory.stored(profile, "overflow", 4));
                 });
             }
             case "set" -> {
@@ -229,9 +232,14 @@ public class PlayerDataCommand extends SCommand {
         sender.sendMessage(Component.text(" " + name, NamedTextColor.GOLD, TextDecoration.BOLD)
                 .append(Component.text("  " + doc.getString("uuid"), NamedTextColor.DARK_GRAY).decoration(TextDecoration.BOLD, false)));
         sender.sendMessage(Component.text(" ").append(held));
+        Document profile = Profiles.selected(doc);
+        Document shown = profile == null ? new Document() : profile;
         sender.sendMessage(Component.text(" ")
-                .append(stat("Rank", doc.get("rank"))).append(stat("Purse", doc.get("coins"))).append(stat("Bank", get(doc, "bank.balance")))
-                .append(stat("Bits", doc.get("bits"))).append(stat("Gems", doc.get("gems"))));
+                .append(stat("Rank", doc.get("rank")))
+                .append(stat("Profile", profile == null ? null : profile.getString(Profiles.NAME) + " (" + Profiles.mode(profile) + ")"))
+                .append(stat("Gems", doc.get("gems"))));
+        sender.sendMessage(Component.text(" ")
+                .append(stat("Purse", shown.get("coins"))).append(stat("Bank", get(shown, "bank.balance"))).append(stat("Bits", shown.get("bits"))));
         sender.sendMessage(fields.build());
         if (loadMillis >= 0) {
             sender.sendMessage(Component.text(" ").append(button("Items", "/pd " + name + " inv", "Look at their inventory", NamedTextColor.GOLD))

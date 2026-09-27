@@ -9,6 +9,7 @@ import static com.mongodb.client.model.Updates.set;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +37,7 @@ import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 
+import net.icxd.dungeons.profile.Profiles;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -80,17 +82,23 @@ public final class UserStore {
     private final Logger log;
     private final String server;
     private final String type;
-    /** A fresh default document each time: nested documents must not be shared between players. */
+    /** A fresh default document each time: nested documents must not be shared between players (or profiles). */
     private final Supplier<Document> defaults;
+    private final Supplier<Document> profileDefaults;
+    private final Random random = new Random();
     private final MongoCollection<Document> users;
     private final MongoCollection<Document> servers;
     private final ExecutorService writer = Executors.newSingleThreadExecutor(r -> new Thread(r, "user-saves"));
     /** Players whose data is being taken back right now. Main thread. */
     private final Set<UUID> reclaiming = new HashSet<>();
 
-    /** @param server this server's name; every server on the network needs its own */
+    /**
+     * @param server this server's name; every server on the network needs its own
+     * @param defaults an account's fields
+     * @param profileDefaults a profile's
+     */
     public UserStore(Plugin plugin, String server, String type, MongoCollection<Document> users, MongoCollection<Document> servers,
-                                     Supplier<Document> defaults) {
+                                     Supplier<Document> defaults, Supplier<Document> profileDefaults) {
         this.plugin = plugin;
         this.log = plugin.getLogger();
         this.server = server;
@@ -98,6 +106,7 @@ public final class UserStore {
         this.users = users;
         this.servers = servers;
         this.defaults = defaults;
+        this.profileDefaults = profileDefaults;
     }
 
     public String server() {
@@ -137,7 +146,7 @@ public final class UserStore {
             try {
                 Player player = user.getPlayer();
                 if (player != null && user.isInventoryRestored() && !user.isReleased()) {
-                    StoredInventory.rescueLooseItems(player, user.getDocument());
+                    StoredInventory.rescueLooseItems(player, user.profile());
                     player.closeInventory();
                 }
                 leave(user);
@@ -208,7 +217,7 @@ public final class UserStore {
             Document doc = users.findOneAndUpdate(and(eq("uuid", id), or(eq("session", null), eq("session.server", server))),
                     set("session", session()), AFTER);
             if (doc == null && users.countDocuments(eq("uuid", id)) == 0) doc = insert(id, name, ip);
-            if (doc != null) return User.loaded(uuid, withDefaults(doc), start);
+            if (doc != null) return User.loaded(uuid, prepare(doc, name), start);
 
             Document held = users.find(eq("uuid", id)).first();
             Document session = held == null ? null : held.get("session", Document.class);
@@ -231,7 +240,7 @@ public final class UserStore {
                 Document taken = users.findOneAndUpdate(and(eq("uuid", id), eq("session.server", holder)), set("session", session()), AFTER);
                 if (taken != null) {
                     log.warning("Took over " + name + "'s data from " + holder + ", which has stopped; what it hadn't saved is lost");
-                    return User.loaded(uuid, withDefaults(taken), start);
+                    return User.loaded(uuid, prepare(taken, name), start);
                 }
             } else if (holderRunning && time - start >= WAIT_FOR_RELEASE_MILLIS) {
                 throw new HeldElsewhereException(holder);
@@ -240,8 +249,10 @@ public final class UserStore {
         }
     }
 
+    /** A new player, with their first profile: a Normal one. */
     private Document insert(String id, String name, String ip) {
         Document doc = defaults.get().append("uuid", id).append("username", name).append("ip", ip).append("session", session());
+        Profiles.repair(doc, profileDefaults, random, System.currentTimeMillis());
         try {
             users.insertOne(doc);
             return doc;
@@ -251,11 +262,23 @@ public final class UserStore {
         }
     }
 
-    /** Top-level fields added to the defaults since the document was made. */
-    private Document withDefaults(Document doc) {
-        Document fresh = defaults.get();
-        for (String key : fresh.keySet()) {
-            if (!doc.containsKey(key)) doc.append(key, fresh.get(key));
+    /**
+     * A document this server now holds, made ready to use: one from before profiles gets its first
+     * (see {@link Profiles#migrate}), which is saved right away, while it's still held here; then
+     * fields added to the defaults since it was made, and a profile to play on.
+     */
+    private Document prepare(Document doc, String name) {
+        long now = System.currentTimeMillis();
+        boolean migrated = Profiles.migrate(doc, random, now);
+        Profiles.withDefaults(doc, defaults.get(), profileDefaults);
+        boolean repaired = Profiles.repair(doc, profileDefaults, random, now);
+        if (migrated) {
+            log.info("Moved " + name + "'s data into their first profile, " + Profiles.selected(doc).getString(Profiles.NAME) + " (Sandbox)");
+        } else if (repaired) {
+            log.warning(name + "'s selected profile was missing; now on " + Profiles.selected(doc).getString(Profiles.NAME));
+        }
+        if (migrated || repaired) {
+            users.replaceOne(and(eq("uuid", doc.getString("uuid")), eq("session.server", server)), doc);
         }
         return doc;
     }
@@ -291,7 +314,7 @@ public final class UserStore {
         User user = User.cached(player.getUniqueId());
         if (user == null || user.isReleased()) return CompletableFuture.completedFuture(null);
         if (user.isInventoryRestored()) {
-            StoredInventory.rescueLooseItems(player, user.getDocument());
+            StoredInventory.rescueLooseItems(player, user.profile());
             player.closeInventory();
         }
         return release(user);
@@ -356,13 +379,13 @@ public final class UserStore {
      * isn't saved. Main thread.
      */
     public void restoreInventory(Player player, User user) throws StoredInventory.NewerDataException {
-        StoredInventory.restore(player, user.getDocument(), log);
+        StoredInventory.restore(player, user.profile(), log);
         user.markInventoryRestored();
     }
 
     /** The player is disconnecting: see {@link StoredInventory#rescueLooseItems}. Main thread. */
     public void rescueLooseItems(Player player, User user) {
-        if (user.isLoaded() && user.isInventoryRestored() && !user.isReleased()) StoredInventory.rescueLooseItems(player, user.getDocument());
+        if (user.isLoaded() && user.isInventoryRestored() && !user.isReleased()) StoredInventory.rescueLooseItems(player, user.profile());
     }
 
     /**
@@ -384,7 +407,7 @@ public final class UserStore {
         Player player = user.getPlayer();
         if (player != null && user.isInventoryRestored()) {
             try {
-                StoredInventory.capture(player, doc);
+                StoredInventory.capture(player, user.profile());
             } catch (RuntimeException e) {
                 // The rest still saves; the stored inventory stays as it was.
                 log.log(Level.SEVERE, "Couldn't save " + player.getName() + "'s inventory", e);

@@ -22,7 +22,7 @@ public class KuudraTierRequirement extends Requirement {
     public Predicate<Player> requirement() {
         return player -> {
             User user = User.ifLoaded(player.getUniqueId());
-            Integer highest = user == null ? null : user.get("crimsonIsle.kuudra.highest", Integer.class);
+            Integer highest = user == null ? null : user.profileValue("crimsonIsle.kuudra.highest", Integer.class);
             return highest != null && highest >= tier.getTier();
         };
     }

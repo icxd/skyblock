@@ -183,7 +183,7 @@ public class TabList {
 
         // Column 4: account info.
         lines.add(new Line("§6§l      Account Info", GOLD));
-        lines.add(new Line("§e§lProfile: §cN/A", GRAY));
+        lines.add(new Line("§e§lProfile: §a" + user.profileName(), GRAY));
         lines.add(new Line("§f Bank: §6" + Utils.formatNumber(user.getBankBalance()) + "/50M", GRAY));
         lines.add(new Line("§8§1 ", GRAY));
         lines.add(new Line("§e§lSkills: ", GRAY));

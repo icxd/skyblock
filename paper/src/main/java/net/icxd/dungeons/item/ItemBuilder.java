@@ -339,7 +339,7 @@ public final class ItemBuilder {
     /** The owner's; level 0's while there's no owner to go by. */
     private static double catacombsBoost(Player owner) {
         User user = owner == null ? null : User.ifLoaded(owner.getUniqueId());
-        Number experience = user == null ? null : user.get("dungeons.catacombsExp", Number.class);
+        Number experience = user == null ? null : user.profileValue("dungeons.catacombsExp", Number.class);
         return catacombsBoost(experience == null ? 0 : DungeonLevels.level(experience.doubleValue()));
     }
 

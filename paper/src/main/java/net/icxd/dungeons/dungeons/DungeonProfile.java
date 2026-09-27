@@ -3,19 +3,31 @@ package net.icxd.dungeons.dungeons;
 import org.bson.Document;
 import org.bukkit.entity.Player;
 
+import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 
-/** A player's dungeon settings and progress, in the {@code dungeons} part of their user document. Main thread. */
+/**
+ * A player's dungeon progress, in the {@code dungeons} part of the profile they play on, and their
+ * auto ready up setting, which is the account's (in {@code settings}). Main thread.
+ */
 public final class DungeonProfile {
     private DungeonProfile() {
     }
 
     private static Document dungeons(User user) {
-        Document doc = user.getDocument().get("dungeons", Document.class);
+        return part(user.profile(), "dungeons");
+    }
+
+    private static Document settings(User user) {
+        return part(user.getDocument(), Profiles.SETTINGS);
+    }
+
+    private static Document part(Document parent, String key) {
+        Document doc = parent.get(key, Document.class);
         if (doc == null) {
             doc = new Document();
-            user.getDocument().put("dungeons", doc);
+            parent.put(key, doc);
         }
         return doc;
     }
@@ -37,13 +49,13 @@ public final class DungeonProfile {
 
     /** Ready up by yourself when you arrive in a dungeon. */
     public static boolean autoReadyUp(User user) {
-        return Boolean.TRUE.equals(dungeons(user).getBoolean("autoReadyUp"));
+        return Boolean.TRUE.equals(settings(user).getBoolean("autoReadyUp"));
     }
 
     /** {@code /togglereadyup}, or the toggle in the Ready Up menu. */
     public static void toggleAutoReadyUp(Player player, User user) {
         boolean on = !autoReadyUp(user);
-        dungeons(user).put("autoReadyUp", on);
+        settings(user).put("autoReadyUp", on);
         user.save();
         player.sendMessage(Utils.color(on ? "&aYou will now auto ready up when joining The Catacombs!"
                 : "&cYou will no longer auto ready up when joining &aThe Catacombs&c!"));

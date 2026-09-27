@@ -639,7 +639,7 @@ public final class DungeonRun {
         User user = User.cached(viewer.getUniqueId());
         Stats stats = PlayerSession.of(viewer).stats();
         column(out, "       &6&lAccount Info", () -> texts(
-                "&e&lProfile: &cN/A",
+                "&e&lProfile: &a" + (user != null && user.isLoaded() ? user.profileName() : "?"),
                 " Bank: &6" + (user != null && user.isLoaded() ? Utils.formatNumber(user.getBankBalance()) : "0"),
                 "",
                 "&e&lSkills:",

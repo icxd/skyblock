@@ -18,6 +18,6 @@ public class CoinCost extends Cost {
 
     @Override
     public void pay(Player player, User user) {
-        user.getDocument().append("coins", user.getCoins() - amount);
+        user.setCoins(user.getCoins() - amount);
     }
 }

@@ -9,6 +9,8 @@ import net.icxd.dungeons.crimsonisle.factions.FactionTitle;
 import net.icxd.dungeons.crimsonisle.factions.FactionType;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
+import net.icxd.dungeons.profile.ProfileMode;
+import net.icxd.dungeons.profile.Profiles;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -103,50 +105,86 @@ public class User {
         Dungeons.getUserStore().save(this);
     }
 
-    /** A value by its dotted path, e.g. "bank.balance". */
+    /** An account value by its dotted path, e.g. "settings.autoReadyUp". Their profile's are {@link #profileValue}. */
     public <T> T get(String path, Class<T> clazz) {
+        return at(document, path, clazz);
+    }
+
+    /** A value of the profile they play on, by its dotted path, e.g. "bank.balance". */
+    public <T> T profileValue(String path, Class<T> clazz) {
+        return at(profile(), path, clazz);
+    }
+
+    private static <T> T at(Document doc, String path, Class<T> clazz) {
         String[] parts = path.split("\\.");
-        Document doc = document;
-        for (int i = 0; i < parts.length - 1; i++) {
+        for (int i = 0; i < parts.length - 1 && doc != null; i++) {
             doc = doc.get(parts[i], Document.class);
-            if (doc == null) return null;
         }
-        return doc.get(parts[parts.length - 1], clazz);
+        return doc == null ? null : doc.get(parts[parts.length - 1], clazz);
     }
+
+    /**
+     * The profile they play on: its coins, skills, items and the rest (see {@link Profiles}). Every
+     * loaded user has one (UserStore sees to it); changing it is a profile switch, which swaps their
+     * items too (see UserStore#switchProfile).
+     */
+    public Document profile() {
+        return Profiles.selected(document);
+    }
+
+    public String profileId() {
+        return document.getString(Profiles.SELECTED);
+    }
+
+    public String profileName() {
+        Document profile = profile();
+        String name = profile == null ? null : profile.getString(Profiles.NAME);
+        return name == null ? "?" : name;
+    }
+
+    public ProfileMode mode() {
+        return Profiles.mode(profile());
+    }
+
     public Rank getRank() { return Rank.valueOf(get("rank", String.class)); }
-    public int getCoins() { return get("coins", Integer.class); }
+    public int getCoins() { return number(profileValue("coins", Number.class)); }
     /** Older saves stored it as a double. */
-    public int getBankBalance() {
-        Number balance = get("bank.balance", Number.class);
-        return balance == null ? 0 : balance.intValue();
-    }
-    public int getBits() { return get("bits", Integer.class); }
-    public int getGems() { return get("gems", Integer.class); }
+    public int getBankBalance() { return number(profileValue("bank.balance", Number.class)); }
+    public int getBits() { return number(profileValue("bits", Number.class)); }
+    public int getGems() { return number(get("gems", Number.class)); }
     /** Null until they pick one. */
     public FactionType getFaction() {
-        String faction = get("crimsonIsle.selectedFaction", String.class);
+        String faction = profileValue("crimsonIsle.selectedFaction", String.class);
         return faction == null ? null : FactionType.valueOf(faction);
     }
-    public int getFactionReputation() { return get("crimsonIsle.factions."+getFaction().name().toLowerCase()+".reputation", Integer.class); }
+    public int getFactionReputation() { return number(profileValue("crimsonIsle.factions."+getFaction().name().toLowerCase()+".reputation", Number.class)); }
     public FactionTitle getFactionTitle() { return FactionTitle.get(getFactionReputation()); }
 
-    public int getHOTMTokens() { return get("dwarvenMines.hotm.tokens", Integer.class); }
-    public int getHOTMPowder(PowderType type) { return get("dwarvenMines.powder."+type.name(), Integer.class); }
-    public int getHOTMPerkLevel(Perk perk) { return get("dwarvenMines.hotm.tree."+perk.name(), Integer.class); }
+    public int getHOTMTokens() { return number(profileValue("dwarvenMines.hotm.tokens", Number.class)); }
+    public int getHOTMPowder(PowderType type) { return number(profileValue("dwarvenMines.powder."+type.name(), Number.class)); }
+    public int getHOTMPerkLevel(Perk perk) { return number(profileValue("dwarvenMines.hotm.tree."+perk.name(), Number.class)); }
+
+    private static int number(Number n) {
+        return n == null ? 0 : n.intValue();
+    }
+
+    /** In their purse, on the profile they play on. */
+    public void setCoins(int coins) {
+        profile().put("coins", coins);
+    }
 
     public void withdrawBank(int amount) {
-        int newBalance = getBankBalance() - amount;
-        document.get("bank", Document.class).append("balance", newBalance);
-        document.get("bank", Document.class).getList("transactions", Document.class)
-                .add(new BankTransaction(getPlayer(), amount, BankTransaction.TransactionType.WITHDRAW).toDocument());
-        save();
+        bank(getBankBalance() - amount, amount, BankTransaction.TransactionType.WITHDRAW);
     }
 
     public void depositBank(int amount) {
-        int newBalance = getBankBalance() + amount;
-        document.get("bank", Document.class).append("balance", newBalance);
-        document.get("bank", Document.class).getList("transactions", Document.class)
-                .add(new BankTransaction(getPlayer(), amount, BankTransaction.TransactionType.DEPOSIT).toDocument());
+        bank(getBankBalance() + amount, amount, BankTransaction.TransactionType.DEPOSIT);
+    }
+
+    private void bank(int balance, int amount, BankTransaction.TransactionType type) {
+        Document bank = profile().get("bank", Document.class);
+        bank.append("balance", balance);
+        bank.getList("transactions", Document.class).add(new BankTransaction(getPlayer(), amount, type).toDocument());
         save();
     }
 

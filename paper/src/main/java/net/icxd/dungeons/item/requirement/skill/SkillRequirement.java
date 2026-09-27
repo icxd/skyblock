@@ -20,7 +20,7 @@ public class SkillRequirement extends Requirement {
     public Predicate<Player> requirement() {
         return (player) -> {
             User user = User.ifLoaded(player.getUniqueId());
-            Integer xp = user == null ? null : user.get("skills." + skill.name().toLowerCase(), Integer.class);
+            Integer xp = user == null ? null : user.profileValue("skills." + skill.name().toLowerCase(), Integer.class);
             return xp != null && Skill.getLevelFromXP(xp) >= level;
         };
     }
