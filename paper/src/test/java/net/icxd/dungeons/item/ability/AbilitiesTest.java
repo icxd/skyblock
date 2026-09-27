@@ -14,9 +14,11 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Which of an item's blocks a click uses, and what it costs (made-up abilities). */
 class AbilitiesTest {
@@ -124,5 +126,44 @@ class AbilitiesTest {
         assertSame(Abilities.handler(SHORTBOW), Abilities.handler(SHORTBOW));
         assertNotNull(Abilities.handler(SHORTBOW));
         assertNull(Abilities.handler(ability("Test Unhandled", "RIGHT_CLICK")));
+    }
+
+    /**
+     * Too little Vitality stops a cast unless its handler says its Vitality part is optional (Wither
+     * Impact without its shield); a handler that doesn't care whether it was paid does its one use.
+     */
+    @Test
+    void vitalityPart() {
+        int[] uses = {0};
+        AbilityHandler plain = (player, item, tag, block) -> uses[0]++;
+        assertFalse(plain.vitalityOptional());
+        plain.use(null, null, null, RIGHT, true);
+        plain.use(null, null, null, RIGHT, false);
+        assertEquals(2, uses[0]);
+
+        boolean[] shield = {false};
+        AbilityHandler optional = new AbilityHandler() {
+            @Override
+            public void use(org.bukkit.entity.Player player, net.icxd.dungeons.item.SkyBlockItem item,
+                            net.icxd.dungeons.item.nbt.NBTTagCompound tag, ItemBlock block) {
+                use(player, item, tag, block, true);
+            }
+
+            @Override
+            public void use(org.bukkit.entity.Player player, net.icxd.dungeons.item.SkyBlockItem item,
+                            net.icxd.dungeons.item.nbt.NBTTagCompound tag, ItemBlock block, boolean vitalityPaid) {
+                shield[0] = vitalityPaid;
+            }
+
+            @Override
+            public boolean vitalityOptional() {
+                return true;
+            }
+        };
+        assertTrue(optional.vitalityOptional());
+        optional.use(null, null, null, RIGHT, false);
+        assertFalse(shield[0]);
+        optional.use(null, null, null, RIGHT, true);
+        assertTrue(shield[0]);
     }
 }

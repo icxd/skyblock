@@ -238,8 +238,11 @@ public class PlayerListener implements Listener {
      * Cooldown, then mana, then Vitality, then whether it can happen at all (see
      * {@link AbilityHandler#usable}): a cast that fails for any of them doesn't start the cooldown
      * (cooldowns are per ability) or take anything. Its mana cost is what it says, and its share of their
-     * max mana; its Vitality cost what it says. What Hypixel does for too little Vitality isn't recorded:
-     * "Vitality is now a resource akin to Mana" (the June 10 changelog), so it's what too little mana does.
+     * max mana; its Vitality cost what it says. Too little Vitality is recorded once: Wither Impact still
+     * casts, without the Wither Shield its 50 Vitality pays for (0.26.1's release notes, and its June 10
+     * alpha), so a handler can say its Vitality part is optional ({@link AbilityHandler#vitalityOptional})
+     * and it casts without it, spending none. For the rest "Vitality is now a resource akin to Mana" (the
+     * June 10 changelog), so it's what too little mana does.
      */
     private void useAbility(Player player, SkyBlockItem sbItem, NBTTagCompound tag, ItemBlock ability) {
         PlayerSession session = PlayerSession.of(player);
@@ -257,18 +260,19 @@ public class PlayerListener implements Listener {
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
             return;
         }
-        if (!Vitality.has(player, ability.vitality())) {
+        AbilityHandler handler = Abilities.handler(ability);
+        boolean vitalityPaid = Vitality.has(player, ability.vitality());
+        if (!vitalityPaid && !handler.vitalityOptional()) {
             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH VITALITY", 2000));
             return;
         }
-        AbilityHandler handler = Abilities.handler(ability);
         if (!handler.usable(player, sbItem, tag, ability)) return;
 
         if (ability.cooldown() > 0) session.startCooldown(cooldown, (long) (ability.cooldown() * 1000));
         session.setMana(mana - cost);
-        Vitality.spend(player, ability.vitality());
-        handler.use(player, sbItem, tag, ability);
+        if (vitalityPaid) Vitality.spend(player, ability.vitality());
+        handler.use(player, sbItem, tag, ability, vitalityPaid);
 
         if (cost > 0) {
             session.setDefenseReplacement(Replacement.forMillis(

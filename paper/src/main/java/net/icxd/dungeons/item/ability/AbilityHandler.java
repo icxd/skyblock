@@ -12,6 +12,24 @@ public interface AbilityHandler {
     void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block);
 
     /**
+     * The use, told whether its Vitality cost was paid: only ever not for one whose Vitality part is
+     * optional (see {@link #vitalityOptional}), which then casts without that part. The rest do the use.
+     */
+    default void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block, boolean vitalityPaid) {
+        use(player, item, tag, block);
+    }
+
+    /**
+     * Whether it still casts with too little Vitality, just without what the Vitality pays for (and
+     * spending none): "Not having enough Vitality does not prevent you from casting Wither Impact - it
+     * still deals damage, it just doesn't put up the shield" (0.26.1's release notes, and its June 10
+     * alpha). No unless it says otherwise: too little of it stops the cast, as too little mana does.
+     */
+    default boolean vitalityOptional() {
+        return false;
+    }
+
+    /**
      * Whether it can happen now, asked once its costs are known to be there and before they're paid, so
      * a use that can't happen costs nothing (Instant Transmission with no room to go); if not, it tells
      * the player why. Yes unless it says otherwise.
