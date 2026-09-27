@@ -74,6 +74,14 @@ public interface Bonus {
         return null;
     }
 
+    /**
+     * The same, for a bonus that needs more of the hit than whether it's an arrow ({@code attacker}: how
+     * far the arrow flew, for the Sniper Helmet); by default the one above.
+     */
+    default Combat.HitBuff hit(Player player, Active active, Damage.Attacker attacker, Damage.Target target) {
+        return hit(player, active, attacker.ranged(), target);
+    }
+
     /** Defense they have against what hit them ({@code by}: a mob, or its projectile). */
     default double defenseAgainst(Player player, Active active, Entity by) {
         return 0;

@@ -110,11 +110,11 @@ public final class SetBonuses implements Listener {
     public static void enable(Plugin plugin) {
         SetBonuses.plugin = plugin;
         PlayerStats.addModifier(SetBonuses::stats);
-        Combat.addHitBuffs((player, ranged, target) -> {
+        Combat.addHitBuffs((player, attacker, target) -> {
             double additive = 0;
             double multiplier = 1;
             for (Bonus.Active a : active(player)) {
-                Combat.HitBuff buff = a.bonus().hit(player, a, ranged, target);
+                Combat.HitBuff buff = a.bonus().hit(player, a, attacker, target);
                 if (buff == null) continue;
                 additive += buff.additive();
                 multiplier *= buff.multiplier();

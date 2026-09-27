@@ -61,8 +61,11 @@ public final class Combat {
     /** What gives a player's hits a {@link HitBuff}: asked once for each hit of theirs that lands on a mob. */
     @FunctionalInterface
     public interface HitBuffs {
-        /** The buff on this hit ({@code ranged}: an arrow's) on this target; null for none. */
-        HitBuff on(Player player, boolean ranged, Damage.Target target);
+        /**
+         * The buff on this hit on this target; null for none. {@code attacker} is the hit as it stands:
+         * whether it's an arrow, and how far that flew.
+         */
+        HitBuff on(Player player, Damage.Attacker attacker, Damage.Target target);
     }
 
     private Combat() {
@@ -79,11 +82,11 @@ public final class Combat {
     }
 
     /** The attacker with the {@link HitBuff}s on this hit of theirs on this target. */
-    static Damage.Attacker buffed(Player player, Damage.Attacker attacker, Damage.Target target, boolean ranged) {
+    static Damage.Attacker buffed(Player player, Damage.Attacker attacker, Damage.Target target) {
         double additive = 0;
         double multiplier = 1;
         for (HitBuffs buffs : HIT_BUFFS) {
-            HitBuff buff = buffs.on(player, ranged, target);
+            HitBuff buff = buffs.on(player, attacker, target);
             if (buff == null) continue;
             additive += buff.additive();
             multiplier *= buff.multiplier();
@@ -173,7 +176,7 @@ public final class Combat {
             critical = Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
             look = DamageIndicators.Look.of(critical, false);
         }
-        double damage = Damage.hit(buffed(player, attacker, on, projectile != null), on, critical);
+        double damage = Damage.hit(buffed(player, attacker, on), on, critical);
 
         boolean invulnerable = dungeonMob != null ? dungeonMob.invulnerable() : mob.type().isInvulnerable();
         if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED));
