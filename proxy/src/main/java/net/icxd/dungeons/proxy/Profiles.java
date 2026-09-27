@@ -82,6 +82,32 @@ public final class Profiles {
         }
     }
 
+    /**
+     * Combat experience on the profile the player plays on, as last saved ({@code
+     * profiles.<selectedProfile>.skills.combat}, the Paper plugin's layout); 0 for none, null if it
+     * can't be read (no database, or it failed). Blocks on the database.
+     */
+    public Double combatXp(UUID uuid) {
+        if (users == null) return null;
+        try {
+            Document account = users.find(eq("uuid", uuid.toString())).projection(Projections.include("selectedProfile")).first();
+            String selected = account == null ? null : account.getString("selectedProfile");
+            if (selected == null) return 0.0;
+            String path = "profiles." + selected + ".skills.combat";
+            Document doc = users.find(eq("uuid", uuid.toString())).projection(Projections.include(path)).first();
+            for (String key : path.split("\\.")) {
+                if (doc == null) return 0.0;
+                Object value = doc.get(key);
+                if (value instanceof Number n) return n.doubleValue();
+                doc = value instanceof Document d ? d : null;
+            }
+            return 0.0;
+        } catch (RuntimeException e) {
+            logger.warn("Couldn't load {}'s Combat experience: {}", uuid, e.toString());
+            return null;
+        }
+    }
+
     /** Someone the proxy has seen this session (their name and rank as of then), or a stand-in. */
     public Profile get(UUID uuid) {
         Profile profile = profiles.get(uuid);

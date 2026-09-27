@@ -19,6 +19,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
+import net.icxd.dungeons.common.DungeonEntry;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.common.ServerType;
@@ -125,6 +126,7 @@ public final class DungeonQueue {
             members = p.members();
             version = p.version();
         }
+        if (!mayLead(player)) return;
         if (runs == null) {
             Chat.send(player, "§cDungeons aren't available right now.");
             return;
@@ -144,6 +146,17 @@ public final class DungeonQueue {
             String why = directory.up(ServerType.DUNGEONS).isEmpty() ? "No dungeon server is running right now" : "Every dungeon server is full right now";
             tell(entry, "§e" + why + ". You're §c#" + waiting.size() + " §ein line for " + displayName(floor) + "§e.");
         }
+    }
+
+    /**
+     * Whoever leads a party into a dungeon needs Combat XV; below it Mort turns them away (see
+     * {@link DungeonEntry}). With the database unreadable, they're let through.
+     */
+    private boolean mayLead(Player leader) {
+        Double combat = profiles.combatXp(leader.getUniqueId());
+        if (combat == null || DungeonEntry.mayLead(combat)) return true;
+        for (String line : DungeonEntry.MORT_REFUSAL) Chat.send(leader, line);
+        return false;
     }
 
     /** Parties at the front of the line go as soon as there's room; ones that changed or waited too long drop out. */
