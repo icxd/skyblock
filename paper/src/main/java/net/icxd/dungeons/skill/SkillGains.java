@@ -1,5 +1,6 @@
 package net.icxd.dungeons.skill;
 
+import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerSession;
@@ -8,6 +9,7 @@ import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Text;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -61,8 +63,11 @@ public final class SkillGains implements Listener {
         Skills.Gain gain = Skills.add(user.profile(), skill, amount);
         PlayerSession session = PlayerSession.of(player);
         session.setLastSkill(skill);
-        session.setDefenseReplacement(Replacement.forMillis(SkillText.actionBar(gain), SHOWN_MILLIS));
+        Replacement shown = Replacement.forMillis(SkillText.actionBar(gain), SHOWN_MILLIS);
+        session.setDefenseReplacement(shown);
         StatsRunnable.sendActionBar(player);
+        // The action bar is otherwise redrawn once a second, which would keep the XP up to a second too long.
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> endShown(player, shown), SHOWN_MILLIS / 50);
         if (gain.leveledUp()) {
             for (int level = gain.oldLevel() + 1; level <= gain.newLevel(); level++) {
                 for (String line : SkillText.levelUp(skill, level)) player.sendMessage(Text.line(line));
@@ -72,6 +77,19 @@ public final class SkillGains implements Listener {
             user.save();
         }
         return gain;
+    }
+
+    /**
+     * Brings Defense back once a gain's XP has been shown, unless something newer (another gain) is
+     * showing in its place. Clears it outright, as the task can run a moment before its time is up.
+     */
+    private static void endShown(Player player, Replacement shown) {
+        if (!player.isOnline()) return;
+        PlayerSession session = PlayerSession.of(player);
+        Replacement current = session.getDefenseReplacement();
+        if (current != null && current != shown) return;
+        session.setDefenseReplacement(null);
+        StatsRunnable.sendActionBar(player);
     }
 
     /**
