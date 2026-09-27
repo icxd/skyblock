@@ -71,6 +71,10 @@ public final class SetBonuses implements Listener {
     private record Now(int tick, Worn worn, List<Bonus.Active> active) {
     }
 
+    static {
+        for (Bonus bonus : DungeonSets.all()) add(bonus);
+    }
+
     private static void add(Bonus bonus) {
         ALL.add(bonus);
         if (!Bonus.ITEM.equals(bonus.kind()) && BY_BLOCK.putIfAbsent(key(bonus.kind(), bonus.name()), bonus) != null) {

@@ -752,6 +752,12 @@ public final class DungeonRun implements ScoreCounts {
         return phase == Phase.RUNNING || phase == Phase.ENDED;
     }
 
+    /** How long it has been going, as its Time Elapsed shows it: 0 before the start, up to its end once it's over. */
+    public long elapsedMillis() {
+        if (!isStarted()) return 0;
+        return (phase == Phase.ENDED ? endedAt : System.currentTimeMillis()) - startedAt;
+    }
+
     /** For EXTRA STATS and the tab list: how much damage a member has dealt, and how many kills. */
     public void damageDealt(UUID member, double damage) {
         Member m = members.get(member);

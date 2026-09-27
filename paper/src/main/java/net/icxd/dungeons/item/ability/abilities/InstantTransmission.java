@@ -3,6 +3,7 @@ package net.icxd.dungeons.item.ability.abilities;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
@@ -72,6 +73,7 @@ public class InstantTransmission implements AbilityHandler {
         player.playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0F, 1.0F);
         if (landing.blocked()) player.sendMessage(BLOCKED);
         speedUp(player);
+        SetBonuses.teleported(player);
     }
 
     /**
