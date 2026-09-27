@@ -88,12 +88,13 @@ final class ClassEvents implements Listener {
     }
 
     /** The drop key: the ultimate, or with ctrl the ability. */
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW)
     public void onDropKey(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
+        // Whatever happens to this drop, the key press is used up.
         boolean stack = STACK_DROPS.remove(player.getUniqueId());
         DungeonRun run = running(player);
-        if (run == null) return;
+        if (run == null || event.isCancelled()) return;
         Integer screen = screenDrops.get(player.getUniqueId());
         if (screen != null && screen == Bukkit.getCurrentTick()) return;
         event.setCancelled(true);
