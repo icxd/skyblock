@@ -51,6 +51,7 @@ public final class RunPuzzles {
         }
         Puzzle puzzle = switch (room.template()) {
             case "tic_tac_toe" -> data.ticTacToe() == null ? null : new TicTacToePuzzle(host, room.id(), room.frame(), data.ticTacToe());
+            case "water_board" -> data.waterBoard() == null ? null : new WaterBoardPuzzle(host, room.id(), room.frame(), data.waterBoard());
             default -> null;
         };
         if (puzzle != null) return puzzle;
