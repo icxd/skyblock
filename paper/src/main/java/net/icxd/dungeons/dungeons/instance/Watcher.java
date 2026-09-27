@@ -394,20 +394,24 @@ final class Watcher implements DungeonMobs.Mob {
 
     /**
      * Who an undead goes for: the nearest player in the Blood Room, and from Floor 2 players of its
-     * class first. Nobody in the room, nobody to fight.
+     * class first. A Tank in Castle of Stone within its reach comes before both (it "aggros all enemies
+     * in a 10 block radius"; here for as long as it lasts, whether they were in reach when it was cast
+     * or came later, which is UNKNOWN). Nobody in the room, nobody to fight.
      */
     Player targetFor(Undead undead, DungeonClass prefer) {
         Location from = undead.body.getLocation();
         Player best = null;
-        boolean bestPreferred = false;
+        int bestRank = -1;
         double bestDistance = Double.MAX_VALUE;
         for (Player player : run.players()) {
             if (!fighting(player)) continue;
-            boolean preferred = prefer != null && run.classOf(player.getUniqueId()) == prefer;
             double distance = player.getLocation().distanceSquared(from);
-            if (best == null || (preferred && !bestPreferred) || (preferred == bestPreferred && distance < bestDistance)) {
+            boolean castle = distance <= ClassAbilities.AGGRO * ClassAbilities.AGGRO
+                    && run.classes().inCastleOfStone(player.getUniqueId());
+            int rank = castle ? 2 : prefer != null && run.classOf(player.getUniqueId()) == prefer ? 1 : 0;
+            if (rank > bestRank || (rank == bestRank && distance < bestDistance)) {
                 best = player;
-                bestPreferred = preferred;
+                bestRank = rank;
                 bestDistance = distance;
             }
         }

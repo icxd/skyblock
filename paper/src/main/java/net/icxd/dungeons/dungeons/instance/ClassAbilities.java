@@ -44,7 +44,7 @@ final class ClassAbilities {
     private static final int WAVE_LENGTH = 12;
     private static final double WAVE_REACH = 1.5;
     /** Castle of Stone: "aggros all enemies in a 10 block radius". */
-    private static final double AGGRO = 10;
+    static final double AGGRO = 10;
     /** Wish: 10 seconds off its cooldown "for every player below 25% health". */
     private static final double WISH_LOW = 0.25;
 
@@ -169,7 +169,10 @@ final class ClassAbilities {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_DAMAGE, 1, 0.6f);
     }
 
-    /** Tank, left click (the Defense is in {@link RunClasses#stats}): every mob around goes for them. */
+    /**
+     * Tank, left click (the Defense is in {@link RunClasses#stats}): every mob around goes for them. The
+     * Blood Room's undead aren't vanilla mobs: they choose for themselves ({@link Watcher#targetFor}).
+     */
     void castleOfStone(Player player) {
         for (Entity entity : player.getNearbyEntities(AGGRO, AGGRO, AGGRO)) {
             if (entity instanceof Mob mob && (Mobs.of(mob) != null || DungeonMobs.of(mob) != null)) mob.setTarget(player);

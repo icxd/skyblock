@@ -275,6 +275,13 @@ final class RunClasses {
         };
     }
 
+    /** Whether this member is a Tank in Castle of Stone now, alive (the undead go for them). */
+    boolean inCastleOfStone(UUID id) {
+        State s = states.get(id);
+        return s != null && s.dungeonClass == DungeonClass.TANK && System.currentTimeMillis() < s.ultimateUntil
+                && run.phase() == DungeonRun.Phase.RUNNING && !run.ghosts().isGhost(id);
+    }
+
     /** A member dealt damage (every hit counts, abilities too): the highest hit, and Bloodlust's heal and bonus. */
     void hit(UUID id, double damage) {
         State s = states.get(id);

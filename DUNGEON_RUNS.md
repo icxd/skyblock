@@ -157,7 +157,8 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
 - The others follow their Class Details lore, with the Berserk's messages: Archer Explosive Shot
   (3 arrows that blow up for your highest hit within 4 blocks) and Rapid Fire (5 arrows a second
   at 75% of it), Tank Seismic Wave (20,000 +10% per 50 Defense to every mob along 12 blocks) and
-  Castle of Stone (70% less damage from hits for 20 seconds, and mobs around go for you), Healer
+  Castle of Stone (70% less damage from hits for 20 seconds, and mobs around go for you; the Blood
+  Room's undead within 10 blocks for as long as it lasts), Healer
   Wish (everyone to full health; no shield). Healing Circle and the Mage's aren't built.
 
 **The Magical Map** (`RunMap`), pixel for pixel Hypixel's: rooms 18 pixels (16 on 6-wide floors)
