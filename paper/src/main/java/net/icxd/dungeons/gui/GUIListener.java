@@ -37,6 +37,11 @@ public class GUIListener implements Listener {
         if (event.getClick() == ClickType.DOUBLE_CLICK)
             event.setCancelled(true);
 
+        if (!event.isCancelled() && event.getClickedInventory() == event.getView().getBottomInventory() && gui.onPlayerInventoryClick(event)) {
+            gui.update(event.getView().getTopInventory());
+            return;
+        }
+
         // Shift-clicking from their own inventory would put the item in a menu slot.
         if (event.getClickedInventory() != event.getView().getTopInventory() && event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
             event.setCancelled(true);

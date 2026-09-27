@@ -10,6 +10,7 @@ import net.icxd.dungeons.utils.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -115,6 +116,13 @@ public abstract class GUI {
     public void update(Inventory inventory) {}
 
     public boolean allowHotkeying() { return false; }
+
+    /**
+     * A click in the player's own inventory while this menu is open (a shop sells what's clicked
+     * there). Return true if it's been dealt with, cancelling it if it should do nothing more; false
+     * lets it go on as it would, except that a shift-click still can't move an item into the menu.
+     */
+    public boolean onPlayerInventoryClick(InventoryClickEvent event) { return false; }
 
     /** Glass with no tooltip, where Hypixel's menus have it. */
     protected static ItemStack filler() {
