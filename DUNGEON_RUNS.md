@@ -73,6 +73,41 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
   DOOR has been opened!" and "A shiver runs down your spine...". Without: "You do not have the key
   for this door!". Each key opens one door.
 
+**Secrets** (`RunSecrets`, `SecretData`, `SecretEvents`).
+- Where each room's secrets are comes from the private data folder, `rooms/_secrets/<room id>.json`
+  (Skyblocker's and BetterMap's waypoints in the capture frame, with how many secrets Hypixel counts
+  for the room; `RoomLibrary` skips folders starting with `_`). `RoomFrame` turns them with the room.
+- When the run starts, every secret lever is switched off (a floor lever facing west, as Hypixel
+  sends it) and the chests Hypixel has out from the start are put out (those behind levers, and the
+  ones recorded so). The rest come when someone first walks into the room: chests (facing as
+  recorded where they were seen, else towards an open side), Wither Essence heads (the profile the
+  mods know them by, with the Wither Key's skin), Redstone Key heads, items dropped on the floor, and
+  bats (100 health, a secret for whoever kills one).
+- A chest holds a blessing 3 times in 4 (as the four recorded ones did), level I or II: it stays
+  open, five harp notes play, a second later its name floats over it and "DUNGEON BUFF! You found a
+  Blessing of Stone I!" follows. Otherwise it's a plain "Chest" menu with a dungeon item in the
+  middle, that only gives; what's left in it falls out when it closes. Opened again: "This chest
+  has already been searched!".
+- An item counts when it's picked up ("You don't have enough space in your inventory to pick up
+  this item!" if it doesn't fit); a Wither Essence when it's right-clicked (an essence for everyone,
+  on the profile they play on); a bat when it's killed (a blessing or an item for the killer); a
+  Redstone Key when its head, once taken, is put on the room's Redstone Node (its redstone block).
+- A lever: "You hear the sound of something opening...", and where its wall was recorded (Tic Tac
+  Toe's, Long Hall's) the wall sinks into the floor like a door. Again: "This lever has already been
+  used.".
+- The action bar shows `N/M Secrets` for the room you're in (ten spaces after the mana), the tab
+  list the team's secrets, Discoveries (secrets and crypts) and the share of the floor's secrets
+  (19%, 4.8%), and EXTRA STATS the secrets found. The score reads `totalSecrets()` and
+  `secretsFound()`.
+
+**Blessings** (`Blessing`, `RunBlessings`). Power, Wisdom, Stone, Life (and Time, from the Quiz on
+later floors): each level adds a flat amount and multiplies the stat (Stone I: +4 and x1.02
+Defense, +6 Damage), on every member's stats until they leave; levels of one kind add up, and from
+Floor III they're 20% stronger. The tab list footer lists them under "Dungeon Buffs" (always Power,
+Wisdom, Stone, Life, as recorded). One out of a chest or a bat comes with "DUNGEON BUFF! You found a
+Blessing of Life I!" and the "Granted you ..." lines; one picked up where a room's last mob died
+also with the run's time ("(14s)").
+
 **The Magical Map** (`RunMap`), pixel for pixel Hypixel's: rooms 18 pixels (16 on 6-wide floors)
 with 4 between, centred. A room shows once someone walks into it (the entrance from the start),
 and each room behind its doors as a grey cell with a question mark. Doors are 7 pixels wide in the
