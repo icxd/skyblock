@@ -40,8 +40,8 @@ public final class PlayerHealth {
      * doesn't multiply healing any more (0.26.1, see {@link Vitality}); a heal from someone else goes
      * through {@link #healFrom}. Since 0.26.1 "all healing within the Catacombs now scales with your
      * Dungeon Stat Boost" (its release notes); not, as the simplest reading has it, Health Regen's, which
-     * "already scales with having more Health" (the same). No healing item is in the plugin yet, so the
-     * boost is for the first one to add.
+     * "already scales with having more Health" (the same). Abilities' heals get it where they're worked
+     * out (item/ability/utility's Heals).
      */
     public static void heal(Player player, double amount) {
         set(player, get(player) + amount);
@@ -52,7 +52,7 @@ public final class PlayerHealth {
      * is multiplied by Mending/100", the healing other players get from them (the wiki's Mending; in game
      * "Mending increases your outgoing healing"). A heal on themselves isn't outgoing, so it's
      * {@link #heal}; a Healer's own heals in the Catacombs get Mending too (0.26.1), once the class is
-     * here. Nothing heals another player yet: what will goes through here. Returns what it healed for.
+     * here. Returns what it healed for.
      */
     public static double healFrom(Player healer, Player player, double amount) {
         double healed = healer == null || healer.equals(player) ? Math.max(0, amount)
