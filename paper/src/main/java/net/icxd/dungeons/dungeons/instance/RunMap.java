@@ -102,6 +102,37 @@ final class RunMap extends MapRenderer {
         return ticked.size();
     }
 
+    // Cells, as Hypixel counts rooms for the score and the tab list: the Entrance room's don't count
+    // (both recorded Entrances have 16 cells and count 15; research score_rewards.md 1.3).
+
+    /** Cells of the rooms done. */
+    int completedCells() {
+        return cells(ticked);
+    }
+
+    /** Cells of the rooms found. */
+    int foundCells() {
+        return cells(found);
+    }
+
+    /** Cells of every room on the floor. */
+    int totalCells() {
+        int cells = 0;
+        for (PlacedRoom r : layout.rooms()) {
+            if (r.type() != RoomType.START) cells += r.cells().size();
+        }
+        return cells;
+    }
+
+    private int cells(Set<Integer> rooms) {
+        int cells = 0;
+        for (int id : rooms) {
+            PlacedRoom r = layout.room(id);
+            if (r.type() != RoomType.START) cells += r.cells().size();
+        }
+        return cells;
+    }
+
     /** Doors changed (one opened), or a room's secrets (its tick's colour). */
     void changed() {
         redraw();

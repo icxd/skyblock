@@ -66,7 +66,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
  *
  * <p>Main thread. {@link RunManager} ticks it every tick and every second.
  */
-public final class DungeonRun {
+public final class DungeonRun implements ScoreCounts {
     public enum Phase { WAITING, STARTING, RUNNING, ENDED }
 
     static final long AUTO_CLOSE_MILLIS = 120_000;
@@ -144,6 +144,7 @@ public final class DungeonRun {
     private long startedAt;
     private long endedAt;
     private Score finalScore;
+    private final SidebarScore sidebarScore = new SidebarScore();
     private boolean closed;
 
     DungeonRun(RunManager manager, Plugin plugin, String id, DungeonFloor floor, List<UUID> members, World world,
@@ -393,8 +394,7 @@ public final class DungeonRun {
                 if (countdown <= 0) start();
                 else tell("&aStarting in " + countdown + (countdown == 1 ? " second." : " seconds."));
             }
-            case RUNNING, ENDED -> {
-            }
+            case RUNNING, ENDED -> sidebarScore.tick(now, this::sidebarScore);
         }
     }
 
@@ -403,6 +403,7 @@ public final class DungeonRun {
     private void start() {
         phase = Phase.RUNNING;
         startedAt = System.currentTimeMillis();
+        sidebarScore.start(startedAt);
         mortSays("Here, I found this map when I first entered the dungeon.");
         runMap.show(map);
         for (Player player : players()) giveMap(player, "&bMagical Map", List.of("&7Shows the layout of the Dungeon as", "&7it is explored and completed."));
@@ -584,12 +585,26 @@ public final class DungeonRun {
         if (m != null && phase == Phase.RUNNING) m.deaths++;
     }
 
+    /** The score as it stands (rooms done, secrets, puzzles, crypts, deaths and time). */
     Score score(long now) {
-        int deaths = members.values().stream().mapToInt(m -> m.deaths).sum();
-        int secrets = members.values().stream().mapToInt(m -> m.secrets).sum();
+        return Score.of(floor, scoreInputs(now));
+    }
+
+    /**
+     * What the score is worked out from, now: rooms are cells (the Entrance room's not counted), and
+     * the rest is {@link ScoreCounts}'. No pets (the Spirit pet's death), Mimic (Floor VI and up) or
+     * mayors (Paul) here.
+     */
+    private Score.Inputs scoreInputs(long now) {
         double seconds = startedAt == 0 ? 0 : (now - startedAt) / 1000.0;
-        // Secrets, puzzles, crypts and the mimic come with clearing.
-        return Score.of(floor, new Score.Inputs(runMap.completedRooms(), rooms, secrets, 0, deaths, false, 0, 0, false, false, seconds));
+        return new Score.Inputs(runMap.completedCells(), runMap.totalCells(), secretsFound(), totalSecrets(), deaths(), false,
+                puzzlesNotDone(), cryptsBlown(), false, false, seconds);
+    }
+
+    /** The sidebar's "(N)" when it next updates: the in-run indicator, or the final score after the end. */
+    private int sidebarScore() {
+        if (phase == Phase.ENDED) return finalScore.total();
+        return Score.indicator(floor, scoreInputs(System.currentTimeMillis()), watcher == null ? 0 : watcher.killed());
     }
 
     // Sidebar and tab list
@@ -615,7 +630,6 @@ public final class DungeonRun {
                     : "&fAuto-closing in: &c" + RunText.clock(closesAt - System.currentTimeMillis()));
         } else {
             long now = phase == Phase.ENDED ? endedAt : System.currentTimeMillis();
-            Score score = phase == Phase.ENDED ? finalScore : score(now);
             lines.add(dateLine);
             lines.add("");
             lines.add(season);
@@ -624,7 +638,8 @@ public final class DungeonRun {
             lines.add("");
             lines.add("&fKeys: &c■ " + (doors.hasBloodKey() ? "&a✓" : "&c✗") + " &8■ &a" + doors.witherKeys() + "x");
             lines.add("&fTime Elapsed: &a" + RunText.elapsed(now - startedAt));
-            lines.add("&fCleared: &c" + cleared() + "% &8(" + score.total() + ")");
+            int cleared = cleared();
+            lines.add("&fCleared: " + Score.clearedColor(cleared) + cleared + "% &8(" + sidebarScore.shown() + ")");
             lines.add("");
             List<Member> others = members.values().stream().filter(m -> !m.id.equals(viewer.getUniqueId())).toList();
             if (others.isEmpty()) lines.add("&3&lSolo");
@@ -678,8 +693,8 @@ public final class DungeonRun {
         column(out, "       &3&lDungeon Stats", () -> {
             List<TabEntry> stats = texts(
                     "&b&lDungeon: &7Catacombs",
-                    " Opened Rooms: &5" + runMap.foundRooms(),
-                    " Completed Rooms: &d" + runMap.completedRooms(),
+                    " Opened Rooms: &5" + runMap.foundCells(),
+                    " Completed Rooms: &d" + runMap.completedCells(),
                     " Secrets Found: &e0%",
                     " Time: &6" + (started ? RunText.elapsed(now - startedAt) : "Soon!"),
                     "",
@@ -707,9 +722,9 @@ public final class DungeonRun {
         return out;
     }
 
-    /** How much of the floor is done, by rooms. */
+    /** How much of the floor is done, in percent of its cells (the Entrance room's not counted). */
     private int cleared() {
-        return rooms == 0 ? 0 : runMap.completedRooms() * 100 / rooms;
+        return Score.cleared(runMap.completedCells(), runMap.totalCells());
     }
 
     private static List<TabEntry> texts(String... lines) {

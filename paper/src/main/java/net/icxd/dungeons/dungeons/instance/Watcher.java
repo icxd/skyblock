@@ -309,6 +309,11 @@ final class Watcher implements DungeonMobs.Mob {
         }
     }
 
+    /** His undead killed so far (the sidebar's score counts them). */
+    int killed() {
+        return killed;
+    }
+
     void addParasite(Undead.Parasite parasite) {
         parasites.add(parasite);
     }
