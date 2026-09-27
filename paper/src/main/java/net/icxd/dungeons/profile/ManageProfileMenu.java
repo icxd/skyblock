@@ -117,7 +117,8 @@ final class ManageProfileMenu extends Menu implements RefreshingGUI {
             Profiles.Entry entry = new Profiles.Entry(id, profile);
             List<String> lore = new ArrayList<>();
             lore.add("");
-            lore.add("&7Profile: " + entry.mode().prefix() + "&e" + entry.name());
+            // As Hypixel's; what it says for a special mode is unknown.
+            lore.add("&7Profile: &e" + entry.name());
             lore.add("");
             lore.addAll(summary(user, entry));
             lore.add("");

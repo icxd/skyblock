@@ -78,6 +78,8 @@ final class ModeMenus {
             name = ProfileActions.newName(user);
             List<String> lore = new ArrayList<>(List.of("&7You are creating a new SkyBlock", "&7profile.", ""));
             lore.add(name == null ? "&cThere are no profile names left!" : "&7Profile name: &e" + name);
+            // Hypixel's is "&7Mode: ♲ Ironman", in Ironman's own grey. Sandbox keeps its pink here as in its name
+            // everywhere else (Hypixel's Stranded keeps its green in Profile Management); our choice.
             if (mode != ProfileMode.NORMAL) lore.add("&7Mode: " + mode.prefix().trim());
             lore.addAll(List.of("", "&7You won't lose any progress.", "&7You can switch between profiles.", ""));
             lore.add(Profiles.cooldownLeft(user.getDocument(), System.currentTimeMillis()) > 0 ? "&cAction on cooldown!" : "&eClick to confirm new profile!");
