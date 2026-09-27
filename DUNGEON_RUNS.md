@@ -78,7 +78,9 @@ found (the wiki). You're a green arrow, the others blue.
 it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each capture's frame:
 `RoomSpawnData`, `RoomFrame`).
 - Every normal and champion room has its mobs from the start: the ones recorded on Hypixel (12
-  rooms), else planned (`FallbackSpawns`, fitted to the recordings: 5 to 16 starred mobs a
+  rooms, though only Catwalk, Crypt, Default, Diagonal, Dragon and Red Green have captures, so
+  only those are ever in a run; `RoomSpawnDataTest` lists the others), else planned
+  (`FallbackSpawns`, fitted to the recordings: 5 to 16 starred mobs a
   square in groups of 2 to 6 on the main floor, kinds as often as recorded, a Lost Adventurer or
   Angry Archaeologist near the middle of a champion room). Planned mobs only go where someone
   can walk to from the door the room is entered by (a block up, any way down, ladders, water;

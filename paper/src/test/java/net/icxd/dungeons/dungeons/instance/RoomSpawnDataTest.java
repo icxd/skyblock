@@ -10,8 +10,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,6 +34,23 @@ class RoomSpawnDataTest {
         if (property != null) return Path.of(property);
         Path repository = Path.of(System.getProperty("basedir", ".")).toAbsolutePath().normalize().getParent();
         return repository.resolveSibling("skyblock-dungeon-data/rooms/" + RoomSpawnData.FOLDER);
+    }
+
+    /** The captures (rooms/<room>/*.schem): -Drooms.dir, else the private checkout's rooms next to this repository's. */
+    static Path capturesFolder() {
+        String property = System.getProperty("rooms.dir");
+        if (property != null) return Path.of(property);
+        Path repository = Path.of(System.getProperty("basedir", ".")).toAbsolutePath().normalize().getParent();
+        return repository.resolveSibling("skyblock-dungeon-data/rooms");
+    }
+
+    /** Whether a room has a capture there: a run can only have the rooms it has captures of. */
+    private static boolean captured(Path captures, String room) {
+        try (var files = Files.list(captures.resolve(room))) {
+            return files.anyMatch(f -> f.getFileName().toString().endsWith(".schem"));
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private static final String ROOM = """
@@ -111,5 +131,15 @@ class RoomSpawnDataTest {
         assertEquals(32, crypt.mobs().stream().filter(RoomSpawnData.Mob::starred).count());
         assertEquals(24, crypt.crypts().get(0).blocks().size());
         assertTrue(crypts >= 4, "crypts: " + crypts);
+        // Data for a room with no capture is never used (runs are built from the captures): say which.
+        Path captures = capturesFolder();
+        if (Files.isDirectory(captures)) {
+            List<String> unused = new ArrayList<>();
+            for (String room : new TreeSet<>(loaded.rooms().keySet())) {
+                if (!captured(captures, room)) unused.add(room + (recorded.contains(room) ? " (recorded)" : ""));
+            }
+            System.out.println("rooms/_mobs data with no capture in " + captures + ", so not in any run: "
+                    + (unused.isEmpty() ? "none" : String.join(", ", unused)));
+        }
     }
 }
