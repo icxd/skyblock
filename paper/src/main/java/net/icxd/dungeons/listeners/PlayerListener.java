@@ -169,8 +169,8 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * What they switch to is rebuilt from its data, and their reach follows its Swing Range at once, not
-     * on the next second (once the switch has happened, so their stats have it).
+     * What they switch to is rebuilt from its data, and their speed and reach follow its stats at once,
+     * not on the next second (once the switch has happened, so their stats have it).
      */
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent event) {

@@ -23,7 +23,6 @@ public class StatsRunnable implements Runnable {
             double maxHealth = PlayerHealth.max(player);
             if (!player.isDead()) PlayerHealth.heal(player, Damage.healthRegen(maxHealth, stats.get(Stat.HEALTH_REGEN)));
 
-            player.setWalkSpeed(Math.min((float) (stats.get(Stat.SPEED) / 5.0) / 100.0f, 1.0f));
             PlayerAttributes.apply(player, stats);
 
             // 2% of the pool a second, rounded up, and never more than the pool (it shrinks when gear comes off).
