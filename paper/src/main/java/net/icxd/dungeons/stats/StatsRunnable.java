@@ -39,10 +39,10 @@ public class StatsRunnable implements Runnable {
     /**
      * Health, Defense (or what's shown in its place for a moment, like a skill's XP gain) and mana, and
      * after it Vitality once they've used an item that spends it (see {@link Vitality#shown}; where
-     * Hypixel puts it and how it reads isn't recorded, so it's mana's look, in Vitality's colour and
-     * symbol, after mana). Sent every second, and at once when what's in Defense's place changes. Numbers
-     * are rounded down and grouped in thousands, as recorded ("§c5,238/5,238❤     §a2,446§a❈ Defense
-     * §b1,201/1,201✎ Mana", with Hypixel's own symbols).
+     * Hypixel puts it among the others isn't recorded, so it's after mana). Sent every second, and at
+     * once when what's in Defense's place changes. Numbers are rounded down and grouped in thousands, as
+     * recorded ("§c5,238/5,238❤     §a2,446§a❈ Defense     §b1,201/1,201✎ Mana", with Hypixel's own
+     * symbols).
      */
     public static void sendActionBar(Player player) {
         PlayerSession session = PlayerSession.of(player);
@@ -55,9 +55,14 @@ public class StatsRunnable implements Runnable {
                 (Vitality.shown(player) ? "     " + vitality(Vitality.get(player), Vitality.max(player)) : ""));
     }
 
-    /** "&4100/100♨ Vitality". */
+    /**
+     * "&4100/100♨": how the Skyblocker mod reads it off Hypixel's action bar, the numbers and then the
+     * resource pack's Vitality glyph with no word after it ({@code VITALITY_STATUS} in its StatusBarTracker,
+     * where Defense's and Mana's have theirs), ♨ standing in for that glyph; dark red, SkyHanni's colour
+     * for Vitality ({@code VITALITY(DARK_RED, ...)} in its SkyblockStat).
+     */
     static String vitality(double vitality, double max) {
-        return "&4" + ofMax(vitality, max) + "♨ Vitality";
+        return "&4" + ofMax(vitality, max) + "♨";
     }
 
     /** "5,238/5,238". */

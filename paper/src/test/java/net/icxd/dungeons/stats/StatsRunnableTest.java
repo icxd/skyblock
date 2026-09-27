@@ -15,10 +15,10 @@ class StatsRunnableTest {
         assertEquals("104/104", StatsRunnable.ofMax(104, 104));
     }
 
-    /** Vitality after mana, as mana reads, in its own colour and symbol. */
+    /** Vitality after mana: the numbers and its symbol, no word (as Skyblocker reads it), in its own colour. */
     @Test
     void vitality() {
-        assertEquals("&4104/104♨ Vitality", StatsRunnable.vitality(104, 104));
-        assertEquals("&479/104♨ Vitality", StatsRunnable.vitality(79.2, 104));
+        assertEquals("&4104/104♨", StatsRunnable.vitality(104, 104));
+        assertEquals("&479/104♨", StatsRunnable.vitality(79.2, 104));
     }
 }
