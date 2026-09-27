@@ -132,14 +132,18 @@ class ItemLoreTest {
         assertEquals(List.of("", "&9Sharpness V", "&7Increases melee damage dealt by &a30%", ""), lore.subList(3, 7));
     }
 
-    /** On a dungeon item even two enchantments share a line, without descriptions. */
+    /**
+     * On a dungeon item even two enchantments share a line, without descriptions. Critical's crit damage
+     * is part of the item's stats, as the recorded Giant's Sword's "Crit Damage: +70%" (Critical VI) was.
+     */
     @Test
     void dungeonItemEnchantsAreCompact() {
         NBTTagCompound tag = data(DUNGEON_SWORD);
         enchant(tag, "smite", 7);
         enchant(tag, "critical", 6);
         List<String> lore = ItemBuilder.lore(DUNGEON_SWORD, tag);
-        assertEquals("&9Critical VI, &9Smite VII", lore.get(7));
+        assertEquals("&7Crit Damage: &9+70% &8(+77%)", lore.get(3));
+        assertEquals("&9Critical VI, &9Smite VII", lore.get(8));
     }
 
     @Test

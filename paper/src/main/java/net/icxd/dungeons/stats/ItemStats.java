@@ -1,6 +1,7 @@
 package net.icxd.dungeons.stats;
 
 import net.icxd.dungeons.attributes.Attribute;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -21,24 +22,37 @@ public final class ItemStats {
 
     /**
      * The item's own stats, its reforge, hot potato books, the stats its enchantments grant (Growth,
-     * Protection, ...) and its attributes, which count for whoever wears or holds it if they meet the attribute's
-     * requirement. Not a SkyBlock item: nothing.
+     * Critical, ...) and its attributes, which count for whoever wears or holds it if they meet the attribute's
+     * requirement. In a dungeon run a dungeon item's come to what its lore's dark gray brackets say (see
+     * {@link #of(SkyBlockItem, NBTTagCompound, Double)}). Not a SkyBlock item: nothing.
      */
     public static Stats of(ItemStack stack, Player wearer) {
-        Stats stats = new Stats();
-        if (stack == null || stack.isEmpty()) return stats;
+        if (stack == null || stack.isEmpty()) return new Stats();
         NBTTagCompound tag = ItemNBT.read(stack);
-        if (tag == null) return stats;
+        if (tag == null) return new Stats();
         SkyBlockItem item = ItemRegistry.get(tag.getString("id"));
-        if (item == null) return stats;
+        if (item == null) return new Stats();
 
+        Double catacombs = wearer != null && item.dungeonItem() && RunManager.inRun(wearer) ? ItemBuilder.catacombsBoost(wearer) : null;
+        Stats stats = of(item, tag, catacombs);
+        if (wearer != null && tag.hasKey("attribute_1") && tag.hasKey("attribute_2")) {
+            addAttribute(stats, Attribute.of(tag.getString("attribute_1")), tag.getInt("attribute_1_level"), wearer);
+            addAttribute(stats, Attribute.of(tag.getString("attribute_2")), tag.getInt("attribute_2_level"), wearer);
+        }
+        return stats;
+    }
+
+    /**
+     * The stats its lore lists: its own, its reforge's, its hot potato books', Art of War's and its
+     * enchantments'. On a dungeon item each star adds 2% of its own stats; in a dungeon ({@code catacombs}
+     * is the wearer's Catacombs boost there, null elsewhere) the whole line is multiplied instead by
+     * {@link ItemBuilder#dungeonFactor} (+10% a star and the Catacombs boost), as Hypixel does: the
+     * recorded Giant's Sword's 265 Strength was 922.2 in a dungeon.
+     */
+    public static Stats of(SkyBlockItem item, NBTTagCompound tag, Double catacombs) {
+        Stats stats = new Stats();
         Stats base = item.stats();
         stats.add(base);
-        // Each star on a dungeon item adds 2% of its base stats (see ItemBuilder: what the lore shows is what counts).
-        if (item.dungeonItem()) {
-            int stars = Math.min(ItemBuilder.starCount(tag), 5);
-            for (Stat stat : Stat.values()) stats.add(stat, base.get(stat) * 0.02 * stars);
-        }
         if (tag.getBoolean("art_of_war")) stats.add(Stat.STRENGTH, 5);
         Rarity rarity = ItemBuilder.rarity(item, tag);
         if (!tag.getString("reforge").isEmpty()) stats.add(Reforge.valueOf(tag.getString("reforge")).getStats().at(rarity));
@@ -53,9 +67,14 @@ public final class ItemStats {
             if (enchant.getType() != null) stats.add(enchant.getType().getStats(enchant.getLevel()));
         }
 
-        if (wearer != null && tag.hasKey("attribute_1") && tag.hasKey("attribute_2")) {
-            addAttribute(stats, Attribute.of(tag.getString("attribute_1")), tag.getInt("attribute_1_level"), wearer);
-            addAttribute(stats, Attribute.of(tag.getString("attribute_2")), tag.getInt("attribute_2_level"), wearer);
+        if (!item.dungeonItem()) return stats;
+        int stars = Math.min(ItemBuilder.starCount(tag), 5);
+        for (Stat stat : Stat.values()) {
+            // In a dungeon only what the lore gives a bracket grows: stats above 0, not breaking power or
+            // a weapon's own ability damage.
+            boolean boosted = catacombs != null && stats.get(stat) > 0 && stat != Stat.BREAKING_POWER && stat != Stat.WEAPON_ABILITY_DAMAGE;
+            if (boosted) stats.set(stat, stats.get(stat) * ItemBuilder.dungeonFactor(stat, stars, catacombs));
+            else stats.add(stat, base.get(stat) * 0.02 * stars);
         }
         return stats;
     }

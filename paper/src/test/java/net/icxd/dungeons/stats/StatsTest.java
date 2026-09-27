@@ -14,7 +14,9 @@ class StatsTest {
     void baseIsHypixels() {
         Stats base = Stats.base();
         assertEquals(100, base.get(Stat.HEALTH));
-        assertEquals(100, base.get(Stat.INTELLIGENCE));
+        // Base intelligence is 0 (a bare player's mana pool is 100), swing range 3.
+        assertEquals(0, base.get(Stat.INTELLIGENCE));
+        assertEquals(3, base.get(Stat.SWING_RANGE));
         assertEquals(100, base.get(Stat.SPEED));
         assertEquals(30, base.get(Stat.CRIT_CHANCE));
         assertEquals(50, base.get(Stat.CRIT_DAMAGE));

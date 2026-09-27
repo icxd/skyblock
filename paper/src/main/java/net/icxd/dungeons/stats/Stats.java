@@ -7,10 +7,10 @@ import static net.icxd.dungeons.stats.Stat.CRIT_CHANCE;
 import static net.icxd.dungeons.stats.Stat.CRIT_DAMAGE;
 import static net.icxd.dungeons.stats.Stat.HEALTH;
 import static net.icxd.dungeons.stats.Stat.HEALTH_REGEN;
-import static net.icxd.dungeons.stats.Stat.INTELLIGENCE;
 import static net.icxd.dungeons.stats.Stat.MENDING;
 import static net.icxd.dungeons.stats.Stat.SEA_CREATURE_CHANCE;
 import static net.icxd.dungeons.stats.Stat.SPEED;
+import static net.icxd.dungeons.stats.Stat.SWING_RANGE;
 import static net.icxd.dungeons.stats.Stat.VITALITY;
 
 /** A value for each {@link Stat}, all 0 to start. Mutable; the changes return it, for chaining. */
@@ -18,13 +18,14 @@ public final class Stats {
     private final double[] values = new double[Stat.all().length];
 
     /**
-     * Everyone's base: 100 health, intelligence, speed, vitality, mending and health regen, 30% crit
-     * chance, 50% crit damage and 20% sea creature chance.
+     * Everyone's base (the wiki's stat infoboxes): 100 health, speed, vitality, mending and health regen,
+     * 30% crit chance, 50% crit damage, 20% sea creature chance and 3 swing range. No intelligence, so a
+     * bare player's mana pool is 100.
      */
     public static Stats base() {
-        return new Stats().set(HEALTH, 100).set(INTELLIGENCE, 100).set(SPEED, 100).set(CRIT_CHANCE, 30)
+        return new Stats().set(HEALTH, 100).set(SPEED, 100).set(CRIT_CHANCE, 30)
                 .set(CRIT_DAMAGE, 50).set(SEA_CREATURE_CHANCE, 20).set(VITALITY, 100).set(MENDING, 100)
-                .set(HEALTH_REGEN, 100);
+                .set(HEALTH_REGEN, 100).set(SWING_RANGE, 3);
     }
 
     public double get(Stat stat) {

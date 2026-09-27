@@ -318,13 +318,22 @@ public final class ItemBuilder {
             if (artOfWar != 0) line.append(" &6[").append(Text.signed(artOfWar)).append("]");
             if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(unit).append(")");
             if (item.dungeonItem() && shown > 0) {
-                double factor = NOT_SCALED.contains(stat) ? 1 : 1 + 0.1 * stars + (CATACOMBS_SCALED.contains(stat) ? catacombs : 0);
-                line.append(" &8(").append(Text.signed((shown - starBonus) * factor)).append(unit).append(")");
+                line.append(" &8(").append(Text.signed((shown - starBonus) * dungeonFactor(stat, stars, catacombs))).append(unit).append(")");
             }
             lines.add(line.toString());
         }
         if (item.shotCooldown() > 0) lines.add("&7Shot Cooldown: &a" + Text.number(item.shotCooldown()) + "s");
         return lines;
+    }
+
+    /**
+     * What a dungeon item's stat is multiplied by in a dungeon (in place of the 2% a star it has
+     * elsewhere): +10% a star, and the Catacombs boost for the stats it applies to. Crit Chance, Attack
+     * Speed and the like only get the stars'; health regen, vitality, mending and swing range nothing.
+     */
+    public static double dungeonFactor(Stat stat, int stars, double catacombsBoost) {
+        if (NOT_SCALED.contains(stat)) return 1;
+        return 1 + 0.1 * stars + (CATACOMBS_SCALED.contains(stat) ? catacombsBoost : 0);
     }
 
     /**
@@ -338,7 +347,7 @@ public final class ItemBuilder {
     }
 
     /** The owner's; level 0's while there's no owner to go by. */
-    private static double catacombsBoost(Player owner) {
+    public static double catacombsBoost(Player owner) {
         User user = owner == null ? null : User.ifLoaded(owner.getUniqueId());
         Number experience = user == null ? null : user.profileValue("dungeons.catacombsExp", Number.class);
         return catacombsBoost(experience == null ? 0 : DungeonLevels.level(experience.doubleValue()));

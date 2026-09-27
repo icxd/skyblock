@@ -64,6 +64,7 @@ import com.mongodb.client.MongoCollection;
 
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.math.Position;
+import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.dungeons.generation.DungeonConfig;
@@ -402,6 +403,18 @@ public final class RunManager {
     boolean belongs(UUID player, DungeonRun lifecycle) {
         Run run = byMember.get(player);
         return run != null && run.lifecycle == lifecycle;
+    }
+
+    /** Whether the player is in a dungeon run on this server, once its floor is built. */
+    public static boolean inRun(Player player) {
+        RunManager manager = Dungeons.getRunManager();
+        return manager != null && manager.runOf(player) != null;
+    }
+
+    /** The run a player is in, once its floor is built; null if none (or no runs on this server). */
+    public static DungeonRun of(Player player) {
+        RunManager manager = Dungeons.getRunManager();
+        return manager == null ? null : manager.runOf(player);
     }
 
     /** The run a player is in, once its floor is built; null if none. */
