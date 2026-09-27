@@ -402,9 +402,9 @@ public final class SetBonuses implements Listener {
     }
 
     /**
-     * Every second: what counts does its second's work, and what stopped counting ends. Nothing counts
-     * for the dead or a dungeon ghost (who's invulnerable): the wiki's Wither Armor has "Fixed the
-     * Witherborn full set bonus working as a ghost in Dungeons".
+     * Every second: what counts does its second's work, and what stopped counting ends. The dead and
+     * dungeon ghosts (who are invulnerable) do no second's work, and what theirs started ends: the
+     * wiki's Wither Armor has "Fixed the Witherborn full set bonus working as a ghost in Dungeons".
      */
     private static void second() {
         for (Player player : Bukkit.getOnlinePlayers()) {
