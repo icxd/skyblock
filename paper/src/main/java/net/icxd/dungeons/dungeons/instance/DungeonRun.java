@@ -304,9 +304,12 @@ public final class DungeonRun implements ScoreCounts {
         }
         ticks++;
         List<Player> here = players();
-        doors.tick(here);
-        if (secrets != null) secrets.tick(here);
-        puzzleRooms.tick(here);
+        // Ghosts don't pick up keys, put out a room's secrets or start its puzzle: they only touch the
+        // world through ghost abilities and fairies.
+        List<Player> living = here.stream().filter(p -> !ghosts.isGhost(p.getUniqueId())).toList();
+        doors.tick(living);
+        if (secrets != null) secrets.tick(living);
+        puzzleRooms.tick(living);
         if (ticks % FIND_ROOMS_EVERY == 0) {
             for (Player player : here) {
                 PlacedRoom room = layout.roomAt(player.getLocation());
