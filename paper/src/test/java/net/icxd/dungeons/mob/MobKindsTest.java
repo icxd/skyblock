@@ -68,6 +68,22 @@ class MobKindsTest {
         assertTrue(MobKinds.WATCHER_UNDEAD.dungeon());
     }
 
+    /** Whatever order a kind lists them in, its variants are lowest level first, and its first is the Entrance's lowest. */
+    @Test
+    void variantOrder() {
+        MobKind kind = MobKind.builder("TEST_ORDER", "Test", EntityType.ZOMBIE)
+                .variant(DungeonFloor.FLOOR_1, 50, 1, 1, 0, 1, 1)
+                .variant(DungeonFloor.ENTRANCE, 90, 1, 1, 0, 1, 1)
+                .variant(DungeonFloor.ENTRANCE, 80, 1, 1, 0, 1, 1)
+                .build();
+        assertEquals(80, kind.firstVariant().level());
+        assertEquals(DungeonFloor.ENTRANCE, kind.firstVariant().floor());
+        assertEquals(80, kind.variant(DungeonFloor.ENTRANCE, null).level());
+        assertEquals(List.of(80, 90), kind.variants(DungeonFloor.ENTRANCE).stream().map(MobKind.Variant::level).toList());
+        assertEquals(50, kind.variant(DungeonFloor.FLOOR_1, null).level());
+        assertTrue(kind.dungeon());
+    }
+
     @Test
     void hubKinds() {
         assertFalse(MobKinds.MAGMA_CUBE.dungeon());

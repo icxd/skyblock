@@ -10,6 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -32,10 +33,12 @@ import java.util.function.Supplier;
 public record MobKind(String id, String name, EntityType entityType, List<MobType> types, NameStyle style, Gear gear, String skin,
                       double speed, double magicResistance, boolean roomScaled, Supplier<? extends MobBehaviour> behaviour,
                       List<Variant> variants) {
+    /** Variants go floor by floor (outside the dungeons first), lowest level first, whatever order they're given in. */
     public MobKind {
         Objects.requireNonNull(id);
         types = List.copyOf(types);
-        variants = List.copyOf(variants);
+        variants = variants.stream().sorted(Comparator.comparing(Variant::floor, Comparator.nullsFirst(Comparator.<DungeonFloor>naturalOrder()))
+                .thenComparingInt(Variant::level)).toList();
         if (variants.isEmpty()) throw new IllegalArgumentException(id + " has no variant");
     }
 
