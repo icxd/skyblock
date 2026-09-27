@@ -14,6 +14,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.PlayerAttributes;
 
 /**
  * 1.8-style combat, like Hypixel SkyBlock: no attack cooldown and no sweeping.
@@ -31,11 +33,19 @@ public class CombatListener implements Listener {
         removeAttackCooldown(event.getPlayer());
     }
 
-    /** Transient modifiers don't carry over to the respawned player. */
+    /**
+     * Transient modifiers don't carry over to the respawned player, nor does their max air, so theirs
+     * (this one, and Swing Range's reach and Respiration's air: see {@link PlayerAttributes}) are put
+     * back at once rather than at the next second's stats.
+     */
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
-        Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> removeAttackCooldown(player));
+        Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
+            if (!player.isOnline()) return;
+            removeAttackCooldown(player);
+            PlayerAttributes.apply(player, PlayerSession.of(player).stats());
+        });
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
