@@ -159,6 +159,8 @@ final class Ghosts {
     }
 
     private void showAsGhost(Player player) {
+        // A ghost's stats have no class in them.
+        PlayerSession.of(player).invalidateStats();
         PlayerHealth.refill(player);
         player.setGameMode(GameMode.ADVENTURE);
         player.setAllowFlight(true);
@@ -245,9 +247,11 @@ final class Ghosts {
         if (ghost != null && ghost.head != null) ghost.head.remove();
         player.teleport(ground(at));
         player.setFallDistance(0);
+        // Their class counts again: stats already worked out this tick were a ghost's.
+        PlayerSession session = PlayerSession.of(player);
+        session.invalidateStats();
         PlayerHealth.refill(player);
         PlayerHealth.sync(player);
-        PlayerSession session = PlayerSession.of(player);
         session.setMana(session.maxMana());
     }
 

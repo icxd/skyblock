@@ -81,6 +81,14 @@ public final class PlayerSession {
     }
 
     /**
+     * Their stats have changed since they were last worked out this tick (a dungeon ghost revived gets
+     * its class back): the next {@link #stats()} works them out again.
+     */
+    public void invalidateStats() {
+        stats = null;
+    }
+
+    /**
      * Gives them these stats for this long ("gain +50 ✦ Speed for 3 seconds"), in place of what the same
      * source gave them before: using it again starts it again, it doesn't stack. They count at once.
      */
