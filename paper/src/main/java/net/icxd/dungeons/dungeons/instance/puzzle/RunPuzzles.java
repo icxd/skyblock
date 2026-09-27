@@ -45,7 +45,7 @@ public final class RunPuzzles {
     public RunPuzzles(PuzzleHost host, List<Room> rooms, PuzzleData data) {
         this.host = host;
         for (Room room : rooms) puzzles.add(create(room, data));
-        BY_WORLD.put(host.world(), this);
+        if (host.world() != null) BY_WORLD.put(host.world(), this);
     }
 
     private Puzzle create(Room room, PuzzleData data) {
@@ -150,7 +150,7 @@ public final class RunPuzzles {
     }
 
     public void dispose() {
-        BY_WORLD.remove(host.world(), this);
+        if (host.world() != null) BY_WORLD.remove(host.world(), this);
         for (Puzzle puzzle : puzzles) puzzle.dispose();
     }
 
