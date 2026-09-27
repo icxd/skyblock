@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 import org.bukkit.Bukkit;
@@ -133,7 +134,8 @@ public final class DungeonRun implements ScoreCounts {
     private final RoomMobs roomMobs;
     private final DisplayCases cases;
     private Watcher watcher;
-    /** Once one is found. */
+    /** From the start ({@link #start}); the blessings once one is found. */
+    private RunSecrets secrets;
     private RunBlessings blessings;
     private int ticks;
     private final MapView map;
@@ -292,6 +294,7 @@ public final class DungeonRun implements ScoreCounts {
         ticks++;
         List<Player> here = players();
         doors.tick(here);
+        if (secrets != null) secrets.tick(here);
         if (ticks % FIND_ROOMS_EVERY == 0) {
             for (Player player : here) {
                 PlacedRoom room = layout.roomAt(player.getLocation());
@@ -416,6 +419,7 @@ public final class DungeonRun implements ScoreCounts {
         mortSays("Here, I found this map when I first entered the dungeon.");
         runMap.show(map);
         for (Player player : players()) giveMap(player, "&bMagical Map", List.of("&7Shows the layout of the Dungeon as", "&7it is explored and completed."));
+        startSecrets();
         later(DOOR_OPENS, () -> {
             Door entranceDoor = doors.entranceDoor();
             if (entranceDoor != null) doors.open(entranceDoor);
@@ -464,7 +468,38 @@ public final class DungeonRun implements ScoreCounts {
         }
     }
 
-    // Blessings (RunBlessings)
+    // Secrets and blessings (RunSecrets, RunBlessings)
+
+    /** The run starts: its secrets, from the rooms' data (RunManager has it), and the levers reset. */
+    private void startSecrets() {
+        secrets = new RunSecrets(this, plugin, world, layout, floor, manager.secretData());
+        secrets.start();
+    }
+
+    /** Null before the start. */
+    RunSecrets secrets() {
+        return secrets;
+    }
+
+    /** Every secret on the floor, as Hypixel counts them room by room (for the score and the tab list). */
+    public int totalSecrets() {
+        return secrets == null ? 0 : secrets.total();
+    }
+
+    /** How many of them the team has found. */
+    public int secretsFound() {
+        return secrets == null ? 0 : secrets.found();
+    }
+
+    /** Whether all of a room's secrets are found (a room without any: yes), for its tick's colour on the map. */
+    boolean allSecretsFound(PlacedRoom room) {
+        return secrets != null && secrets.allFound(room);
+    }
+
+    /** "          &72/5 Secrets", after the mana on the action bar, in a room with secrets. */
+    public String secretsActionBar(Player player) {
+        return phase == Phase.RUNNING && secrets != null ? secrets.actionBar(player) : "";
+    }
 
     /** A member's stats with the team's blessings, from the start until they leave (PlayerStats). */
     public void applyBlessings(Stats stats) {
@@ -497,6 +532,15 @@ public final class DungeonRun implements ScoreCounts {
             player.sendMessage(Utils.color(blessing.found(player.equals(finder) ? null : who, level, elapsed)));
             for (String line : granted) player.sendMessage(Utils.color(line));
         }
+    }
+
+    /**
+     * A chest with a blessing of this level opened (a puzzle's reward chest): it stays open, harp notes, its
+     * name over it and the "DUNGEON BUFF!" lines, as a secret chest's. Its kind is picked at random (which
+     * one Hypixel gives is UNKNOWN).
+     */
+    void blessingChest(Player player, Block chest, int level) {
+        if (secrets != null) secrets.blessingChest(player, chest, Blessing.random(ThreadLocalRandom.current()), level);
     }
 
     /** The tab list footer while the run's on: its Dungeon Buffs (recorded from the start); null before. */
@@ -639,6 +683,7 @@ public final class DungeonRun implements ScoreCounts {
         doors.dispose();
         roomMobs.dispose();
         if (watcher != null) watcher.dispose();
+        if (secrets != null) secrets.dispose();
         if (cases != null) cases.dispose();
         for (Player player : players()) takeRunItems(player);
         ScoreCard.blank(map);
@@ -771,7 +816,7 @@ public final class DungeonRun implements ScoreCounts {
                 " Team Healing Done: &c" + RunText.compact(healing) + "❤",
                 " Your Milestone: &e?",
                 "",
-                "&a&lDiscoveries: &f" + secrets,
+                "&a&lDiscoveries: &f" + (secrets + cryptsBlown()),
                 " Secrets Found: &b" + secrets,
                 " Crypts: &6" + cryptsBlown()));
 
@@ -781,7 +826,7 @@ public final class DungeonRun implements ScoreCounts {
                     "&b&lDungeon: &7Catacombs",
                     " Opened Rooms: &5" + runMap.openedCells(doors::isShut),
                     " Completed Rooms: &d" + runMap.completedCells(),
-                    " Secrets Found: &e0%",
+                    " Secrets Found: &e" + SecretText.percent(secretsFound(), totalSecrets()) + "%",
                     " Time: &6" + (started ? RunText.elapsed(now - startedAt) : "Soon!"),
                     "",
                     "&b&lPuzzles: &f(" + puzzles + ")");

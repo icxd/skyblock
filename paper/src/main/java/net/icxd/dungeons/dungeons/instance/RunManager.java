@@ -138,6 +138,8 @@ public final class RunManager {
     /** Maps of finished runs, for the next ones (each new one is saved with the main world for good). */
     private final Deque<MapView> spareMaps = new ArrayDeque<>();
     private CompletableFuture<RoomLibrary> library;
+    /** Where the rooms' secrets are (see {@link SecretData}); none until it's read. */
+    private CompletableFuture<SecretData> secretData = CompletableFuture.completedFuture(SecretData.empty());
     /** Everything a floor can take up, and the height of the waiting platform; known once the rooms are loaded. */
     private PastePlan.Box largest;
     private int waitingY;
@@ -169,6 +171,7 @@ public final class RunManager {
                 throw new IllegalStateException("couldn't read the rooms in " + folder + ": " + e.getMessage(), e);
             }
         });
+        loadSecrets(folder);
         library.whenComplete((rooms, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (error != null) {
                 log.severe("No dungeon runs on this server: " + (error.getCause() != null ? error.getCause() : error).getMessage());
@@ -182,6 +185,7 @@ public final class RunManager {
         Bukkit.getPluginManager().registerEvents(new RoomEvents(), plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20, 20);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickRuns, 1, 1);
+        Bukkit.getPluginManager().registerEvents(new SecretEvents(this), plugin);
     }
 
     /**
@@ -436,11 +440,26 @@ public final class RunManager {
         return run == null || run.lifecycle == null || !player.getWorld().equals(run.world) ? null : run.lifecycle;
     }
 
-    private DungeonRun runIn(World world) {
+    /** The run in this world, once its floor is built; null if none. */
+    DungeonRun runIn(World world) {
         for (Run run : byId.values()) {
             if (run.lifecycle != null && world.equals(run.world)) return run.lifecycle;
         }
         return null;
+    }
+
+    /** The rooms' secrets, next to the captured rooms (rooms/_secrets), off the main thread. */
+    private void loadSecrets(Path folder) {
+        secretData = CompletableFuture.supplyAsync(() -> SecretData.load(folder));
+        secretData.thenAccept(data -> Bukkit.getScheduler().runTask(plugin, () -> {
+            data.problems().forEach(p -> log.warning("Room secrets: " + p));
+            log.info("Room secrets: " + data.size() + " rooms");
+        }));
+    }
+
+    /** Where the rooms' secrets are, once read (none before, or if they couldn't be). */
+    SecretData secretData() {
+        return secretData.getNow(SecretData.empty());
     }
 
     private MapView takeMap(World world) {

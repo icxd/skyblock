@@ -1,6 +1,8 @@
 package net.icxd.dungeons.stats;
 
 import net.icxd.dungeons.combat.Damage;
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.session.Vitality;
@@ -39,8 +41,9 @@ public class StatsRunnable implements Runnable {
     /**
      * Health, Defense (or what's shown in its place for a moment, like a skill's XP gain) and mana, and
      * after it Vitality once they've used an item that spends it (see {@link Vitality#shown}; where
-     * Hypixel puts it among the others isn't recorded, so it's after mana). Sent every second, and at
-     * once when what's in Defense's place changes. Numbers are rounded down and grouped in thousands, as
+     * Hypixel puts it among the others isn't recorded, so it's after mana), and in a dungeon room with
+     * secrets how many of them the team has found. Sent every second, and at once when what's in
+     * Defense's place changes (or a secret is found). Numbers are rounded down and grouped in thousands, as
      * recorded ("§c5,238/5,238❤     §a2,446§a❈ Defense     §b1,201/1,201✎ Mana", with Hypixel's own
      * symbols).
      */
@@ -49,10 +52,12 @@ public class StatsRunnable implements Runnable {
         Stats stats = session.stats();
         Replacement defense = session.getDefenseReplacement();
         Replacement manaText = session.getManaReplacement();
+        DungeonRun run = RunManager.of(player);
         Utils.sendActionText(player, "&c" + ofMax(PlayerHealth.get(player), PlayerHealth.max(player)) + "❤     &a" +
                 (defense == null ? (stats.has(Stat.DEFENSE) ? number(stats.get(Stat.DEFENSE)) + "❈ Defense     " : "") : defense.text() + "     ") +
                 (manaText != null ? manaText.text() : "&b" + ofMax(session.getMana(), session.maxMana()) + "✎ Mana") +
-                (Vitality.shown(player) ? "     " + vitality(Vitality.get(player), Vitality.max(player)) : ""));
+                (Vitality.shown(player) ? "     " + vitality(Vitality.get(player), Vitality.max(player)) : "") +
+                (run == null ? "" : run.secretsActionBar(player)));
     }
 
     /**
