@@ -65,7 +65,8 @@ public final class SkillRewards {
         }
         if (skill == Skill.TAMING) {
             // Exp Share: 6➜6.2 at XXXI is the one recorded value; 0.2 a level (6 at 30) is assumed for the rest (UNKNOWN).
-            lines.add("&8+&fGain &8" + Text.number(0.2 * (level - 1)) + "➜&a" + Text.number(0.2 * level) + "% &fExp Share rate.");
+            // Like the perks, level I has no change from the level before.
+            lines.add("&8+&fGain " + value(0.2 * (level - 1), 0.2 * level, level > 1, "%") + " &fExp Share rate.");
         }
         lines.addAll(statLines(skill, level));
         lines.addAll(unlocks(skill, level));

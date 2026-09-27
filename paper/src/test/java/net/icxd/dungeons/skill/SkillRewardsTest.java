@@ -142,4 +142,15 @@ class SkillRewardsTest {
         assertEquals("&fGrants &a+88&f &6☘ Farming Fortune&f,", SkillRewards.perkDescription(Skill.FARMING, 22, false).get(0));
         assertEquals("&fGrants &a+4&f &6☘ Farming Fortune&f,", SkillRewards.perkDescription(Skill.FARMING, 1, true).get(0));
     }
+
+    /** Level I has no change from the level before, for Taming's Exp Share as for the perks. */
+    @Test
+    void tamingOne() {
+        assertEquals(List.of("&eZoologist I",
+                "  &fGain &a1%&f extra pet exp.",
+                "&8+&fGain &a0.2% &fExp Share rate.",
+                "&8+&a1 &d♣ Pet Luck",
+                "&8+&6100 &7Coins",
+                "&8+&b5 SkyBlock XP"), SkillRewards.lines(Skill.TAMING, 1));
+    }
 }
