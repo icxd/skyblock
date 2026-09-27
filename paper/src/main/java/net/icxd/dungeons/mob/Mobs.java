@@ -43,6 +43,7 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -243,8 +244,8 @@ public final class Mobs implements Listener {
         DungeonRun run = killer == null ? null : RunManager.of(killer);
         if (run != null) run.killed(killer.getUniqueId());
         live.type.onDeath(live.entity, killer);
-        if (killer != null && !live.type.isBoss()) drop(live, killer);
         Location at = live.entity.getLocation();
+        if (killer != null && !live.type.isBoss()) drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer);
         remove(live);
         died(live, killer, at);
     }
@@ -255,25 +256,36 @@ public final class Mobs implements Listener {
     }
 
     /**
+     * A mob of this kind that isn't spawned here (the Watcher's undeads, which the Blood Room keeps) died
+     * on this floor: its drops for the killer (none if nobody killed it), then the same death event as
+     * the others'. Nothing on a floor the kind has no variant on yet.
+     */
+    public static void kindDied(MobKind kind, DungeonFloor floor, Location at, Player killer) {
+        MobKind.Variant variant = kind.variant(floor, null);
+        if (variant == null) return;
+        if (killer != null) drop(variant.drops(), kind.dungeon(), at, killer);
+        Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, kind, variant, false, null, at));
+    }
+
+    /**
      * Each drop rolls on its own (magic find raises the chance). A dungeon mob's go straight into the
      * killer's inventory, as recorded on Hypixel (on the ground where it died if there's no room), and
      * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
      * on the ground, and each is announced.
      */
-    private static void drop(Live live, Player killer) {
+    private static void drop(List<MobDrop> drops, boolean dungeon, Location at, Player killer) {
         double magicFind = PlayerSession.of(killer).stats().get(Stat.MAGIC_FIND);
-        boolean toInventory = live.type.dropsToInventory() && !InventorySyncListener.frozen(killer);
-        for (MobDrop drop : live.type.getDrops()) {
+        boolean toInventory = dungeon && !InventorySyncListener.frozen(killer);
+        for (MobDrop drop : drops) {
             SkyBlockItem item = drop.item();
             if (item == null || Math.random() >= drop.chance() / 100 * (1 + magicFind / 100)) continue;
             ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
-            Location at = live.entity.getLocation();
             if (toInventory) {
                 for (ItemStack left : killer.getInventory().addItem(stack).values()) at.getWorld().dropItemNaturally(at, left);
             } else {
                 at.getWorld().dropItemNaturally(at, stack);
             }
-            if (!announced(live.type, drop.type())) continue;
+            if (!announced(dungeon, drop.type())) continue;
             String kind = drop.type() == MobDropType.RNGESUS_INCARNATE ? "INSANE DROP! "
                     : (drop.type() == MobDropType.CRAZY_RARE ? "CRAZY " : "") + "RARE DROP! ";
             killer.sendMessage(Utils.color("§" + drop.type().getColor() + "§l" + kind + item.rarity().getColor() + item.name()
@@ -283,7 +295,11 @@ public final class Mobs implements Listener {
 
     /** Whether a drop this rare from this mob gets a "RARE DROP!" line: a dungeon mob's only past Occasional. */
     static boolean announced(SkyBlockMob type, MobDropType drop) {
-        return !type.dropsToInventory() || drop.ordinal() > MobDropType.OCCASIONAL.ordinal();
+        return announced(type.dropsToInventory(), drop);
+    }
+
+    private static boolean announced(boolean dungeon, MobDropType drop) {
+        return !dungeon || drop.ordinal() > MobDropType.OCCASIONAL.ordinal();
     }
 
     /** It, its name tag and its passenger, gone. */

@@ -33,7 +33,8 @@ import static net.icxd.dungeons.mob.MobType.WITHER;
  * <p>Magic resistance: "10% for melee mobs, 30% for ranged mobs, and 50-80% for magic mobs" (the wiki's
  * Catacombs Mobs), and the Crypt Lurker's 10%, the Souleater's and Dreadlord's 50% from their pages.
  * Not here yet: the Sniper, Cellar Spider, Lonely Spider and secret bats (listed for the Entrance by the
- * wiki, never seen in the recordings), and the Watcher's undeads (their own classes in the Blood Room).
+ * wiki, never seen in the recordings). The Watcher's undeads are their own classes in the Blood Room;
+ * {@link #WATCHER_UNDEAD} only has what their kills are worth.
  */
 public final class MobKinds {
     // Drop tiers: the wiki's drop rows have c, u, r, l and rng; which of Hypixel's tiers each stands for is
@@ -175,6 +176,18 @@ public final class MobKinds {
     }
 
     /**
+     * The Watcher's undeads, which the Blood Room spawns with their own names, gear and health (Undead):
+     * here for their drops and what a kill is worth. The wiki's Entrance numbers (14k health, recorded
+     * 12,000-20,000, never room-scaled; 1,080 damage; Combat XP 75, recorded too), named after their
+     * bestiary family (NEU), in the generic undead skin. Coins UNKNOWN (the wiki has none): 0. Level
+     * UNKNOWN (their tags show none): 1, as NEU's id watcher_summon_undead_1 ends.
+     */
+    public static final MobKind WATCHER_UNDEAD = MobKind.builder("WATCHER_UNDEAD", "Undead", EntityType.MANNEQUIN)
+            .types(UNDEAD).skin("Undead").speed(0.28).magicResistance(0.1).notRoomScaled().behaviour(() -> Behaviours.avatar(false))
+            .variant(ENTRANCE, 1, 14_000, 1_080, 0, 75, 0, drop("BEATING_HEART", L, 0.1))
+            .build();
+
+    /**
      * The Hub's test mobs keep the numbers they've had. Coins (20) and Combat XP (120) are the wiki's Lv75
      * Crimson Isle Magma Cube's.
      */
@@ -197,6 +210,7 @@ public final class MobKinds {
 
     static {
         for (MobKind kind : ENTRANCE_KINDS) BY_ID.put(kind.id(), kind);
+        BY_ID.put(WATCHER_UNDEAD.id(), WATCHER_UNDEAD);
         BY_ID.put(MAGMA_CUBE.id(), MAGMA_CUBE);
         BY_ID.put(BLADESOUL.id(), BLADESOUL);
     }

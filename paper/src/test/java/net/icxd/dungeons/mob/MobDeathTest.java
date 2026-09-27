@@ -28,6 +28,18 @@ class MobDeathTest {
         assertEquals(14_700, event.mob().getMaxHealth());
     }
 
+    /** One of the Watcher's undeads, which Mobs doesn't spawn: the same event, with its kind's numbers. */
+    @Test
+    void watcherUndead() {
+        MobKind.Variant variant = MobKinds.WATCHER_UNDEAD.firstVariant();
+        SkyBlockMobDeathEvent event = new SkyBlockMobDeathEvent(null, MobKinds.WATCHER_UNDEAD, variant, false, null, new Location(null, 0, 70, 0));
+        assertSame(MobKinds.WATCHER_UNDEAD, event.kind());
+        assertEquals(75, event.variant().combatXp());
+        assertFalse(event.starred());
+        assertNull(event.modifier());
+        assertNull(event.mob());
+    }
+
     /** Dungeon drops go to the inventory silently unless they're rare (the recorded 5% armor pieces had no chat line). */
     @Test
     void announced() {

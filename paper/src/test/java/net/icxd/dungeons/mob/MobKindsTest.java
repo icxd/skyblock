@@ -59,6 +59,13 @@ class MobKindsTest {
         assertEquals(12_000, MobKinds.ANGRY_ARCHAEOLOGIST.variant(DungeonFloor.ENTRANCE, 90).health());
         assertEquals(900, MobKinds.ANGRY_ARCHAEOLOGIST.firstVariant().defense());
         assertNull(MobKinds.ANGRY_ARCHAEOLOGIST.variant(DungeonFloor.ENTRANCE, 85));
+        // The Watcher's undeads: the wiki's Entrance 14k and 1,080, 75 Combat XP, no coins known.
+        MobKind.Variant undead = MobKinds.WATCHER_UNDEAD.variant(DungeonFloor.ENTRANCE, null);
+        assertEquals(75, undead.combatXp());
+        assertEquals(1_080, undead.damage());
+        assertEquals(0, undead.coins());
+        assertFalse(MobKinds.WATCHER_UNDEAD.roomScaled());
+        assertTrue(MobKinds.WATCHER_UNDEAD.dungeon());
     }
 
     @Test
@@ -77,7 +84,7 @@ class MobKindsTest {
     void ids() {
         Set<String> ids = new HashSet<>();
         for (MobKind kind : MobKinds.all().values()) assertTrue(ids.add(kind.id()), kind.id());
-        assertEquals(13, ids.size());
+        assertEquals(14, ids.size());
         assertEquals(MobKinds.CRYPT_LURKER, MobKinds.get("crypt_lurker"));
         assertNull(MobKinds.get(null));
     }

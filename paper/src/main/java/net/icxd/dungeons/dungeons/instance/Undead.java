@@ -19,7 +19,9 @@ import org.bukkit.inventory.ItemStack;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.mob.MobKinds;
 import net.icxd.dungeons.mob.MobType;
+import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.mob.goals.AvatarControl;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.utils.Text;
@@ -222,7 +224,9 @@ final class Undead implements DungeonMobs.Mob {
             if (type.perk == UndeadType.Perk.EXPLODES) explode();
             if (type.perk == UndeadType.Perk.SILVERFISH) for (int i = 0; i < 3; i++) watcher.addParasite(new Parasite(watcher, floor, body.getLocation()));
         }
-        // Its drops are cleared (RunManager), as it's tagged.
+        // SkyBlock's drops for the killer, and the death event (Combat XP), as for the room mobs.
+        Mobs.kindDied(MobKinds.WATCHER_UNDEAD, floor, body.getLocation(), killer);
+        // Its vanilla drops are cleared (RunManager), as it's tagged.
         if (body.isValid()) body.setHealth(0);
         Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), tag::remove, 20);
         watcher.undeadDied(this);
