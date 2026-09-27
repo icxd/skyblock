@@ -24,6 +24,11 @@ public class MeleeAttackGoal implements Goal<Mob> {
         this.cooldownTicks = cooldownTicks;
     }
 
+    /** How close it has to be to hit: twice its width and the target's. */
+    public static double reach(LivingEntity mob, LivingEntity target) {
+        return mob.getWidth() * 2 + target.getWidth();
+    }
+
     @Override
     public boolean shouldActivate() {
         return mob.getTarget() != null;
@@ -36,7 +41,7 @@ public class MeleeAttackGoal implements Goal<Mob> {
         mob.lookAt(target);
         mob.getPathfinder().moveTo(target, speed);
         if (cooldown > 0) cooldown--;
-        double reach = mob.getWidth() * 2 + target.getWidth();
+        double reach = reach(mob, target);
         if (cooldown == 0 && mob.getLocation().distanceSquared(target.getLocation()) <= reach * reach) {
             mob.swingMainHand();
             mob.attack(target);

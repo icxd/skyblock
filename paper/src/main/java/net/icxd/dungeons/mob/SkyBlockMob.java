@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A kind of SkyBlock mob: what it is, and what it does. {@link Mobs} spawns them and keeps their
- * health, which is SkyBlock health (millions, where a vanilla mob has at most 1024).
+ * A SkyBlock mob as {@link Mobs} spawns it: what it is, and what it does. The kinds (see
+ * {@link MobKinds}) are {@link DataMob}s; a mob's scenery, such as the Bladesoul's blaze, can be one
+ * of its own. Mobs keeps their health, which is SkyBlock health (millions, where a vanilla mob has at
+ * most 1024).
  */
 public interface SkyBlockMob {
     /** What it's registered as ("MAGMA_CUBE"). */
@@ -51,10 +53,17 @@ public interface SkyBlockMob {
     /** A mob riding it, spawned and removed with it. */
     default SkyBlockMob getPassenger() { return null; }
 
+    /** What its name tag says at this much health (the Hub's style: "[Lv75] Magma Cube 1M/1M❤"). */
+    default String nameTag(double health) { return NameTags.hub(getLevel(), getName(), health, getMaxHealth(), isBoss()); }
+
+    /** Before it's in the world (nobody has seen it yet). */
+    default void beforeSpawn(LivingEntity entity) {}
     default void onSpawn(LivingEntity entity) {}
     default void onDeath(LivingEntity entity, Player killer) {}
     default void onDamaged(LivingEntity entity, Player by, double damage) {}
     /** After its hit (or its projectile's) on a player. */
     default void onAttack(LivingEntity entity, Player target) {}
+    /** After its hit on a player: {@code melee} if it hit them itself, not with a projectile. */
+    default void onHit(LivingEntity entity, Player target, boolean melee) { onAttack(entity, target); }
     default void onTick(LivingEntity entity) {}
 }

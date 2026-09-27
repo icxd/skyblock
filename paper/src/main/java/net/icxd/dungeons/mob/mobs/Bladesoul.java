@@ -1,39 +1,34 @@
 package net.icxd.dungeons.mob.mobs;
 
+import net.icxd.dungeons.mob.DataMob;
+import net.icxd.dungeons.mob.MobBehaviour;
 import net.icxd.dungeons.mob.SkyBlockMob;
 import net.icxd.dungeons.mob.goals.LeapAtTargetGoal;
 import net.icxd.dungeons.mob.goals.MeleeAttackGoal;
 import net.icxd.dungeons.mob.goals.TargetNearestPlayerGoal;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.WitherSkull;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-/** The Crimson Isle miniboss: leaps at players, withers them, and now and then fires a ring of wither skulls. */
-public class Bladesoul implements SkyBlockMob {
+/**
+ * The Crimson Isle miniboss (its stats are the kind's, see MobKinds): leaps at players, withers them,
+ * and now and then fires a ring of wither skulls.
+ */
+public class Bladesoul implements MobBehaviour {
     private static final int SKULLS = 16;
 
-    @Override public String getId() { return "BLADESOUL"; }
-    @Override public EntityType getEntityType() { return EntityType.SKELETON; }
-    @Override public String getName() { return "&8&lBladesoul"; }
-    @Override public int getLevel() { return 200; }
-    @Override public double getMaxHealth() { return 50_000_000; }
-    @Override public double getDamage() { return 4000; }
-    @Override public boolean isBoss() { return true; }
-    @Override public ItemStack getItemInHand() { return new ItemStack(Material.GOLDEN_AXE); }
-
     /** The upside-down blaze on its shoulders; part of how it looks, so nothing hurts it. */
-    @Override public SkyBlockMob getPassenger() {
+    @Override
+    public SkyBlockMob passenger() {
         return new SkyBlockMob() {
             @Override public String getId() { return "BLADESOUL_BLAZE"; }
             @Override public EntityType getEntityType() { return EntityType.BLAZE; }
@@ -47,7 +42,7 @@ public class Bladesoul implements SkyBlockMob {
     }
 
     @Override
-    public void onSpawn(LivingEntity entity) {
+    public void spawned(DataMob data, LivingEntity entity) {
         // Its own goals only: a skeleton's would have it shoot arrows it doesn't have.
         Mob mob = (Mob) entity;
         Bukkit.getMobGoals().removeAllGoals(mob);
@@ -57,13 +52,13 @@ public class Bladesoul implements SkyBlockMob {
     }
 
     @Override
-    public void onAttack(LivingEntity entity, Player target) {
+    public void attacked(DataMob data, LivingEntity entity, Player target) {
         target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 5, 5));
     }
 
     /** About once every 5 seconds: wither skulls out in every direction. */
     @Override
-    public void onTick(LivingEntity entity) {
+    public void tick(DataMob data, LivingEntity entity) {
         if (ThreadLocalRandom.current().nextInt(100) != 0) return;
         Location from = entity.getLocation().add(0, 2, 0);
         for (int i = 0; i < SKULLS; i++) {

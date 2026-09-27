@@ -19,8 +19,8 @@ import com.google.gson.JsonParser;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 
-/** Skins and head textures for dungeon things, from {@code dungeons/textures.json} (recorded on Hypixel). */
-final class DungeonTextures {
+/** Skins and head textures for dungeon things and mobs, from {@code dungeons/textures.json} (recorded on Hypixel). */
+public final class DungeonTextures {
     /** For undeads with no skin of their own yet. */
     static final String UNDEAD = "Undead";
     private static final Map<String, ProfileProperty> TEXTURES = new HashMap<>();
@@ -46,7 +46,7 @@ final class DungeonTextures {
     }
 
     /** For a Mannequin: the named skin, or the generic undead one. */
-    static ResolvableProfile profile(String name) {
+    public static ResolvableProfile profile(String name) {
         ResolvableProfile.Builder builder = ResolvableProfile.resolvableProfile().uuid(UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8)));
         ProfileProperty texture = get(name);
         if (texture != null) builder.addProperty(texture);
@@ -54,7 +54,7 @@ final class DungeonTextures {
     }
 
     /** A player head with that texture. */
-    static ItemStack head(String name) {
+    public static ItemStack head(String name) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         PlayerProfile profile = Bukkit.createProfile(UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8)));

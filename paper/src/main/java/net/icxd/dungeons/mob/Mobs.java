@@ -5,12 +5,13 @@ import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
-import net.icxd.dungeons.mob.mobs.Bladesoul;
-import net.icxd.dungeons.mob.mobs.MagmaCube;
+import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
@@ -21,6 +22,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -29,6 +31,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -37,27 +40,22 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * SkyBlock's mobs: which there are, the ones alive now, and how they fight. A mob's health is
- * SkyBlock health, kept here; hits on it do no vanilla damage (it still flinches and takes
- * knockback), and its hits on players do SkyBlock damage less their defense. Its name tag is a text
- * display riding it. Mobs aren't saved with the world: a restart clears them. Main thread.
+ * SkyBlock's mobs: the ones alive now, and how they fight. Every kind ({@link MobKinds}) is spawned
+ * here, as a {@link DataMob}, and shares this one path: hits, damage numbers, drops, death and
+ * removal. A mob's health is SkyBlock health, kept here; hits on it do no vanilla damage (it still
+ * flinches and takes knockback), and its hits on players do SkyBlock damage less their defense. Its
+ * name tag is a text display riding it. Mobs aren't saved with the world: a restart clears them.
+ * Main thread.
  */
 public final class Mobs implements Listener {
     /** On every spawned mob's entity: which mob it is. */
     public static final NamespacedKey TYPE = new NamespacedKey("skyblock", "mob");
 
-    private static final Map<String, SkyBlockMob> REGISTRY = new LinkedHashMap<>();
     private static final Map<UUID, Live> LIVE = new HashMap<>();
-
-    static {
-        for (SkyBlockMob mob : List.of(new MagmaCube(), new Bladesoul())) REGISTRY.put(mob.getId(), mob);
-    }
 
     /** A spawned mob: its entity, its health, its name tag and whatever rides it. */
     public static final class Live {
@@ -94,12 +92,20 @@ public final class Mobs implements Listener {
         }
     }
 
-    public static SkyBlockMob get(String id) {
-        return id == null ? null : REGISTRY.get(id.toUpperCase());
+    /** The kind with this id ("zombie_grunt" too); null for none. */
+    public static MobKind kind(String id) {
+        return MobKinds.get(id);
     }
 
-    public static Map<String, SkyBlockMob> registry() {
-        return java.util.Collections.unmodifiableMap(REGISTRY);
+    /** A mob of this kind as it first spawns (the Entrance's lowest level, for a dungeon kind); null for no such kind. */
+    public static DataMob get(String id) {
+        MobKind kind = kind(id);
+        return kind == null ? null : new DataMob(kind, kind.firstVariant(), SpawnOptions.NONE);
+    }
+
+    /** Every kind, by id. */
+    public static Map<String, MobKind> registry() {
+        return MobKinds.all();
     }
 
     /** The live mob an entity is, or null. */
@@ -107,10 +113,26 @@ public final class Mobs implements Listener {
         return entity == null ? null : LIVE.get(entity.getUniqueId());
     }
 
+    /**
+     * A mob of this kind on this floor (null outside the dungeons), at the level {@code options} asks for
+     * (the floor's first if none), starred or with a modifier as it says, times the room's multiplier.
+     *
+     * @throws IllegalArgumentException if the kind has no such variant there
+     */
+    public static Live spawn(MobKind kind, DungeonFloor floor, SpawnOptions options, Location location) {
+        MobKind.Variant variant = kind.variant(floor, options.level());
+        if (variant == null) {
+            throw new IllegalArgumentException(kind.id() + " has no " + (options.level() == null ? "" : "Lv" + options.level() + " ")
+                    + "variant " + (floor == null ? "outside the dungeons" : "on " + floor.getName()));
+        }
+        return spawn(new DataMob(kind, variant, options), location);
+    }
+
     public static Live spawn(SkyBlockMob type, Location location) {
         LivingEntity entity = (LivingEntity) location.getWorld().spawn(location, type.getEntityType().getEntityClass(), spawned -> {
             spawned.setPersistent(false);
             spawned.getPersistentDataContainer().set(TYPE, PersistentDataType.STRING, type.getId());
+            if (spawned instanceof LivingEntity living) type.beforeSpawn(living);
         });
         entity.setRemoveWhenFarAway(false);
         entity.setCanPickupItems(false);
@@ -156,11 +178,16 @@ public final class Mobs implements Listener {
         return live;
     }
 
-    /** "[Lv75] Magma Cube 1M/1M❤", and a boss's framed in ﴾ ﴿. */
+    /** "[Lv75] Magma Cube 1M/1M❤" in the Hub, "༕ ✯ Zombie Grunt 7,000❤" in a dungeon (see {@link NameTags}). */
     static String nameTag(SkyBlockMob type, double health) {
-        String tag = "&8[&7Lv" + type.getLevel() + "&8] &c" + type.getName() + " &a" + Utils.formatNumber(Math.max(0, Math.ceil(health)))
-                + "&f/&a" + Utils.formatNumber(type.getMaxHealth()) + "&c❤";
-        return type.isBoss() ? "&e﴾ " + tag + " &e﴿" : tag;
+        return type.nameTag(health);
+    }
+
+    /** It gets health back, never more than its max. */
+    public static void heal(Live live, double amount) {
+        if (amount <= 0 || live.health <= 0) return;
+        live.health = Math.min(live.type.getMaxHealth(), live.health + amount);
+        updateNameTag(live);
     }
 
     private static void updateNameTag(Live live) {
@@ -205,7 +232,7 @@ public final class Mobs implements Listener {
 
     /** Each drop rolls on its own (magic find raises the chance); only what drops is announced. */
     private static void drop(Live live, Player killer) {
-        double magicFind = net.icxd.dungeons.session.PlayerSession.of(killer).stats().get(net.icxd.dungeons.stats.Stat.MAGIC_FIND);
+        double magicFind = PlayerSession.of(killer).stats().get(Stat.MAGIC_FIND);
         for (MobDrop drop : live.type.getDrops()) {
             SkyBlockItem item = drop.item();
             if (item == null || Math.random() >= drop.chance() / 100 * (1 + magicFind / 100)) continue;
@@ -264,14 +291,32 @@ public final class Mobs implements Listener {
         if (event.getCause() != EntityDamageEvent.DamageCause.KILL) event.setCancelled(true);
     }
 
+    /**
+     * A mob's hit on a player, by itself or with a projectile ({@code by}): its damage, less their
+     * Defense, and whatever its hits do (a Flaming mob's melee sets them on fire).
+     */
+    public static void mobHit(Live live, Player player, Entity by) {
+        if (live.type.getDamage() > 0) PlayerDamage.hit(player, live.type.getDamage(), PlayerDamage.Kind.NORMAL, by, live.type.getKnockback());
+        live.type.onHit(live.entity, player, !(by instanceof Projectile));
+    }
+
     /** Their hits (and their projectiles') on players do SkyBlock damage. */
     @EventHandler(priority = EventPriority.LOW)
     public void onAttack(EntityDamageByEntityEvent event) {
         Live live = attacker(event.getDamager());
         if (live == null || !(event.getEntity() instanceof Player player)) return;
         event.setCancelled(true);
-        if (live.type.getDamage() > 0) PlayerDamage.hit(player, live.type.getDamage(), PlayerDamage.Kind.NORMAL, event.getDamager(), live.type.getKnockback());
-        live.type.onAttack(live.entity, player);
+        // A thrown bone (a snowball) hits in onProjectileHit: snowballs don't always get this far.
+        if (event.getDamager() instanceof Snowball) return;
+        mobHit(live, player, event.getDamager());
+    }
+
+    /** A Crypt Lurker's bone (a snowball that looks like one) hits whoever it lands on. */
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof Snowball bone) || !(event.getHitEntity() instanceof Player player)) return;
+        Live live = attacker(bone);
+        if (live != null) mobHit(live, player, bone);
     }
 
     /** Their wither skulls hit, and don't blow up as well (the blast would hit again). */
