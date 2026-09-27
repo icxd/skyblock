@@ -2,6 +2,7 @@ package net.icxd.dungeons.listeners;
 
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.session.PlayerHealth;
+import net.icxd.dungeons.session.PlayerSession;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -56,8 +57,19 @@ public class HealthListener implements Listener {
         PlayerHealth.sync(event.getPlayer());
     }
 
+    /**
+     * Back with full health, and half their mana: "Upon respawning, 50% of max Mana is returned" (the
+     * wiki's Mana, 0.11.3), so that's what they have, rounded down, whatever they had when they died.
+     */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
         PlayerHealth.refill(event.getPlayer());
+        PlayerSession session = PlayerSession.of(event.getPlayer());
+        session.setMana(respawnMana(session.maxMana()));
+    }
+
+    /** Half the pool, rounded down. */
+    static int respawnMana(int pool) {
+        return Math.max(0, pool) / 2;
     }
 }
