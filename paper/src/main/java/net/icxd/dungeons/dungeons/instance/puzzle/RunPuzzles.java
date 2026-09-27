@@ -20,14 +20,17 @@ import org.bukkit.entity.Player;
 public final class RunPuzzles {
     /** By run world, for {@link PuzzleEvents} (every run has a world of its own). */
     private static final Map<World, RunPuzzles> BY_WORLD = new ConcurrentHashMap<>();
-    /** The tab list's names (the wiki's), by room template. */
+    /**
+     * The tab list's names, by room template: the wiki's, but "Higher Or Lower" with its capital O as
+     * the tab has it (the map mods match it exactly: FunnyMap, BetterMap).
+     */
     private static final Map<String, String> NAMES = Map.of(
             "tic_tac_toe", "Tic Tac Toe",
             "water_board", "Water Board",
             "three_weirdos", "Three Weirdos",
             "creeper_beams", "Creeper Beams",
             "teleport_maze", "Teleport Maze",
-            "blaze", "Higher or Lower",
+            "blaze", "Higher Or Lower",
             "boulder", "Boulder",
             "ice_path", "Ice Path",
             "ice_fill", "Ice Fill",
