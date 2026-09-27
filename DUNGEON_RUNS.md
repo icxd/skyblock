@@ -48,7 +48,8 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
   Completed Rooms in cells, as the score counts them. A room behind the entrance door, a wither
   door or the Blood Door is opened when that door opens (3 as the run starts), any other when
   someone walks in, as both recordings have it.
-- Damage dealt, kills and deaths are counted for EXTRA STATS and the tab list.
+- Damage dealt, kills and deaths are counted for EXTRA STATS and the tab list, and deaths for the
+  score.
 - Until there are ghosts, dying brings you back in the entrance room, with everything you had
   (run worlds keep inventories).
 
@@ -190,8 +191,8 @@ Hypixel's in-run indicator, worked out every 10 seconds from the start: skill wi
 explore, the cleared share, the bonus and 2.2 per Watcher undead killed (fitted to all 21
 recorded values).
 
-Secrets, crypts, puzzles and deaths reach the score through `ScoreCounts`: crypts (room mobs) and
-deaths are counted; secrets and puzzles are 0 until the code counting them is in.
+Secrets, crypts and puzzles reach the score through `ScoreCounts`: crypts are counted (room mobs),
+secrets and puzzles are 0 until the code counting them is in; deaths are the members' own count.
 
 Experience (`RunRewards`) follows the chat's score: the floor's base at 300 (55 on the Entrance)
 x score/300, with 300 more score for the first five completions of a floor and 40% more for the

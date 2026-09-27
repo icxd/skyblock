@@ -602,6 +602,11 @@ public final class DungeonRun implements ScoreCounts {
         if (m != null && phase == Phase.RUNNING) m.deaths++;
     }
 
+    /** Deaths so far, everyone's (for the score and the tab list). */
+    public int deaths() {
+        return members.values().stream().mapToInt(m -> m.deaths).sum();
+    }
+
     /** The score as it stands (rooms done, secrets, puzzles, crypts, deaths and time). */
     Score score(long now) {
         return Score.of(floor, scoreInputs(now));
