@@ -40,6 +40,7 @@ import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.combat.Shots;
+import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.network.ProxyLink;
@@ -116,6 +117,7 @@ public class Dungeons extends JavaPlugin {
         listen(Shots.class, Shots::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
+        listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
