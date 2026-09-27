@@ -36,10 +36,10 @@ import net.icxd.dungeons.utils.Utils;
 import net.kyori.adventure.text.Component;
 
 /**
- * An NPC's shop menu, as Hypixel lays them out (research coins.md 2.1): 54 slots in black glass, the
- * wares in the middle 7 by 4 (a page of 28, with Previous and Next Page arrows at 45 and 53 when
- * there's more), and at 49, where other menus close, the Sell Item hopper, or once they've sold
- * something, the last thing sold, to buy back.
+ * An NPC's shop menu, as Hypixel lays them out (research coins.md 2.1): 54 slots with a black glass
+ * border, the wares in the middle 7 by 4 (a page of 28, with Previous and Next Page arrows at 45 and
+ * 53 when there's more), and at 49, where other menus close, the Sell Item hopper, or once they've
+ * sold something, the last thing sold, to buy back.
  *
  * <p>Clicking an item in their own inventory sells the whole stack, if a shop takes it (see
  * {@link Selling}); so does putting it on the hopper. The coins go into the purse, the stack onto the
@@ -75,7 +75,7 @@ public final class ShopMenu extends GUI {
 
     private void items() {
         getItems().clear();
-        fill(filler());
+        border();
         User user = User.ifLoaded(viewer.getUniqueId());
         if (user == null) return;
         List<Shop.Ware> wares = new ArrayList<>();
@@ -93,7 +93,22 @@ public final class ShopMenu extends GUI {
         set(sellSlot(user));
     }
 
-    /** Every slot has an item (glass at least), so the new page's replace all of the old one's. */
+    /**
+     * Black glass around the edge, and inside, nothing but the wares (research coins.md 2.1: the wiki
+     * template's {@code fill = 'border'}). The slots inside are empty menu items all the same, so a
+     * click on one does nothing (an item on the cursor isn't put there), and a page's wares replace
+     * all of the last one's.
+     */
+    private void border() {
+        ItemStack glass = filler();
+        for (int slot = 0; slot < getSize(); slot++) {
+            int row = slot / 9;
+            int column = slot % 9;
+            boolean edge = row == 0 || row == getSize() / 9 - 1 || column == 0 || column == 8;
+            set(slot, edge ? glass : ItemStack.empty());
+        }
+    }
+
     private void turn(int by) {
         page += by;
         items();
