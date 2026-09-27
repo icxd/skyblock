@@ -43,7 +43,13 @@ public final class PuzzleEvents implements Listener {
         if (puzzles.click(event.getPlayer(), event.getClickedBlock(), right)) event.setCancelled(true);
     }
 
-    /** The Three Weirdos (and the puzzles' other entities, which do nothing). */
+    /**
+     * The Three Weirdos (and the puzzles' other entities, which do nothing). In 26.2 a right click on
+     * any entity is one packet and one event, a {@link org.bukkit.event.player.PlayerInteractAtEntityEvent},
+     * which has no handler list of its own and so comes here: a click on a Weirdo's name stand (the
+     * top of its head) as much as on the NPC. A handler for that event as well would hear each click
+     * twice.
+     */
     @EventHandler(priority = EventPriority.LOW)
     public void onClickEntity(PlayerInteractEntityEvent event) {
         RunPuzzles puzzles = RunPuzzles.in(event.getRightClicked().getWorld());
