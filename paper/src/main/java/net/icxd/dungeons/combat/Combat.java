@@ -47,6 +47,23 @@ public final class Combat {
      * factor, 1 for none; they multiply.
      */
     private static final List<ToDoubleBiFunction<Player, Boolean>> MULTIPLIERS = new ArrayList<>();
+    private static final List<HitBuffs> HIT_BUFFS = new ArrayList<>();
+
+    /**
+     * A buff on one hit that has landed, which may depend on what it hit (armor bonuses: Reaper Armor
+     * deals "+100% damage to Undead mobs"): what it adds to the hit's additive buffs, in percent, and a
+     * multiplicative factor, 1 for none (see {@link Damage#buffed}).
+     */
+    public record HitBuff(double additive, double multiplier) {
+        public static final HitBuff NONE = new HitBuff(0, 1);
+    }
+
+    /** What gives a player's hits a {@link HitBuff}: asked once for each hit of theirs that lands on a mob. */
+    @FunctionalInterface
+    public interface HitBuffs {
+        /** The buff on this hit ({@code ranged}: an arrow's) on this target; null for none. */
+        HitBuff on(Player player, boolean ranged, Damage.Target target);
+    }
 
     private Combat() {
     }
@@ -54,6 +71,24 @@ public final class Combat {
     /** Adds a multiplicative buff: its factor for a player's hit (the flag says whether it's an arrow). */
     public static void addMultiplier(ToDoubleBiFunction<Player, Boolean> multiplier) {
         MULTIPLIERS.add(multiplier);
+    }
+
+    /** Adds buffs on hits that are only known once the hit lands (see {@link HitBuff}). */
+    public static void addHitBuffs(HitBuffs buffs) {
+        HIT_BUFFS.add(buffs);
+    }
+
+    /** The attacker with the {@link HitBuff}s on this hit of theirs on this target. */
+    static Damage.Attacker buffed(Player player, Damage.Attacker attacker, Damage.Target target, boolean ranged) {
+        double additive = 0;
+        double multiplier = 1;
+        for (HitBuffs buffs : HIT_BUFFS) {
+            HitBuff buff = buffs.on(player, ranged, target);
+            if (buff == null) continue;
+            additive += buff.additive();
+            multiplier *= buff.multiplier();
+        }
+        return Damage.buffed(attacker, target, additive, multiplier);
     }
 
     /** The product of the multiplicative buffs on this player's hit. */
@@ -138,7 +173,7 @@ public final class Combat {
             critical = Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
             look = DamageIndicators.Look.of(critical, false);
         }
-        double damage = Damage.hit(attacker, on, critical);
+        double damage = Damage.hit(buffed(player, attacker, on, projectile != null), on, critical);
 
         boolean invulnerable = dungeonMob != null ? dungeonMob.invulnerable() : mob.type().isInvulnerable();
         if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED));

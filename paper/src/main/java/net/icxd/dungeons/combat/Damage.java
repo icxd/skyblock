@@ -172,6 +172,20 @@ public final class Damage {
         return level < 1 ? 0 : values[Math.min(level, values.length) - 1];
     }
 
+    /**
+     * The attacker with more buffs on a hit on this target: {@code additive} more percent in the additive
+     * sum (the Tuxedo's "Deal +50% damage!") and {@code multiplier} more in the product (1 for none). The
+     * additive part goes in as the factor it makes on that sum, (100 + sum + additive) / (100 + sum), so
+     * the formula above stays as it is; the same attacker if there's nothing more.
+     */
+    public static Attacker buffed(Attacker a, Target target, double additive, double multiplier) {
+        if (additive == 0 && multiplier == 1) return a;
+        double sum = 100 + additive(a, target);
+        double factor = multiplier * (sum > 0 ? (sum + additive) / sum : 1);
+        return new Attacker(a.damage(), a.strength(), a.critChance(), a.critDamage(), a.combatLevel(), a.health(), a.enchantments(),
+                a.ranged(), a.travelled(), a.multiplier() * factor);
+    }
+
     /** What the hit does to the target, before rounding. */
     public static double exact(Attacker attacker, Target target, boolean critical) {
         double damage = initial(attacker.damage(), attacker.strength());

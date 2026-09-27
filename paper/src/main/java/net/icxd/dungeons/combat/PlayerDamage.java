@@ -9,6 +9,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
@@ -16,6 +17,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 
 /**
@@ -50,6 +52,19 @@ public final class PlayerDamage {
         double left(Player player, double taken, Entity by);
     }
 
+    /** What changes a hit by something (see {@link #hit}'s {@code by}): extra Defense against it, factors, knockback resistance. */
+    private static final List<ToDoubleBiFunction<Player, Entity>> DEFENSE_AGAINST = new ArrayList<>();
+    private static final List<ToDoubleBiFunction<Player, Entity>> TAKEN_FROM = new ArrayList<>();
+    private static final List<ToDoubleBiFunction<Player, Entity>> KNOCKBACK_RESISTANCE = new ArrayList<>();
+    private static final List<Hurt> HURT = new ArrayList<>();
+
+    /** Something that happens once a hit has taken health from a player who's still alive. */
+    @FunctionalInterface
+    public interface Hurt {
+        /** {@code by} is what hit them (see {@link #hit}), {@code taken} what it took. */
+        void hurt(Player player, Entity by, Kind kind, double taken);
+    }
+
     private PlayerDamage() {
     }
 
@@ -71,9 +86,51 @@ public final class PlayerDamage {
         return taken;
     }
 
+    /**
+     * Adds Defense a player has against what hits them (Revenant Armor's "+100 Defense against Undead
+     * mobs"): it's given what hit them, a mob or its projectile (see {@link #attacker}), and only counts
+     * where Defense does.
+     */
+    public static void addDefenseAgainst(ToDoubleBiFunction<Player, Entity> defense) {
+        DEFENSE_AGAINST.add(defense);
+    }
+
+    /** Adds a factor on a hit by what hit them (Wither Armor: "Reduces the damage you take from withers by 10%"). */
+    public static void addTakenFrom(ToDoubleBiFunction<Player, Entity> factor) {
+        TAKEN_FROM.add(factor);
+    }
+
+    /** Adds a share of knockback a player doesn't take from what hit them (Rotten Armor's against arrows); shares add up. */
+    public static void addKnockbackResistance(ToDoubleBiFunction<Player, Entity> share) {
+        KNOCKBACK_RESISTANCE.add(share);
+    }
+
+    /** Adds something that happens when a hit hurts a player (see {@link Hurt}). */
+    public static void addHurtListener(Hurt hurt) {
+        HURT.add(hurt);
+    }
+
+    /** The mob behind what hit a player: {@code by} itself, or whoever shot it; null for nothing. */
+    public static Entity attacker(Entity by) {
+        if (by instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) return shooter;
+        return by;
+    }
+
     private static double takenMultiplier(Player player) {
         double product = 1;
         for (ToDoubleFunction<Player> factor : TAKEN) product *= factor.applyAsDouble(player);
+        return product;
+    }
+
+    private static double sum(List<ToDoubleBiFunction<Player, Entity>> parts, Player player, Entity by) {
+        double sum = 0;
+        if (by != null) for (ToDoubleBiFunction<Player, Entity> part : parts) sum += part.applyAsDouble(player, by);
+        return sum;
+    }
+
+    private static double product(List<ToDoubleBiFunction<Player, Entity>> factors, Player player, Entity by) {
+        double product = 1;
+        if (by != null) for (ToDoubleBiFunction<Player, Entity> factor : factors) product *= factor.applyAsDouble(player, by);
         return product;
     }
 
@@ -92,24 +149,27 @@ public final class PlayerDamage {
     }
 
     /**
-     * Hits a player. {@code by} is what they're knocked away from (null for no knockback), and
-     * {@code knockback} how much of the usual knockback they get. Returns the health it took (0 if they
-     * can't be hurt: dead, invulnerable (a dungeon ghost), or in creative or spectator; or if a shield,
-     * see {@link #addShield}, took it all).
+     * Hits a player. {@code by} is what hit them and what they're knocked away from (a mob or its
+     * projectile; null for no knockback), and {@code knockback} how much of the usual knockback they get.
+     * What they have against {@code by} counts (see {@link #addDefenseAgainst}). Returns the health it
+     * took (0 if they can't be hurt: dead, invulnerable (a dungeon ghost), or in creative or spectator; or
+     * if a shield, see {@link #addShield}, took it all).
      */
     public static double hit(Player player, double amount, Kind kind, Entity by, double knockback) {
         if (player.isDead() || player.isInvulnerable() || player.getGameMode() == GameMode.CREATIVE
                 || player.getGameMode() == GameMode.SPECTATOR) return 0;
         LastHit.record(player, by, kind);
         Stats stats = PlayerSession.of(player).stats();
-        double taken = taken(amount, kind, stats.get(Stat.DEFENSE), stats.get(Stat.TRUE_DEFENSE), PlayerHealth.max(player))
-                * takenMultiplier(player);
+        double defense = stats.get(Stat.DEFENSE) + sum(DEFENSE_AGAINST, player, by);
+        double taken = taken(amount, kind, defense, stats.get(Stat.TRUE_DEFENSE), PlayerHealth.max(player))
+                * takenMultiplier(player) * product(TAKEN_FROM, player, by);
         // A shield that takes all of it leaves them as they were: no number, flinch or knockback.
         taken = shielded(player, taken, by);
         if (taken <= 0) return 0;
         PlayerHealth.damage(player, taken);
         DamageIndicators.show(player, taken, false);
         if (player.isDead()) return taken;
+        knockback *= Math.max(0, 1 - sum(KNOCKBACK_RESISTANCE, player, by));
         if (by != null && knockback > 0) {
             Vector away = player.getLocation().toVector().subtract(by.getLocation().toVector()).setY(0);
             if (away.lengthSquared() > 0) away.normalize().multiply(KNOCKBACK * knockback);
@@ -117,6 +177,7 @@ public final class PlayerDamage {
         }
         player.playHurtAnimation(0);
         player.getWorld().playSound(player, Sound.ENTITY_PLAYER_HURT, 1, 1);
+        if (taken > 0) for (Hurt hurt : HURT) hurt.hurt(player, by, kind, taken);
         return taken;
     }
 
