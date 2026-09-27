@@ -133,6 +133,7 @@ public final class DungeonRun {
     private final RunLayout layout;
     private final RunDoors doors;
     private final RunMap runMap;
+    private final RoomMobs roomMobs;
     private final DisplayCases cases;
     private Watcher watcher;
     private int ticks;
@@ -168,6 +169,7 @@ public final class DungeonRun {
                 yaw(-door.dx, -door.dy), 0));
         this.doors = new RunDoors(this, plugin, world, layout);
         this.runMap = new RunMap(this, layout);
+        this.roomMobs = new RoomMobs(this, world, layout, doors, floor, plugin.getLogger());
         PlacedRoom blood = layout.bloodRoom();
         this.cases = blood == null ? null : DisplayCases.place(world, layout.center(world, RunLayout.firstCell(blood)));
         PlacedRoom start = layout.roomAt(entrance);
@@ -273,16 +275,25 @@ public final class DungeonRun {
     // Every tick
 
     void tick() {
-        if (closed || phase != Phase.RUNNING) return;
+        if (closed) return;
+        if (phase != Phase.RUNNING) {
+            // The rooms' mobs are spawned while the party waits.
+            roomMobs.tickWaiting();
+            return;
+        }
         ticks++;
         List<Player> here = players();
         doors.tick(here);
         if (ticks % FIND_ROOMS_EVERY == 0) {
             for (Player player : here) {
                 PlacedRoom room = layout.roomAt(player.getLocation());
-                if (room != null) runMap.find(room);
+                if (room == null) continue;
+                runMap.find(room);
+                // Walking into a room opens it, for its mobs.
+                roomMobs.open(room);
             }
         }
+        roomMobs.tick(here);
         if (watcher != null) watcher.tick();
     }
 
@@ -303,6 +314,8 @@ public final class DungeonRun {
 
     void doorOpened(Door door) {
         runMap.changed();
+        // The room behind it opens, for its mobs.
+        roomMobs.open(layout.room(door.child()));
     }
 
     /** The Watcher's fight starts. */
@@ -315,6 +328,41 @@ public final class DungeonRun {
     void bloodRoomCleared() {
         PlacedRoom blood = layout.bloodRoom();
         if (blood != null) runMap.complete(blood);
+    }
+
+    // Room mobs (RoomMobs): clearing rooms, crypts, room loot
+
+    /** A room's starred mobs are all dead: it's done (its tick on the map, the sidebar's Cleared), and a RoomClearedEvent. */
+    void clearedRoom(PlacedRoom room) {
+        runMap.complete(room);
+        Bukkit.getPluginManager().callEvent(new RoomClearedEvent(this, room));
+    }
+
+    /** Whether a room's starred mobs are all dead (rooms with nothing to clear, like the fairy room, aren't counted here). */
+    public boolean roomCleared(PlacedRoom room) {
+        return roomMobs.isCleared(room);
+    }
+
+    /** How many crypts have been blown up (the bonus score counts at most 5). */
+    public int cryptsBlown() {
+        return roomMobs.cryptsBlown();
+    }
+
+    /** A Superboom TNT went off at this block. */
+    void superboom(Block at) {
+        roomMobs.superboom(at);
+    }
+
+    /**
+     * Someone picked up a blessing a room dropped ("Name has obtained Blessing of Wisdom!" has been said):
+     * the team gets it at this level. The blessings themselves (their stats and chat) aren't here.
+     */
+    void blessingFound(Player player, String blessing, int level) {
+    }
+
+    /** Whether all of a room's secrets are found, for its tick's colour on the map; until secrets are counted, never. */
+    boolean allSecretsFound(PlacedRoom room) {
+        return false;
     }
 
     // Every second
@@ -507,6 +555,7 @@ public final class DungeonRun {
         closed = true;
         mort.remove();
         doors.dispose();
+        roomMobs.dispose();
         if (watcher != null) watcher.dispose();
         if (cases != null) cases.dispose();
         for (Player player : players()) takeRunItems(player);
@@ -623,7 +672,7 @@ public final class DungeonRun {
                 "",
                 "&a&lDiscoveries: &f" + secrets,
                 " Secrets Found: &b" + secrets,
-                " Crypts: &60"));
+                " Crypts: &6" + cryptsBlown()));
 
         long now = phase == Phase.ENDED ? endedAt : System.currentTimeMillis();
         column(out, "       &3&lDungeon Stats", () -> {

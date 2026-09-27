@@ -17,7 +17,6 @@ import org.bukkit.plugin.Plugin;
 
 import net.icxd.dungeons.dungeons.generation.DoorType;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
-import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Position;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.utils.Text;
@@ -27,9 +26,10 @@ import net.icxd.dungeons.utils.Text;
  * (coal) and the Blood Door (red terracotta) stay shut until someone right-clicks them with the
  * team's key; normal and fairy doors are open from the start.
  *
- * <p>On Hypixel a door's key drops from the last starred mob (or the miniboss) of the room before
- * it. Until rooms have mobs it waits in that room from the start, the way Hypixel shows a dropped
- * key: a floating head with its name. Walking into it picks it up for the whole team.
+ * <p>A door's key drops from the last starred mob (or the miniboss) of the room before it, with the
+ * rest of the room's loot ({@link RoomMobs}), the way Hypixel shows a dropped key: a floating head
+ * with its name. A key room with no starred mobs has it waiting there from the start instead. Walking
+ * into it picks it up for the whole team.
  */
 final class RunDoors {
     /** Hypixel's key display: a head on one invisible armor stand, the name on another, this far below the floor. */
@@ -105,8 +105,12 @@ final class RunDoors {
             if (look == null) continue;
             shut.add(door);
             for (int[] b : layout.doorBlocks(door)) world.getBlockAt(b[0], b[1], b[2]).setType(look, false);
-            if (door.type() == DoorType.WITHER || door.type() == DoorType.BLOOD) placeKey(door);
         }
+    }
+
+    /** The doors whose keys a room drops or has waiting: the wither doors and the Blood Door. */
+    List<Door> keyDoors() {
+        return layout.doors().stream().filter(d -> d.type() == DoorType.WITHER || d.type() == DoorType.BLOOD).toList();
     }
 
     /** What a shut door is made of; null for doors that are open from the start. */
@@ -133,9 +137,13 @@ final class RunDoors {
 
     // Keys
 
-    private void placeKey(Door door) {
-        PlacedRoom room = layout.keyRoom(door);
-        Location at = keySpot(RunLayout.firstCell(room));
+    /** The door's key, waiting in its key room from the start (one with no starred mobs to drop it). */
+    void placeKey(Door door) {
+        dropKey(door, keySpot(RunLayout.firstCell(layout.keyRoom(door))));
+    }
+
+    /** The door's key where a room's last starred mob died (the spot is at the mob's feet). */
+    void dropKey(Door door, Location at) {
         boolean blood = door.type() == DoorType.BLOOD;
         String name = blood ? "Blood Key" : "Wither Key";
         Location headAt = at.clone().subtract(0, HEAD_BELOW, 0);

@@ -26,7 +26,9 @@ import net.icxd.dungeons.dungeons.paste.PastePlan;
  * as a grey cell with a question mark. Rooms are 18 pixels (16 on the 6-wide floors) with 4 between
  * them, centred on the map; doors are 7 pixels wide in the gap, in the colour of the room they lead
  * into (black for a shut wither door). Rooms with nothing to clear, like the fairy room, get their
- * green tick when found. Players are arrows: yours green, the others blue.
+ * green tick when found. A cleared room gets a white tick, green once its secrets are all found too
+ * (the wiki's Dungeon Secrets: "white ✔ = cleared with secrets left; green ✔ = cleared with all
+ * secrets found"). Players are arrows: yours green, the others blue.
  */
 final class RunMap extends MapRenderer {
     // Map palette colours, as Hypixel uses them.
@@ -100,7 +102,7 @@ final class RunMap extends MapRenderer {
         return ticked.size();
     }
 
-    /** Doors changed (one opened). */
+    /** Doors changed (one opened), or a room's secrets (its tick's colour). */
     void changed() {
         redraw();
     }
@@ -122,8 +124,14 @@ final class RunMap extends MapRenderer {
             }
             drawDoor(door, doorColor(door, parent && child, into));
         }
-        for (int id : ticked) mark(RunLayout.firstCell(layout.room(id)), TICK, GREEN);
+        for (int id : ticked) mark(RunLayout.firstCell(layout.room(id)), TICK, tickColor(layout.room(id)));
         version++;
+    }
+
+    /** Green for a room with nothing to find (fairy, blood) or whose secrets are all found; white for one with some left. */
+    private byte tickColor(PlacedRoom r) {
+        boolean nothingToFind = r.type() == RoomType.FAIRY || r.type() == RoomType.BLOOD || r.type() == RoomType.START;
+        return nothingToFind || run.allSecretsFound(r) ? GREEN : WHITE;
     }
 
     private byte doorColor(Door door, boolean bothFound, PlacedRoom into) {

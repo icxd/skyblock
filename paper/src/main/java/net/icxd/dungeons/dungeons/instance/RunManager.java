@@ -161,6 +161,7 @@ public final class RunManager {
             try {
                 RoomLibrary loaded = RoomLibrary.load(folder);
                 loaded.problems().forEach(p -> log.warning("Room library: " + p));
+                loadRoomData(folder);
                 if (loaded.templates().isEmpty()) throw new IllegalStateException("no rooms in " + folder);
                 log.info("Dungeon rooms: " + loaded.summary());
                 return loaded;
@@ -178,8 +179,20 @@ public final class RunManager {
             prepareSpare();
         }));
         Bukkit.getPluginManager().registerEvents(new Events(), plugin);
+        Bukkit.getPluginManager().registerEvents(new RoomEvents(), plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20, 20);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickRuns, 1, 1);
+    }
+
+    /**
+     * The rooms' mobs, crypts and weak walls (rooms/_mobs, next to the captures); without them every room
+     * gets planned mobs. Off the main thread.
+     */
+    private void loadRoomData(Path folder) {
+        RoomSpawnData.Loaded data = RoomSpawnData.load(folder.resolve("rooms").resolve(RoomSpawnData.FOLDER));
+        data.problems().forEach(p -> log.warning("Room mobs: " + p));
+        log.info("Room mobs: " + data.rooms().size() + " rooms with data");
+        RoomMobs.setData(data);
     }
 
     /** Ends every run; players still in one go back to the main world. */
