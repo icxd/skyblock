@@ -123,7 +123,8 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
 - It comes back ("❣ Alice was revived!", full health and mana): by itself after 15 seconds on the
   Entrance (45 on Floor 1, 100 on Floor 2, never later); when a teammate right-clicks a Revive
   Stone (5 seconds later, next to them; with several dead, a menu to pick one; with none, "There
-  are no players available to revive right now!"); or when it, or a teammate, kills a fairy. A
+  are no players available to revive right now!"; one stone per ghost, and it's given back if the
+  ghost is back another way first); or when it, or a teammate, kills a fairy. A
   Revive Stone in your inventory when you die brings you straight back. Revive Stones go when you
   leave.
 - The Fairy Room has four fairies (Mari, Nymira, Zana, Q'ara, "[Lv0] Mari 4❤") floating about.

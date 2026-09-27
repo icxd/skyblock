@@ -88,11 +88,14 @@ final class ReviveStones {
 
     /**
      * A right click with one in the run: one dead teammate is revived, several get a menu to pick from.
-     * The menu's layout is UNKNOWN (MCW only says it exists): their heads in a row.
+     * The menu's layout is UNKNOWN (MCW only says it exists): their heads in a row. A ghost another
+     * Revive Stone is already bringing back isn't available.
      */
     static void use(DungeonRun run, Player player) {
         List<UUID> dead = new ArrayList<>();
-        for (UUID id : run.ghosts().all()) if (!id.equals(player.getUniqueId()) && Bukkit.getPlayer(id) != null) dead.add(id);
+        for (UUID id : run.ghosts().all()) {
+            if (!id.equals(player.getUniqueId()) && Bukkit.getPlayer(id) != null && !run.ghosts().beingRevived(id)) dead.add(id);
+        }
         if (dead.isEmpty()) {
             player.sendMessage(Utils.color(DeathText.NOBODY_TO_REVIVE));
             return;
@@ -104,14 +107,29 @@ final class ReviveStones {
         new Pick(run, player, dead).open(player);
     }
 
-    /** "The reviving process itself takes 5 seconds": the stone goes now, the teammate comes back at the reviver's side. */
+    /**
+     * "The reviving process itself takes 5 seconds": the stone goes now, the teammate comes back at the
+     * reviver's side. One stone per ghost at a time; if the ghost is back another way meanwhile (its
+     * timer, a fairy) or has left, the stone is given back (what Hypixel does then is UNKNOWN).
+     */
     private static void start(DungeonRun run, Player player, UUID target) {
+        // Picked from a menu that was open a while: they may be back, or another stone on its way.
+        if (!run.ghosts().isGhost(target) || run.ghosts().beingRevived(target)) {
+            player.sendMessage(Utils.color(DeathText.NOBODY_TO_REVIVE));
+            return;
+        }
         if (!take(player)) return;
+        run.ghosts().startRevive(target);
         run.later(DeathRules.REVIVE_STONE_TICKS, () -> {
+            run.ghosts().endRevive(target);
             Player ghost = Bukkit.getPlayer(target);
-            if (ghost == null || !run.ghosts().isGhost(target)) return;
+            boolean here = player.isOnline() && player.getWorld().equals(run.world);
+            if (ghost == null || !run.ghosts().isGhost(target)) {
+                if (here) give(player);
+                return;
+            }
             // Where they come back is UNKNOWN; next to whoever revived them (MCW mentions a bug that does so).
-            run.ghosts().revive(ghost, player.isOnline() && player.getWorld().equals(run.world) ? player.getLocation() : null);
+            run.ghosts().revive(ghost, here ? player.getLocation() : null);
         });
     }
 

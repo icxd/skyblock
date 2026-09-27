@@ -1,9 +1,11 @@
 package net.icxd.dungeons.dungeons.instance;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -46,6 +48,8 @@ final class Ghosts {
     private final Plugin plugin;
     private final int autoReviveTicks;
     private final Map<UUID, Ghost> ghosts = new LinkedHashMap<>();
+    /** Ghosts a teammate's Revive Stone is already bringing back (see {@link ReviveStones}). */
+    private final Set<UUID> reviving = new HashSet<>();
     private int ticks;
 
     Ghosts(DungeonRun run, Plugin plugin) {
@@ -66,6 +70,21 @@ final class Ghosts {
 
     int count() {
         return ghosts.size();
+    }
+
+    /** Whether a Revive Stone is already on its way to this ghost. */
+    boolean beingRevived(UUID id) {
+        return reviving.contains(id);
+    }
+
+    /** A Revive Stone was used on this ghost; false if it isn't one, or one already was. */
+    boolean startRevive(UUID id) {
+        return isGhost(id) && reviving.add(id);
+    }
+
+    /** That Revive Stone's 5 seconds are up. */
+    void endRevive(UUID id) {
+        reviving.remove(id);
     }
 
     /** Seconds until this ghost comes back by itself; -1 if it won't. */
@@ -311,6 +330,7 @@ final class Ghosts {
             if (player != null) restore(player, entry.getValue().mode);
         }
         ghosts.clear();
+        reviving.clear();
     }
 
     /** "&a&lDowned: ..." and the two lines under it, for the tab list's Player Stats. */
