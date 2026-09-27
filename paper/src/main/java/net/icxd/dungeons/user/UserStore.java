@@ -398,8 +398,9 @@ public final class UserStore {
         Document doc = user.getDocument();
         String oldId = user.profileId();
         Document old = user.profile();
-        player.closeInventory();
+        // Before closing the menu, which would put the cursor item back itself, or drop it if there's no room.
         StoredInventory.rescueLooseItems(player, old);
+        player.closeInventory();
         // First, so an item that can't be saved stops the switch before anything has changed.
         StoredInventory.capture(player, old);
         doc.put(Profiles.SELECTED, id);

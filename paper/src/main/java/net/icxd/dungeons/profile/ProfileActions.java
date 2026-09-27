@@ -67,8 +67,8 @@ public final class ProfileActions {
         User user = User.ifLoaded(player.getUniqueId());
         if (!refuse(player, user, "creation")) return;
         Document doc = user.getDocument();
-        player.closeInventory();
         if (Profiles.ordered(doc).size() >= Math.min(Profiles.MAX_SLOTS, Profiles.slots(user.getRank()))) {
+            player.closeInventory();
             say(player, "&cYou don't have a free profile slot!");
             return;
         }
@@ -76,6 +76,7 @@ public final class ProfileActions {
         List<String> used = Profiles.names(doc);
         if (name == null || used.stream().anyMatch(name::equalsIgnoreCase)) name = Profiles.pickName(used, RANDOM);
         if (name == null) {
+            player.closeInventory();
             say(player, "&cThere are no profile names left!");
             return;
         }
