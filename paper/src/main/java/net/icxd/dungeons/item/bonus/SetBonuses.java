@@ -129,7 +129,7 @@ public final class SetBonuses implements Listener {
         PlayerDamage.addTakenFrom((player, by) -> {
             double factor = 1;
             for (Bonus.Active a : active(player)) factor *= a.bonus().takenFrom(player, a, by);
-            return factor;
+            return factor * takenNear(player);
         });
         PlayerDamage.addKnockbackResistance((player, by) -> {
             double share = 0;
@@ -161,6 +161,16 @@ public final class SetBonuses implements Listener {
         for (Bonus bonus : ALL) {
             if (bonus.auraRange() > 0 && auraReaches(bonus, player)) bonus.aura(player, stats);
         }
+    }
+
+    /** The least factor on a hit on them that wearers' bonuses give (see {@link Bonus#takenNear}); not the dead's or ghosts'. */
+    private static double takenNear(Player hurt) {
+        double least = 1;
+        for (Player wearer : hurt.getWorld().getPlayers()) {
+            if (wearer.isDead() || wearer.isInvulnerable()) continue;
+            for (Bonus.Active a : active(wearer)) least = Math.min(least, a.bonus().takenNear(wearer, a, hurt));
+        }
+        return least;
     }
 
     /** Whether they, or someone near enough to them, wears this aura's bonus. */

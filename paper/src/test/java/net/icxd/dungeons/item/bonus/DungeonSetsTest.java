@@ -18,7 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The Catacombs' sets in numbers: Dungeon Lord, Adaptive, which pieces count, Vindicate, the Wither pieces, kills per run. */
+/**
+ * The Catacombs' sets in numbers: Dungeon Lord, Adaptive, which pieces count, Vindicate, the Wither pieces, the pieces'
+ * own text, kills per run.
+ */
 class DungeonSetsTest {
     private static final double EPSILON = 1e-9;
 
@@ -64,12 +67,42 @@ class DungeonSetsTest {
         assertFalse(new DungeonSets.ArrowPieces().item("TANK_WITHER_LEGGINGS"));
     }
 
+    /** Vindicate's whole fifties; the Wither pieces' 10% each off withers' hits, a Crypt Witherlord piece's 5%. */
     @Test
     void vindicateAndWither() {
         assertEquals(0, DungeonSets.Vindicate.speed(49), EPSILON);
         assertEquals(12, DungeonSets.Vindicate.speed(612), EPSILON);
-        assertEquals(0.6, DungeonSets.WitherPieces.factor(4), EPSILON);
-        assertEquals(0.9, DungeonSets.WitherPieces.factor(1), EPSILON);
+        List<Worn.Piece> wither = pieces("WITHER", fullSet("Witherborn", 4));
+        assertEquals(0.6, DungeonSets.WitherPieces.factor(wither), EPSILON);
+        assertEquals(0.9, DungeonSets.WitherPieces.factor(wither.subList(0, 1)), EPSILON);
+        assertEquals(0.85, DungeonSets.WitherPieces.factor(List.of(wither.get(0), worn(item("CRYPT_WITHERLORD_BOOTS")))), EPSILON);
+        assertTrue(new DungeonSets.WitherPieces().item("CRYPT_WITHERLORD_HELMET"));
+    }
+
+    /** The Mender helmets' stats in a run, the Stone to Steel Chestplates' share and reach, the Sniper Helmet's steps. */
+    @Test
+    void piecesOwnText() {
+        assertEquals(new Stats().set(Stat.MENDING, 50), DungeonSets.MenderPieces.of("MENDER_HELMET"));
+        assertEquals(new Stats().set(Stat.MENDING, 80).set(Stat.VITALITY, 80), DungeonSets.MenderPieces.of("MENDER_CROWN"));
+        assertTrue(new DungeonSets.MenderPieces().item("MENDER_FEDORA"));
+        assertFalse(new DungeonSets.MenderPieces().item("MENDER_SWORD"));
+        assertEquals(0.08, DungeonSets.GuardChestplates.share("METAL_CHESTPLATE"), EPSILON);
+        assertFalse(new DungeonSets.GuardChestplates().item("IRON_CHESTPLATE"));
+        assertEquals(30, DungeonSets.GuardChestplates.range(DungeonClass.TANK), EPSILON);
+        assertEquals(10, DungeonSets.GuardChestplates.range(DungeonClass.HEALER), EPSILON);
+        assertEquals(0, DungeonSets.SniperHelmet.extra(21.9), EPSILON);
+        assertEquals(1, DungeonSets.SniperHelmet.extra(22), EPSILON);
+        assertEquals(15, DungeonSets.SniperHelmet.extra(51), EPSILON);
+        Bonus sniper = new DungeonSets.SniperHelmet();
+        Bonus.Active worn = new Bonus.Active(sniper, null, 1, List.of());
+        Damage.Target target = new Damage.Target(100, 100, 0, 0, Set.of(), 0);
+        assertEquals(new Combat.HitBuff(5, 1), sniper.hit(null, worn, arrow(30), target));
+        assertNull(sniper.hit(null, worn, arrow(10), target));
+    }
+
+    /** An arrow's hit that flew this far. */
+    private static Damage.Attacker arrow(double travelled) {
+        return new Damage.Attacker(100, 0, 0, 0, 0, 100, null, true, travelled, 1);
     }
 
     /** The skeletons' arrows: +5 additive a piece, +25 for a whole Skeleton Master set; nothing for melee. */

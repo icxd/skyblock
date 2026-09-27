@@ -92,6 +92,15 @@ public interface Bonus {
         return 1;
     }
 
+    /**
+     * A factor on what a hit takes from {@code hurt}, a player who may be near {@code wearer}, whom it
+     * counts for (or {@code wearer} themselves): 1 for nothing. Of all wearers', the least counts (the
+     * Stone Chestplate's "players within 10 blocks of you take 5% less damage").
+     */
+    default double takenNear(Player wearer, Active active, Player hurt) {
+        return 1;
+    }
+
     /** The share of knockback from {@code by} they don't take. */
     default double knockbackResistance(Player player, Active active, Entity by) {
         return 0;

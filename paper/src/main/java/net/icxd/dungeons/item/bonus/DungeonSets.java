@@ -31,7 +31,8 @@ import java.util.regex.Pattern;
 /**
  * The Catacombs' armor: Shadow Assassin's set and its pieces' bonuses, Dungeon Lord, Zombie Knight,
  * Adaptive's, the skeleton sets' arrow damage, Heavy's Vindicate, Rotten's Sieve Body, Zombie
- * Soldier's Shoal and the Wither sets' pieces. Their numbers are the items' text's. Not here: the
+ * Soldier's Shoal, the Wither and Crypt Witherlord pieces, and what the Mender helmets, the Stone to
+ * Steel Chestplates and the Sniper Helmet say they do. Their numbers are the items' text's. Not here: the
  * Witherborn wither (how much its explosion deals isn't on the wiki), Skeletor's and Zombie Commander's
  * kill counts (kills of mobs this plugin doesn't have, kept on the item), Super Heavy's Seismic Wave
  * cooldown (the Tank's ability would need to ask).
@@ -47,7 +48,7 @@ final class DungeonSets {
         return List.of(new ShadowAssassin(), new Pursuit(), new Sinew(), new Fluxation(), new Salubrious(), new Bloodrush(),
                 new DungeonLord(), new ZombieKnight(), new EfficientTraining(), new AdaptiveClasses(), new ArrowPieces(),
                 new ArrowSet("Skeleton Master"), new ArrowSet("Skeleton Soldier"), new KeepsArrows(), new Vindicate(), new SieveBody(),
-                new RottenPieces(), new WitherPieces(), new Shoal());
+                new RottenPieces(), new WitherPieces(), new Shoal(), new MenderPieces(), new GuardChestplates(), new SniperHelmet());
     }
 
     /** Whether the id is one of these sets' armor pieces ("ROTTEN" for ROTTEN_HELMET to ROTTEN_BOOTS). */
@@ -55,6 +56,13 @@ final class DungeonSets {
         if (!ARMOR.matcher(id).find()) return false;
         for (String set : sets) if (id.startsWith(set + "_") && id.indexOf('_', set.length() + 1) < 0) return true;
         return false;
+    }
+
+    /** Their class in a run (the one they've selected, as the run has it); null out of one. */
+    static DungeonClass dungeonClass(Player player) {
+        if (!RunManager.inRun(player)) return null;
+        User user = User.ifLoaded(player.getUniqueId());
+        return user == null ? null : DungeonProfile.selectedClass(user);
     }
 
     // ---------- Shadow Assassin ----------
@@ -314,7 +322,7 @@ final class DungeonSets {
      * the Adaptive Belt's text has its own (+10 Strength; +10 Health and +5 Mending; +25 Intelligence; +5
      * Health and +10 Defense; +2 Crit Chance and +5 Crit Damage). A Tank also "reduces damage taken by 5%
      * for each piece you have equipped if you are hit by the same monster within 10 seconds". The class
-     * is the one they've selected (the run's class is the same unless they changed it after the start).
+     * is the one they've selected, which is the run's ({@link #dungeonClass}).
      */
     static final class AdaptiveClasses implements Bonus {
         private static final Pattern IDS = Pattern.compile("^(STARRED_)?ADAPTIVE_(HELMET|CHESTPLATE|LEGGINGS|BOOTS|BELT)$");
@@ -371,13 +379,6 @@ final class DungeonSets {
         public void hurt(Player player, Active active, Entity by, double taken) {
             Entity mob = PlayerDamage.attacker(by);
             if (mob != null) lastHit.put(player.getUniqueId(), new LastHit(mob.getUniqueId(), System.currentTimeMillis()));
-        }
-
-        /** Their class, in a run; null out of one. */
-        private static DungeonClass dungeonClass(Player player) {
-            if (!RunManager.inRun(player)) return null;
-            User user = User.ifLoaded(player.getUniqueId());
-            return user == null ? null : DungeonProfile.selectedClass(user);
         }
 
         @Override
@@ -518,8 +519,8 @@ final class DungeonSets {
 
     /**
      * Each Wither Armor piece (Maxor's, Storm's, Goldor's and Necron's too): "Reduces the damage you take
-     * from withers by 10%", from mobs of the Wither type. Pieces add up, 40% for all four (UNKNOWN: they
-     * might multiply).
+     * from withers by 10%", and each Crypt Witherlord piece's "Reduces damage from Withers by 5%", from
+     * mobs of the Wither type. Pieces add up, 40% for all four (UNKNOWN: they might multiply).
      */
     static final class WitherPieces implements Bonus {
         @Override
@@ -534,16 +535,19 @@ final class DungeonSets {
 
         @Override
         public boolean item(String id) {
-            return armorOf(id, "WITHER", "POWER_WITHER", "SPEED_WITHER", "TANK_WITHER", "WISE_WITHER");
+            return armorOf(id, "WITHER", "POWER_WITHER", "SPEED_WITHER", "TANK_WITHER", "WISE_WITHER", "CRYPT_WITHERLORD");
         }
 
         @Override
         public double takenFrom(Player player, Active active, Entity by) {
-            return SetBonuses.types(by).contains(MobType.WITHER) ? factor(active.count()) : 1;
+            return SetBonuses.types(by).contains(MobType.WITHER) ? factor(active.pieces()) : 1;
         }
 
-        static double factor(int pieces) {
-            return Math.max(0, 1 - 0.1 * pieces);
+        /** What's left of a wither's hit with these pieces on. */
+        static double factor(List<Worn.Piece> pieces) {
+            double share = 0;
+            for (Worn.Piece piece : pieces) share += piece.id().startsWith("CRYPT_WITHERLORD_") ? 0.05 : 0.1;
+            return Math.max(0, 1 - share);
         }
     }
 
@@ -565,6 +569,128 @@ final class DungeonSets {
         @Override
         public void stats(Player player, Active active, Stats stats) {
             stats.add(Stat.DEFENSE, 30 * Bonuses.playersNear(player, 30, other -> SetBonuses.active(other, name())));
+        }
+    }
+
+    // ---------- the pieces' own text: Mender, the Stone to Steel Chestplates, the Sniper Helmet ----------
+
+    /**
+     * The Mender Helmet's "Grants +50 Mending while in Dungeons", the Mender Fedora's "+65 Mending and
+     * Vitality" and the Mender Crown's "+80" (0.26.1's numbers), in a run. What a helmet's own stats
+     * grow by in a run doesn't touch these (UNKNOWN: the text has no bracket).
+     */
+    static final class MenderPieces implements Bonus {
+        @Override
+        public String kind() {
+            return ITEM;
+        }
+
+        @Override
+        public String name() {
+            return "Mender";
+        }
+
+        @Override
+        public boolean item(String id) {
+            return !of(id).equals(new Stats());
+        }
+
+        @Override
+        public void stats(Player player, Active active, Stats stats) {
+            if (!RunManager.inRun(player)) return;
+            for (Worn.Piece piece : active.pieces()) stats.add(of(piece.id()));
+        }
+
+        /** What this piece grants in a run. */
+        static Stats of(String id) {
+            return switch (id) {
+                case "MENDER_HELMET" -> new Stats().set(Stat.MENDING, 50);
+                case "MENDER_FEDORA" -> new Stats().set(Stat.MENDING, 65).set(Stat.VITALITY, 65);
+                case "MENDER_CROWN" -> new Stats().set(Stat.MENDING, 80).set(Stat.VITALITY, 80);
+                default -> new Stats();
+            };
+        }
+    }
+
+    /**
+     * The Stone, Metal and Steel Chestplates: "While in Dungeons, players within 10 blocks of you take 5%
+     * (8%, 10%) less damage. This range is extended to 30 blocks while playing as a Tank." Players in
+     * the wearer's run, the wearer too ("all players within 10 blocks of the wearer", the wiki's); two
+     * wearers don't add up, the one that takes off more counts (UNKNOWN both).
+     */
+    static final class GuardChestplates implements Bonus {
+        @Override
+        public String kind() {
+            return ITEM;
+        }
+
+        @Override
+        public String name() {
+            return "Stone to Steel";
+        }
+
+        @Override
+        public boolean item(String id) {
+            return share(id) > 0;
+        }
+
+        @Override
+        public double takenNear(Player wearer, Active active, Player hurt) {
+            DungeonRun run = RunManager.of(wearer);
+            if (run == null || run != RunManager.of(hurt)) return 1;
+            double range = range(dungeonClass(wearer));
+            if (wearer.getLocation().distanceSquared(hurt.getLocation()) > range * range) return 1;
+            double share = 0;
+            for (Worn.Piece piece : active.pieces()) share = Math.max(share, share(piece.id()));
+            return 1 - share;
+        }
+
+        /** How far it reaches for a wearer of this class. */
+        static double range(DungeonClass dungeonClass) {
+            return dungeonClass == DungeonClass.TANK ? 30 : 10;
+        }
+
+        /** What this chestplate takes off; 0 for anything else. */
+        static double share(String id) {
+            return switch (id) {
+                case "STONE_CHESTPLATE" -> 0.05;
+                case "METAL_CHESTPLATE" -> 0.08;
+                case "STEEL_CHESTPLATE" -> 0.1;
+                default -> 0;
+            };
+        }
+    }
+
+    /**
+     * The Sniper Helmet's "Increases the damage your arrows deal by 1% for every 2 blocks traveled above 20
+     * blocks": how far from where the arrow left the bow to where it hit (as Snipe has it), whole steps of
+     * 2, in the additive buffs as Snipe's are (UNKNOWN both: the wiki doesn't list it).
+     */
+    static final class SniperHelmet implements Bonus {
+        @Override
+        public String kind() {
+            return ITEM;
+        }
+
+        @Override
+        public String name() {
+            return "Sniper Helmet";
+        }
+
+        @Override
+        public boolean item(String id) {
+            return id.equals("SNIPER_HELMET");
+        }
+
+        @Override
+        public Combat.HitBuff hit(Player player, Active active, Damage.Attacker attacker, Damage.Target target) {
+            double extra = attacker.ranged() ? extra(attacker.travelled()) : 0;
+            return extra > 0 ? new Combat.HitBuff(extra, 1) : null;
+        }
+
+        /** The additive percent for an arrow that flew this far. */
+        static double extra(double travelled) {
+            return Math.max(0, Math.floor((travelled - 20) / 2 + 1e-9));
         }
     }
 }
