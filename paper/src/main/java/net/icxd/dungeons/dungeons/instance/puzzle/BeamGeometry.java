@@ -5,10 +5,13 @@ package net.icxd.dungeons.dungeons.instance.puzzle;
  * the wiki says the four beams must "pass through the Creeper", the mods either list the pairs that
  * work (Odin, 11 pairs) or pair the lanterns whose line passes closest to it (Skyblocker). None of
  * Odin's pairs misses the creeper's hitbox by more than 0.76 of a block (lantern centre to lantern
- * centre), so a beam counts if that line goes through the hitbox grown by {@link #MARGIN}.
+ * centre), so a beam counts if that line goes through the hitbox grown by {@link #MARGIN}: to the
+ * sides and over its head, not under its feet. There is the lantern it stands on, whose middle is
+ * only half a block down; grown below too, the box would hold it, and a beam from that lantern to
+ * any other would count (Odin pairs it with just one, the lantern straight over it).
  */
 public final class BeamGeometry {
-    /** How much bigger than the creeper's hitbox the beam may pass through, on every side. */
+    /** How much bigger than the creeper's hitbox the beam may pass through, on every side but the bottom. */
     static final double MARGIN = 0.8;
     /** A creeper's hitbox. */
     static final double WIDTH = 0.6;
@@ -24,7 +27,7 @@ public final class BeamGeometry {
      */
     public static boolean throughCreeper(int[] a, int[] b, double[] feet) {
         double half = WIDTH / 2 + MARGIN;
-        double[] min = {feet[0] - half, feet[1] - MARGIN, feet[2] - half};
+        double[] min = {feet[0] - half, feet[1], feet[2] - half};
         double[] max = {feet[0] + half, feet[1] + HEIGHT + MARGIN, feet[2] + half};
         return segmentHitsBox(new double[]{a[0] + 0.5, a[1] + 0.5, a[2] + 0.5}, new double[]{b[0] + 0.5, b[1] + 0.5, b[2] + 0.5}, min, max);
     }

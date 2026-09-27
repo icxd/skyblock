@@ -38,4 +38,16 @@ class BeamGeometryTest {
     void segmentNotLine() {
         assertFalse(BeamGeometry.throughCreeper(new int[]{0, 50, 10}, new int[]{5, 50, 10}, FEET));
     }
+
+    /**
+     * The lantern it stands on: a beam from there counts only if it goes up through the creeper, not
+     * one off to the side (its middle is half a block under the creeper's feet).
+     */
+    @Test
+    void fromUnderItsFeet() {
+        int[] under = {10, 49, 10};
+        assertTrue(BeamGeometry.throughCreeper(under, new int[]{10, 60, 11}, FEET));
+        assertFalse(BeamGeometry.throughCreeper(under, new int[]{0, 49, 10}, FEET));
+        assertFalse(BeamGeometry.throughCreeper(under, new int[]{4, 44, 4}, FEET));
+    }
 }
