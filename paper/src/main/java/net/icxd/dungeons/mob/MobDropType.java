@@ -2,7 +2,7 @@ package net.icxd.dungeons.mob;
 
 import lombok.Getter;
 
-/** How rare a mob drop is, and the colour its "RARE DROP!" message is in. */
+/** How rare a mob drop is, and its colour (a CRAZY RARE or INSANE drop's line is in it; every RARE DROP! line is gold). */
 @Getter
 public enum MobDropType {
     GUARANTEED('a'),

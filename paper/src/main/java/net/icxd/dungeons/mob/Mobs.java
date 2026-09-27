@@ -285,12 +285,22 @@ public final class Mobs implements Listener {
             } else {
                 at.getWorld().dropItemNaturally(at, stack);
             }
-            if (!announced(dungeon, drop.type())) continue;
-            String kind = drop.type() == MobDropType.RNGESUS_INCARNATE ? "INSANE DROP! "
-                    : (drop.type() == MobDropType.CRAZY_RARE ? "CRAZY " : "") + "RARE DROP! ";
-            killer.sendMessage(Utils.color("§" + drop.type().getColor() + "§l" + kind + item.rarity().getColor() + item.name()
-                    + " &b(+" + Utils.round(magicFind, 0) + "% ✯ Magic Find)"));
+            if (announced(dungeon, drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
         }
+    }
+
+    /**
+     * "§6§lRARE DROP! §9Beating Heart §b(+0% ✯ Magic Find)": a RARE DROP! is gold (as SkyHanni has the
+     * dungeon one for a Beating Heart, and every other mob drop's); a CRAZY RARE or INSANE one is in its
+     * drop type's colour.
+     */
+    static String dropMessage(MobDropType type, String itemColor, String itemName, double magicFind) {
+        String line = switch (type) {
+            case RNGESUS_INCARNATE -> "§" + type.getColor() + "§lINSANE DROP! ";
+            case CRAZY_RARE -> "§" + type.getColor() + "§lCRAZY RARE DROP! ";
+            default -> "§6§lRARE DROP! ";
+        };
+        return Utils.color(line + itemColor + itemName + " &b(+" + Utils.round(magicFind, 0) + "% ✯ Magic Find)");
     }
 
     /** Whether a drop this rare from this mob gets a "RARE DROP!" line: a dungeon mob's only past Occasional. */
