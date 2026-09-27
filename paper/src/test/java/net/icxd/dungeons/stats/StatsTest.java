@@ -21,6 +21,7 @@ class StatsTest {
         assertEquals(30, base.get(Stat.CRIT_CHANCE));
         assertEquals(50, base.get(Stat.CRIT_DAMAGE));
         assertEquals(0, base.get(Stat.STRENGTH));
+        assertEquals(30, base.get(Stat.RESPIRATION));
     }
 
     @Test

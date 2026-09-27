@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 /**
  * What a player's stats do to their vanilla attributes, set from their stats every second (see
  * {@link StatsRunnable}) and put back when a stat drops: Speed is their walk speed, Swing Range their
- * melee reach.
+ * melee reach and Respiration how long they can stay under water.
  */
 public final class PlayerAttributes {
     /**
@@ -37,6 +37,19 @@ public final class PlayerAttributes {
         float walkSpeed = walkSpeed(speed(stats.get(Stat.SPEED), SPEED_CAP, RunManager.inRun(player)));
         if (player.getWalkSpeed() != walkSpeed) player.setWalkSpeed(walkSpeed);
         setBonus(player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE), SWING_RANGE, reachBonus(stats.get(Stat.SWING_RANGE)));
+        int maxAir = maxAir(stats.get(Stat.RESPIRATION));
+        if (player.getMaximumAir() != maxAir) {
+            player.setMaximumAir(maxAir);
+            if (player.getRemainingAir() > maxAir) player.setRemainingAir(maxAir);
+        }
+    }
+
+    /**
+     * How long they can stay under water before they drown, in ticks: "For every 2 Respiration, the player
+     * can stay underwater 1 second longer" (the wiki's Respiration), so the base 30 is vanilla's 15 seconds.
+     */
+    static int maxAir(double respiration) {
+        return (int) Math.round(Math.max(0, respiration) * 10);
     }
 
     /**

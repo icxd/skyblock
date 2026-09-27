@@ -8,6 +8,7 @@ import static net.icxd.dungeons.stats.Stat.CRIT_DAMAGE;
 import static net.icxd.dungeons.stats.Stat.HEALTH;
 import static net.icxd.dungeons.stats.Stat.HEALTH_REGEN;
 import static net.icxd.dungeons.stats.Stat.MENDING;
+import static net.icxd.dungeons.stats.Stat.RESPIRATION;
 import static net.icxd.dungeons.stats.Stat.SEA_CREATURE_CHANCE;
 import static net.icxd.dungeons.stats.Stat.SPEED;
 import static net.icxd.dungeons.stats.Stat.SWING_RANGE;
@@ -19,13 +20,13 @@ public final class Stats {
 
     /**
      * Everyone's base (the wiki's stat infoboxes): 100 health, speed, vitality, mending and health regen,
-     * 30% crit chance, 50% crit damage, 20% sea creature chance and 3 swing range. No intelligence, so a
-     * bare player's mana pool is 100.
+     * 30% crit chance, 50% crit damage, 20% sea creature chance, 3 swing range and 30 respiration. No
+     * intelligence, so a bare player's mana pool is 100.
      */
     public static Stats base() {
         return new Stats().set(HEALTH, 100).set(SPEED, 100).set(CRIT_CHANCE, 30)
                 .set(CRIT_DAMAGE, 50).set(SEA_CREATURE_CHANCE, 20).set(VITALITY, 100).set(MENDING, 100)
-                .set(HEALTH_REGEN, 100).set(SWING_RANGE, 3);
+                .set(HEALTH_REGEN, 100).set(SWING_RANGE, 3).set(RESPIRATION, 30);
     }
 
     public double get(Stat stat) {

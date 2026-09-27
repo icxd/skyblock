@@ -34,4 +34,13 @@ class PlayerAttributesTest {
         assertEquals(12, PlayerAttributes.reachBonus(19.25), 1e-9);
         assertEquals(-3, PlayerAttributes.reachBonus(-1), 1e-9);
     }
+
+    /** Each 2 Respiration is a second under water: the base 30 is vanilla's 300 ticks. */
+    @Test
+    void air() {
+        assertEquals(300, PlayerAttributes.maxAir(30));
+        assertEquals(310, PlayerAttributes.maxAir(31));
+        assertEquals(305, PlayerAttributes.maxAir(30.5));
+        assertEquals(0, PlayerAttributes.maxAir(-4));
+    }
 }
