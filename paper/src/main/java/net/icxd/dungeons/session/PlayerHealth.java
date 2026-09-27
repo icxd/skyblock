@@ -38,7 +38,10 @@ public final class PlayerHealth {
     /**
      * Health back from nobody but themselves (their regeneration, their own item): as it is. Vitality
      * doesn't multiply healing any more (0.26.1, see {@link Vitality}); a heal from someone else goes
-     * through {@link #healFrom}.
+     * through {@link #healFrom}. Since 0.26.1 "all healing within the Catacombs now scales with your
+     * Dungeon Stat Boost" (its release notes); not, as the simplest reading has it, Health Regen's, which
+     * "already scales with having more Health" (the same). No healing item is in the plugin yet, so the
+     * boost is for the first one to add.
      */
     public static void heal(Player player, double amount) {
         set(player, get(player) + amount);
