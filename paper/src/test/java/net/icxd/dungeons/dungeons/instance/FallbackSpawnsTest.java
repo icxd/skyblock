@@ -67,6 +67,147 @@ class FallbackSpawnsTest {
         assertEquals(29 * 29 - 5 * 2, columns.size());
     }
 
+    /** Blocks made up for a test: solid ones, fences, ladders and water; air everywhere else. */
+    private static final class Scene implements FallbackSpawns.Blocks {
+        final Set<List<Integer>> solid = new HashSet<>();
+        final Set<List<Integer>> fences = new HashSet<>();
+        final Set<List<Integer>> ladders = new HashSet<>();
+        final Set<List<Integer>> water = new HashSet<>();
+
+        /** A floor with its top at y 69 (feet at 69) over x 0..sizeX-1, z 0..sizeZ-1. */
+        Scene(int sizeX, int sizeZ) {
+            fill(0, 68, 0, sizeX - 1, 68, sizeZ - 1, solid);
+        }
+
+        Scene fill(int x1, int y1, int z1, int x2, int y2, int z2, Set<List<Integer>> into) {
+            for (int x = x1; x <= x2; x++) for (int y = y1; y <= y2; y++) for (int z = z1; z <= z2; z++) into.add(List.of(x, y, z));
+            return this;
+        }
+
+        @Override
+        public boolean solid(int x, int y, int z) {
+            return solid.contains(List.of(x, y, z)) || fences.contains(List.of(x, y, z));
+        }
+
+        @Override
+        public boolean passable(int x, int y, int z) {
+            List<Integer> at = List.of(x, y, z);
+            return !solid.contains(at) && !fences.contains(at) && !ladders.contains(at);
+        }
+
+        @Override
+        public boolean tall(int x, int y, int z) {
+            return fences.contains(List.of(x, y, z));
+        }
+
+        @Override
+        public boolean climbable(int x, int y, int z) {
+            return ladders.contains(List.of(x, y, z)) || water.contains(List.of(x, y, z));
+        }
+    }
+
+    private static FallbackSpawns.Area box(int sizeX, int sizeZ) {
+        return (x, z) -> x >= 0 && x < sizeX && z >= 0 && z < sizeZ;
+    }
+
+    private static Set<FallbackSpawns.Spot> fromTheDoor(Scene scene, int sizeX, int sizeZ) {
+        return FallbackSpawns.reachable(scene, box(sizeX, sizeZ), List.of(new FallbackSpawns.Spot(0, 69, 0)), 60, 80);
+    }
+
+    private static FallbackSpawns.Spot spot(int x, int y, int z) {
+        return new FallbackSpawns.Spot(x, y, z);
+    }
+
+    /**
+     * A pocket walled off all round (a hidden room behind a weak wall, or behind nothing that opens) is out
+     * of reach, however much room there is in it: mobs there couldn't be killed.
+     */
+    @Test
+    void sealedPocketsAreOutOfReach() {
+        Scene scene = new Scene(12, 12);
+        // Walls along x 7 and z 7 up to y 73, fencing off x 8..11, z 8..11.
+        scene.fill(7, 69, 7, 11, 73, 7, scene.solid).fill(7, 69, 7, 7, 73, 11, scene.solid);
+        Set<FallbackSpawns.Spot> reach = fromTheDoor(scene, 12, 12);
+        assertTrue(reach.contains(spot(5, 69, 5)));
+        assertTrue(reach.contains(spot(11, 69, 0)));
+        assertFalse(reach.contains(spot(9, 69, 9)));
+        assertFalse(reach.contains(spot(11, 69, 11)));
+        // Filtering the room's spots keeps only the ones outside it.
+        List<int[]> columns = new ArrayList<>();
+        for (int x = 1; x < 11; x++) for (int z = 1; z < 11; z++) columns.add(new int[]{x, z});
+        List<FallbackSpawns.Spot> spots = new ArrayList<>(FallbackSpawns.spots(scene, columns, 67, 74));
+        spots.retainAll(reach);
+        assertFalse(spots.isEmpty());
+        assertTrue(spots.stream().noneMatch(s -> s.x() >= 8 && s.z() >= 8), spots.toString());
+        // Nor anywhere outside the room's area.
+        assertTrue(reach.stream().allMatch(s -> s.x() >= 0 && s.x() < 12 && s.z() >= 0 && s.z() < 12));
+    }
+
+    /** A block up with room to jump, not two, not onto a fence; and down again, any way. */
+    @Test
+    void stepsAndDrops() {
+        Scene step = new Scene(6, 1);
+        step.solid.add(List.of(3, 69, 0));
+        Set<FallbackSpawns.Spot> reach = fromTheDoor(step, 6, 1);
+        assertTrue(reach.contains(spot(3, 70, 0)), "onto the block");
+        assertTrue(reach.contains(spot(5, 69, 0)), "down the other side");
+
+        Scene two = new Scene(6, 1);
+        two.fill(3, 69, 0, 3, 70, 0, two.solid);
+        assertFalse(fromTheDoor(two, 6, 1).contains(spot(5, 69, 0)), "two blocks up");
+
+        Scene fence = new Scene(6, 1);
+        fence.fences.add(List.of(3, 69, 0));
+        assertFalse(fromTheDoor(fence, 6, 1).contains(spot(5, 69, 0)), "a fence");
+
+        Scene low = new Scene(6, 1);
+        low.solid.add(List.of(3, 69, 0));
+        low.fill(0, 71, 0, 2, 71, 0, low.solid);
+        assertFalse(fromTheDoor(low, 6, 1).contains(spot(3, 70, 0)), "no room to jump under a ceiling at y 71");
+
+        // A pit: its floor 4 lower, dropped into.
+        Scene pit = new Scene(3, 1);
+        pit.fill(3, 64, 0, 5, 64, 0, pit.solid);
+        Set<FallbackSpawns.Spot> down = fromTheDoor(pit, 6, 1);
+        assertTrue(down.contains(spot(4, 65, 0)));
+        assertFalse(down.contains(spot(4, 69, 0)), "nothing to stand on up there");
+    }
+
+    /** Up a ladder onto a floor 5 higher, which isn't reached without it; across water. */
+    @Test
+    void laddersAndWater() {
+        Scene wall = new Scene(3, 1);
+        wall.fill(3, 68, 0, 6, 73, 0, wall.solid);
+        assertFalse(fromTheDoor(wall, 7, 1).contains(spot(5, 74, 0)));
+        wall.fill(2, 69, 0, 2, 73, 0, wall.ladders);
+        assertTrue(fromTheDoor(wall, 7, 1).contains(spot(5, 74, 0)), "up the ladder");
+
+        // A pool 3 deep between two floors: swum across and climbed out of.
+        Scene pool = new Scene(8, 1);
+        pool.solid.removeIf(b -> b.get(0) >= 3 && b.get(0) <= 4);
+        pool.fill(3, 65, 0, 4, 65, 0, pool.solid).fill(3, 66, 0, 4, 68, 0, pool.water);
+        assertTrue(fromTheDoor(pool, 8, 1).contains(spot(7, 69, 0)));
+    }
+
+    /** A room's columns: its cells, the gap between two of them, its doorways; not the gap by a cell it hasn't. */
+    @Test
+    void theRoomsArea() {
+        // An L: cells at (0, 0), (32, 0) and (32, 32), 31 wide; a door block out at (15, 69, -1).
+        FallbackSpawns.Area area = FallbackSpawns.area(List.of(new int[]{0, 0}, new int[]{32, 0}, new int[]{32, 32}), 31,
+                List.<int[]>of(new int[]{15, 69, -1}));
+        assertTrue(area.contains(0, 0));
+        assertTrue(area.contains(31, 10), "the gap between two of its cells");
+        assertTrue(area.contains(40, 31), "and the other");
+        assertFalse(area.contains(31, 31), "where its cells meet the one it hasn't");
+        assertFalse(area.contains(10, 40), "the cell it hasn't");
+        assertTrue(area.contains(15, -1), "its doorway");
+        assertFalse(area.contains(16, -2));
+        // A 2x2's middle, where four meet.
+        FallbackSpawns.Area square = FallbackSpawns.area(List.of(new int[]{0, 0}, new int[]{32, 0}, new int[]{0, 32}, new int[]{32, 32}), 31,
+                List.of());
+        assertTrue(square.contains(31, 31));
+    }
+
     /** 5 to 16 a square (research mobs.md 7.3). */
     @Test
     void countsPerSquare() {

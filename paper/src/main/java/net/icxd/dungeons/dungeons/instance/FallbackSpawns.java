@@ -1,6 +1,9 @@
 package net.icxd.dungeons.dungeons.instance;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,8 +17,10 @@ import net.icxd.dungeons.mob.MobKinds;
  * isn't known), only fitted to the two recorded runs. Starred mobs on the main floor (y 67 to 74), in
  * groups of 2 to 6 standing 1 to 3 blocks apart, at least 3 blocks from the doorways; 5 to 16 of them a
  * square (the recorded rooms had 7 to 16 in a 1x1, 32 in a 1x2, 16 and 24 in an L); kinds as often as
- * recorded; 1 to 7 skeleton skulls a square; a champion room's miniboss near its middle. The unstarred
- * extras Hypixel hides in a room's secret areas are left out.
+ * recorded; 1 to 7 skeleton skulls a square; a champion room's miniboss near its middle. Only where
+ * someone can walk to from the room's door ({@link #reachable}): a starred mob sealed in a hidden part
+ * would keep the room from ever clearing. The unstarred extras Hypixel hides in a room's secret areas
+ * are left out.
  */
 final class FallbackSpawns {
     /** The main floor, where the recorded starred mobs stood. */
@@ -47,7 +52,24 @@ final class FallbackSpawns {
 
         /** Room to stand in (air and the like). */
         boolean passable(int x, int y, int z);
+
+        /** Taller than a block (fences, walls): nobody steps up onto it. */
+        default boolean tall(int x, int y, int z) {
+            return false;
+        }
+
+        /** Something to climb or swim up (ladders, vines, water). */
+        default boolean climbable(int x, int y, int z) {
+            return false;
+        }
     }
+
+    /** Which block columns are a room's. */
+    interface Area {
+        boolean contains(int x, int z);
+    }
+
+    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     record Spot(int x, int y, int z) {
         int distance(Spot other) {
@@ -87,6 +109,81 @@ final class FallbackSpawns {
             if (blocks.solid(x, up - 1, z) && blocks.passable(x, up, z) && blocks.passable(x, up + 1, z)) return up;
         }
         return y;
+    }
+
+    /**
+     * A room's columns: its cells ({x, z} min corners, {@code cellSize} wide), the gaps between two of them
+     * (and where four meet), and the columns of these blocks ({x, y, z}: its doorways).
+     */
+    static Area area(List<int[]> cellMins, int cellSize, List<int[]> extra) {
+        Set<Long> extras = new HashSet<>();
+        for (int[] b : extra) extras.add(column(b[0], b[2]));
+        Area cells = (x, z) -> {
+            for (int[] min : cellMins) {
+                if (x >= min[0] && x < min[0] + cellSize && z >= min[1] && z < min[1] + cellSize) return true;
+            }
+            return false;
+        };
+        return (x, z) -> cells.contains(x, z) || extras.contains(column(x, z))
+                || (cells.contains(x - 1, z) && cells.contains(x + 1, z))
+                || (cells.contains(x, z - 1) && cells.contains(x, z + 1))
+                || (cells.contains(x - 1, z - 1) && cells.contains(x + 1, z - 1) && cells.contains(x - 1, z + 1) && cells.contains(x + 1, z + 1));
+    }
+
+    private static long column(int x, int z) {
+        return ((long) x << 32) | (z & 0xffffffffL);
+    }
+
+    /**
+     * Where someone can walk to from these spots (inside a door), in {@code area} and from {@code minY} to
+     * {@code maxY}: along the ground, a block up where there's room to jump (not onto a fence or a wall),
+     * any way down, and up ladders, vines and water. Nothing is opened on the way (doors, levers, weak
+     * walls), so a room's hidden parts aren't in it. Spots are where the feet are, as {@link #spots}'.
+     */
+    static Set<Spot> reachable(Blocks blocks, Area area, Collection<Spot> starts, int minY, int maxY) {
+        Set<Spot> seen = new HashSet<>(starts);
+        Deque<Spot> queue = new ArrayDeque<>(seen);
+        while (!queue.isEmpty()) {
+            Spot at = queue.poll();
+            if (at.y < maxY && blocks.climbable(at.x, at.y, at.z) && stand(blocks, at.x, at.y + 1, at.z)) {
+                Spot up = new Spot(at.x, at.y + 1, at.z);
+                if (seen.add(up)) queue.add(up);
+            }
+            for (int[] side : SIDES) {
+                int x = at.x + side[0];
+                int z = at.z + side[1];
+                if (!area.contains(x, z)) continue;
+                Spot to = step(blocks, at, x, z, minY, maxY);
+                if (to != null && seen.add(to)) queue.add(to);
+            }
+        }
+        return seen;
+    }
+
+    /** From a spot to the next column: level, a block up, or down to wherever that ends; null if it can't. */
+    private static Spot step(Blocks blocks, Spot from, int x, int z, int minY, int maxY) {
+        int y = from.y;
+        if (stand(blocks, x, y, z)) return new Spot(x, y, z);
+        if (room(blocks, x, y, z) && room(blocks, x, y + 1, z)) {
+            for (int down = y - 1; down >= minY; down--) {
+                if (!room(blocks, x, down, z)) return null;
+                if (stand(blocks, x, down, z)) return new Spot(x, down, z);
+            }
+            return null;
+        }
+        if (y + 1 <= maxY && room(blocks, from.x, y + 2, from.z) && !blocks.tall(x, y, z) && stand(blocks, x, y + 1, z)) {
+            return new Spot(x, y + 1, z);
+        }
+        return null;
+    }
+
+    /** Feet here: something under them (anything that isn't air and the like), or something to hold on to, and room for the head. */
+    private static boolean stand(Blocks blocks, int x, int y, int z) {
+        return (!blocks.passable(x, y - 1, z) || blocks.climbable(x, y, z)) && room(blocks, x, y, z) && room(blocks, x, y + 1, z);
+    }
+
+    private static boolean room(Blocks blocks, int x, int y, int z) {
+        return blocks.passable(x, y, z) || blocks.climbable(x, y, z);
     }
 
     /**

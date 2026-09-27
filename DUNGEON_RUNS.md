@@ -80,9 +80,12 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
 - Every normal and champion room has its mobs from the start: the ones recorded on Hypixel (12
   rooms), else planned (`FallbackSpawns`, fitted to the recordings: 5 to 16 starred mobs a
   square in groups of 2 to 6 on the main floor, kinds as often as recorded, a Lost Adventurer or
-  Angry Archaeologist near the middle of a champion room). Modifiers are rolled for each run.
-  The mob kinds only have the Entrance's variants so far: on other floors the rooms have no mobs
-  and clear when they open (the log says which kinds are missing, once each).
+  Angry Archaeologist near the middle of a champion room). Planned mobs only go where someone
+  can walk to from the door the room is entered by (a block up, any way down, ladders, water;
+  nothing opened on the way), so none is sealed in a hidden part where it would keep the room,
+  and its key, from ever clearing. Modifiers are rolled for each run. The mob kinds only have
+  the Entrance's variants so far: on other floors the rooms have no mobs and clear when they
+  open (the log says which kinds are missing, once each).
 - They wait at their base health, not moving, until their room opens (its door is opened, someone
   walks in, or someone hits one of them). Then they wake up with the room's multiplier on their
   health and damage: 1.05 for the first room, then 1 + 0.05 x (squares opened before, the

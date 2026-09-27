@@ -21,6 +21,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -380,32 +381,77 @@ final class RoomMobs {
 
     /** The world's blocks, as {@link FallbackSpawns} asks about them. */
     private FallbackSpawns.Blocks worldBlocks() {
+        return worldBlocks(Set.of());
+    }
+
+    /** The same, with these blocks (doorways, whether their doors are open yet or not) as air. */
+    private FallbackSpawns.Blocks worldBlocks(Set<PastePlan.Block> open) {
         return new FallbackSpawns.Blocks() {
             @Override
             public boolean solid(int x, int y, int z) {
-                return world.getBlockAt(x, y, z).getType().isSolid();
+                return !isOpen(x, y, z) && world.getBlockAt(x, y, z).getType().isSolid();
             }
 
             @Override
             public boolean passable(int x, int y, int z) {
-                return world.getBlockAt(x, y, z).isPassable();
+                return isOpen(x, y, z) || world.getBlockAt(x, y, z).isPassable();
+            }
+
+            @Override
+            public boolean tall(int x, int y, int z) {
+                Material type = world.getBlockAt(x, y, z).getType();
+                return !isOpen(x, y, z) && (Tag.FENCES.isTagged(type) || Tag.WALLS.isTagged(type) || Tag.FENCE_GATES.isTagged(type));
+            }
+
+            @Override
+            public boolean climbable(int x, int y, int z) {
+                Block block = world.getBlockAt(x, y, z);
+                return !isOpen(x, y, z) && (block.isLiquid() || Tag.CLIMBABLE.isTagged(block.getType()));
+            }
+
+            private boolean isOpen(int x, int y, int z) {
+                return !open.isEmpty() && open.contains(new PastePlan.Block(x, y, z));
             }
         };
     }
 
-    /** A room nobody recorded: {@link FallbackSpawns}' mobs and skulls (unless the capture has skulls). */
+    /**
+     * A room nobody recorded: {@link FallbackSpawns}' mobs and skulls (unless the capture has skulls), only
+     * where someone coming in by its door can walk to: a starred mob sealed in a hidden part (behind a weak
+     * wall nobody may have a Superboom for, or behind nothing that opens at all) would keep the room, and
+     * its key, from ever clearing.
+     */
     private void fallback(RoomState state, List<Planned> out) {
-        FallbackSpawns.Blocks blocks = worldBlocks();
         List<int[]> doorBlocks = new ArrayList<>();
-        for (Door door : state.room.doors()) doorBlocks.addAll(layout.doorBlocks(door));
-        List<int[]> columns = FallbackSpawns.columns(layout.cellMins(state.room), PastePlan.CELL, doorBlocks);
-        List<FallbackSpawns.Spot> floorSpots = FallbackSpawns.spots(blocks, columns, FallbackSpawns.FLOOR_MIN_Y, FallbackSpawns.FLOOR_MAX_Y);
+        Set<PastePlan.Block> open = new HashSet<>();
+        List<FallbackSpawns.Spot> starts = new ArrayList<>();
+        List<FallbackSpawns.Spot> anyDoor = new ArrayList<>();
+        for (Door door : state.room.doors()) {
+            for (int[] b : layout.doorBlocks(door)) {
+                doorBlocks.add(b);
+                open.add(new PastePlan.Block(b[0], b[1], b[2]));
+                if (b[1] != RunLayout.DOOR_BOTTOM) continue;
+                // Players come in by the door into it (each room has just the one), at the doorway's floor.
+                if (door.child() == state.room.id()) starts.add(new FallbackSpawns.Spot(b[0], b[1], b[2]));
+                anyDoor.add(new FallbackSpawns.Spot(b[0], b[1], b[2]));
+            }
+        }
+        if (starts.isEmpty()) starts = anyDoor;
+        FallbackSpawns.Blocks blocks = worldBlocks(open);
+        List<int[]> cellMins = layout.cellMins(state.room);
+        var capture = layout.capture(state.room);
+        int low = capture == null ? FallbackSpawns.FLOOR_MIN_Y : capture.originY() + 1;
+        int high = capture == null ? FallbackSpawns.FLOOR_MAX_Y : capture.topY() - 2;
+        Set<FallbackSpawns.Spot> reachable = FallbackSpawns.reachable(blocks, FallbackSpawns.area(cellMins, PastePlan.CELL, doorBlocks),
+                starts, low, high);
+        List<int[]> columns = FallbackSpawns.columns(cellMins, PastePlan.CELL, doorBlocks);
+        List<FallbackSpawns.Spot> floorSpots = new ArrayList<>(FallbackSpawns.spots(blocks, columns, FallbackSpawns.FLOOR_MIN_Y,
+                FallbackSpawns.FLOOR_MAX_Y));
+        floorSpots.retainAll(reachable);
         int squares = state.room.cells().size();
         if (state.room.type() == RoomType.MINIBOSS) {
-            var capture = layout.capture(state.room);
-            int low = capture == null ? FallbackSpawns.FLOOR_MIN_Y : capture.originY() + 1;
-            int high = capture == null ? FallbackSpawns.FLOOR_MAX_Y : capture.topY() - 2;
-            List<FallbackSpawns.Spot> anywhere = FallbackSpawns.spots(blocks, columns, low, high);
+            List<FallbackSpawns.Spot> anywhere = new ArrayList<>(FallbackSpawns.spots(blocks, columns, low, high));
+            anywhere.retainAll(reachable);
             Location middle = layout.center(world, RunLayout.firstCell(state.room));
             FallbackSpawns.Spot spot = FallbackSpawns.nearest(anywhere, middle.getX(), middle.getY(), middle.getZ());
             MobKind kind = FallbackSpawns.miniboss(random);
