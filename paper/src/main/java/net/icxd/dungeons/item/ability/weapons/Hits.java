@@ -32,6 +32,8 @@ import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.ability.Abilities;
+import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.session.PlayerHealth;
@@ -207,6 +209,12 @@ final class Hits {
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
         PlayerSession.of(player).setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
         return false;
+    }
+
+    /** {@link #enoughMana} for the extra cost on top of the block's own (which isn't taken yet when it's asked). */
+    static boolean enoughMana(Player player, ItemBlock block, int extra) {
+        if (extra <= 0) return true;
+        return enoughMana(player, Abilities.manaCost(block, PlayerSession.of(player).maxMana()) + extra);
     }
 
     /** Takes that mana, shown as a block's cost is ("-60 Mana (Rapid-fire)"). */

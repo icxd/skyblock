@@ -92,7 +92,7 @@ final class Strikes {
         @Override
         public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             Run run = RUNS.get(player.getUniqueId());
-            return run == null || Hits.enoughMana(player, extraMana(block, run.recasts() + 1));
+            return run == null || Hits.enoughMana(player, block, extraMana(block, run.recasts() + 1));
         }
 
         @Override

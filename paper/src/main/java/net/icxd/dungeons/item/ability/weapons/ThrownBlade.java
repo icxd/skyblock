@@ -61,7 +61,7 @@ final class ThrownBlade implements AbilityHandler {
     @Override
     public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
         if (!item.id().equals(HALBERD)) return true;
-        return Hits.enoughMana(player, extraMana(block, throwsBefore(player, System.currentTimeMillis())));
+        return Hits.enoughMana(player, block, extraMana(block, throwsBefore(player, System.currentTimeMillis())));
     }
 
     private static int extraMana(ItemBlock block, int throwsBefore) {
