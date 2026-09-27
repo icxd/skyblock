@@ -149,7 +149,8 @@ so this is the wiki's (MCW Ghosts, Revive Stone, Catacombs) with the mods' messa
 - Abilities: right-click the Dungeon Orb (or ctrl+drop) for the class ability, left-click it (or
   drop) for the ultimate; in a run the drop key never drops what you hold. The Berserk's are as
   recorded: Throwing Axe ("Used Throwing Axe!", your held item flies ahead and hits the first mob
-  for your highest hit in the last minute, "Your Throwing Axe hit 1 enemy for ... damage.", 10
+  for your highest hit in the last minute (the lore's words: the one recorded throw did 90% of
+  it, so the real rule is unknown), "Your Throwing Axe hit 1 enemy for ... damage.", 10
   second cooldown, "Throwing Axe is now available!") and Ragnarok (+100 Attack Speed, +400 Speed,
   1.5x melee for 15 seconds, 60 second cooldown; no minions), with "Ragnarok is ready to use! Press
   DROP to activate it!" 23 seconds in and every 30 seconds while it's unused. Bloodlust: the next

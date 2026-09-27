@@ -44,10 +44,10 @@ import net.icxd.dungeons.utils.Utils;
  * as they started, their stats ({@link ClassBonus}, doubled for a class nobody else plays, with the
  * recorded chat), the Berserk's passives, and the Dungeon Orb abilities: the class ability (right
  * click the orb, or ctrl+drop) and the ultimate (left click the orb, or drop). The Berserk's Throwing
- * Axe and Ragnarok are as recorded (messages, timings, the axe's flight); the Archer's Explosive Shot
- * and Rapid Fire, the Tank's Seismic Wave and Castle of Stone and the Healer's Wish follow their lore
- * ({@link ClassAbilities}), with the Berserk's messages; the Healer's Healing Circle and the Mage's
- * aren't built.
+ * Axe and Ragnarok are as recorded (messages, timings, the axe's flight; not the axe's damage, see
+ * {@link ThrownAxe}); the Archer's Explosive Shot and Rapid Fire, the Tank's Seismic Wave and Castle
+ * of Stone and the Healer's Wish follow their lore ({@link ClassAbilities}), with the Berserk's
+ * messages; the Healer's Healing Circle and the Mage's aren't built.
  *
  * <p>Stats go in through {@link PlayerStats#addModifier} and damage through {@link Combat#addMultiplier}
  * (see {@link #register}). Main thread.
@@ -434,8 +434,11 @@ final class RunClasses {
     /**
      * Throwing Axe in flight, as recorded: an invisible armor stand holding what the thrower holds (their
      * sword, in both recordings), flying straight ahead until it hits a mob, a wall or its range. It hits
-     * the first mob for the thrower's highest hit in the last minute (not a crit: grey, as abilities'
-     * numbers are), and the thrower is told "&7Your Throwing Axe hit &c1 &7enemy for &c14,689,667.3 &7damage.".
+     * the first mob (not a crit: grey, as abilities' numbers are), and the thrower is told "&7Your
+     * Throwing Axe hit &c1 &7enemy for &c14,689,667.3 &7damage.". APPROXIMATION: how much it hits for.
+     * The lore's "the same damage as your highest hit in the last minute" is used, but the one recorded
+     * throw (RUN2 01:59.6, 14,689,667.3) was 0.90 of the highest number shown in the minute before it
+     * (16,295,779 at 01:57.8), so the real formula is something else, UNKNOWN.
      */
     private final class ThrownAxe {
         private final Player thrower;
