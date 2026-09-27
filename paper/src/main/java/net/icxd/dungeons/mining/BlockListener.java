@@ -52,7 +52,8 @@ public class BlockListener implements Listener {
             return;
         }
         // The player's own mining speed and fortune (tool, armor and all), not just the tool's; on a Dwarven
-        // Metal, Dwarven Metal Fortune adds to Mining Fortune (the wiki doesn't say how they combine: added up).
+        // Metal, Dwarven Metal Fortune too: "These stats are added to regular Mining Fortune when mining their
+        // respective block types" (the wiki's Mining Fortune).
         Stats stats = PlayerSession.of(player).stats();
         int miningSpeed = (int) stats.get(Stat.MINING_SPEED);
         if (miningSpeed <= 0) return;

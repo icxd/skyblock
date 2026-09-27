@@ -21,8 +21,8 @@ public interface MinableBlock {
     default ArrayList<Tuple<SkyBlockItem, Integer>> drops() { return null; }
 
     /**
-     * The fortune stat that adds to Mining Fortune on this block (Dwarven Metal Fortune on Mithril and the
-     * other Dwarven Metals, the wiki's Dwarven Metal Fortune); null for none.
+     * The fortune stat that's added to Mining Fortune on this block (Dwarven Metal Fortune on Mithril and
+     * the other Dwarven Metals: the wiki's Dwarven Metal Fortune and Mining Fortune); null for none.
      */
     default Stat fortune() { return null; }
 
