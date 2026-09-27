@@ -1,14 +1,19 @@
 package net.icxd.dungeons.gui;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import lombok.Getter;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.event.GUIOpenEvent;
 import net.icxd.dungeons.gui.item.GUIItem;
+import net.icxd.dungeons.utils.Text;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
@@ -110,6 +115,27 @@ public abstract class GUI {
     public void update(Inventory inventory) {}
 
     public boolean allowHotkeying() { return false; }
+
+    /** Glass with no tooltip, where Hypixel's menus have it. */
+    protected static ItemStack filler() {
+        ItemStack pane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        pane.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().hideTooltip(true).build());
+        return pane;
+    }
+
+    /** A menu's item: its name and lore in {@code &} codes. */
+    protected static ItemStack item(Material material, String name, String... lore) {
+        return item(material, name, List.of(lore));
+    }
+
+    protected static ItemStack item(Material material, String name, List<String> lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Text.line(name));
+        meta.lore(Text.lines(lore));
+        item.setItemMeta(meta);
+        return item;
+    }
 
     public static class Size {
         public static final int ONE = 9;

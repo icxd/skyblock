@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionType;
@@ -24,7 +23,6 @@ import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.RefreshingGUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.user.User;
-import net.icxd.dungeons.utils.Text;
 
 /**
  * Mort's menu before a run starts, as on Hypixel: the party along the top (ready or not), the
@@ -149,21 +147,6 @@ final class ReadyUpMenu extends GUI implements RefreshingGUI {
         lore.addAll(DOUBLED);
         ItemStack item = item(Material.LIME_DYE, "&a" + picked.size() + " Player(s)", lore.toArray(String[]::new));
         item.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
-        return item;
-    }
-
-    private static ItemStack filler() {
-        ItemStack pane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        pane.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().hideTooltip(true).build());
-        return pane;
-    }
-
-    private static ItemStack item(Material material, String name, String... lore) {
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(Text.line(name));
-        meta.lore(Text.lines(List.of(lore)));
-        item.setItemMeta(meta);
         return item;
     }
 

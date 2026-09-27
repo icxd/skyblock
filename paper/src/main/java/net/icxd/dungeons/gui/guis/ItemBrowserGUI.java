@@ -1,7 +1,5 @@
 package net.icxd.dungeons.gui.guis;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.command.commands.admin.ItemCommand;
@@ -269,21 +267,6 @@ public final class ItemBrowserGUI extends GUI {
         Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
             if (viewer.isOnline()) show(viewer);
         });
-    }
-
-    private static ItemStack filler() {
-        ItemStack pane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        pane.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().hideTooltip(true).build());
-        return pane;
-    }
-
-    private static ItemStack item(Material material, String name, String... lore) {
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(Text.line(name));
-        meta.lore(Text.lines(List.of(lore)));
-        item.setItemMeta(meta);
-        return item;
     }
 
     /** A player's choices last until they leave. */

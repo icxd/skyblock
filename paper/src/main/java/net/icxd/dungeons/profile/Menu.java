@@ -10,10 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
@@ -24,7 +21,6 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
-import net.icxd.dungeons.utils.Text;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 /**
@@ -80,26 +76,6 @@ abstract class Menu extends GUI {
 
     GUIClickableItem goBack(int slot, String to, java.util.function.Supplier<Menu> menu) {
         return button(slot, item(Material.ARROW, "&aGo Back", "&7To " + to), () -> menu.get().open(viewer));
-    }
-
-    static ItemStack item(Material material, String name, String... lore) {
-        return item(material, name, List.of(lore));
-    }
-
-    static ItemStack item(Material material, String name, List<String> lore) {
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(Text.line(name));
-        meta.lore(Text.lines(lore));
-        item.setItemMeta(meta);
-        return item;
-    }
-
-    /** Glass with no tooltip, where Hypixel's menus have it. */
-    static ItemStack filler() {
-        ItemStack pane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        pane.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().hideTooltip(true).build());
-        return pane;
     }
 
     /**
