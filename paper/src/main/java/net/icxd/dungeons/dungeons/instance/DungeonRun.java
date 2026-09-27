@@ -133,6 +133,8 @@ public final class DungeonRun implements ScoreCounts {
     private final RoomMobs roomMobs;
     private final DisplayCases cases;
     private Watcher watcher;
+    /** Once one is found. */
+    private RunBlessings blessings;
     private int ticks;
     private final MapView map;
     private Phase phase = Phase.WAITING;
@@ -460,6 +462,47 @@ public final class DungeonRun implements ScoreCounts {
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             if (StoredInventory.isNotSaved(inventory.getItem(slot))) inventory.setItem(slot, null);
         }
+    }
+
+    // Blessings (RunBlessings)
+
+    /** A member's stats with the team's blessings, from the start until they leave (PlayerStats). */
+    public void applyBlessings(Stats stats) {
+        if (isStarted() && blessings != null) blessings.apply(stats);
+    }
+
+    /**
+     * Someone picked up a blessing a room dropped where its last starred mob died ("Name has obtained Blessing of
+     * Wisdom!" has been said): the team has it at this level, with "DUNGEON BUFF!" and the run's time.
+     * {@code blessing} is its kind ("Wisdom").
+     */
+    void blessingFound(Player player, String blessing, int level) {
+        Blessing kind = Blessing.named(blessing);
+        if (kind != null) blessingFound(player, kind, level, Blessing.elapsed(System.currentTimeMillis() - startedAt));
+    }
+
+    /**
+     * {@code finder} found a blessing: the whole team has it for the rest of the run, with Hypixel's lines
+     * ("DUNGEON BUFF! You found a Blessing of Stone I!" and what it grants). {@code elapsed}, the run's time,
+     * for one picked up from a room; null for one out of a chest or a bat.
+     */
+    void blessingFound(Player finder, Blessing blessing, int level, String elapsed) {
+        if (phase != Phase.RUNNING || level <= 0) return;
+        if (blessings == null) blessings = new RunBlessings(floor);
+        blessings.add(blessing, level);
+        Member member = members.get(finder.getUniqueId());
+        String who = member != null ? member.display() : finder.getName();
+        List<String> granted = blessing.granted(level, blessings.strength());
+        for (Player player : players()) {
+            player.sendMessage(Utils.color(blessing.found(player.equals(finder) ? null : who, level, elapsed)));
+            for (String line : granted) player.sendMessage(Utils.color(line));
+        }
+    }
+
+    /** The tab list footer while the run's on: its Dungeon Buffs (recorded from the start); null before. */
+    public List<String> tabFooter() {
+        if (!isStarted()) return null;
+        return blessings == null ? new RunBlessings(floor).footer() : blessings.footer();
     }
 
     // End

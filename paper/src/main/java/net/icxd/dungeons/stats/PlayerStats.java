@@ -1,5 +1,7 @@
 package net.icxd.dungeons.stats;
 
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
+import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -19,7 +21,8 @@ public final class PlayerStats {
     /**
      * The base, the armor they wear, what they hold (unless its stats only count when worn or
      * equipped, see {@link SkyBlockItem#statsWhenHeld()}), their skill levels' bonuses (see
-     * {@link Skills#stats}) and their Heart of the Mountain perks.
+     * {@link Skills#stats}) and their Heart of the Mountain perks; in a dungeon run, its blessings on top
+     * of all that (they multiply what the rest adds up to).
      */
     public static Stats of(Player player) {
         Stats stats = Stats.base();
@@ -35,6 +38,8 @@ public final class PlayerStats {
                 if (level != null && level > 0) stats.add(perk.getStats().apply(level));
             }
         }
+        DungeonRun run = RunManager.of(player);
+        if (run != null) run.applyBlessings(stats);
         return stats;
     }
 

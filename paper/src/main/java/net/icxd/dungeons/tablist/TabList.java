@@ -91,6 +91,8 @@ public class TabList {
     private static final Map<Player, Line[]> sent = new WeakHashMap<>();
     /** Players whose tab list failed to build, so it's logged once each. */
     private static final Set<UUID> failed = new HashSet<>();
+    /** The footer each viewer has been sent, if any (only dungeon runs have one). */
+    private static final Map<Player, List<String>> footers = new WeakHashMap<>();
 
     public static void handle() {
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), TabList::update, 200, 60);
@@ -117,6 +119,7 @@ public class TabList {
     private static Line[] lines(Player viewer, Collection<? extends Player> online) {
         RunManager runs = Dungeons.getRunManager();
         DungeonRun run = runs == null ? null : runs.runOf(viewer);
+        footer(viewer, run == null ? null : run.tabFooter());
         if (run != null) return runLines(run.tab(viewer));
 
         User user = User.ifLoaded(viewer.getUniqueId());
@@ -197,6 +200,19 @@ public class TabList {
         for (String line : widget) lines.add(new Line(Utils.color(line), GRAY));
         while (lines.size() < SLOTS) lines.add(new Line("§9 ", GRAY));
         return lines.toArray(new Line[0]);
+    }
+
+    /**
+     * The footer under the list: a dungeon run's "Dungeon Buffs" (Hypixel's footer has more, for things this
+     * server doesn't have), or none. Sent when it changes.
+     */
+    private static void footer(Player viewer, List<String> lines) {
+        List<String> before = footers.get(viewer);
+        if (lines == null ? before == null : lines.equals(before)) return;
+        if (lines == null) footers.remove(viewer);
+        else footers.put(viewer, List.copyOf(lines));
+        viewer.sendPlayerListFooter(lines == null ? net.kyori.adventure.text.Component.empty()
+                : LegacyComponentSerializer.legacySection().deserialize(Utils.color(String.join("\n", lines))));
     }
 
     /** A dungeon run's tab list: party members with their skins, headers in their colours. */
