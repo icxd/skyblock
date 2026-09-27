@@ -1,5 +1,6 @@
 package net.icxd.dungeons.menu;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -62,23 +63,51 @@ public final class SkyBlockMenuItem {
     /**
      * Puts it in hotbar slot 9 if it isn't there, and takes away any other (a copy somewhere else, or
      * on the cursor). Whatever was in the slot moves to a free one; with none free they go without it
-     * for now (it's put back once there's room). Nothing on a dungeon server.
+     * for now (it's put back once there's room). Nothing on a dungeon server. See {@link Plan}.
      */
     public static void give(Player player) {
         if (!givenHere()) return;
         PlayerInventory inventory = player.getInventory();
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            if (slot != SLOT && is(inventory.getItem(slot))) inventory.setItem(slot, null);
+        int size = inventory.getSize();
+        boolean[] item = new boolean[size];
+        boolean[] empty = new boolean[size];
+        for (int slot = 0; slot < size; slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            item[slot] = is(stack);
+            empty[slot] = stack == null || stack.isEmpty();
         }
         if (is(player.getItemOnCursor())) player.setItemOnCursor(null);
-        ItemStack there = inventory.getItem(SLOT);
-        if (is(there)) return;
-        if (there != null && !there.isEmpty()) {
-            int free = inventory.firstEmpty();
-            if (free < 0) return;
-            inventory.setItem(free, there);
-        }
+        Plan plan = Plan.of(item, empty);
+        for (int slot : plan.clear()) inventory.setItem(slot, null);
+        if (!plan.put()) return;
+        if (plan.moveTo() >= 0) inventory.setItem(plan.moveTo(), inventory.getItem(SLOT));
         inventory.setItem(SLOT, create());
+    }
+
+    /**
+     * What {@link #give} does to an inventory, from which of its slots hold this item ({@code item})
+     * and which are empty ({@code empty}), in Bukkit's order (the 36 storage slots, hotbar first, then
+     * the equipment: armor, the off hand): the other slots it's taken from ({@code clear}), then
+     * whether it's put in its slot ({@code put}), what was there moving to {@code moveTo} first (-1:
+     * nothing moves). It isn't put when it's there already, or when what's there has nowhere to go.
+     */
+    record Plan(List<Integer> clear, int moveTo, boolean put) {
+        /** What's in its slot only moves to a storage slot (the first empty one, as firstEmpty finds it), not onto their armor. */
+        static final int STORAGE = 36;
+
+        static Plan of(boolean[] item, boolean[] empty) {
+            List<Integer> clear = new ArrayList<>();
+            for (int slot = 0; slot < item.length; slot++) {
+                if (slot != SLOT && item[slot]) clear.add(slot);
+            }
+            if (item[SLOT]) return new Plan(clear, -1, false);
+            if (empty[SLOT]) return new Plan(clear, -1, true);
+            for (int slot = 0; slot < STORAGE; slot++) {
+                // A copy taken away leaves its slot free.
+                if (slot != SLOT && (empty[slot] || item[slot])) return new Plan(clear, slot, true);
+            }
+            return new Plan(clear, -1, false);
+        }
     }
 
     /**

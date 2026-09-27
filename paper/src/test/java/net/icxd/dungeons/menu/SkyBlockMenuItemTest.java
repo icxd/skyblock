@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.ClickType;
@@ -16,6 +18,7 @@ import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.gui.GUIListener;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.listeners.PlayerListener;
+import net.icxd.dungeons.menu.SkyBlockMenuItem.Plan;
 import net.icxd.dungeons.menu.SkyBlockMenuListener.Response;
 
 /** The SkyBlock Menu item: the recorded one (the menu tour, inventory slot 44), and what clicks do to it. */
@@ -55,6 +58,43 @@ class SkyBlockMenuItemTest {
         assertEquals(Response.BLOCK, SkyBlockMenuListener.click(ClickType.NUMBER_KEY, false, true, false));
         assertEquals(Response.BLOCK, SkyBlockMenuListener.click(ClickType.LEFT, false, false, true));
         assertEquals(Response.NONE, SkyBlockMenuListener.click(ClickType.LEFT, false, false, false));
+    }
+
+    /** A player's inventory in Bukkit's slots: 36 storage, 4 armor, the off hand. */
+    private static final int SIZE = 41;
+
+    private static Plan plan(int[] items, int[] filled) {
+        boolean[] item = new boolean[SIZE];
+        boolean[] empty = new boolean[SIZE];
+        Arrays.fill(empty, true);
+        for (int slot : items) {
+            item[slot] = true;
+            empty[slot] = false;
+        }
+        for (int slot : filled) empty[slot] = false;
+        return Plan.of(item, empty);
+    }
+
+    /** Every storage slot but those given. */
+    private static int[] storageBut(int... free) {
+        return IntStream.range(0, Plan.STORAGE).filter(slot -> IntStream.of(free).noneMatch(f -> f == slot)).toArray();
+    }
+
+    @Test
+    void give() {
+        // There already: nothing changes but copies elsewhere going, the off hand's too.
+        assertEquals(new Plan(List.of(20, 40), -1, false), plan(new int[] {8, 20, 40}, new int[0]));
+        assertEquals(new Plan(List.of(), -1, false), plan(new int[] {8}, storageBut()));
+        // Its slot empty: it's put there.
+        assertEquals(new Plan(List.of(), -1, true), plan(new int[0], new int[] {0, 1, 2}));
+        // Something in its slot moves to the first empty storage slot.
+        assertEquals(new Plan(List.of(), 5, true), plan(new int[0], new int[] {0, 1, 2, 3, 4, 8}));
+        assertEquals(new Plan(List.of(), 9, true), plan(new int[0], new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8}));
+        // A copy's slot is free once it's taken away.
+        assertEquals(new Plan(List.of(30), 30, true), plan(new int[] {30}, storageBut(30)));
+        // No room in storage (empty armor slots don't count, and a copy in the off hand frees none): wait.
+        assertEquals(new Plan(List.of(), -1, false), plan(new int[0], storageBut()));
+        assertEquals(new Plan(List.of(40), -1, false), plan(new int[] {40}, storageBut()));
     }
 
     /**
