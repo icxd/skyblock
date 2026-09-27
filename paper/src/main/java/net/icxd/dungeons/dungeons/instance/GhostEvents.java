@@ -21,6 +21,7 @@ import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
@@ -153,6 +154,12 @@ final class GhostEvents implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onGhostPickup(EntityPickupItemEvent event) {
         if (ghost(event.getEntity())) event.setCancelled(true);
+    }
+
+    /** Arrows (and tridents) stuck in the ground have their own pickup event. */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onGhostPickupArrow(PlayerPickupArrowEvent event) {
+        if (ghost(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
