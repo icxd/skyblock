@@ -76,6 +76,11 @@ public final class Combat {
         return enchantments;
     }
 
+    /** The enchantments (id to level) of the SkyBlock item in their main hand; none for anything else. */
+    public static Map<String, Integer> heldEnchantments(Player player) {
+        return enchantments(skyBlockData(player.getInventory().getItemInMainHand()));
+    }
+
     /** Who's hitting: the player's stats now, and the weapon's enchantments. */
     static Damage.Attacker attacker(Player player, NBTTagCompound weapon, boolean ranged, double travelled) {
         Stats stats = PlayerSession.of(player).stats();

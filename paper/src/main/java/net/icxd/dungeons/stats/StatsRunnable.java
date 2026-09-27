@@ -30,11 +30,21 @@ public class StatsRunnable implements Runnable {
             int mana = session.getMana() < 0 ? manaPool : session.getMana();
             session.setMana(Math.min(manaPool, mana + (mana < manaPool ? Damage.manaRegen(manaPool) : 0)));
 
-            Replacement defense = session.getDefenseReplacement();
-            Replacement manaText = session.getManaReplacement();
-            Utils.sendActionText(player, "&c" + (int) PlayerHealth.get(player) + "/" + (int) maxHealth + "❤     &a" +
-                    (defense == null ? (stats.has(Stat.DEFENSE) ? (int) stats.get(Stat.DEFENSE) + "❈ Defense     " : "") : defense.text() + "     ") +
-                    (manaText == null ? "&b" + session.getMana() + "/" + manaPool + "✎ Mana" : manaText.text()));
+            sendActionBar(player);
         }
+    }
+
+    /**
+     * Health, Defense (or what's shown in its place for a moment, like a skill's XP gain) and mana.
+     * Sent every second, and at once when what's in Defense's place changes.
+     */
+    public static void sendActionBar(Player player) {
+        PlayerSession session = PlayerSession.of(player);
+        Stats stats = session.stats();
+        Replacement defense = session.getDefenseReplacement();
+        Replacement manaText = session.getManaReplacement();
+        Utils.sendActionText(player, "&c" + (int) PlayerHealth.get(player) + "/" + (int) PlayerHealth.max(player) + "❤     &a" +
+                (defense == null ? (stats.has(Stat.DEFENSE) ? (int) stats.get(Stat.DEFENSE) + "❈ Defense     " : "") : defense.text() + "     ") +
+                (manaText == null ? "&b" + session.getMana() + "/" + session.maxMana() + "✎ Mana" : manaText.text()));
     }
 }

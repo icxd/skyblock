@@ -89,9 +89,9 @@ class MobKindsTest {
         assertFalse(MobKinds.MAGMA_CUBE.dungeon());
         assertEquals(20, MobKinds.MAGMA_CUBE.variant(null, null).coins());
         assertEquals(1_000, MobKinds.BLADESOUL.variant(null, null).coins());
-        // Research has no Combat XP for either.
-        assertEquals(0, MobKinds.MAGMA_CUBE.firstVariant().combatXp());
-        assertEquals(0, MobKinds.BLADESOUL.firstVariant().combatXp());
+        // The wiki's.
+        assertEquals(120, MobKinds.MAGMA_CUBE.firstVariant().combatXp());
+        assertEquals(4_000, MobKinds.BLADESOUL.firstVariant().combatXp());
         assertEquals(1_000_000, MobKinds.MAGMA_CUBE.firstVariant().health());
         assertEquals(50_000_000, MobKinds.BLADESOUL.firstVariant().health());
         assertNull(MobKinds.BLADESOUL.variant(DungeonFloor.ENTRANCE, null));
