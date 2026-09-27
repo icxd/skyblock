@@ -45,6 +45,9 @@ import net.icxd.dungeons.utils.Text;
  * <p>The vanilla ender chest is one per player (and one per server), not one per profile, so it's
  * closed to everyone but staff: what's in it may be from a Sandbox profile, or from before profiles
  * (whose items went to Sandbox ones).
+ *
+ * <p>The hubs and islands are read-only anyway (see HubProtection), so these rules are what holds in
+ * dungeon runs, and for what HubProtection lets through.
  */
 public class SandboxStorage implements Listener {
     private static final String NO_STORAGE = "&cItems can't leave a Sandbox profile!";
@@ -69,7 +72,7 @@ public class SandboxStorage implements Listener {
         String refused = null;
         if (block.getType() == Material.ENDER_CHEST) {
             if (!staff(player)) refused = NO_ENDER_CHEST;
-        } else if (SandboxDrops.onSandbox(player) && keepsItems(block)) {
+        } else if (keepsNothingFor(player) && keepsItems(block)) {
             refused = NO_STORAGE;
         }
         if (refused == null) return;
@@ -81,7 +84,7 @@ public class SandboxStorage implements Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onUseEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
-        if (player.getInventory().getItem(event.getHand()).isEmpty() || !SandboxDrops.onSandbox(player)
+        if (player.getInventory().getItem(event.getHand()).isEmpty() || !keepsNothingFor(player)
                 || !keepsItems(event.getRightClicked())) return;
         event.setCancelled(true);
         if (event.getHand() == EquipmentSlot.HAND) player.sendMessage(Text.line(NO_STORAGE));
@@ -90,7 +93,7 @@ public class SandboxStorage implements Listener {
     /** Giving an armor stand something (or swapping); taking what it has is fine. */
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onArmorStand(PlayerArmorStandManipulateEvent event) {
-        if (event.getPlayerItem().isEmpty() || !SandboxDrops.onSandbox(event.getPlayer())) return;
+        if (event.getPlayerItem().isEmpty() || !keepsNothingFor(event.getPlayer())) return;
         event.setCancelled(true);
         event.getPlayer().sendMessage(Text.line(NO_STORAGE));
     }
@@ -103,7 +106,7 @@ public class SandboxStorage implements Listener {
         String refused = null;
         if (inventory.getType() == InventoryType.ENDER_CHEST) {
             if (!staff(player)) refused = NO_ENDER_CHEST;
-        } else if (keepsItems(inventory) && SandboxDrops.onSandbox(player)) {
+        } else if (keepsItems(inventory) && keepsNothingFor(player)) {
             refused = NO_STORAGE;
         }
         if (refused == null) return;
@@ -131,6 +134,11 @@ public class SandboxStorage implements Listener {
         InventoryHolder holder = inventory.getHolder(false);
         return holder instanceof BlockInventoryHolder || holder instanceof DoubleChest
                 || holder instanceof Entity && !(holder instanceof HumanEntity);
+    }
+
+    /** A player on a Sandbox profile; staff aren't held back, since /item gives them anything on any profile. */
+    private static boolean keepsNothingFor(Player player) {
+        return SandboxDrops.onSandbox(player) && !staff(player);
     }
 
     private static boolean staff(Player player) {

@@ -23,6 +23,7 @@ import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.gui.GUIListener;
 import net.icxd.dungeons.listeners.CombatListener;
 import net.icxd.dungeons.listeners.HealthListener;
+import net.icxd.dungeons.listeners.HubProtection;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.listeners.PlayerListener;
 import net.icxd.dungeons.listeners.WorldListener;
@@ -95,6 +96,7 @@ public class Dungeons extends JavaPlugin {
         listen(HealthListener.class, HealthListener::new);
         listen(InventorySyncListener.class, InventorySyncListener::new);
         listen(WorldListener.class, WorldListener::new);
+        listen(HubProtection.class, HubProtection::new);
         listen(GUIListener.class, GUIListener::new);
         listen(BlockListener.class, BlockListener::new);
         listen(MovementListener.class, MovementListener::new);
