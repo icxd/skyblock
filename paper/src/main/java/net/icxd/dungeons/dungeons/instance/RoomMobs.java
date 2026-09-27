@@ -324,6 +324,7 @@ final class RoomMobs {
                 MobKind kind = MobKinds.get(m.kind());
                 if (kind == null || !spawnable(kind, m.level())) continue;
                 double[] p = state.frame.point(m.x(), m.y(), m.z());
+                p[1] = FallbackSpawns.standY(worldBlocks(), (int) Math.floor(p[0]), p[1], (int) Math.floor(p[2]));
                 mine.add(new Planned(state, kind, options(kind, m.starred(), m.level()), at(p)));
             }
             skulls(state, roomData.skulls());
@@ -377,9 +378,9 @@ final class RoomMobs {
         return out;
     }
 
-    /** A room nobody recorded: {@link FallbackSpawns}' mobs and skulls (unless the capture has skulls). */
-    private void fallback(RoomState state, List<Planned> out) {
-        FallbackSpawns.Blocks blocks = new FallbackSpawns.Blocks() {
+    /** The world's blocks, as {@link FallbackSpawns} asks about them. */
+    private FallbackSpawns.Blocks worldBlocks() {
+        return new FallbackSpawns.Blocks() {
             @Override
             public boolean solid(int x, int y, int z) {
                 return world.getBlockAt(x, y, z).getType().isSolid();
@@ -390,6 +391,11 @@ final class RoomMobs {
                 return world.getBlockAt(x, y, z).isPassable();
             }
         };
+    }
+
+    /** A room nobody recorded: {@link FallbackSpawns}' mobs and skulls (unless the capture has skulls). */
+    private void fallback(RoomState state, List<Planned> out) {
+        FallbackSpawns.Blocks blocks = worldBlocks();
         List<int[]> doorBlocks = new ArrayList<>();
         for (Door door : state.room.doors()) doorBlocks.addAll(layout.doorBlocks(door));
         List<int[]> columns = FallbackSpawns.columns(layout.cellMins(state.room), PastePlan.CELL, doorBlocks);

@@ -40,6 +40,19 @@ class FallbackSpawnsTest {
         assertEquals(List.of(new FallbackSpawns.Spot(1, 69, 1), new FallbackSpawns.Spot(5, 71, 5)), spots);
     }
 
+    /** A recorded mob inside something stands on it instead (Default's Angry Archaeologist, recorded at the dirt floor's y 69). */
+    @Test
+    void recordedMobsInsideAFloorStandOnIt() {
+        // In the floor (y 68) and in the pillar (y 69, 70): up onto them.
+        assertEquals(69, FallbackSpawns.standY(FLOOR, 1, 68, 1), 1e-9);
+        assertEquals(71, FallbackSpawns.standY(FLOOR, 5, 69.5, 5), 1e-9);
+        // Where there's room, as recorded (half a block over the floor, say).
+        assertEquals(69, FallbackSpawns.standY(FLOOR, 1, 69, 1), 1e-9);
+        assertEquals(70.5, FallbackSpawns.standY(FLOOR, 1, 70.5, 1), 1e-9);
+        // Under the floor by the pillar, nothing free within 2 blocks: left as it was.
+        assertEquals(67.5, FallbackSpawns.standY(FLOOR, 5, 67.5, 5), 1e-9);
+    }
+
     @Test
     void columnsKeepOffTheWallsAndDoors() {
         // One cell at the origin, a door block in the middle of its north wall.

@@ -37,6 +37,9 @@ final class FallbackSpawns {
             MobKinds.SCARED_SKELETON, MobKinds.TANK_ZOMBIE, MobKinds.CRYPT_DREADLORD, MobKinds.CRYPT_SOULEATER);
     private static final double[] WEIGHTS = {23, 22, 14, 13.5, 13, 9, 5};
 
+    /** How far above a recorded spot that's inside something its mob is moved, at most. */
+    static final int RAISE = 2;
+
     /** What the world has at a block. */
     interface Blocks {
         /** Something to stand on. */
@@ -69,6 +72,21 @@ final class FallbackSpawns {
             }
         }
         return out;
+    }
+
+    /**
+     * Where a recorded mob stands: at its recorded height, unless that's inside something (Default's Angry
+     * Archaeologist was recorded at y 69, where the capture has its dirt floor, whose top is 70); then on
+     * the first spot at most {@link #RAISE} blocks up with something under it and room for it, or where
+     * it was if there's none.
+     */
+    static double standY(Blocks blocks, int x, double y, int z) {
+        int feet = (int) Math.floor(y);
+        if (blocks.passable(x, feet, z) && blocks.passable(x, feet + 1, z)) return y;
+        for (int up = feet + 1; up <= feet + RAISE; up++) {
+            if (blocks.solid(x, up - 1, z) && blocks.passable(x, up, z) && blocks.passable(x, up + 1, z)) return up;
+        }
+        return y;
     }
 
     /**
