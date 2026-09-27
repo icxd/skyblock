@@ -211,6 +211,37 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   to the Dungeon Hub (a hub if there's no `DUNGEON_HUB` server). The sidebar's time stops at the
   end, and its score turns into the card's at its next update.
 
+## Puzzles
+
+Each puzzle room starts when someone first walks in (`puzzle/RunPuzzles`). Where things are in
+each room comes from `rooms/_puzzles/<room>.json` in the private data, in the room's capture frame;
+a puzzle without its file shows in the tab list but can't be done. The tab list's Puzzles lines go
+" ???: [✦]", then the name half a second after someone walks in, then a green tick or a red cross
+with who failed it; a solved puzzle is a cleared room with its tick on the map, a failed one gets a
+red cross and isn't. Every puzzle not solved costs 10 points of skill.
+
+- **Tic Tac Toe**: nine stone buttons. The AI (X) takes the middle the moment someone walks in; a
+  click on a button puts an O there (the button goes and an item frame with the O map hangs in its
+  place), and 3 seconds later the AI answers. It plays perfectly, so the best a player can do is a
+  tie: "PUZZLE SOLVED! Name tied Tic Tac Toe! Good job!"; three in a row for it is "PUZZLE FAIL!
+  Name lost Tic Tac Toe! Yikes!". The X and O maps are drawn here, red on light grey like
+  Hypixel's, with the middle pixel the mods look at in the same colour.
+- **Water Board**: three of the five gates close when someone walks in, and the chest appears
+  behind them. The board is vanilla: the water lever lets the water out at the top, each other lever
+  moves every block of its material on the board in or out (a redstone block behind each piston, as
+  Hypixel does it), and water reaching a hole at the bottom toggles that hole's gate. Opening the
+  chest solves it (no chat line). Any captured board works; Hypixel has four, we have two.
+- **Three Weirdos**: three NPCs with a chest each, one of Hypixel's six sets of statements and
+  three random names. The right chest: "PUZZLE SOLVED! Name wasn't fooled by Hope! Good job!"; a
+  wrong one fails it.
+- **Creeper Beams**: a creeper on a sea lantern. Shoot (or click) two lanterns: if the line
+  between them goes through the creeper they turn to prismarine and stay joined by a line of
+  particles. Four and the creeper blows up, clearing the pillar under it; opening the chest there
+  solves it.
+- A solved puzzle gives a Tier V blessing: from its chest, the way a blessing chest opens (lid up,
+  harp notes, the blessing 1.3 seconds later), or for Tic Tac Toe at once. The Teleport Maze was
+  never captured, so it's kept off the Entrance.
+
 ## Score
 
 Hypixel's formulas (`Score`), which give all four recorded Entrance numbers (chat 182 and 109,
@@ -230,9 +261,9 @@ Hypixel's in-run indicator, worked out every 10 seconds from the start: skill wi
 explore, the cleared share, the bonus and 2.2 per Watcher undead killed (fitted to all 21
 recorded values).
 
-Secrets, crypts and puzzles reach the score through `ScoreCounts`: secrets and crypts are counted
-(`RunSecrets`, room mobs), puzzles are 0 until the code counting them is in; deaths are the members'
-own count.
+Secrets, crypts and puzzles reach the score through `ScoreCounts`: secrets, crypts and puzzles are
+counted (`RunSecrets`, room mobs, `RunPuzzles`: 10 off skill for each one not solved); deaths are
+the members' own count.
 
 Experience (`RunRewards`) follows the chat's score: the floor's base at 300 (55 on the Entrance)
 x score/300, with 300 more score for the first five completions of a floor and 40% more for the
@@ -244,9 +275,11 @@ Those multipliers are community reverse-engineering, unverified.
 
 ## Not yet
 
-- Puzzles, the bosses, the boss bar compass. Unstarred mobs in the hidden parts of
+- The bosses, the boss bar compass. Unstarred mobs in the hidden parts of
   rooms nobody recorded; crypts where no tomb is known; the Dungeon Sack. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
   his real icons (placeholders for now).
+- The puzzles of later floors (Higher or Lower, Boulder, Ice Path, Quiz, Ice Fill) and the
+  Teleport Maze; Water Boards 1 and 2 (only 3 and 4 were captured); the Three Weirdos' skins.
 - Deaths as ghosts, revives.
 - Classes beyond picking one: their stats in the Ready Up menu, Class Details (right click), the
   Dungeon Orb, "stats are doubled because you are the only player using this class".
