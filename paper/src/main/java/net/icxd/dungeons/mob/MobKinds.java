@@ -111,19 +111,22 @@ public final class MobKinds {
             .variant(ENTRANCE, 47, 14_000, 327, 0, 61, 1, drop("CRYPT_DREADLORD_SWORD", U, 5))
             .build();
 
-    /** From skeleton skulls; its name tag has its level and max health, and its health is never room-scaled. */
+    /** From skeleton skulls; its name tag has its level and max health, and it's never room-scaled (always 25,000). */
     public static final MobKind UNDEAD_SKELETON = MobKind.builder("UNDEAD_SKELETON", "Undead Skeleton", EntityType.SKELETON)
-            .types(UNDEAD, SKELETAL).style(NameStyle.LEVELED).speed(0.35).magicResistance(0.3).behaviour(() -> Behaviours.archer(false))
+            .types(UNDEAD, SKELETAL).style(NameStyle.LEVELED).speed(0.35).magicResistance(0.3).notRoomScaled()
+            .behaviour(() -> Behaviours.archer(false))
             .gear(new Gear(BOW, null, null, null, null))
             .variant(ENTRANCE, 40, 25_000, 720, 0, 36, 1, drop("ENCHANTED_BONE", U, 2), drop("DYE_BONE", RNG, ONE_IN_3M))
             .build();
 
     /**
-     * From a blown-up crypt. Combat XP 40 (the wiki; what the recordings show fits it too); coins 1. It also
-     * drops 1 Undead Essence and 1 more half the time, which isn't an item (no essences yet).
+     * From a blown-up crypt, never room-scaled (always 22,500). Combat XP 40 (the wiki; what the recordings
+     * show fits it too); coins 1. It also drops 1 Undead Essence and 1 more half the time, which isn't an
+     * item (no essences yet).
      */
     public static final MobKind CRYPT_UNDEAD = MobKind.builder("CRYPT_UNDEAD", "Crypt Undead", EntityType.MANNEQUIN)
-            .types(UNDEAD, SUBTERRANEAN).skin("Crypt Undead").speed(0.35).magicResistance(0.1).behaviour(() -> Behaviours.avatar(false))
+            .types(UNDEAD, SUBTERRANEAN).skin("Crypt Undead").speed(0.35).magicResistance(0.1).notRoomScaled()
+            .behaviour(() -> Behaviours.avatar(false))
             .gear(Gear.holding(Material.BONE))
             .variant(ENTRANCE, 25, 22_500, 936, 0, 40, 1, drop("REVIVE_STONE", U, 22), drop("PREMIUM_FLESH", L, 0.1))
             .build();

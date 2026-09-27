@@ -25,10 +25,13 @@ import java.util.function.Supplier;
  * @param skin            for a player-shaped mob, the key of its skin in dungeons/textures.json; else null
  * @param speed           its movement speed attribute (vanilla units, as Hypixel sends it); NaN for vanilla's
  * @param magicResistance the share of magic damage it resists (0.1 for 10%)
+ * @param roomScaled      whether a room's health and damage multiplier applies to it (not to Undead Skeletons and
+ *                        Crypt Undead, research mobs.md 1.3)
  * @param behaviour       makes the (per mob) behaviour: its goals and anything else it does
  */
 public record MobKind(String id, String name, EntityType entityType, List<MobType> types, NameStyle style, Gear gear, String skin,
-                      double speed, double magicResistance, Supplier<? extends MobBehaviour> behaviour, List<Variant> variants) {
+                      double speed, double magicResistance, boolean roomScaled, Supplier<? extends MobBehaviour> behaviour,
+                      List<Variant> variants) {
     public MobKind {
         Objects.requireNonNull(id);
         types = List.copyOf(types);
@@ -148,6 +151,7 @@ public record MobKind(String id, String name, EntityType entityType, List<MobTyp
         private String skin;
         private double speed = Double.NaN;
         private double magicResistance;
+        private boolean roomScaled = true;
         private Supplier<? extends MobBehaviour> behaviour = () -> new MobBehaviour() {
         };
         private final List<Variant> variants = new ArrayList<>();
@@ -188,6 +192,12 @@ public record MobKind(String id, String name, EntityType entityType, List<MobTyp
             return this;
         }
 
+        /** A room's multiplier leaves its health and damage alone. */
+        public Builder notRoomScaled() {
+            this.roomScaled = false;
+            return this;
+        }
+
         public Builder behaviour(Supplier<? extends MobBehaviour> behaviour) {
             this.behaviour = behaviour;
             return this;
@@ -205,7 +215,7 @@ public record MobKind(String id, String name, EntityType entityType, List<MobTyp
         }
 
         public MobKind build() {
-            return new MobKind(id, name, entityType, types, style, gear, skin, speed, magicResistance, behaviour, variants);
+            return new MobKind(id, name, entityType, types, style, gear, skin, speed, magicResistance, roomScaled, behaviour, variants);
         }
     }
 }

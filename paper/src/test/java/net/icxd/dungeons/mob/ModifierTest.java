@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Modifiers and the room multiplier against what the recordings show (research mobs.md 1.3 and 1.5). */
 class ModifierTest {
     private static double health(MobKind kind, SpawnOptions options) {
-        return DataMob.maxHealth(kind.variant(net.icxd.dungeons.common.DungeonFloor.ENTRANCE, options.level()), options);
+        return DataMob.maxHealth(kind, kind.variant(net.icxd.dungeons.common.DungeonFloor.ENTRANCE, options.level()), options);
     }
 
     /** Healthy: x1.6 (Zombie Grunt 11,200, Crypt Souleater 20,800, Scared Skeleton 19,200, Tank 1,920, Dreadlord 22,400). */
@@ -97,9 +97,22 @@ class ModifierTest {
         // With Healthy too: 9,000 x 1.6 x 1.05 = 15,120, as recorded.
         assertEquals(15_120, health(MobKinds.CRYPT_LURKER, SpawnOptions.NONE.roomMultiplier(1.05).modifier(Modifier.HEALTHY)));
         // Damage scales the same way.
-        assertEquals(201 * 1.1, DataMob.damage(MobKinds.ZOMBIE_GRUNT.firstVariant(), SpawnOptions.NONE.roomMultiplier(1.1)), 1e-9);
-        assertEquals(201, DataMob.damage(MobKinds.ZOMBIE_GRUNT.firstVariant(), SpawnOptions.NONE), 1e-9);
+        assertEquals(201 * 1.1, DataMob.damage(MobKinds.ZOMBIE_GRUNT, MobKinds.ZOMBIE_GRUNT.firstVariant(), SpawnOptions.NONE.roomMultiplier(1.1)), 1e-9);
+        assertEquals(201, DataMob.damage(MobKinds.ZOMBIE_GRUNT, MobKinds.ZOMBIE_GRUNT.firstVariant(), SpawnOptions.NONE), 1e-9);
         assertThrows(IllegalArgumentException.class, () -> SpawnOptions.NONE.roomMultiplier(0));
         assertThrows(IllegalArgumentException.class, () -> SpawnOptions.NONE.roomMultiplier(Double.NaN));
+    }
+
+    /** Undead Skeletons (always 25,000) and Crypt Undead (22,500) aren't room-scaled, whatever the room passes (mobs.md 1.3). */
+    @Test
+    void notRoomScaled() {
+        SpawnOptions room = SpawnOptions.NONE.roomMultiplier(1.5);
+        assertEquals(25_000, health(MobKinds.UNDEAD_SKELETON, room));
+        assertEquals(22_500, health(MobKinds.CRYPT_UNDEAD, room));
+        assertEquals(720, DataMob.damage(MobKinds.UNDEAD_SKELETON, MobKinds.UNDEAD_SKELETON.firstVariant(), room), 1e-9);
+        assertEquals(936, DataMob.damage(MobKinds.CRYPT_UNDEAD, MobKinds.CRYPT_UNDEAD.firstVariant(), room), 1e-9);
+        for (MobKind kind : MobKinds.ENTRANCE_KINDS) {
+            assertEquals(kind != MobKinds.UNDEAD_SKELETON && kind != MobKinds.CRYPT_UNDEAD, kind.roomScaled(), kind.id());
+        }
     }
 }

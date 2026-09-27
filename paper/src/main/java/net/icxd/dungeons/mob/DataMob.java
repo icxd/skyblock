@@ -50,22 +50,27 @@ public final class DataMob implements SkyBlockMob {
         this.variant = variant;
         this.options = options;
         this.behaviour = kind.behaviour().get();
-        this.maxHealth = maxHealth(variant, options);
-        this.damage = damage(variant, options);
+        this.maxHealth = maxHealth(kind, variant, options);
+        this.damage = damage(kind, variant, options);
     }
 
     /**
      * The variant's health times its modifier's (Healthy: x1.6) and the room's multiplier, rounded (the
      * recorded ones are whole: 7,000 x 1.05 = 7,350; 9,000 x 1.6 x 1.05 = 15,120).
      */
-    public static double maxHealth(MobKind.Variant variant, SpawnOptions options) {
+    public static double maxHealth(MobKind kind, MobKind.Variant variant, SpawnOptions options) {
         double modifier = options.modifier() == null ? 1 : options.modifier().healthMultiplier();
-        return Math.round(variant.health() * modifier * options.roomMultiplier());
+        return Math.round(variant.health() * modifier * room(kind, options));
     }
 
     /** The variant's damage times the room's multiplier (the staff quote says damage scales too; not seen in the recordings). */
-    public static double damage(MobKind.Variant variant, SpawnOptions options) {
-        return variant.damage() * options.roomMultiplier();
+    public static double damage(MobKind kind, MobKind.Variant variant, SpawnOptions options) {
+        return variant.damage() * room(kind, options);
+    }
+
+    /** The room's multiplier, for a kind it applies to (1 for the rest). */
+    private static double room(MobKind kind, SpawnOptions options) {
+        return kind.roomScaled() ? options.roomMultiplier() : 1;
     }
 
     public MobKind kind() {
