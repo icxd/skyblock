@@ -206,8 +206,8 @@ public final class Mobs implements Listener {
     }
 
     /**
-     * A player hit a mob for this much SkyBlock damage: it loses that much health (or dies, dropping
-     * what it drops for them), and the hit itself goes through with no vanilla damage.
+     * A player hit a mob for this much SkyBlock damage (see {@link #damage}), and the hit itself goes
+     * through with no vanilla damage, so it still flinches and is knocked back; not if that killed it.
      */
     public static void playerHit(EntityDamageByEntityEvent event, Player player, Live live, double damage, boolean critical) {
         if (live.type.isInvulnerable()) {
@@ -215,18 +215,28 @@ public final class Mobs implements Listener {
             return;
         }
         event.setDamage(0);
-        live.health -= damage;
         live.hits++;
+        if (damage(live, player, damage, critical)) event.setCancelled(true);
+    }
+
+    /**
+     * A player deals a mob this much SkyBlock damage, with no vanilla hit needed (an ability's, say): it
+     * loses that much health, with its damage number, or dies, dropping what it drops for them. Returns
+     * whether it died.
+     */
+    public static boolean damage(Live live, Player player, double damage, boolean critical) {
+        if (live.type.isInvulnerable() || live.health <= 0) return false;
+        live.health -= damage;
         DamageIndicators.show(live.entity, damage, critical);
         DungeonRun run = RunManager.of(player);
         if (run != null) run.damageDealt(player.getUniqueId(), damage);
         if (live.health <= 0) {
-            event.setCancelled(true);
             die(live, player);
-            return;
+            return true;
         }
         live.type.onDamaged(live.entity, player, damage);
         updateNameTag(live);
+        return false;
     }
 
     private static void die(Live live, Player killer) {

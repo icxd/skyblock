@@ -95,23 +95,29 @@ public final class DungeonMobs {
     }
 
     /**
-     * A player hit one of our mobs for this much SkyBlock damage. The hit itself goes through with
-     * no vanilla damage (so it still flinches and takes knockback), or not at all if it's invulnerable.
+     * A player hit one of our mobs for this much SkyBlock damage (see {@link #damage}). The hit itself
+     * goes through with no vanilla damage (so it still flinches and takes knockback), or not at all if
+     * it's invulnerable.
      */
     public static void playerHit(EntityDamageByEntityEvent event, Player player, Mob mob, double damage, boolean critical) {
         if (mob.invulnerable()) {
             event.setCancelled(true);
-            mob.hurt(player, damage);
-            return;
+        } else {
+            event.setDamage(0);
+            HITS.merge(event.getEntity().getUniqueId(), 1, Integer::sum);
         }
-        event.setDamage(0);
-        HITS.merge(event.getEntity().getUniqueId(), 1, Integer::sum);
-        mob.hurt(player, damage);
-        showDamage(event.getEntity(), damage, critical);
+        damage(event.getEntity(), player, damage, critical);
     }
 
-    /** The number that pops up where a mob was hit, as for SkyBlock's other mobs. */
-    public static void showDamage(Entity at, double damage, boolean critical) {
-        DamageIndicators.show(at, damage, critical);
+    /**
+     * A player deals one of our mobs this much SkyBlock damage, with no vanilla hit needed (an ability's,
+     * say), with its damage number as for SkyBlock's other mobs. The Watcher can't be hurt: he zaps them
+     * for trying. Nothing for an entity that isn't one of ours.
+     */
+    public static void damage(Entity entity, Player player, double damage, boolean critical) {
+        Mob mob = of(entity);
+        if (mob == null) return;
+        mob.hurt(player, damage);
+        if (!mob.invulnerable()) DamageIndicators.show(entity, damage, critical);
     }
 }
