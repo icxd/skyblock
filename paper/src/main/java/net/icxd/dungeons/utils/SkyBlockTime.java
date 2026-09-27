@@ -30,6 +30,11 @@ public record SkyBlockTime(int year, int month, int day, int hour, int minute) {
         return MONTHS[month] + " " + day + ordinal(day);
     }
 
+    /** "25th Autumn 516": the day first and the year, as the SkyBlock Menu's calendar item writes the date. */
+    public String calendarDate() {
+        return day + ordinal(day) + " " + MONTHS[month] + " " + year;
+    }
+
     /** "10:30am": to the ten minutes, as the sidebar shows it. */
     public String clock() {
         int twelve = hour % 12 == 0 ? 12 : hour % 12;
