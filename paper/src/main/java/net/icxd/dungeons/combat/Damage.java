@@ -17,7 +17,8 @@ import java.util.Set;
  * </pre>
  * Additive buffs are the Combat skill's Warrior bonus and the weapon's enchantments (their values are
  * what the enchanted books say in game, enchantments.json); multiplicative ones (dungeon classes and
- * the like) come in as one product, {@link Attacker#multiplier}.
+ * the like) come in as one product, {@link Attacker#multiplier}. Abilities ({@link #initialAbility},
+ * {@link #exactMagic}) never crit and go through the target's magic resistance before its caps.
  */
 public final class Damage {
     private static final double[] SHARPNESS = {5, 10, 15, 20, 30, 45, 65};
@@ -56,10 +57,12 @@ public final class Damage {
     }
 
     /**
-     * What's hit: its health now and at most, its Defense and mob types, how many hits it had taken
-     * before this one (First Strike, Triple-Strike), and its damage caps (bosses; none for most).
+     * What's hit: its health now and at most, its Defense, the share of magic damage it resists (0.1 for
+     * 10%), its mob types, how many hits it had taken before this one (First Strike, Triple-Strike), and
+     * its damage caps (bosses; none for most).
      */
-    public record Target(double health, double maxHealth, double defense, Set<MobType> types, int hitsTaken, double... caps) {
+    public record Target(double health, double maxHealth, double defense, double magicResistance, Set<MobType> types, int hitsTaken,
+                         double... caps) {
         public Target {
             types = types == null ? Set.of() : Set.copyOf(types);
             caps = caps == null ? new double[0] : caps.clone();
@@ -163,6 +166,27 @@ public final class Damage {
     /** What the hit does to the target: rounded down, as Hypixel's damage is. */
     public static double hit(Attacker attacker, Target target, boolean critical) {
         return Math.floor(exact(attacker, target, critical));
+    }
+
+    /**
+     * An ability's damage before any buff: its base damage x (1 + Intelligence / 100 x its scaling) x
+     * (1 + Ability Damage / 100) (the wiki's Damage Calculation, "Ability Damage"; the Giant's Slam is base
+     * 100,000 with scaling 0.05, for one). Abilities don't crit.
+     */
+    public static double initialAbility(double baseDamage, double scaling, double intelligence, double abilityDamage) {
+        return baseDamage * (1 + intelligence / 100 * scaling) * (1 + abilityDamage / 100);
+    }
+
+    /**
+     * What magic damage (an ability's) does to the target, before rounding: times the additive and
+     * multiplicative buffs (a few abilities skip the additive ones: pass 0), less the target's magic
+     * resistance, then its caps and its Defense, in that order (the wiki's Scarf example).
+     */
+    public static double exactMagic(double initial, double additive, double multiplier, Target target) {
+        double damage = initial * (1 + additive / 100) * multiplier;
+        damage *= 1 - Math.max(0, Math.min(target.magicResistance(), 1));
+        damage = cap(damage, target.caps());
+        return damage * defenseMultiplier(target.defense());
     }
 
     /** A hit on a player, less their Defense (True Defense for true damage). */

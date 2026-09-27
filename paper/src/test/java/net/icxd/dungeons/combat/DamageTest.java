@@ -21,7 +21,7 @@ class DamageTest {
     }
 
     private static Damage.Target target(double health, double maxHealth, double defense, MobType... types) {
-        return new Damage.Target(health, maxHealth, defense, Set.of(types), 0);
+        return new Damage.Target(health, maxHealth, defense, 0, Set.of(types), 0);
     }
 
     @Test
@@ -77,7 +77,7 @@ class DamageTest {
     void damageCapBeforeDefense() {
         assertEquals(60_090_000, Damage.cap(600_000_000, 100_000), 1e-3);
         Damage.Attacker bow = new Damage.Attacker(600_000_000 - 5, 0, 0, 0, 0, 1000, Map.of(), true, 0, 1);
-        Damage.Target apex = new Damage.Target(1e9, 1e9, 2500, Set.of(), 0, 100_000);
+        Damage.Target apex = new Damage.Target(1e9, 1e9, 2500, 0, Set.of(), 0, 100_000);
         assertEquals(2_311_153.85, Damage.exact(bow, apex, false), 0.01);
         // Several caps: lowest first (Bladesoul's are 800,000 and 1,200,000).
         // 20M: 800,000 + 1,920,000 = 2,720,000 after the first, then 1,200,000 + 152,000.
@@ -156,10 +156,10 @@ class DamageTest {
     void firstHits() {
         Damage.Attacker melee = hundred(Map.of(), 0, 1);
         Damage.Attacker arrow = new Damage.Attacker(95, 0, 0, 0, 0, 1000, Map.of(), true, 25, 1);
-        assertEquals(100, Damage.enchantment("first_strike", 4, melee, new Damage.Target(1, 1, 0, Set.of(), 0)), 1e-9);
-        assertEquals(0, Damage.enchantment("first_strike", 4, melee, new Damage.Target(1, 1, 0, Set.of(), 1)), 1e-9);
-        assertEquals(50, Damage.enchantment("triple_strike", 5, melee, new Damage.Target(1, 1, 0, Set.of(), 2)), 1e-9);
-        assertEquals(0, Damage.enchantment("triple_strike", 5, melee, new Damage.Target(1, 1, 0, Set.of(), 3)), 1e-9);
+        assertEquals(100, Damage.enchantment("first_strike", 4, melee, new Damage.Target(1, 1, 0, 0, Set.of(), 0)), 1e-9);
+        assertEquals(0, Damage.enchantment("first_strike", 4, melee, new Damage.Target(1, 1, 0, 0, Set.of(), 1)), 1e-9);
+        assertEquals(50, Damage.enchantment("triple_strike", 5, melee, new Damage.Target(1, 1, 0, 0, Set.of(), 2)), 1e-9);
+        assertEquals(0, Damage.enchantment("triple_strike", 5, melee, new Damage.Target(1, 1, 0, 0, Set.of(), 3)), 1e-9);
         // Melee enchantments don't count for arrows, bow ones only for arrows.
         assertEquals(0, Damage.enchantment("sharpness", 5, arrow, target(1, 1, 0)), 1e-9);
         assertEquals(65, Damage.enchantment("power", 7, arrow, target(1, 1, 0)), 1e-9);
@@ -199,6 +199,37 @@ class DamageTest {
         assertEquals(5, Damage.invulnerabilityTicks(82));
         assertEquals(5, Damage.invulnerabilityTicks(100));
         assertEquals(5, Damage.invulnerabilityTicks(400));
+    }
+
+    /**
+     * Wiki, the Scarf example: a 7,000 ability hit on a target with 15% magic resistance, a 6,000 cap and no
+     * Defense is 5,950 after the resistance and still under the cap. (The example's last steps, the Scarf's
+     * own reduction and Extra Infliction, are special mechanics none of this plugin's mobs have: 5,950 x 0.28
+     * x 1.037 = 1,727.64.)
+     */
+    @Test
+    void magicDamage() {
+        Damage.Target scarf = new Damage.Target(1e6, 1e6, 0, 0.15, Set.of(), 0, 6000);
+        assertEquals(5950, Damage.exactMagic(7000, 0, 1, scarf), 1e-9);
+        // Resistance comes before the cap: 10,000 -> 8,500 -> 6,250, not 10,000 -> 6,400 -> 5,440.
+        assertEquals(6250, Damage.exactMagic(10_000, 0, 1, scarf), 1e-9);
+        // Then Defense: the Lv40 Tank Zombie's 2,000, and a Crypt Lurker's 10% resistance.
+        assertEquals(900 / 21.0, Damage.exactMagic(1000, 0, 1, new Damage.Target(1, 1, 2000, 0.1, Set.of(), 0)), 1e-9);
+        // Buffs first: +100% additive and x1.5.
+        assertEquals(3000, Damage.exactMagic(1000, 100, 1.5, target(1, 1, 0)), 1e-9);
+    }
+
+    /**
+     * Ability damage: base x (1 + Intelligence / 100 x scaling) x (1 + Ability Damage / 100). The stats menu
+     * shows 17.5 Ability Damage as "Damage Multiplier: 1.2x" (1.175) and 692 Intelligence as "Magic Damage:
+     * +692%" (scaling 1).
+     */
+    @Test
+    void abilityDamage() {
+        assertEquals(1.175, Damage.initialAbility(1, 0, 0, 17.5), 1e-9);
+        assertEquals(7.92, Damage.initialAbility(1, 1, 692, 0), 1e-9);
+        // Giant's Slam: 100,000 base, 0.05 scaling; 1,000 Intelligence makes it 150,000.
+        assertEquals(150_000, Damage.initialAbility(100_000, 0.05, 1000, 0), 1e-6);
     }
 
     /** "This ability is on cooldown for 17s." with 16.9 seconds left. */

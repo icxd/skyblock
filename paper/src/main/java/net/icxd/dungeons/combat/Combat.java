@@ -100,7 +100,8 @@ public final class Combat {
         }
 
         Damage.Target on = dungeonMob != null
-                ? new Damage.Target(dungeonMob.health(), dungeonMob.maxHealth(), dungeonMob.defense(), dungeonMob.types(), DungeonMobs.hitsTaken(target))
+                ? new Damage.Target(dungeonMob.health(), dungeonMob.maxHealth(), dungeonMob.defense(), dungeonMob.magicResistance(), dungeonMob.types(),
+                        DungeonMobs.hitsTaken(target))
                 : mob.target();
         Damage.Attacker attacker;
         boolean critical;

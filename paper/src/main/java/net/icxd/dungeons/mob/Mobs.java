@@ -90,7 +90,7 @@ public final class Mobs implements Listener {
 
         /** What a hit on it is worked out against. */
         public Damage.Target target() {
-            return new Damage.Target(health, type.getMaxHealth(), type.getDefense(), type.getTypes(), hits);
+            return new Damage.Target(health, type.getMaxHealth(), type.getDefense(), type.getMagicResistance(), type.getTypes(), hits);
         }
     }
 

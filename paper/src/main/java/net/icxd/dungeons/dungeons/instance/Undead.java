@@ -197,6 +197,12 @@ final class Undead implements DungeonMobs.Mob {
         return 0;
     }
 
+    /** "All Catacombs Mobs have Magic Damage resistance: 10% for melee mobs" (the wiki's Catacombs Mobs). */
+    @Override
+    public double magicResistance() {
+        return 0.1;
+    }
+
     @Override
     public java.util.Set<MobType> types() {
         return java.util.Set.of(MobType.UNDEAD);

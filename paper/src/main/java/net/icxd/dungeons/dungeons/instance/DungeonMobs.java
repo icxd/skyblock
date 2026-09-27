@@ -49,6 +49,11 @@ public final class DungeonMobs {
             return 0;
         }
 
+        /** The share of magic (ability) damage it resists: 0.1 for 10%. */
+        default double magicResistance() {
+            return 0;
+        }
+
         /** For Smite and the like. */
         default Set<MobType> types() {
             return Set.of();

@@ -25,6 +25,8 @@ public interface SkyBlockMob {
     default double getDamage() { return 0; }
     /** What players' hits on it are reduced by: 100 / (100 + Defense). */
     default double getDefense() { return 0; }
+    /** The share of magic (ability) damage it resists: 0.1 for 10%. */
+    default double getMagicResistance() { return 0; }
     /** Its mob types, for Smite and the like. */
     default Set<MobType> getTypes() { return Set.of(); }
     /** How hard its hits knock players back: 1 for the usual. */
