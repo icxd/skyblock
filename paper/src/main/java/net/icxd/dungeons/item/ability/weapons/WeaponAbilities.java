@@ -34,6 +34,16 @@ public final class WeaponAbilities {
         to.accept("Rapid-fire", new JerryGun());
         to.accept("Dreadlord", new Skulls("Dreadlord", 1));
         to.accept("Witherlord", new Skulls("Witherlord", 3));
+        // Hits worked out as the weapon's melee hit or arrow.
+        to.accept("Throw", new ThrownBlade());
+        to.accept("Shadow Fury", new ShadowFury());
+        to.accept("Heat-Seeking Rose", new Roses(1, 3, true));
+        to.accept("Petal Barrage", new Roses(3, 5, false));
+        to.accept("Swing", new Bonemerang());
+        to.accept("Flay", new Flay());
+        to.accept("Reaving Strike", new ReavingStrike());
+        to.accept("Rapid Fire", new MachineGun());
+        to.accept("Ragnarock", new Ragnarock());
     }
 
     /** A shortbow shot this arrow: what the bow's abilities need to know of it (Salvation counts its hits). */

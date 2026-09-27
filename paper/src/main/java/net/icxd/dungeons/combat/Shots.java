@@ -52,8 +52,15 @@ public final class Shots implements Listener {
      * arrow can't be picked up once it lands, as a Terminator's can't on Hypixel (the owner).
      */
     public static void record(Projectile projectile, Player shooter, NBTTagCompound bow, boolean fullyDrawn) {
+        record(projectile, shooter, bow, fullyDrawn, 1);
+    }
+
+    /** As {@link #record(Projectile, Player, NBTTagCompound, boolean)}, its damage times {@code factor} (70% for Rapid Fire's). */
+    public static void record(Projectile projectile, Player shooter, NBTTagCompound bow, boolean fullyDrawn, double factor) {
         if (projectile instanceof AbstractArrow arrow) arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
-        Damage.Attacker attacker = Combat.attacker(shooter, bow, true, 0);
+        Damage.Attacker a = Combat.attacker(shooter, bow, true, 0);
+        Damage.Attacker attacker = factor == 1 ? a : new Damage.Attacker(a.damage(), a.strength(), a.critChance(), a.critDamage(),
+                a.combatLevel(), a.health(), a.enchantments(), true, 0, a.multiplier() * factor);
         ThreadLocalRandom random = ThreadLocalRandom.current();
         boolean critical = fullyDrawn && Damage.crits(attacker.critChance(), random.nextDouble());
         // Overload is a bow's enchantment, so (as Power) it's the arrow's.

@@ -37,5 +37,8 @@ public final class WeaponEvents implements Listener {
         Salvation.forget(player);
         WitherBlade.forget(player);
         JerryGun.forget(player);
+        ThrownBlade.forget(player);
+        Bonemerang.forget(player);
+        ReavingStrike.forget(player);
     }
 }
