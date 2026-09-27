@@ -62,15 +62,18 @@ public final class Buyback {
     }
 
     /**
-     * Takes an entry off the list, once it's bought back.
+     * Takes an entry off the list, once it's bought back: one of them, if two stacks alike sold in
+     * the same millisecond (stackable items have nothing of their own to tell them apart).
      *
      * @return false if it wasn't there (gone past the hour, or bought back already)
      */
     public static boolean remove(Document profile, Entry entry, long now) {
         List<Entry> kept = new ArrayList<>(oldestFirst(profile, now));
-        boolean removed = kept.removeIf(entry::same);
+        int at = kept.size() - 1;
+        while (at >= 0 && !entry.same(kept.get(at))) at--;
+        if (at >= 0) kept.remove(at);
         write(profile, kept);
-        return removed;
+        return at >= 0;
     }
 
     private static List<Entry> oldestFirst(Document profile, long now) {

@@ -105,6 +105,18 @@ class ShopTest {
     }
 
     @Test
+    void twoStacksAlikeSoldAtOnceAreBoughtBackOneAtATime() {
+        // Two stacks of 64 of the same stackable item, shift-clicked in the same millisecond.
+        Document profile = new Document();
+        Buyback.add(profile, sale(64, NOW), NOW);
+        Buyback.add(profile, sale(64, NOW), NOW);
+        assertTrue(Buyback.remove(profile, Buyback.latest(profile, NOW), NOW));
+        assertEquals(1, Buyback.entries(profile, NOW).size(), "the other is still there");
+        assertTrue(Buyback.remove(profile, Buyback.latest(profile, NOW), NOW));
+        assertNull(Buyback.latest(profile, NOW));
+    }
+
+    @Test
     void buybackSurvivesTheDatabase() {
         // Through Mongo, the bytes come back as Binary and the time as a Date: toDocument writes both so already.
         Document profile = new Document();
