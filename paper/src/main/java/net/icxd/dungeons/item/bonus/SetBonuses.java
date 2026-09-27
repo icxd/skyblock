@@ -73,6 +73,7 @@ public final class SetBonuses implements Listener {
 
     static {
         for (Bonus bonus : DungeonSets.all()) add(bonus);
+        for (Bonus bonus : DragonSets.all()) add(bonus);
     }
 
     private static void add(Bonus bonus) {

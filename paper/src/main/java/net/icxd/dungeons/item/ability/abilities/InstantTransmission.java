@@ -4,6 +4,7 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.bonus.SetBonuses;
+import net.icxd.dungeons.item.bonus.StrongBlood;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
@@ -79,18 +80,22 @@ public class InstantTransmission implements AbilityHandler {
     /**
      * "...and gain +50 ✦ Speed for 3 seconds" (both swords' lore): their walk speed follows at once, and
      * again when it's over (a use in between starts the 3 seconds again, see {@link PlayerSession#buff}).
+     * Strong Dragon Armor makes it last longer and adds Strength (see {@link StrongBlood}).
      */
     private static void speedUp(Player player) {
         PlayerSession session = PlayerSession.of(player);
-        session.buff("Instant Transmission", new Stats().set(Stat.SPEED, SPEED), SPEED_MILLIS);
+        long millis = SPEED_MILLIS + StrongBlood.extraMillis(player);
+        session.buff("Instant Transmission", new Stats().set(Stat.SPEED, SPEED), millis);
+        StrongBlood.onCast(player, millis);
         PlayerAttributes.apply(player, session.stats());
         Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
             if (player.isOnline()) PlayerAttributes.apply(player, PlayerSession.of(player).stats());
-        }, SPEED_MILLIS / 50 + 1);
+        }, millis / 50 + 1);
     }
 
     private static Landing landing(Player player) {
-        return landing(player, DISTANCE);
+        // Strong Blood reaches further with this one only, not with the teleports that reuse the path.
+        return landing(player, DISTANCE + StrongBlood.range(player));
     }
 
     /** Where a teleport up to {@code distance} blocks the way they look takes them, as this one's does (Wither Impact's 10). */
