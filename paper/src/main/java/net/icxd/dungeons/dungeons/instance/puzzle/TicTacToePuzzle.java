@@ -32,11 +32,9 @@ final class TicTacToePuzzle extends Puzzle {
     private static final float PLING_PITCH = 2;
 
     private final PuzzleData.TicTacToe data;
-    private final TicTacToeGame game = new TicTacToeGame();
+    private final TicTacToeTurns turns = new TicTacToeTurns();
     private final Random random = new Random();
     private final List<ItemFrame> frames = new ArrayList<>();
-    private boolean aiToMove;
-    private Player last;
 
     TicTacToePuzzle(PuzzleHost host, int room, PuzzleFrame frame, PuzzleData.TicTacToe data) {
         super(host, room, frame, "Tic Tac Toe");
@@ -53,57 +51,55 @@ final class TicTacToePuzzle extends Puzzle {
             button.setFacing(frame.face(data.facing()));
             block.setBlockData(button, false);
         }
-        // Floors up to III: always in the middle first (the wiki).
-        mark(TicTacToeGame.MIDDLE, TicTacToeGame.Mark.X);
+        mark(turns.open(), TicTacToeGame.Mark.X);
     }
 
     @Override
     boolean click(Player player, Block block, boolean right) {
         int cell = data.cells().indexOf(local(block, data.cells()));
         if (cell < 0) return false;
-        if (!right || isOver() || aiToMove || !game.isEmpty(cell) || game.turn() != TicTacToeGame.Mark.O) return true;
+        if (!right || isOver() || !turns.mayPlay(cell)) return true;
         Location at = block.getLocation().add(0.5, 0.5, 0.5);
         at.getWorld().playSound(at, Sound.BLOCK_STONE_BUTTON_CLICK_ON, SoundCategory.BLOCKS, 1f, 1f);
+        TicTacToeTurns.Outcome outcome = turns.play(cell);
         mark(cell, TicTacToeGame.Mark.O);
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS, PLING_VOLUME, PLING_PITCH);
-        last = player;
-        if (!finished()) {
-            aiToMove = true;
-            host.later(AI_DELAY, this::aiMove);
-        }
+        if (outcome == TicTacToeTurns.Outcome.PLAYING) host.later(AI_DELAY, () -> aiMove(player));
+        else end(outcome, player);
         return true;
     }
 
-    private void aiMove() {
-        aiToMove = false;
+    /** The AI answers {@code last}'s move. */
+    private void aiMove(Player last) {
         // Not once the run is over: its end has been told.
-        if (isOver() || !host.running()) return;
-        int cell = game.aiMove(random);
-        if (cell >= 0) mark(cell, TicTacToeGame.Mark.X);
-        finished();
+        if (!host.running()) return;
+        int cell = turns.aiMove(random);
+        if (cell < 0) return;
+        mark(cell, TicTacToeGame.Mark.X);
+        end(turns.outcome(), last);
     }
 
-    /** Ends the game if it's over; whether it is. */
-    private boolean finished() {
-        TicTacToeGame.Result result = game.result();
-        if (result == TicTacToeGame.Result.PLAYING || last == null) return false;
-        if (result == TicTacToeGame.Result.AI_WON) {
-            host.tell("&c&lPUZZLE FAIL! " + named(last) + " &elost Tic Tac Toe! &4Y&ci&6k&ee&as&2!");
-            fail(last, PuzzleTab.AFTER_LINE);
-        } else {
-            // A tie (a win can't happen against this AI, but would count too).
-            host.tell("&a&lPUZZLE SOLVED! " + named(last) + " &etied Tic Tac Toe! &4G&co&6o&ed&a &2j&bo&3b&5!");
-            solve(PuzzleTab.AFTER_LINE);
-            // How the blessing comes for Tic Tac Toe is UNKNOWN (never seen); the wiki only says a
-            // solved puzzle gives the team a Tier V one, so it's given straight away.
-            host.blessing(last, randomBlessing(), BLESSING_LEVEL);
+    /** The game's end, if it has ended: {@code last} made the players' last move. */
+    private void end(TicTacToeTurns.Outcome outcome, Player last) {
+        switch (outcome) {
+            case LOST -> {
+                host.tell("&c&lPUZZLE FAIL! " + named(last) + " &elost Tic Tac Toe! &4Y&ci&6k&ee&as&2!");
+                fail(last, PuzzleTab.AFTER_LINE);
+            }
+            case SOLVED -> {
+                host.tell("&a&lPUZZLE SOLVED! " + named(last) + " &etied Tic Tac Toe! &4G&co&6o&ed&a &2j&bo&3b&5!");
+                solve(PuzzleTab.AFTER_LINE);
+                // How the blessing comes for Tic Tac Toe is UNKNOWN (never seen); the wiki only says a
+                // solved puzzle gives the team a Tier V one, so it's given straight away.
+                host.blessing(last, randomBlessing(), BLESSING_LEVEL);
+            }
+            default -> {
+            }
         }
-        return true;
     }
 
-    /** A move: the button goes and an item frame with the mark's map hangs there. */
+    /** A move on the wall: the button goes and an item frame with the mark's map hangs there. */
     private void mark(int cell, TicTacToeGame.Mark mark) {
-        game.play(cell, mark);
         Block block = block(data.cells().get(cell));
         block.setType(Material.AIR, false);
         BlockFace facing = frame.face(data.facing());
