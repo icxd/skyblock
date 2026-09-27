@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -17,9 +19,12 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
+import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
@@ -234,6 +239,46 @@ final class Hits {
             Mobs.damage(Mobs.of(entity), by, damage, look);
         }
         return true;
+    }
+
+    /** What their crosshair is on within {@code range}: the first block along their aim, or as far as it goes. */
+    static Location aimed(Player player, double range) {
+        Location eye = player.getEyeLocation();
+        RayTraceResult hit = player.getWorld().rayTraceBlocks(eye, eye.getDirection(), range, FluidCollisionMode.NEVER, true);
+        Vector at = hit != null ? hit.getHitPosition() : eye.toVector().add(eye.getDirection().multiply(range));
+        return at.toLocation(player.getWorld());
+    }
+
+    /** The first mob an ability could hurt along their crosshair within {@code range}, not through blocks; null for none. */
+    static LivingEntity aimedMob(Player player, double range) {
+        Location eye = player.getEyeLocation();
+        double reach = aimed(player, range).distance(eye);
+        RayTraceResult hit = player.getWorld().rayTraceEntities(eye, eye.getDirection(), reach, 0.3, Hits::hittable);
+        return hit == null ? null : (LivingEntity) hit.getHitEntity();
+    }
+
+    /**
+     * The spell's damage on each mob {@code every} ticks, {@code times} times, each hit {@code share} of it
+     * ("dealing up to 42,000 damage over 10 seconds": a tenth a second): on the mobs {@code targets} finds
+     * each time. Stops early when the caster can't hit any more.
+     */
+    static void overTime(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, double share, int every, int times,
+                         Supplier<List<LivingEntity>> targets) {
+        new BukkitRunnable() {
+            private int done;
+
+            @Override
+            public void run() {
+                if (done++ >= times || !canStillHit(caster)) {
+                    cancel();
+                    return;
+                }
+                for (LivingEntity mob : targets.get()) {
+                    if (!hittable(mob)) continue;
+                    hurt(caster, mob, magic(caster, item, tag, spell, mob) * share * takenFactor(mob), DamageIndicators.Look.NORMAL);
+                }
+            }
+        }.runTaskTimer(Dungeons.getInstance(), every, every);
     }
 
     /**

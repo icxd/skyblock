@@ -6,6 +6,7 @@ import org.bukkit.entity.AbstractArrow;
 
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 
 /**
  * Weapons' abilities: the ones that hit (swords, bows, wands and staves), by ability name. What each
@@ -44,10 +45,40 @@ public final class WeaponAbilities {
         to.accept("Reaving Strike", new ReavingStrike());
         to.accept("Rapid Fire", new MachineGun());
         to.accept("Ragnarock", new Ragnarock());
+        // Every other weapon's that hits, and the rest on weapons.
+        to.accept("Ice Bolt", new Bolts.IceBolt());
+        to.accept("Ink Bomb", new Bolts.InkBomb());
+        to.accept("Fire Blast", new Bolts.FireBlast());
+        to.accept("Coin Conversion", new Bolts.CoinConversion());
+        to.accept("Ray of Hope", new Bolts.RayOfHope());
+        to.accept("Runic Zap", new Bolts.RunicZap());
+        to.accept("Bingo Blast", new Bolts.BingoBlast());
+        to.accept("Explode", new Areas.Explode());
+        to.accept("Iron Punch", new Areas.IronPunch());
+        to.accept("Lightning Strike", new Areas.LightningStrike());
+        to.accept("Leap", new Areas.Leap());
+        to.accept("Fire Veil", new Areas.FireVeil());
+        to.accept("Firestorm", new Areas.Firestorm());
+        to.accept("Starfall", new Areas.Starfall());
+        to.accept("Burning Souls", new Areas.BurningSouls());
+        to.accept("Acupuncture", new Areas.Acupuncture());
+        to.accept("Nasty Bite", new Bows.NastyBite());
+        to.accept("Ender Warp", new Bows.EnderWarp());
+        to.accept("Thwack", new Strikes.Thwack());
+        to.accept("Sinrecall Transmission", new Strikes.SinrecallTransmission());
+        to.accept("Bad Health", new Buffs.BadHealth());
+        to.accept("Hellstorm", new Buffs.Hellstorm());
+        to.accept("Enrage", new Buffs.Enrage());
+        to.accept("ME SMASH HEAD", new Buffs.SmashHead());
+        to.accept("Gravity Storm", new Buffs.GravityStorm());
     }
 
-    /** A shortbow shot this arrow: what the bow's abilities need to know of it (Salvation counts its hits). */
-    public static void shortbowArrow(AbstractArrow arrow, SkyBlockItem bow) {
+    /**
+     * A shortbow shot this arrow, {@code tag} being the bow's data: what the bow's abilities need to know of it
+     * (Salvation counts its hits; a Juju's impact hits more mobs).
+     */
+    public static void shortbowArrow(AbstractArrow arrow, SkyBlockItem bow, NBTTagCompound tag) {
         Salvation.shot(arrow, bow);
+        Bows.shot(arrow, bow, tag);
     }
 }

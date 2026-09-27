@@ -41,7 +41,7 @@ public class InstantlyShoots implements AbilityHandler {
             a.setShooter(player);
             // A shortbow's shot is always a full draw.
             Shots.record(a, player, tag, true);
-            WeaponAbilities.shortbowArrow(a, item);
+            WeaponAbilities.shortbowArrow(a, item, tag);
         }
     }
 

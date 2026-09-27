@@ -1,13 +1,10 @@
 package net.icxd.dungeons.item.ability.weapons;
 
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Player;
-import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
@@ -44,19 +41,12 @@ final class GuidedBat implements AbilityHandler {
         new Missile(player, eye, eye.getDirection().multiply(SPEED))
                 .range(RANGE)
                 .look(bat)
-                .steer(missile -> aim(missile.caster()).subtract(missile.at().toVector()))
+                .steer(missile -> Hits.aimed(missile.caster(), AIM).toVector().subtract(missile.at().toVector()))
                 .onEnd((missile, at, impact) -> {
                     if (impact) explode(missile.caster(), item, tag, spell, at);
                 })
                 .launch();
         player.getWorld().playSound(eye, Sound.ENTITY_BAT_TAKEOFF, 1, 1);
-    }
-
-    /** What their crosshair is on: the first block along their aim, or as far as it looks. */
-    private static Vector aim(Player player) {
-        Location eye = player.getEyeLocation();
-        RayTraceResult hit = player.getWorld().rayTraceBlocks(eye, eye.getDirection(), AIM, FluidCollisionMode.NEVER, true);
-        return hit != null ? hit.getHitPosition() : eye.toVector().add(eye.getDirection().multiply(AIM));
     }
 
     private static void explode(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, Location at) {
