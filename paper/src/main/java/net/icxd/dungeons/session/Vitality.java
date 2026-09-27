@@ -60,6 +60,8 @@ public final class Vitality {
         PlayerSession.of(player).setVitality(vitality - cost);
         User user = User.ifLoaded(player.getUniqueId());
         if (user != null && markShown(user.profile())) {
+            // Saved now, as other one-time profile changes are, so a crash before the autosave can't show it twice.
+            user.save();
             for (String line : DISCOVERED) player.sendMessage(Utils.color(line));
         }
         return true;
