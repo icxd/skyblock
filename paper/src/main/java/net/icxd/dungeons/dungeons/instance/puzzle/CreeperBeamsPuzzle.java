@@ -130,6 +130,17 @@ final class CreeperBeamsPuzzle extends Puzzle {
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, SoundCategory.HOSTILE, 4f, 1f);
         creeper.remove();
         creeper = null;
+        // The chest is walled in under the creeper's lantern in both captures; what the explosion does
+        // to that is UNKNOWN, so it clears the data's box around it (the wiki: "revealing" the chest).
+        if (!data.reveal().isEmpty()) {
+            int[] from = data.reveal().get(0);
+            int[] to = data.reveal().get(1);
+            for (int x = from[0]; x <= to[0]; x++) {
+                for (int y = from[1]; y <= to[1]; y++) {
+                    for (int z = from[2]; z <= to[2]; z++) block(x, y, z).setType(Material.AIR, false);
+                }
+            }
+        }
         chest = PuzzleChest.place(block(data.chest()), frame.face(data.chestFacing()));
     }
 

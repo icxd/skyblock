@@ -40,6 +40,7 @@ class PuzzleDataTest {
         assertEquals(BlockFace.WEST, data.ticTacToe().facing());
         assertArrayEquals(new int[]{1, 0, 5}, data.ticTacToe().cells().get(8));
         assertArrayEquals(new int[]{1, 9}, data.beams().lanternsY());
+        assertEquals(List.of(), data.beams().reveal());
         assertNull(data.waterBoard());
         assertNull(data.weirdos(), "three weirdos, not one");
         assertEquals(2, problems.size(), problems.toString());
@@ -88,6 +89,6 @@ class PuzzleDataTest {
         assertEquals(5, data.waterBoard().gates().size());
         assertEquals(4, data.waterBoard().variants().size());
         assertEquals(3, data.weirdos().npcs().size());
-        assertNotNull(data.beams());
+        assertEquals(2, data.beams().reveal().size());
     }
 }

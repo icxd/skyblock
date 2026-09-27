@@ -70,8 +70,10 @@ public record PuzzleData(TicTacToe ticTacToe, WaterBoard waterBoard, Weirdos wei
      * @param creeper    the block the creeper stands in
      * @param lanternsY  the heights the sea lanterns to shoot are in
      * @param chest      where the chest appears once it blows up
+     * @param reveal     the blocks the explosion clears so the chest can be reached, as {from, to}
+     *                   (none if not given)
      */
-    public record Beams(int[] creeper, int[] lanternsY, int[] chest, BlockFace chestFacing) {
+    public record Beams(int[] creeper, int[] lanternsY, int[] chest, BlockFace chestFacing, List<int[]> reveal) {
     }
 
     /** The puzzle files in a rooms folder; the ones that aren't there are null. */
@@ -138,8 +140,10 @@ public record PuzzleData(TicTacToe ticTacToe, WaterBoard waterBoard, Weirdos wei
     }
 
     static Beams beams(JsonObject o) {
+        List<int[]> reveal = o.has("reveal") ? positions(o.getAsJsonArray("reveal")) : List.of();
+        if (!reveal.isEmpty() && reveal.size() != 2) throw new IllegalArgumentException("reveal is a box: from and to");
         return new Beams(ints(o.getAsJsonArray("creeper")), ints(o.getAsJsonArray("lanternsY")), ints(o.getAsJsonArray("chest")),
-                face(o, "chestFacing"));
+                face(o, "chestFacing"), reveal);
     }
 
     private static Material material(String name) {
