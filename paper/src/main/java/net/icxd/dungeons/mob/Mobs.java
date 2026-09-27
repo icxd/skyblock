@@ -18,6 +18,7 @@ import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -326,15 +327,28 @@ public final class Mobs implements Listener {
         live.type.onHit(live.entity, player, !(by instanceof Projectile));
     }
 
-    /** Their hits (and their projectiles') on players do SkyBlock damage. */
+    /**
+     * Their hits (and their projectiles') on players do SkyBlock damage. The vanilla hit is cancelled, so
+     * an arrow would bounce off and lie there for a minute: it goes instead.
+     */
     @EventHandler(priority = EventPriority.LOW)
     public void onAttack(EntityDamageByEntityEvent event) {
         Live live = attacker(event.getDamager());
         if (live == null || !(event.getEntity() instanceof Player player)) return;
         event.setCancelled(true);
+        if (event.getDamager() instanceof AbstractArrow arrow) arrow.remove();
         // A thrown bone (a snowball) hits in onProjectileHit: snowballs don't always get this far.
         if (event.getDamager() instanceof Snowball) return;
         mobHit(live, player, event.getDamager());
+    }
+
+    /**
+     * Their arrows that miss go when they land, rather than a minute later: a Skeleton Grunt shoots
+     * twice a second, and a fight would leave hundreds lying in the room.
+     */
+    @EventHandler
+    public void onArrowLand(ProjectileHitEvent event) {
+        if (event.getHitBlock() != null && event.getEntity() instanceof AbstractArrow arrow && attacker(arrow) != null) arrow.remove();
     }
 
     /** A Crypt Lurker's bone (a snowball that looks like one) hits whoever it lands on. */
