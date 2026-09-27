@@ -80,7 +80,7 @@ class MobKindsTest {
         assertEquals(50_000_000, MobKinds.BLADESOUL.firstVariant().health());
         assertNull(MobKinds.BLADESOUL.variant(DungeonFloor.ENTRANCE, null));
         assertEquals(MobKind.NameStyle.BOSS, MobKinds.BLADESOUL.style());
-        assertTrue(Mobs.get("BLADESOUL").isBoss());
+        assertTrue(MobsTest.mob("BLADESOUL").isBoss());
     }
 
     @Test

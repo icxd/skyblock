@@ -81,10 +81,6 @@ public final class DataMob implements SkyBlockMob {
         return variant;
     }
 
-    public SpawnOptions options() {
-        return options;
-    }
-
     public boolean starred() {
         return options.starred();
     }

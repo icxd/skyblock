@@ -63,9 +63,7 @@ public interface SkyBlockMob {
     default void onSpawn(LivingEntity entity) {}
     default void onDeath(LivingEntity entity, Player killer) {}
     default void onDamaged(LivingEntity entity, Player by, double damage) {}
-    /** After its hit (or its projectile's) on a player. */
-    default void onAttack(LivingEntity entity, Player target) {}
-    /** After its hit on a player: {@code melee} if it hit them itself, not with a projectile. */
-    default void onHit(LivingEntity entity, Player target, boolean melee) { onAttack(entity, target); }
+    /** After its hit (or its projectile's) on a player: {@code melee} if it hit them itself. */
+    default void onHit(LivingEntity entity, Player target, boolean melee) {}
     default void onTick(LivingEntity entity) {}
 }

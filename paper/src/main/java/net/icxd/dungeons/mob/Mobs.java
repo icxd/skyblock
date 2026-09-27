@@ -101,12 +101,6 @@ public final class Mobs implements Listener {
         return MobKinds.get(id);
     }
 
-    /** A mob of this kind as it first spawns (the Entrance's lowest level, for a dungeon kind); null for no such kind. */
-    public static DataMob get(String id) {
-        MobKind kind = kind(id);
-        return kind == null ? null : new DataMob(kind, kind.firstVariant(), SpawnOptions.NONE);
-    }
-
     /** Every kind, by id. */
     public static Map<String, MobKind> registry() {
         return MobKinds.all();

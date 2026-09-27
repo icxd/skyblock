@@ -43,12 +43,12 @@ class MobDeathTest {
     /** Dungeon drops go to the inventory silently unless they're rare (the recorded 5% armor pieces had no chat line). */
     @Test
     void announced() {
-        DataMob grunt = Mobs.get("ZOMBIE_GRUNT");
+        DataMob grunt = MobsTest.mob("ZOMBIE_GRUNT");
         assertTrue(grunt.dropsToInventory());
         assertFalse(Mobs.announced(grunt, MobDropType.OCCASIONAL));
         assertFalse(Mobs.announced(grunt, MobDropType.COMMON));
         assertTrue(Mobs.announced(grunt, MobDropType.VERY_RARE));
-        DataMob cube = Mobs.get("MAGMA_CUBE");
+        DataMob cube = MobsTest.mob("MAGMA_CUBE");
         assertFalse(cube.dropsToInventory());
         assertTrue(Mobs.announced(cube, MobDropType.COMMON));
     }
