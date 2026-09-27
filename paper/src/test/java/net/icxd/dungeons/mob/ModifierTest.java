@@ -1,5 +1,6 @@
 package net.icxd.dungeons.mob;
 
+import net.icxd.dungeons.common.DungeonFloor;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Modifiers and the room multiplier against what the recordings show (research mobs.md 1.3 and 1.5). */
 class ModifierTest {
     private static double health(MobKind kind, SpawnOptions options) {
-        return DataMob.maxHealth(kind, kind.variant(net.icxd.dungeons.common.DungeonFloor.ENTRANCE, options.level()), options);
+        return DataMob.maxHealth(kind, kind.variant(DungeonFloor.ENTRANCE, options.level()), options);
     }
 
     /** Healthy: x1.6 (Zombie Grunt 11,200, Crypt Souleater 20,800, Scared Skeleton 19,200, Tank 1,920, Dreadlord 22,400). */

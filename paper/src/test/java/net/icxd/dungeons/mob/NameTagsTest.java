@@ -1,5 +1,6 @@
 package net.icxd.dungeons.mob;
 
+import net.icxd.dungeons.common.DungeonFloor;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,7 +15,7 @@ class NameTagsTest {
     }
 
     private static String full(MobKind kind, SpawnOptions options) {
-        DataMob mob = new DataMob(kind, kind.variant(net.icxd.dungeons.common.DungeonFloor.ENTRANCE, options.level()), options);
+        DataMob mob = new DataMob(kind, kind.variant(DungeonFloor.ENTRANCE, options.level()), options);
         return mob.nameTag(mob.getMaxHealth());
     }
 

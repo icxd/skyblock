@@ -1,6 +1,7 @@
 package net.icxd.dungeons.dungeons.instance;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
@@ -195,8 +196,8 @@ final class Undead implements DungeonMobs.Mob {
     }
 
     @Override
-    public java.util.Set<MobType> types() {
-        return java.util.Set.of(MobType.UNDEAD);
+    public Set<MobType> types() {
+        return Set.of(MobType.UNDEAD);
     }
 
     @Override

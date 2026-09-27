@@ -24,8 +24,12 @@ public final class DamageIndicators {
 
     /** What a hit shows: rounded down, thousands grouped, never past what Hypixel's can show (2,147,483,647). */
     public static String text(double damage, boolean critical) {
-        String number = Utils.getFormattedNumber((int) Math.min(Integer.MAX_VALUE, Math.floor(Math.max(0, damage))));
+        String number = number(damage);
         return critical ? Utils.rainbowize("✧" + number + "✧") : "&7" + number;
+    }
+
+    private static String number(double damage) {
+        return Utils.getFormattedNumber((int) Math.min(Integer.MAX_VALUE, Math.floor(Math.max(0, damage))));
     }
 
     /** A hit on something. */
@@ -35,7 +39,7 @@ public final class DamageIndicators {
 
     /** In a colour of its own (gold for fire). */
     public static void show(Entity at, double damage, char color) {
-        spawn(at, "&" + color + Utils.getFormattedNumber((int) Math.min(Integer.MAX_VALUE, Math.floor(Math.max(0, damage)))));
+        spawn(at, "&" + color + number(damage));
     }
 
     /**

@@ -22,6 +22,7 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
+import net.icxd.dungeons.mob.MobType;
 import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.utils.Text;
 
@@ -42,8 +43,8 @@ final class Watcher implements DungeonMobs.Mob {
     /** A line stays over his head this long, and he says at most one this often (bar the last). */
     private static final int SPEECH_LASTS = 40;
     private static final int SPEECH_GAP = 40;
-    /** His Arcane mob type glyph (from Hypixel's resource pack), as the classic symbol (see {@link net.icxd.dungeons.mob.MobType}). */
-    private static final String ICON = net.icxd.dungeons.mob.MobType.ARCANE.symbol();
+    /** His Arcane mob type glyph (from Hypixel's resource pack), as the classic symbol (see {@link MobType}). */
+    private static final String ICON = MobType.ARCANE.symbol();
     private static final String NAME = "&e﴾ &5" + ICON + " &c&lThe Watcher &e﴿";
 
     private static final int UNDEADS = 9;

@@ -32,8 +32,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -391,7 +393,7 @@ public final class Mobs implements Listener {
 
     /** Their wither skulls hit, and don't blow up as well (the blast would hit again). */
     @EventHandler
-    public void onPrime(org.bukkit.event.entity.ExplosionPrimeEvent event) {
+    public void onPrime(ExplosionPrimeEvent event) {
         if (event.getEntity() instanceof Projectile && attacker(event.getEntity()) != null) event.setCancelled(true);
     }
 
@@ -408,7 +410,7 @@ public final class Mobs implements Listener {
 
     /** Their wither skulls don't blow up the world. */
     @EventHandler
-    public void onExplode(org.bukkit.event.entity.EntityExplodeEvent event) {
+    public void onExplode(EntityExplodeEvent event) {
         if (attacker(event.getEntity()) != null) event.blockList().clear();
     }
 

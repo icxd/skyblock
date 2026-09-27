@@ -61,8 +61,7 @@ public final class PlayerDamage {
     public static double hit(Player player, double amount, Kind kind, Entity by, double knockback) {
         if (player.isDead() || player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) return 0;
         Stats stats = PlayerSession.of(player).stats();
-        double taken = taken(amount, kind, stats == null ? 0 : stats.get(Stat.DEFENSE), stats == null ? 0 : stats.get(Stat.TRUE_DEFENSE),
-                PlayerHealth.max(player));
+        double taken = taken(amount, kind, stats.get(Stat.DEFENSE), stats.get(Stat.TRUE_DEFENSE), PlayerHealth.max(player));
         PlayerHealth.damage(player, taken);
         DamageIndicators.show(player, taken, false);
         if (player.isDead()) return taken;

@@ -28,19 +28,22 @@ class DamageTest {
     void initialDamage() {
         assertEquals(100, Damage.initial(95, 0), 1e-9);
         // The stats menu: "Damage Multiplier: 6.8x" at 579.25 Strength, "9.3x" at 834.03% Crit Damage.
-        assertEquals(6.7925, 1 + 579.25 / 100, 1e-9);
         assertEquals(6.7925 * 25, Damage.initial(20, 579.25), 1e-9);
         assertEquals(9.3403, Damage.critMultiplier(834.03), 1e-9);
     }
 
-    /** Wiki: 100 additive from Prosecute VI on a full-health target, and 250 from a pet: x4.5, 100 -> 450. */
+    /**
+     * Wiki: 100 additive from Prosecute VI on a full-health target, and 250 from a pet: x4.5, 100 -> 450.
+     * Here the other 250 are Warrior at Combat 50 (200), Sharpness IV (20) and Smite V (30) on an undead.
+     */
     @Test
     void additiveExample() {
-        Damage.Attacker attacker = hundred(Map.of("prosecute", 6), 0, 1);
+        Damage.Attacker prosecute = hundred(Map.of("prosecute", 6), 0, 1);
         Damage.Target full = target(5000, 5000, 0);
-        assertEquals(100, Damage.additive(attacker, full), 1e-9);
-        assertEquals(450, 100 * (1 + (Damage.additive(attacker, full) + 250) / 100), 1e-9);
-        assertEquals(200, Damage.exact(attacker, full, false), 1e-9);
+        assertEquals(100, Damage.additive(prosecute, full), 1e-9);
+        assertEquals(200, Damage.exact(prosecute, full, false), 1e-9);
+        Damage.Attacker attacker = hundred(Map.of("prosecute", 6, "sharpness", 4, "smite", 5), 50, 1);
+        assertEquals(450, Damage.exact(attacker, target(5000, 5000, 0, MobType.UNDEAD), false), 1e-9);
     }
 
     /** Wiki: x1.15 and x3.5 multiply to x4.025, 100 -> 402.5. */

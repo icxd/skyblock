@@ -9,6 +9,7 @@ import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.stats.ItemStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
+import net.icxd.dungeons.utils.Text;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -112,8 +113,8 @@ class ItemStatsTest {
         NBTTagCompound tag = upgraded(SWORD);
         Stats stats = ItemStats.of(SWORD, tag, ItemBuilder.catacombsBoost(0));
         List<String> lines = ItemBuilder.statLines(SWORD, tag, Rarity.LEGENDARY, null);
-        assertTrue(lines.contains("&7Damage: &c+580 &e(+30) &8(+" + net.icxd.dungeons.utils.Text.number(stats.get(Stat.DAMAGE)) + ")"), lines.toString());
-        assertTrue(lines.contains("&7Crit Damage: &9+70% &8(+" + net.icxd.dungeons.utils.Text.number(stats.get(Stat.CRIT_DAMAGE)) + "%)"), lines.toString());
+        assertTrue(lines.contains("&7Damage: &c+580 &e(+30) &8(+" + Text.number(stats.get(Stat.DAMAGE)) + ")"), lines.toString());
+        assertTrue(lines.contains("&7Crit Damage: &9+70% &8(+" + Text.number(stats.get(Stat.CRIT_DAMAGE)) + "%)"), lines.toString());
         assertTrue(lines.contains("&7Swing Range: &e+1 &8(+1)"), lines.toString());
     }
 }

@@ -5,6 +5,7 @@ import net.icxd.dungeons.mob.mobs.MagmaCube;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -220,7 +221,7 @@ public final class MobKinds {
 
     /** Every kind, by id. */
     public static Map<String, MobKind> all() {
-        return java.util.Collections.unmodifiableMap(BY_ID);
+        return Collections.unmodifiableMap(BY_ID);
     }
 
     /** "ZOMBIE_GRUNT", "zombie_grunt": the kind; null for none. */
