@@ -215,7 +215,10 @@ public class PlayerListener implements Listener {
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
         List<ItemBlock> blocks = ItemBehaviours.of(sbItem).blocks(sbItem, tag, sbItem.blocks());
-        ItemBlock block = Abilities.forClick(blocks, right, player.isSneaking(), name -> Abilities.get(name) != null);
+        ItemBlock block = Abilities.forClick(blocks, right, player.isSneaking(), name -> {
+            AbilityHandler handler = Abilities.get(name);
+            return handler != null && handler.casts(player, sbItem, tag);
+        });
         if (block == null) return;
         if (block.isShortbow()) {
             if (right && usesBlock(event)) return;

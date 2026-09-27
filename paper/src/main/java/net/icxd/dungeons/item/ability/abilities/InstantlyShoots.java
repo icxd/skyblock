@@ -3,6 +3,7 @@ package net.icxd.dungeons.item.ability.abilities;
 import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.ability.weapons.WeaponAbilities;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.Location;
@@ -36,9 +37,11 @@ public class InstantlyShoots implements AbilityHandler {
             l.setYaw(location.getYaw() + offset);
             // A vanilla bow's inaccuracy is 1; the side arrows have none.
             Arrow a = player.getWorld().spawnArrow(l.clone().add(l.getDirection().multiply(0.7)), l.getDirection(), 5, offset == 0 ? 1 : 0);
+            // Before Shots.record, which makes it an arrow nobody can pick up: a player shooter makes it one they can.
             a.setShooter(player);
             // A shortbow's shot is always a full draw.
             Shots.record(a, player, tag, true);
+            WeaponAbilities.shortbowArrow(a, item);
         }
     }
 

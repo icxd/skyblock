@@ -2,6 +2,9 @@ package net.icxd.dungeons.item.ability.weapons;
 
 import java.util.function.BiConsumer;
 
+import org.bukkit.entity.AbstractArrow;
+
+import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 
 /**
@@ -20,5 +23,11 @@ public final class WeaponAbilities {
         to.accept("Shadow Warp", new WitherBlade.ShadowWarp());
         to.accept("Wither Impact", new WitherBlade.WitherImpact());
         to.accept("Giant's Slam", new GiantsSlam());
+        to.accept(Salvation.NAME, new Salvation());
+    }
+
+    /** A shortbow shot this arrow: what the bow's abilities need to know of it (Salvation counts its hits). */
+    public static void shortbowArrow(AbstractArrow arrow, SkyBlockItem bow) {
+        Salvation.shot(arrow, bow);
     }
 }

@@ -30,6 +30,16 @@ public interface AbilityHandler {
     }
 
     /**
+     * Whether a click with the item is this ability's at all just now, or the item's other use (its
+     * shortbow shot): the Terminator's Salvation "Can be cast after landing 3 hits", and until then a left
+     * click shoots as ever. Asked before anything else, and nothing is said or spent when it isn't. Yes
+     * unless it says otherwise.
+     */
+    default boolean casts(Player player, SkyBlockItem item, NBTTagCompound tag) {
+        return true;
+    }
+
+    /**
      * Whether it can happen now, asked once its costs are known to be there and before they're paid, so
      * a use that can't happen costs nothing (Instant Transmission with no room to go); if not, it tells
      * the player why. Yes unless it says otherwise.
