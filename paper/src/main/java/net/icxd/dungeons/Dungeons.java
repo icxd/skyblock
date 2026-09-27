@@ -33,6 +33,8 @@ import net.icxd.dungeons.listeners.HubProtection;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.listeners.PlayerListener;
 import net.icxd.dungeons.listeners.WorldListener;
+import net.icxd.dungeons.menu.SkyBlockMenuItem;
+import net.icxd.dungeons.menu.SkyBlockMenuListener;
 import net.icxd.dungeons.mining.BlockListener;
 import net.icxd.dungeons.region.MovementListener;
 import net.icxd.dungeons.command.SCommand;
@@ -121,6 +123,7 @@ public class Dungeons extends JavaPlugin {
         listen(KillCoins.class, KillCoins::new);
         listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);
+        listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));
@@ -145,6 +148,7 @@ public class Dungeons extends JavaPlugin {
         });
 
         Bukkit.getScheduler().runTaskTimer(this, new StatsRunnable(), 0, 20);
+        if (SkyBlockMenuItem.givenHere()) Bukkit.getScheduler().runTaskTimer(this, SkyBlockMenuItem::sweep, 20, 20);
         Bukkit.getScheduler().runTaskTimer(this, new ScoreboardRunnable(), 0, 20);
         Bukkit.getScheduler().runTaskTimer(this, ItemStash::remindAll, ItemStash.REMIND_TICKS, ItemStash.REMIND_TICKS);
         Mobs.start();

@@ -13,6 +13,7 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.listeners.InventorySyncListener;
+import net.icxd.dungeons.menu.SkyBlockMenuItem;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
@@ -133,6 +134,8 @@ public final class ProfileActions {
         user.getDocument().put(Profiles.LAST_ACTION, new Date());
         // Items made before an update to how items look are brought up to date, as when they join.
         ItemBuilder.refreshInventory(player);
+        // The SkyBlock Menu isn't one of the profile's items.
+        SkyBlockMenuItem.give(player);
         PlayerSession.end(player.getUniqueId());
         ScoreboardRunnable.forget(player.getUniqueId());
         PlayerHealth.sync(player);
