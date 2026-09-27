@@ -13,6 +13,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
+import net.icxd.dungeons.user.ItemStash;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
@@ -282,7 +283,7 @@ public final class Mobs implements Listener {
 
     /**
      * Each drop rolls on its own (magic find raises the chance). A dungeon mob's go straight into the
-     * killer's inventory, as recorded on Hypixel (on the ground where it died if there's no room), and
+     * killer's inventory, as recorded on Hypixel (into their item stash if there's no room), and
      * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
      * on the ground, and each is announced.
      */
@@ -294,7 +295,7 @@ public final class Mobs implements Listener {
             if (item == null || Math.random() >= drop.chance() / 100 * (1 + magicFind / 100)) continue;
             ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
             if (toInventory) {
-                for (ItemStack left : killer.getInventory().addItem(stack).values()) at.getWorld().dropItemNaturally(at, left);
+                ItemStash.give(killer, stack);
             } else {
                 at.getWorld().dropItemNaturally(at, stack);
             }
