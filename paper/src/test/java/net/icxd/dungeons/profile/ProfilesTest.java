@@ -103,7 +103,7 @@ class ProfilesTest {
         Profiles.withDefaults(doc, USERS.defaultDocument(), USERS::profileDefaults);
         Document profile = Profiles.selected(doc);
         assertEquals(ProfileMode.SANDBOX, Profiles.mode(profile));
-        assertEquals(0, profile.get("coins"));
+        assertEquals(0.0, profile.get("coins"));
         assertEquals(new Date(NOW), profile.getDate(Profiles.CREATED));
         assertEquals(false, doc.get(Profiles.SETTINGS, Document.class).get("autoReadyUp"));
     }
@@ -117,7 +117,7 @@ class ProfilesTest {
         assertEquals(1, profiles.size());
         assertEquals(ProfileMode.NORMAL, profiles.getFirst().mode());
         assertEquals(profiles.getFirst().id(), doc.getString(Profiles.SELECTED));
-        assertEquals(0, profiles.getFirst().profile().get("coins"));
+        assertEquals(0.0, profiles.getFirst().profile().get("coins"));
         assertNull(profiles.getFirst().profile().get("storage", Document.class).get("inventory"));
         // And it's left alone from then on.
         assertFalse(Profiles.migrate(doc, new Random(1), NOW));
@@ -150,7 +150,7 @@ class ProfilesTest {
         Document a = Profiles.profiles(doc).get("a", Document.class);
         Document b = Profiles.profiles(doc).get("b", Document.class);
         assertEquals(5, a.get("coins"), "kept");
-        assertEquals(0, b.get("coins"));
+        assertEquals(0.0, b.get("coins"));
         for (String key : USERS.profileDefaults().keySet()) {
             assertTrue(a.containsKey(key) && b.containsKey(key), key);
         }

@@ -9,6 +9,7 @@ import net.icxd.dungeons.crimsonisle.factions.FactionTitle;
 import net.icxd.dungeons.crimsonisle.factions.FactionType;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
+import net.icxd.dungeons.economy.Purse;
 import net.icxd.dungeons.profile.ProfileMode;
 import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.skill.Skills;
@@ -147,7 +148,8 @@ public class User {
     }
 
     public Rank getRank() { return Rank.valueOf(get("rank", String.class)); }
-    public int getCoins() { return number(profileValue("coins", Number.class)); }
+    /** In their purse, on the profile they play on; {@link Purse} gives and takes them. */
+    public double getCoins() { return Purse.coins(this); }
     /** Older saves stored it as a double. */
     public int getBankBalance() { return number(profileValue("bank.balance", Number.class)); }
     public int getBits() { return number(profileValue("bits", Number.class)); }
@@ -166,11 +168,6 @@ public class User {
 
     private static int number(Number n) {
         return n == null ? 0 : n.intValue();
-    }
-
-    /** In their purse, on the profile they play on. */
-    public void setCoins(int coins) {
-        profile().put("coins", coins);
     }
 
     public void withdrawBank(int amount) {

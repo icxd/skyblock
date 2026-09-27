@@ -1,7 +1,5 @@
 package net.icxd.dungeons.profile;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -20,6 +18,8 @@ import java.util.function.Supplier;
 import org.bson.Document;
 
 import net.icxd.dungeons.common.Rank;
+import net.icxd.dungeons.economy.Coins;
+import net.icxd.dungeons.economy.Purse;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.utils.Utils;
@@ -66,9 +66,6 @@ public final class Profiles {
     public static final int KEPT_DELETED = 10;
     /** Between making, switching and deleting profiles, shared by all three (Hypixel's, as seen in 2026). */
     public static final long COOLDOWN_MILLIS = 30_000;
-
-    private static final ThreadLocal<DecimalFormat> COINS =
-            ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.#", DecimalFormatSymbols.getInstance(Locale.US)));
 
     private Profiles() {
     }
@@ -300,10 +297,9 @@ public final class Profiles {
     /** "&7Bank Coins: &60" when the bank has any, then "&7Purse Coins: &679,208,878.1". */
     public static List<String> coinLines(Document profile) {
         double bank = profile.get("bank") instanceof Document b && b.get("balance") instanceof Number n ? n.doubleValue() : 0;
-        double purse = profile.get("coins") instanceof Number n ? n.doubleValue() : 0;
         List<String> lines = new ArrayList<>();
-        if (bank > 0) lines.add("&7Bank Coins: &6" + COINS.get().format(bank));
-        lines.add("&7Purse Coins: &6" + COINS.get().format(purse));
+        if (bank > 0) lines.add("&7Bank Coins: &6" + Coins.format(bank));
+        lines.add("&7Purse Coins: &6" + Coins.format(Purse.coins(profile)));
         return lines;
     }
 

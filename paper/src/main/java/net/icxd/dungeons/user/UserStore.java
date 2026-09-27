@@ -37,6 +37,7 @@ import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 
+import net.icxd.dungeons.economy.Purse;
 import net.icxd.dungeons.profile.Profiles;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -265,8 +266,9 @@ public final class UserStore {
     /**
      * A document this server now holds, made ready to use: one from before profiles gets its first
      * (see {@link Profiles#migrate}), which is saved right away, while it's still held here; then
-     * fields added to the defaults since it was made, and a profile to play on. If that fails, it's
-     * let go again, or they couldn't join any other server until this one restarts.
+     * fields added to the defaults since it was made, a profile to play on, and purses that were
+     * whole numbers become doubles (see {@link Purse#migrate}; saved with the next save). If that
+     * fails, it's let go again, or they couldn't join any other server until this one restarts.
      */
     private Document prepare(Document doc, String name) {
         String id = doc.getString("uuid");
@@ -277,6 +279,7 @@ public final class UserStore {
             migrated = Profiles.migrate(doc, random, now);
             Profiles.withDefaults(doc, defaults.get(), profileDefaults);
             repaired = Profiles.repair(doc, profileDefaults, random, now);
+            Purse.migrate(doc);
         } catch (RuntimeException e) {
             try {
                 users.updateOne(and(eq("uuid", id), eq("session.server", server)), set("session", null));

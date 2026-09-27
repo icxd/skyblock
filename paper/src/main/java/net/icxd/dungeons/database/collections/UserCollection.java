@@ -36,7 +36,8 @@ public class UserCollection implements ICollection {
     /** A profile's fields, as a new profile starts (its name, mode and when it was made come on top). */
     public Document profileDefaults() {
         return new Document()
-                .append("coins", 0)
+                // A double: coins can have fractions (see Purse).
+                .append("coins", 0.0)
                 .append("bits", 0)
                 .append("skills", skills())
                 .append("dungeons", new Document()

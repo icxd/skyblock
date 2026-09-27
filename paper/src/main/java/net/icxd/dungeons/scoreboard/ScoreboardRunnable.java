@@ -70,7 +70,7 @@ public class ScoreboardRunnable implements Runnable {
         clock += time.isDay() ? " &e\u2600" : " &b\u263d";
 
         UUID id = player.getUniqueId();
-        int coinsNow = user.getCoins();
+        int coinsNow = (int) user.getCoins();
         int bitsNow = user.getBits();
         StringBuilder coins = new StringBuilder("&fPurse: &6").append(Utils.getFormattedNumber(coinsCache.getOrDefault(id, coinsNow)));
         StringBuilder bits = new StringBuilder("&fBits: &b").append(Utils.getFormattedNumber(bitsCache.getOrDefault(id, bitsNow)));
