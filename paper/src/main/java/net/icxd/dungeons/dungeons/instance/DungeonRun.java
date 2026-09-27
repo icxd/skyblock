@@ -1,7 +1,7 @@
 package net.icxd.dungeons.dungeons.instance;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -145,6 +145,9 @@ public final class DungeonRun implements ScoreCounts {
     private Score cardScore;
     /** The Watcher let them pass; the Blood Room counts once the summary is out. */
     private boolean watcherPassed;
+    /** At the end: the secrets' share, and the members who have had their summary (and rewards). */
+    private double endSecretPercent;
+    private final Set<UUID> summarized = new HashSet<>();
     private final SidebarScore sidebarScore = new SidebarScore();
     private boolean closed;
 
@@ -228,6 +231,7 @@ public final class DungeonRun implements ScoreCounts {
         }
         member.name = player.getName();
         player.teleport(phase == Phase.WAITING || phase == Phase.STARTING ? arrival : entrance);
+        if (member.arrived && phase == Phase.ENDED) backAfterTheEnd(player);
         if (member.arrived) return;
         member.arrived = true;
         // The score card of the run they re-queued from.
@@ -486,24 +490,41 @@ public final class DungeonRun implements ScoreCounts {
 
     /** Each member here gets their experience and Bits, saved to the profile they play on, and their summary. */
     private void rewardAndSummarize() {
-        long millis = endedAt - startedAt;
-        double secretPercent = scoreInputs(endedAt).secretPercent();
+        endSecretPercent = scoreInputs(endedAt).secretPercent();
         List<Player> here = players();
-        LocalDate today = RunEnd.today();
-        for (Player player : here) {
-            User user = User.ifLoaded(player.getUniqueId());
-            RunEnd.Outcome outcome = null;
-            if (user != null) {
-                List<DungeonClass> teammates = here.stream().filter(p -> !p.equals(player)).map(p -> classOf(p.getUniqueId())).toList();
-                outcome = RunEnd.award(user.profile(), floor, chatScore, millis, secretPercent, classOf(player.getUniqueId()), teammates, today);
-                user.save();
-            }
-            for (String line : RunEnd.summary(floor, chatScore, millis, outcome)) {
-                if (!line.equals(RunEnd.EXTRA_STATS)) player.sendMessage(Utils.color(line));
-                else player.sendMessage(legacy(line).clickEvent(ClickEvent.runCommand("/showextrastats"))
-                        .hoverEvent(HoverEvent.showText(Component.text("Click to view extra stats!", NamedTextColor.YELLOW))));
-            }
+        for (Player player : here) rewardAndSummarize(player, here);
+    }
+
+    /**
+     * One member's experience and Bits (their teammates are the others {@code here}), saved to the
+     * profile they play on, and their summary; once a run.
+     */
+    private void rewardAndSummarize(Player player, List<Player> here) {
+        if (!summarized.add(player.getUniqueId())) return;
+        long millis = endedAt - startedAt;
+        User user = User.ifLoaded(player.getUniqueId());
+        RunEnd.Outcome outcome = null;
+        // Handed off (a warp, or a transfer waiting to be reclaimed): nothing given here would be saved.
+        if (user != null && !user.isReleased()) {
+            List<DungeonClass> teammates = here.stream().filter(p -> !p.equals(player)).map(p -> classOf(p.getUniqueId())).toList();
+            outcome = RunEnd.award(user.profile(), floor, chatScore, millis, endSecretPercent, classOf(player.getUniqueId()), teammates,
+                    RunEnd.today());
+            user.save();
         }
+        for (String line : RunEnd.summary(floor, chatScore, millis, outcome)) {
+            if (!line.equals(RunEnd.EXTRA_STATS)) player.sendMessage(Utils.color(line));
+            else player.sendMessage(legacy(line).clickEvent(ClickEvent.runCommand("/showextrastats"))
+                    .hoverEvent(HoverEvent.showText(Component.text("Click to view extra stats!", NamedTextColor.YELLOW))));
+        }
+    }
+
+    /**
+     * A member back (from a disconnect) after the end, before the close: their summary and rewards
+     * if they missed them, and the score card once it's out.
+     */
+    private void backAfterTheEnd(Player player) {
+        rewardAndSummarize(player, players());
+        if (cardScore != null) giveMap(player, "&a&lYour Score Summary", List.of());
     }
 
     /** Half a second after the summary: the Blood Room counts, and the map shows the score with it. */

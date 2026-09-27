@@ -163,7 +163,9 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   160 pixels).
 - The experience and Bits go to the profile they play on, which also counts the floor's
   completions, its best score and fastest times (S and S+ too), the runs completed today and
-  the highest floor completed.
+  the highest floor completed. A member who was disconnected at the end gets their summary and
+  rewards when they rejoin, if that's before the instance closes; one whose data was already
+  handed off to another server gets nothing (it wouldn't be saved).
 - +0.5 s: the Blood Room counts (only now, as on Hypixel), and the map becomes "Your Score
   Summary" (the item at +0.6 s): skill, explore, speed and bonus, the grade and the total. With
   the Blood Room in it, it's more than the chat said (182 and 189 in one recording).
