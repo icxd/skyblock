@@ -125,40 +125,44 @@ public final class Combat {
                 : mob.target();
         Damage.Attacker attacker;
         boolean critical;
+        DamageIndicators.Look look;
         if (shot != null) {
             attacker = shot.attacker(projectile.getLocation());
             critical = shot.critical();
+            look = DamageIndicators.Look.of(critical, shot.megaCritical());
         } else {
             attacker = attacker(player, projectile == null ? skyBlockData(player.getInventory().getItemInMainHand()) : null, projectile != null, 0);
             critical = Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
+            look = DamageIndicators.Look.of(critical, false);
         }
         double damage = Damage.hit(attacker, on, critical);
 
         boolean invulnerable = dungeonMob != null ? dungeonMob.invulnerable() : mob.type().isInvulnerable();
         if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED));
         if (!invulnerable && RunManager.inRun(player)) restoreMana(player);
-        if (dungeonMob != null) DungeonMobs.playerHit(event, player, dungeonMob, damage, critical);
-        else Mobs.playerHit(event, player, mob, damage, critical);
+        if (dungeonMob != null) DungeonMobs.playerHit(event, player, dungeonMob, damage, look);
+        else Mobs.playerHit(event, player, mob, damage, look);
         if (!invulnerable) {
             double ferocity = shot != null ? shot.ferocity() : PlayerSession.of(player).stats().get(Stat.FEROCITY);
-            ferocity(player, target, damage, critical, ferocity, projectile != null);
+            ferocity(player, target, damage, look, ferocity, projectile != null);
         }
     }
 
     /**
      * A hit's extra strikes (see {@link Ferocity}), {@link Ferocity#STRIKE_DELAY_TICKS} apart. Each does the
      * hit's damage again, crit or not as the hit was (the wiki doesn't say they're worked out anew; they
-     * don't roll a crit of their own), with its own damage number and a red slash across the target; they
-     * stop once it's dead, and one can kill it. They aren't hits: no mana back, no knockback, and First
-     * Strike and the like don't count them. None for a melee hit from more than 6 blocks (from their feet
-     * to its: the wiki doesn't say where it measures from), or for a Berserk in a dungeon run.
+     * don't roll a crit of their own), with its own damage number looking as the hit's did, and a red
+     * slash across the target; they stop once it's dead, and one can kill it. They aren't hits: no mana
+     * back, no knockback, and First Strike and the like don't count them. None for a melee hit from more
+     * than 6 blocks (from their feet to its: the wiki doesn't say where it measures from), or for a
+     * Berserk in a dungeon run.
      */
-    private static void ferocity(Player player, LivingEntity target, double damage, boolean critical, double ferocity, boolean ranged) {
+    private static void ferocity(Player player, LivingEntity target, double damage, DamageIndicators.Look look, double ferocity, boolean ranged) {
         if (ferocity <= 0 || !player.getWorld().equals(target.getWorld())) return;
         if (!Ferocity.inRange(ranged, player.getLocation().distance(target.getLocation())) || ferocityDisabled(player)) return;
         int strikes = Ferocity.extraStrikes(ferocity, ThreadLocalRandom.current().nextDouble());
         for (int i = 1; i <= strikes; i++) {
-            Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> strike(player, target, damage, critical),
+            Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> strike(player, target, damage, look),
                     (long) i * Ferocity.STRIKE_DELAY_TICKS);
         }
     }
@@ -174,14 +178,14 @@ public final class Combat {
     }
 
     /** One extra strike, if the target is still one of SkyBlock's mobs that can be hurt. */
-    private static void strike(Player player, LivingEntity target, double damage, boolean critical) {
+    private static void strike(Player player, LivingEntity target, double damage, DamageIndicators.Look look) {
         if (!player.isOnline() || !target.isValid() || target.isDead()) return;
         DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
         Mobs.Live mob = dungeonMob == null ? Mobs.of(target) : null;
         if (dungeonMob != null ? dungeonMob.invulnerable() : mob == null || mob.type().isInvulnerable()) return;
         slash(player, target);
-        if (dungeonMob != null) DungeonMobs.damage(target, player, damage, critical);
-        else Mobs.damage(mob, player, damage, critical);
+        if (dungeonMob != null) DungeonMobs.damage(target, player, damage, look);
+        else Mobs.damage(mob, player, damage, look);
     }
 
     /** A strike's red slash: dust in a line across the target, sideways to the player, one way or the other at random. */

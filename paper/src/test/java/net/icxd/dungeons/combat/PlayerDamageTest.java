@@ -31,5 +31,8 @@ class PlayerDamageTest {
         assertEquals("§f✧§f1§e6§6,§c4§c8§f5§f,§e4§66§c3§c✧", DamageIndicators.text(16_485_463, true));
         assertEquals("§f✧§f7§e1§64§c,§c9§f1§f9§e✧", DamageIndicators.text(714_919, true));
         assertEquals("&72,147,483,647", DamageIndicators.text(1e12, false));
+        // An Overload Mega Critical Hit: ✯ in place of ✧.
+        assertEquals("§f✯§f7§e1§64§c,§c9§f1§f9§e✯", DamageIndicators.text(714_919, DamageIndicators.Look.MEGA_CRITICAL));
+        assertEquals(DamageIndicators.text(714_919, true), DamageIndicators.text(714_919, DamageIndicators.Look.CRITICAL));
     }
 }

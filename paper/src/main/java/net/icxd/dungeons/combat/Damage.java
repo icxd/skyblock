@@ -74,6 +74,25 @@ public final class Damage {
         return random * 100 < critChance;
     }
 
+    /**
+     * With Overload on the bow, the chance of a crit being a Mega Critical Hit: "Having a Crit Chance above 100%
+     * grants a chance to perform a Mega Critical Hit", (Crit Chance - 100) / 100 up to 100% at 200 (the wiki's
+     * Damage Calculation, Multiplicative Sources). Crit Chance above 100 does nothing else.
+     */
+    public static double megaCritChance(double critChance) {
+        return Math.max(0, Math.min((critChance - 100) / 100, 1));
+    }
+
+    /** Whether a crit is a mega one, for this {@code random} (0 inclusive to 1 exclusive). */
+    public static boolean megaCrits(double critChance, double random) {
+        return random < megaCritChance(critChance);
+    }
+
+    /** A Mega Critical Hit's multiplicative multiplier with Overload at this level: 1 + 10% a level (10 to 50%). */
+    public static double overload(int level) {
+        return 1 + 0.1 * Math.max(0, Math.min(level, 5));
+    }
+
     /** (5 + Damage) x (1 + Strength / 100). */
     public static double initial(double damage, double strength) {
         return (5 + damage) * (1 + strength / 100);

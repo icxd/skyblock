@@ -99,14 +99,14 @@ public final class DungeonMobs {
      * goes through with no vanilla damage (so it still flinches and takes knockback), or not at all if
      * it's invulnerable.
      */
-    public static void playerHit(EntityDamageByEntityEvent event, Player player, Mob mob, double damage, boolean critical) {
+    public static void playerHit(EntityDamageByEntityEvent event, Player player, Mob mob, double damage, DamageIndicators.Look look) {
         if (mob.invulnerable()) {
             event.setCancelled(true);
         } else {
             event.setDamage(0);
             HITS.merge(event.getEntity().getUniqueId(), 1, Integer::sum);
         }
-        damage(event.getEntity(), player, damage, critical);
+        damage(event.getEntity(), player, damage, look);
     }
 
     /**
@@ -114,10 +114,10 @@ public final class DungeonMobs {
      * say), with its damage number as for SkyBlock's other mobs. The Watcher can't be hurt: he zaps them
      * for trying. Nothing for an entity that isn't one of ours.
      */
-    public static void damage(Entity entity, Player player, double damage, boolean critical) {
+    public static void damage(Entity entity, Player player, double damage, DamageIndicators.Look look) {
         Mob mob = of(entity);
         if (mob == null) return;
         mob.hurt(player, damage);
-        if (!mob.invulnerable()) DamageIndicators.show(entity, damage, critical);
+        if (!mob.invulnerable()) DamageIndicators.show(entity, damage, look);
     }
 }

@@ -108,6 +108,28 @@ class DamageTest {
         assertFalse(Damage.crits(0, 0));
     }
 
+    /**
+     * Overload: Crit Chance above 100 is a (Crit Chance - 100)% chance of a Mega Critical Hit, sure from 200;
+     * it deals 10% a level more, as a multiplicative multiplier.
+     */
+    @Test
+    void overload() {
+        assertEquals(0, Damage.megaCritChance(90), 1e-12);
+        assertEquals(0, Damage.megaCritChance(100), 1e-12);
+        assertEquals(0.53, Damage.megaCritChance(153), 1e-12);
+        assertEquals(1, Damage.megaCritChance(200), 1e-12);
+        assertEquals(1, Damage.megaCritChance(250), 1e-12);
+        assertTrue(Damage.megaCrits(153, 0.52));
+        assertFalse(Damage.megaCrits(153, 0.53));
+        assertFalse(Damage.megaCrits(100, 0));
+        assertEquals(1.1, Damage.overload(1), 1e-12);
+        assertEquals(1.5, Damage.overload(5), 1e-12);
+        assertEquals(1, Damage.overload(0), 1e-12);
+        // A crit of 200 with Overload V's mega-crit on top: 300.
+        Damage.Attacker bow = new Damage.Attacker(95, 0, 200, 100, 0, 1000, Map.of(), true, 0, Damage.overload(5));
+        assertEquals(300, Damage.exact(bow, target(1, 1, 0), true), 1e-9);
+    }
+
     /** Combat skill: +4% a level to 50 (200%), +1% a level 51-60 (210%). */
     @Test
     void warrior() {

@@ -22,10 +22,31 @@ public final class DamageIndicators {
     private DamageIndicators() {
     }
 
+    /**
+     * How a hit's number looks: gray; a critical hit's between ✧ in the cycling colours; an Overload Mega
+     * Critical Hit's between ✯ (the mods that read Hypixel's numbers know it by that symbol; its colours
+     * aren't recorded, so they're a crit's).
+     */
+    public enum Look {
+        NORMAL, CRITICAL, MEGA_CRITICAL;
+
+        public static Look of(boolean critical, boolean mega) {
+            return !critical ? NORMAL : mega ? MEGA_CRITICAL : CRITICAL;
+        }
+    }
+
     /** What a hit shows: rounded down, thousands grouped, never past what Hypixel's can show (2,147,483,647). */
     public static String text(double damage, boolean critical) {
+        return text(damage, Look.of(critical, false));
+    }
+
+    public static String text(double damage, Look look) {
         String number = number(damage);
-        return critical ? Utils.rainbowize("✧" + number + "✧") : "&7" + number;
+        return switch (look) {
+            case NORMAL -> "&7" + number;
+            case CRITICAL -> Utils.rainbowize("✧" + number + "✧");
+            case MEGA_CRITICAL -> Utils.rainbowize("✯" + number + "✯");
+        };
     }
 
     private static String number(double damage) {
@@ -34,7 +55,11 @@ public final class DamageIndicators {
 
     /** A hit on something. */
     public static void show(Entity at, double damage, boolean critical) {
-        spawn(at, text(damage, critical));
+        show(at, damage, Look.of(critical, false));
+    }
+
+    public static void show(Entity at, double damage, Look look) {
+        spawn(at, text(damage, look));
     }
 
     /** In a colour of its own (gold for fire). */

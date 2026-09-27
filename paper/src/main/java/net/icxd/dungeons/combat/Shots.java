@@ -30,14 +30,18 @@ import java.util.concurrent.ThreadLocalRandom;
  * partial draw is UNKNOWN, so it doesn't. Main thread.
  */
 public final class Shots implements Listener {
-    /** An arrow in flight: who shot it, with what (and their Ferocity then), from where. */
-    record Shot(Damage.Attacker launched, boolean critical, double ferocity, Location from) {
-        /** The attacker, with how far the arrow has come (Snipe) by the time it hits. */
+    /**
+     * An arrow in flight: who shot it, with what (and their Ferocity then), from where, and whether it crits,
+     * and whether that's an Overload Mega Critical Hit.
+     */
+    record Shot(Damage.Attacker launched, boolean critical, boolean megaCritical, double ferocity, Location from) {
+        /** The attacker, with how far the arrow has come (Snipe) by the time it hits, and a mega-crit's Overload. */
         Damage.Attacker attacker(Location at) {
             double travelled = from.getWorld().equals(at.getWorld()) ? from.distance(at) : 0;
             Damage.Attacker a = launched;
+            double overload = megaCritical ? Damage.overload(a.enchantments().getOrDefault("overload", 0)) : 1;
             return new Damage.Attacker(a.damage(), a.strength(), a.critChance(), a.critDamage(), a.combatLevel(), a.health(),
-                    a.enchantments(), true, travelled, a.multiplier());
+                    a.enchantments(), true, travelled, a.multiplier() * overload);
         }
     }
 
@@ -46,9 +50,13 @@ public final class Shots implements Listener {
     /** A player shot this projectile with this bow (its SkyBlock data; null for none); fully drawn or not. */
     public static void record(Projectile projectile, Player shooter, NBTTagCompound bow, boolean fullyDrawn) {
         Damage.Attacker attacker = Combat.attacker(shooter, bow, true, 0);
-        boolean critical = fullyDrawn && Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        boolean critical = fullyDrawn && Damage.crits(attacker.critChance(), random.nextDouble());
+        // Overload is a bow's enchantment, so (as Power) it's the arrow's.
+        boolean megaCritical = critical && attacker.enchantments().getOrDefault("overload", 0) > 0
+                && Damage.megaCrits(attacker.critChance(), random.nextDouble());
         double ferocity = PlayerSession.of(shooter).stats().get(Stat.FEROCITY);
-        SHOTS.put(projectile.getUniqueId(), new Shot(attacker, critical, ferocity, projectile.getLocation()));
+        SHOTS.put(projectile.getUniqueId(), new Shot(attacker, critical, megaCritical, ferocity, projectile.getLocation()));
     }
 
     /** The shot this projectile is, once (null if it isn't one). */
