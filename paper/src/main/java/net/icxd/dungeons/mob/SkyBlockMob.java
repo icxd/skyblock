@@ -50,6 +50,8 @@ public interface SkyBlockMob {
 
     /** Each rolls on its own when a player kills it. */
     default List<MobDrop> getDrops() { return List.of(); }
+    /** Its drops go straight into the killer's inventory (a dungeon mob's), rather than on the ground. */
+    default boolean dropsToInventory() { return false; }
     /** A mob riding it, spawned and removed with it. */
     default SkyBlockMob getPassenger() { return null; }
 

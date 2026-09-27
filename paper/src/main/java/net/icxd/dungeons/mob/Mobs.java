@@ -10,6 +10,7 @@ import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.utils.Text;
@@ -45,11 +46,11 @@ import java.util.UUID;
 
 /**
  * SkyBlock's mobs: the ones alive now, and how they fight. Every kind ({@link MobKinds}) is spawned
- * here, as a {@link DataMob}, and shares this one path: hits, damage numbers, drops, death and
- * removal. A mob's health is SkyBlock health, kept here; hits on it do no vanilla damage (it still
- * flinches and takes knockback), and its hits on players do SkyBlock damage less their defense. Its
- * name tag is a text display riding it. Mobs aren't saved with the world: a restart clears them.
- * Main thread.
+ * here, as a {@link DataMob}, and shares this one path: hits, damage numbers, drops, death (a
+ * {@link SkyBlockMobDeathEvent} after the drops) and removal. A mob's health is SkyBlock health,
+ * kept here; hits on it do no vanilla damage (it still flinches and takes knockback), and its hits on
+ * players do SkyBlock damage less their defense. Its name tag is a text display riding it. Mobs
+ * aren't saved with the world: a restart clears them. Main thread.
  */
 public final class Mobs implements Listener {
     /** On every spawned mob's entity: which mob it is. */
@@ -227,22 +228,46 @@ public final class Mobs implements Listener {
         if (run != null) run.killed(killer.getUniqueId());
         live.type.onDeath(live.entity, killer);
         if (killer != null && !live.type.isBoss()) drop(live, killer);
+        Location at = live.entity.getLocation();
         remove(live);
+        died(live, killer, at);
     }
 
-    /** Each drop rolls on its own (magic find raises the chance); only what drops is announced. */
+    /** Tells the rest of the plugin (Combat XP, coins, the room's starred mobs), once its drops are out. */
+    private static void died(Live live, Player killer, Location at) {
+        if (live.type instanceof DataMob mob) Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, mob, at));
+    }
+
+    /**
+     * Each drop rolls on its own (magic find raises the chance). A dungeon mob's go straight into the
+     * killer's inventory, as recorded on Hypixel (on the ground where it died if there's no room), and
+     * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
+     * on the ground, and each is announced.
+     */
     private static void drop(Live live, Player killer) {
         double magicFind = PlayerSession.of(killer).stats().get(Stat.MAGIC_FIND);
+        boolean toInventory = live.type.dropsToInventory() && !InventorySyncListener.frozen(killer);
         for (MobDrop drop : live.type.getDrops()) {
             SkyBlockItem item = drop.item();
             if (item == null || Math.random() >= drop.chance() / 100 * (1 + magicFind / 100)) continue;
             ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
-            live.entity.getWorld().dropItemNaturally(live.entity.getLocation(), stack);
+            Location at = live.entity.getLocation();
+            if (toInventory) {
+                for (ItemStack left : killer.getInventory().addItem(stack).values()) at.getWorld().dropItemNaturally(at, left);
+            } else {
+                at.getWorld().dropItemNaturally(at, stack);
+            }
+            if (!announced(live.type, drop.type())) continue;
             String kind = drop.type() == MobDropType.RNGESUS_INCARNATE ? "INSANE DROP! "
                     : (drop.type() == MobDropType.CRAZY_RARE ? "CRAZY " : "") + "RARE DROP! ";
             killer.sendMessage(Utils.color("§" + drop.type().getColor() + "§l" + kind + item.rarity().getColor() + item.name()
                     + " &b(+" + Utils.round(magicFind, 0) + "% ✯ Magic Find)"));
         }
+    }
+
+    /** Whether a drop this rare from this mob gets a "RARE DROP!" line: a dungeon mob's only past Occasional. */
+    static boolean announced(SkyBlockMob type, MobDropType drop) {
+        return !type.dropsToInventory() || drop.ordinal() > MobDropType.OCCASIONAL.ordinal();
     }
 
     /** It, its name tag and its passenger, gone. */
@@ -333,6 +358,7 @@ public final class Mobs implements Listener {
         event.getDrops().clear();
         event.setDroppedExp(0);
         remove(live);
+        died(live, null, event.getEntity().getLocation());
     }
 
     /** Their wither skulls don't blow up the world. */

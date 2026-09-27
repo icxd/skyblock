@@ -112,6 +112,7 @@ public final class DataMob implements SkyBlockMob {
     @Override public boolean isBoss() { return kind.style() == MobKind.NameStyle.BOSS; }
     @Override public List<MobDrop> getDrops() { return variant.drops(); }
     @Override public SkyBlockMob getPassenger() { return behaviour.passenger(); }
+    @Override public boolean dropsToInventory() { return kind.dungeon(); }
 
     @Override
     public String nameTag(double health) {
