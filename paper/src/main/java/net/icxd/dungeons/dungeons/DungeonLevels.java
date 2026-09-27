@@ -21,7 +21,10 @@ public final class DungeonLevels {
     private DungeonLevels() {
     }
 
-    /** Whole levels reached with this much experience. */
+    /** Levels past this one are cosmetic: stats (the Catacombs item boost) stop at it. */
+    public static final int STAT_CAP = 50;
+
+    /** Whole levels reached with this much experience (past 50 too: a cosmetic level per 200 million). */
     public static int level(double xp) {
         double total = 0;
         for (int level = 0; level < XP.length; level++) {
@@ -29,6 +32,24 @@ public final class DungeonLevels {
             total += XP[level];
         }
         return XP.length + (int) ((xp - total) / PAST_TABLE);
+    }
+
+    /** Experience that level {@code level} takes from the one before. */
+    public static long xpFor(int level) {
+        return level < 1 ? 0 : level <= XP.length ? XP[level - 1] : PAST_TABLE;
+    }
+
+    /** Experience to reach level {@code level} from nothing. */
+    public static double cumulative(int level) {
+        double total = 0;
+        for (int l = 1; l <= level; l++) total += xpFor(l);
+        return total;
+    }
+
+    /** How far this much experience is into the next level, from 0 to 1. */
+    public static double progress(double xp) {
+        int level = level(Math.max(0, xp));
+        return Math.max(0, Math.min(1, (xp - cumulative(level)) / xpFor(level + 1)));
     }
 
     /** "XX" for 20, as in the tab list's "(Berserk XX)"; 0 stays "0". */

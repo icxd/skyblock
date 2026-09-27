@@ -7,6 +7,7 @@ import io.papermc.paper.datacomponent.item.ItemLore;
 import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.icxd.dungeons.attributes.Attribute;
 import net.icxd.dungeons.dungeons.DungeonLevels;
+import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.item.behaviour.ItemBehaviour;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.cost.Cost;
@@ -350,15 +351,14 @@ public final class ItemBuilder {
      */
     static double catacombsBoost(int level) {
         int[] early = {10, 15, 20, 25, 31, 38, 46, 55};
-        level = Math.max(0, Math.min(level, 50));
+        level = Math.max(0, Math.min(level, DungeonLevels.STAT_CAP));
         return (level < early.length ? early[level] : 55 + (level - 7) * 10) / 100.0;
     }
 
     /** The owner's; level 0's while there's no owner to go by. */
     public static double catacombsBoost(Player owner) {
         User user = owner == null ? null : User.ifLoaded(owner.getUniqueId());
-        Number experience = user == null ? null : user.profileValue("dungeons.catacombsExp", Number.class);
-        return catacombsBoost(experience == null ? 0 : DungeonLevels.level(experience.doubleValue()));
+        return catacombsBoost(user == null ? 0 : DungeonProfile.catacombsStatLevel(user));
     }
 
     /** "&7Gemstones: &8[✎] [⚔]": locked slots all dark gray, open ones with a gray symbol. */
