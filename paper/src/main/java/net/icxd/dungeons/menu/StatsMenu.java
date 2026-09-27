@@ -104,7 +104,7 @@ public final class StatsMenu extends GUI {
         worn(CHESTPLATE, inventory.getChestplate());
         worn(LEGGINGS, inventory.getLeggings());
         worn(BOOTS, inventory.getBoots());
-        set(SkyBlockMenu.button(BACK, new Icon(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu").stack(), viewer,
+        set(GUIClickableItem.button(BACK, new Icon(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu").stack(), viewer,
                 () -> new SkyBlockMenu(viewer).open(viewer)));
         set(GUIClickableItem.close(CLOSE));
     }

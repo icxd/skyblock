@@ -2,23 +2,18 @@ package net.icxd.dungeons.skill;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.TooltipDisplay;
-import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.menu.SkyBlockMenu;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import org.bson.Document;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * "Your Skills" ({@code /skills}), as recorded (research skills.md 1.2): every skill with its level,
@@ -53,14 +48,14 @@ public final class SkillsMenu extends GUI {
         for (Skill skill : Skill.values()) {
             double xp = Skills.xp(profile, skill);
             ItemStack stack = menuItem(skill.icon(), "&a" + SkillText.named(skill, skill.level(xp)), lore(skill, xp));
-            set(button(slot(skill), stack, () -> new SkillMenu(viewer, skill).open(viewer)));
+            set(GUIClickableItem.button(slot(skill), stack, viewer, () -> new SkillMenu(viewer, skill).open(viewer)));
         }
         ItemStack head = menuItem(Material.PLAYER_HEAD, "&aDungeoneering", List.of("&7Complete Dungeons to level up your",
                 "&7classes! Unlock new gear and class", "&7upgrades by completing higher tier", "&7dungeons!", "",
                 "&7Requires &bCombat Level 15 &7to enter a", "&7Dungeon.", "", "&eClick to view!"));
         Utils.skull(head, Utils.texture(DUNGEONEERING_HEAD));
         set(34, head);
-        set(button(48, item(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu"), () -> new SkyBlockMenu(viewer).open(viewer)));
+        set(GUIClickableItem.button(48, item(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu"), viewer, () -> new SkyBlockMenu(viewer).open(viewer)));
         set(GUIClickableItem.close(49));
         set(53, menuItem(Material.OAK_SIGN, "&aShow Skill Rankings", List.of("&7Show the rankings display for your", "&7Skills.", "",
                 "&eClick to show!")));
@@ -116,33 +111,5 @@ public final class SkillsMenu extends GUI {
         stack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay()
                 .addHiddenComponents(DataComponentTypes.ATTRIBUTE_MODIFIERS).build());
         return stack;
-    }
-
-    /** Runs {@code action} with the click on the next tick for a left or right click (shift or not), if they're still on. */
-    static GUIClickableItem button(int slot, ItemStack stack, Player viewer, Consumer<ClickType> action) {
-        return new GUIClickableItem() {
-            @Override
-            public void run(InventoryClickEvent event) {
-                ClickType click = event.getClick();
-                if (!click.isLeftClick() && !click.isRightClick()) return;
-                Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
-                    if (viewer.isOnline()) action.accept(click);
-                });
-            }
-
-            @Override
-            public int slot() {
-                return slot;
-            }
-
-            @Override
-            public ItemStack stack() {
-                return stack;
-            }
-        };
-    }
-
-    private GUIClickableItem button(int slot, ItemStack stack, Runnable action) {
-        return button(slot, stack, viewer, click -> action.run());
     }
 }

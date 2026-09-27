@@ -8,8 +8,6 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -111,37 +109,13 @@ public final class SkyBlockMenu extends GUI {
                 stack.setItemMeta(head);
             }
             switch (slot) {
-                case STATS -> set(button(slot, stack, viewer, () -> new StatsMenu(viewer).open(viewer)));
-                case SKILLS -> set(button(slot, stack, viewer, () -> new SkillsMenu(viewer).open(viewer)));
-                case PROFILES -> set(button(slot, stack, viewer, () -> new ProfileManagementMenu(viewer).open(viewer)));
+                case STATS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new StatsMenu(viewer).open(viewer)));
+                case SKILLS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new SkillsMenu(viewer).open(viewer)));
+                case PROFILES -> set(GUIClickableItem.button(slot, stack, viewer, () -> new ProfileManagementMenu(viewer).open(viewer)));
                 default -> set(slot, stack);
             }
         }
         set(GUIClickableItem.close(CLOSE));
-    }
-
-    /** Runs {@code action} on the next tick for a left or right click (shift or not), if they're still on. */
-    static GUIClickableItem button(int slot, ItemStack stack, Player viewer, Runnable action) {
-        return new GUIClickableItem() {
-            @Override
-            public void run(InventoryClickEvent event) {
-                ClickType click = event.getClick();
-                if (!click.isLeftClick() && !click.isRightClick()) return;
-                Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
-                    if (viewer.isOnline()) action.run();
-                });
-            }
-
-            @Override
-            public int slot() {
-                return slot;
-            }
-
-            @Override
-            public ItemStack stack() {
-                return stack;
-            }
-        };
     }
 
     // What each slot shows

@@ -4,14 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.item.ItemBuilder;
@@ -50,28 +46,9 @@ abstract class Menu extends GUI {
         items();
     }
 
-    /** Does {@code action} on a left or right click (shift or not). */
+    /** Does {@code action} on a left or right click (shift or not), on the next tick. */
     GUIClickableItem button(int slot, ItemStack stack, Runnable action) {
-        return new GUIClickableItem() {
-            @Override
-            public void run(InventoryClickEvent event) {
-                ClickType click = event.getClick();
-                if (click != ClickType.LEFT && click != ClickType.RIGHT && click != ClickType.SHIFT_LEFT && click != ClickType.SHIFT_RIGHT) return;
-                Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
-                    if (viewer.isOnline()) action.run();
-                });
-            }
-
-            @Override
-            public int slot() {
-                return slot;
-            }
-
-            @Override
-            public ItemStack stack() {
-                return stack;
-            }
-        };
+        return GUIClickableItem.button(slot, stack, viewer, action);
     }
 
     GUIClickableItem goBack(int slot, String to, java.util.function.Supplier<Menu> menu) {

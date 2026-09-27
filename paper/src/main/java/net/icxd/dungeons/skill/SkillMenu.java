@@ -7,7 +7,6 @@ import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -129,17 +128,17 @@ public final class SkillMenu extends GUI {
         }
         if (offset > 0) set(scroll(45, "&aScroll Left", -1));
         if (offset < maxOffset(levels)) set(scroll(53, "&aScroll Right", 1));
-        set(SkillsMenu.button(48, item(Material.ARROW, "&aGo Back", "&7To Your Skills"), viewer, click -> new SkillsMenu(viewer).open(viewer)));
+        set(GUIClickableItem.button(48, item(Material.ARROW, "&aGo Back", "&7To Your Skills"), viewer, () -> new SkillsMenu(viewer).open(viewer)));
         set(GUIClickableItem.close(49));
         if (offset != centre) {
-            set(SkillsMenu.button(50, item(Material.NETHER_STAR, "&aRe-Center", "&7Centers the menu around your", "&7current tier.", "",
-                    "&eClick to re-center!"), viewer, click -> scrollTo(centre)));
+            set(GUIClickableItem.button(50, item(Material.NETHER_STAR, "&aRe-Center", "&7Centers the menu around your", "&7current tier.", "",
+                    "&eClick to re-center!"), viewer, () -> scrollTo(centre)));
         }
     }
 
     private GUIClickableItem scroll(int slot, String name, int direction) {
         ItemStack arrow = item(Material.ARROW, name, "&eLeft-click to scroll!", "&eRight-click to scroll fast!");
-        return SkillsMenu.button(slot, arrow, viewer, click -> scrollTo(offset + direction * (click.isRightClick() ? FAST : 1)));
+        return GUIClickableItem.button(slot, arrow, viewer, click -> scrollTo(offset + direction * (click.isRightClick() ? FAST : 1)));
     }
 
     /** Scrolls the open menu in place (a new one would put their cursor back in the middle). */
