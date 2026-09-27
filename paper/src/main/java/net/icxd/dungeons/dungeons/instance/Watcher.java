@@ -42,8 +42,8 @@ final class Watcher implements DungeonMobs.Mob {
     /** A line stays over his head this long, and he says at most one this often (bar the last). */
     private static final int SPEECH_LASTS = 40;
     private static final int SPEECH_GAP = 40;
-    /** Placeholder for the icon in his name (a resource pack glyph on Hypixel). */
-    private static final String ICON = "✦";
+    /** His Arcane mob type glyph (from Hypixel's resource pack), as the classic symbol (see {@link net.icxd.dungeons.mob.MobType}). */
+    private static final String ICON = net.icxd.dungeons.mob.MobType.ARCANE.symbol();
     private static final String NAME = "&e﴾ &5" + ICON + " &c&lThe Watcher &e﴿";
 
     private static final int UNDEADS = 9;

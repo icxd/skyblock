@@ -39,8 +39,8 @@ final class Undead implements DungeonMobs.Mob {
     private static final int STAGGER = 8;
     /** The name tag's height above its feet, as on Hypixel. */
     private static final double TAG_ABOVE = 2.1;
-    /** Placeholder for Hypixel's undead icon (from its resource pack). */
-    static final String ICON = "☠";
+    /** Hypixel's Undead mob type glyph (from its resource pack), as the classic symbol (see {@link MobType}). */
+    static final String ICON = MobType.UNDEAD.symbol();
 
     private static final List<Material> CHESTPLATES = List.of(Material.CHAINMAIL_CHESTPLATE, Material.IRON_CHESTPLATE, Material.LEATHER_CHESTPLATE);
     private static final List<Material> LEGGINGS = List.of(Material.IRON_LEGGINGS, Material.CHAINMAIL_LEGGINGS, Material.AIR);
@@ -110,7 +110,7 @@ final class Undead implements DungeonMobs.Mob {
         return dead;
     }
 
-    /** "☠ Leech 20,000❤": green down to half health, then yellow. */
+    /** "༕ Leech 20,000❤": green down to half health, then yellow. */
     private void updateTag() {
         String number = (health >= maxHealth / 2 ? "&a" : "&e") + Utils.getFormattedNumber((int) Math.ceil(health));
         tag.customName(Text.line("&2" + ICON + " &6" + type.displayName + " " + number + "&c❤"));
