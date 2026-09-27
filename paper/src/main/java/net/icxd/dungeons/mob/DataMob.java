@@ -39,11 +39,13 @@ public final class DataMob implements SkyBlockMob {
 
     private final MobKind kind;
     private final MobKind.Variant variant;
-    private final SpawnOptions options;
+    private SpawnOptions options;
     private final MobBehaviour behaviour;
-    private final double maxHealth;
-    private final double damage;
+    private double maxHealth;
+    private double damage;
     private int age;
+    /** Waiting for its room to open: it neither moves nor fights (see {@link #setDormant}). */
+    private boolean dormant;
 
     public DataMob(MobKind kind, MobKind.Variant variant, SpawnOptions options) {
         this.kind = kind;
@@ -75,6 +77,38 @@ public final class DataMob implements SkyBlockMob {
 
     public MobKind kind() {
         return kind;
+    }
+
+    /** The room's health and damage multiplier it has now (1 until its room opens). */
+    public double roomMultiplier() {
+        return options.roomMultiplier();
+    }
+
+    /**
+     * Its room opened: its health and damage are the variant's times this multiplier from now on (for a kind
+     * it applies to). {@link Mobs#setRoomMultiplier} keeps its health's share of the max.
+     */
+    void roomMultiplier(double multiplier) {
+        options = options.roomMultiplier(multiplier);
+        maxHealth = maxHealth(kind, variant, options);
+        damage = damage(kind, variant, options);
+    }
+
+    public boolean dormant() {
+        return dormant;
+    }
+
+    /**
+     * A room's mobs are there from the start of a run and wait for their room to open (research mobs.md
+     * 1.2): until then it doesn't move, target or fight (whether Hypixel's go for players through the walls
+     * before their room opens is UNKNOWN; they only wandered a few blocks), and doesn't heal or strike.
+     */
+    public void setDormant(LivingEntity entity, boolean dormant) {
+        this.dormant = dormant;
+        if (entity instanceof org.bukkit.entity.Mob mob) {
+            mob.setAware(!dormant);
+            if (dormant) mob.setTarget(null);
+        }
     }
 
     public MobKind.Variant variant() {
@@ -169,6 +203,7 @@ public final class DataMob implements SkyBlockMob {
 
     @Override
     public void onTick(LivingEntity entity) {
+        if (dormant) return;
         age++;
         Modifier modifier = options.modifier();
         if (modifier == Modifier.HEALING && age % 20 == 0) {

@@ -198,6 +198,19 @@ public final class Mobs implements Listener {
         updateNameTag(live);
     }
 
+    /**
+     * Its room opened (research mobs.md 1.3): its health and damage get the room's multiplier, its health
+     * keeping its share of the max (a mob at full health is at the new full, as the recorded 7,000 to 7,350
+     * is), and its name tag says so. Nothing for a mob that isn't one of the kinds.
+     */
+    public static void setRoomMultiplier(Live live, double multiplier) {
+        if (!(live.type instanceof DataMob mob) || live.health <= 0) return;
+        double before = mob.getMaxHealth();
+        mob.roomMultiplier(multiplier);
+        if (before > 0) live.health = live.health * mob.getMaxHealth() / before;
+        updateNameTag(live);
+    }
+
     private static void updateNameTag(Live live) {
         if (live.nameTag == null) return;
         String name = nameTag(live.type, live.health);
