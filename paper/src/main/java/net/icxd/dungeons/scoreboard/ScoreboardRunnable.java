@@ -5,6 +5,7 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.SkyBlockServer;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.economy.Coins;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.user.User;
@@ -35,21 +36,21 @@ public class ScoreboardRunnable implements Runnable {
     private static final ZoneId HYPIXEL_ZONE = ZoneId.of("America/New_York");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MM/dd/yy");
     private final Map<UUID, Scoreboard> boards = new HashMap<>();
-    /** What the purse and bits said last time, to show how much they changed. Main thread. */
-    private static final HashMap<UUID, Integer> coinsCache = new HashMap<>();
-    private static final HashMap<UUID, Integer> bitsCache = new HashMap<>();
+    /** How much the purse and bits just changed. Main thread. */
+    private static final Map<UUID, SidebarChange> coinChanges = new HashMap<>();
+    private static final Map<UUID, SidebarChange> bitChanges = new HashMap<>();
 
     /** Their purse and bits start over (another profile's aren't a change). Main thread. */
     public static void forget(UUID player) {
-        coinsCache.remove(player);
-        bitsCache.remove(player);
+        coinChanges.remove(player);
+        bitChanges.remove(player);
     }
 
     @Override
     public void run() {
         boards.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
-        coinsCache.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
-        bitsCache.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
+        coinChanges.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
+        bitChanges.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
         for (Player player : Bukkit.getOnlinePlayers()) {
             User user = User.cached(player.getUniqueId());
             if (user == null || !user.isLoaded()) continue;
@@ -70,20 +71,10 @@ public class ScoreboardRunnable implements Runnable {
         clock += time.isDay() ? " &e\u2600" : " &b\u263d";
 
         UUID id = player.getUniqueId();
-        int coinsNow = (int) user.getCoins();
+        double coinsNow = user.getCoins();
         int bitsNow = user.getBits();
-        StringBuilder coins = new StringBuilder("&fPurse: &6").append(Utils.getFormattedNumber(coinsCache.getOrDefault(id, coinsNow)));
-        StringBuilder bits = new StringBuilder("&fBits: &b").append(Utils.getFormattedNumber(bitsCache.getOrDefault(id, bitsNow)));
-        Integer oldCoins = coinsCache.put(id, coinsNow);
-        Integer oldBits = bitsCache.put(id, bitsNow);
-        if (oldCoins != null && oldCoins != coinsNow) {
-            int difference = coinsNow - oldCoins;
-            coins.append(" &e(").append(difference > 0 ? "+" : "").append(Utils.getFormattedNumber(difference)).append(")");
-        }
-        if (oldBits != null && oldBits != bitsNow) {
-            int difference = bitsNow - oldBits;
-            bits.append(" &3(").append(difference > 0 ? "+" : "").append(Utils.getFormattedNumber(difference)).append(")");
-        }
+        String coins = purseLine(coinsNow, coinChanges.computeIfAbsent(id, i -> new SidebarChange()).update(coinsNow));
+        Double bitsChange = bitChanges.computeIfAbsent(id, i -> new SidebarChange()).update(bitsNow);
 
         List<String> lines = new ArrayList<>();
         lines.add(dateLine);
@@ -101,11 +92,22 @@ public class ScoreboardRunnable implements Runnable {
             lines.add("&7 \u23e3 &7" + (region != null ? region : RegionType.getRegionType(player.getLocation())).displayName());
         }
         lines.add("&7");
-        lines.add(coins.toString());
-        lines.add(bits.toString());
+        lines.add(coins);
+        // No bits, no line (a new profile's sidebar).
+        if (bitsNow > 0) lines.add(bitsLine(bitsNow, bitsChange));
         lines.add("&8");
         lines.add("&ewww.hypixel.net");
         return lines;
+    }
+
+    /** "&fPurse: &657,690,425", then " &e(+5)" for a change (research coins.md 1.1). */
+    static String purseLine(double coins, Double change) {
+        return "&fPurse: &6" + Coins.sidebar(coins) + (change == null ? "" : " &e(" + Coins.signed(change) + ")");
+    }
+
+    /** "&fBits: &b14,321", then " &3(+545)" for a change. */
+    static String bitsLine(int bits, Double change) {
+        return "&fBits: &b" + Utils.getFormattedNumber(bits) + (change == null ? "" : " &3(" + Coins.signed(change) + ")");
     }
 
     private void show(Player player, List<String> lines) {

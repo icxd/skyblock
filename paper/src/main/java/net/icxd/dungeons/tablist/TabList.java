@@ -186,7 +186,8 @@ public class TabList {
         // Column 4: account info.
         lines.add(new Line("§6§l      Account Info", GOLD));
         lines.add(new Line("§e§lProfile: §a" + user.profileName(), GRAY));
-        lines.add(new Line("§f Bank: §6" + Utils.formatNumber(user.getBankBalance()) + "/50M", GRAY));
+        // " Bank: &60" as recorded (research coins.md 1.1); a big balance short, "1B" (as in Skyblocker's tab example).
+        lines.add(new Line("§f Bank: §6" + Utils.formatNumber(user.getBankBalance()), GRAY));
         lines.add(new Line("§8§1 ", GRAY));
         // The Dungeon Hub's has Dungeons where the Hub's has Skills (both recorded).
         List<String> widget = type == ServerType.DUNGEON_HUB
