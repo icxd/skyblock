@@ -50,6 +50,7 @@ public final class RunPuzzles {
             return new Undoable(host, room, NAMES.getOrDefault(room.template(), room.template()));
         }
         Puzzle puzzle = switch (room.template()) {
+            case "tic_tac_toe" -> data.ticTacToe() == null ? null : new TicTacToePuzzle(host, room.id(), room.frame(), data.ticTacToe());
             default -> null;
         };
         if (puzzle != null) return puzzle;
