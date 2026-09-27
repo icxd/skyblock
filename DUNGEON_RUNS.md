@@ -98,8 +98,9 @@ second." (the sidebar shows "Starting in: 0:04"). Anyone readying down stops it.
   used.".
 - The action bar shows `N/M Secrets` for the room you're in (ten spaces after the mana), the tab
   list the team's secrets, Discoveries (secrets and crypts) and the share of the floor's secrets
-  (19%, 4.8%), and EXTRA STATS the secrets found. The score reads `totalSecrets()` and
-  `secretsFound()`.
+  (19%, 4.8%), and EXTRA STATS the secrets found. `totalSecrets()` and `secretsFound()` are the
+  run's `ScoreCounts` for the score, which doesn't read them yet: it still counts the members'
+  secrets against a total of 0, so secrets add nothing to it.
 
 **Blessings** (`Blessing`, `RunBlessings`). Power, Wisdom, Stone, Life (and Time, from the Quiz on
 later floors): each level adds a flat amount and multiplies the stat (Stone I: +4 and x1.02
