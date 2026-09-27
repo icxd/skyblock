@@ -212,10 +212,18 @@ final class RunClasses {
 
     // Stats and damage
 
-    /** Their class's stats on top of the rest. */
+    /** Their class's stats on top of the rest (see {@link #classStats}). */
     void stats(Player player, Stats stats) {
         State s = active(player);
-        if (s == null) return;
+        if (s != null) classStats(s, stats, System.currentTimeMillis());
+    }
+
+    /**
+     * A class's stats, at {@code now}, on top of everything else's in {@code stats}: its bonuses, then
+     * what scales the total (the Healer's Renew multiplies all their Mending, the Tank's Protective
+     * Barrier all their Defense, the Berserk's Indomitable adds a share of all their Strength).
+     */
+    static void classStats(State s, Stats stats, long now) {
         switch (s.dungeonClass) {
             case HEALER -> {
                 stats.add(Stat.VITALITY, s.value(ClassBonus.HEALER_VITALITY));
@@ -230,7 +238,7 @@ final class RunClasses {
             case BERSERK -> {
                 stats.add(Stat.SPEED, s.value(ClassBonus.BERSERK_WALK_SPEED));
                 stats.add(Stat.SWING_RANGE, s.value(ClassBonus.BERSERK_WEAPON_MASTER));
-                if (System.currentTimeMillis() < s.ultimateUntil) {
+                if (now < s.ultimateUntil) {
                     stats.add(Stat.ATTACK_SPEED, 100);
                     stats.add(Stat.SPEED, 400);
                 }
@@ -245,7 +253,7 @@ final class RunClasses {
                 stats.add(Stat.VITALITY, s.value(ClassBonus.TANK_VITALITY));
                 // Protective Barrier: "Grants 1.3x Defense".
                 stats.set(Stat.DEFENSE, stats.get(Stat.DEFENSE) * (1 + s.value(ClassBonus.TANK_PROTECTIVE_BARRIER) / 100));
-                if (System.currentTimeMillis() < s.ultimateUntil) stats.set(Stat.DEFENSE, ClassAbilities.castleOfStoneDefense(stats.get(Stat.DEFENSE)));
+                if (now < s.ultimateUntil) stats.set(Stat.DEFENSE, ClassAbilities.castleOfStoneDefense(stats.get(Stat.DEFENSE)));
             }
         }
     }
@@ -258,12 +266,15 @@ final class RunClasses {
      */
     double damageMultiplier(Player player, boolean ranged) {
         State s = active(player);
-        if (s == null) return 1;
+        return s == null ? 1 : damageFactor(s, ranged, System.currentTimeMillis());
+    }
+
+    /** {@link #damageMultiplier} for a member in this state, at {@code now}. */
+    static double damageFactor(State s, boolean ranged, long now) {
         return switch (s.dungeonClass) {
             case BERSERK -> {
                 if (ranged) yield 1;
                 double factor = 1 + s.value(ClassBonus.BERSERK_MELEE_DAMAGE) / 100;
-                long now = System.currentTimeMillis();
                 if (now < s.bloodlustUntil) factor *= 1 + s.value(ClassBonus.BERSERK_BLOODLUST_DAMAGE) / 100;
                 if (now < s.ultimateUntil) factor *= 1.5;
                 yield factor;
@@ -370,8 +381,7 @@ final class RunClasses {
             case HEALER -> ClassAbilities.wishCooldown(abilities.wish(player));
             case MAGE -> 0;
         };
-        s.ultimateReadyAt = now + cooldown;
-        s.nextReminder = ticks + (int) (cooldown / 50);
+        usedUltimate(s, ticks, now, cooldown);
         player.sendMessage(Utils.color("&aUsed &6" + name + "&a!"));
     }
 
@@ -421,14 +431,28 @@ final class RunClasses {
                 player.sendMessage(Utils.color("&6" + ability + " &ais now available!"));
             }
             String ultimate = ultimateName(s.dungeonClass);
-            if (ultimate != null && ticks >= s.nextReminder) {
-                s.nextReminder = ticks + REMINDER_EVERY;
-                // Not for ghosts (UNKNOWN whether Hypixel reminds them).
-                if (now >= s.ultimateReadyAt && !run.ghosts().isGhost(entry.getKey())) {
-                    player.sendMessage(Utils.color("&6" + ultimate + "&a is ready to use! Press &6&lDROP&a to activate it!"));
-                }
+            // Not for ghosts (UNKNOWN whether Hypixel reminds them).
+            if (ultimate != null && reminderDue(s, ticks, now) && !run.ghosts().isGhost(entry.getKey())) {
+                player.sendMessage(Utils.color("&6" + ultimate + "&a is ready to use! Press &6&lDROP&a to activate it!"));
             }
         }
+    }
+
+    /**
+     * Whether the ultimate's "ready to use" line is due at run tick {@code tick}, {@code now}: 466 ticks
+     * in, then every 600 while it's unused, and when a cooldown is over (see {@link #usedUltimate}).
+     * Moves the next one on either way.
+     */
+    static boolean reminderDue(State s, int tick, long now) {
+        if (tick < s.nextReminder) return false;
+        s.nextReminder = tick + REMINDER_EVERY;
+        return now >= s.ultimateReadyAt;
+    }
+
+    /** The ultimate was used at run tick {@code tick}, {@code now}: it's ready, and reminded of, when the cooldown is over. */
+    static void usedUltimate(State s, int tick, long now, long cooldown) {
+        s.ultimateReadyAt = now + cooldown;
+        s.nextReminder = tick + (int) (cooldown / 50);
     }
 
     /**
