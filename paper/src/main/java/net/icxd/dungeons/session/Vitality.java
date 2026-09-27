@@ -2,14 +2,17 @@ package net.icxd.dungeons.session;
 
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.user.User;
+import net.icxd.dungeons.utils.Utils;
 import org.bson.Document;
 import org.bukkit.entity.Player;
+
+import java.util.List;
 
 /**
  * A player's Vitality: since the Healing Revamp (0.26.1) a pool that healing abilities spend, as other
  * abilities spend mana. "Your Vitality stat defines the maximum amount of Vitality (the resource) you
  * have. Activating an ability that costs Vitality depletes the resource", and it "no longer boosts healing
- * as a multiplier" (the wiki's June 10 changelog; the wiki's Vitality). It's kept on their session with
+ * as a multiplier" (0.26.1's release notes, and its June 10 alpha; the wiki's Vitality). It's kept on their session with
  * its fractions (the stats menu: "You will regenerate 5.2 Vitality per second" at 104). Main thread.
  */
 public final class Vitality {
@@ -17,6 +20,17 @@ public final class Vitality {
     static final double REGEN_SHARE = 0.05;
     /** The profile's flag: they've used an item that costs Vitality, so the action bar shows it (see {@link #shown}). */
     static final String SHOWN = "vitalityShown";
+    /** The bold green rule around it, as around Hypixel's other announcements (64 of them in its picture too). */
+    private static final String RULE = "&a&l" + "▬".repeat(64);
+    /**
+     * "When you first use an ability that costs Vitality, a stat message unlock will appear, explaining how
+     * Vitality works" (0.26.1's release notes), as their picture of it reads. Its colours there are the
+     * SkyBlock resource pack's own, so these are the nearest codes: gold, gray, and Vitality's dark red as
+     * in lore and the stats menu.
+     */
+    static final List<String> DISCOVERED = List.of(RULE, "&6&lNEW STAT DISCOVERED! &4♨ Vitality", "",
+            "&4♨ Vitality &7is a resource for healing abilities. The more &4♨ Vitality &7you have, the more healing you will have available.",
+            "", RULE);
 
     private Vitality() {
     }
@@ -45,7 +59,9 @@ public final class Vitality {
         if (vitality < cost) return false;
         PlayerSession.of(player).setVitality(vitality - cost);
         User user = User.ifLoaded(player.getUniqueId());
-        if (user != null) markShown(user.profile());
+        if (user != null && markShown(user.profile())) {
+            for (String line : DISCOVERED) player.sendMessage(Utils.color(line));
+        }
         return true;
     }
 
@@ -76,8 +92,10 @@ public final class Vitality {
         return profile != null && Boolean.TRUE.equals(profile.getBoolean(SHOWN));
     }
 
-    /** From now on their action bar shows Vitality (they've spent some). */
-    static void markShown(Document profile) {
-        if (profile != null && !shown(profile)) profile.put(SHOWN, true);
+    /** From now on their action bar shows Vitality (they've spent some); whether that's new. */
+    static boolean markShown(Document profile) {
+        if (profile == null || shown(profile)) return false;
+        profile.put(SHOWN, true);
+        return true;
     }
 }

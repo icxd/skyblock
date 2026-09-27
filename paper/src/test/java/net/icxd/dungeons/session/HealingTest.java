@@ -34,11 +34,23 @@ class HealingTest {
     void shownAfterFirstUse() {
         Document profile = new Document();
         assertFalse(Vitality.shown(profile));
-        Vitality.markShown(profile);
+        assertTrue(Vitality.markShown(profile));
         assertTrue(Vitality.shown(profile));
         assertEquals(true, profile.getBoolean(Vitality.SHOWN));
-        Vitality.markShown(profile);
+        // Only the first time is news (the "NEW STAT DISCOVERED!" message).
+        assertFalse(Vitality.markShown(profile));
         assertTrue(Vitality.shown(profile));
         assertFalse(Vitality.shown((Document) null));
+        assertFalse(Vitality.markShown(null));
+    }
+
+    /** 0.26.1's "NEW STAT DISCOVERED!" message, between two rules, as its picture shows it. */
+    @Test
+    void discovered() {
+        assertEquals(6, Vitality.DISCOVERED.size());
+        assertEquals(Vitality.DISCOVERED.getFirst(), Vitality.DISCOVERED.getLast());
+        assertEquals("&6&lNEW STAT DISCOVERED! &4♨ Vitality", Vitality.DISCOVERED.get(1));
+        assertEquals("", Vitality.DISCOVERED.get(2));
+        assertTrue(Vitality.DISCOVERED.get(3).endsWith("the more healing you will have available."));
     }
 }
