@@ -22,6 +22,7 @@ import net.icxd.dungeons.command.commands.user.ProfilesCommand;
 import net.icxd.dungeons.command.commands.user.SbMenuCommand;
 import net.icxd.dungeons.command.commands.user.ShowExtraStatsCommand;
 import net.icxd.dungeons.command.commands.user.SkillsCommand;
+import net.icxd.dungeons.command.commands.user.StatsCommand;
 import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.command.commands.user.ViewStashCommand;
 import net.icxd.dungeons.economy.KillCoins;
@@ -132,7 +133,7 @@ public class Dungeons extends JavaPlugin {
                 new NBTCommand(), new PlayerDataCommand(), new RecombobulateCommand(), new SpawnEntityCommand(),
                 new SpawnRewardChestCommand(), new UnlockCommand(), new UpgradeCommand(), new HotmCommand(),
                 new ShowExtraStatsCommand(), new ToggleReadyUpCommand(), new ProfilesCommand(), new SkillsCommand(),
-                new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand());
+                new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {

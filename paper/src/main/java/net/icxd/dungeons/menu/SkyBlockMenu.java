@@ -34,9 +34,9 @@ import net.icxd.dungeons.utils.Text;
  * What this plugin has is filled in: the stats, the skill average, the SkyBlock level, the profiles
  * and the date. What it doesn't have yet (collections, the recipe book, pets, the bank's banker, fast
  * travel) is shown as Lemon's menu showed it, a profile with none of it; the Booster Cookie, which
- * Lemon's didn't have, is left out, and so are the calendar's events. Your Skills and Profile
- * Management open; the rest do nothing yet. Stat icons are the classic symbols (Hypixel's are its
- * resource pack's glyphs). Main thread.
+ * Lemon's didn't have, is left out, and so are the calendar's events. Stats & Equipment, Your Skills
+ * and Profile Management open; the rest do nothing yet. Stat icons are the classic symbols (Hypixel's
+ * are its resource pack's glyphs). Main thread.
  */
 public final class SkyBlockMenu extends GUI {
     public static final String TITLE = "SkyBlock Menu";
@@ -114,6 +114,7 @@ public final class SkyBlockMenu extends GUI {
                 stack.setItemMeta(head);
             }
             switch (slot) {
+                case STATS -> set(button(slot, stack, () -> new StatsMenu(viewer).open(viewer)));
                 case SKILLS -> set(button(slot, stack, () -> new SkillsMenu(viewer).open(viewer)));
                 case PROFILES -> set(button(slot, stack, () -> new ProfileManagementMenu(viewer).open(viewer)));
                 default -> set(slot, stack);
