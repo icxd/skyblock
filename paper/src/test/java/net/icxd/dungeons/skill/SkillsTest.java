@@ -12,7 +12,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** The XP tables (research skills.md 3.2-3.4), levels, progress and caps, and a profile's skill data. */
@@ -210,8 +209,6 @@ class SkillsTest {
 
     @Test
     void byName() {
-        assertEquals(Skill.HUNTING, Skill.parse("hunting"));
-        assertNull(Skill.parse("DUNGEONEERING"));
         assertEquals("combat", Skill.COMBAT.key());
         assertEquals("Runecrafting", Skill.RUNECRAFTING.getName());
     }

@@ -181,14 +181,4 @@ public enum Skill {
             375_000, 400_000, 425_000, 450_000, 475_000, 500_000, 550_000, 600_000, 650_000, 700_000,
             750_000, 800_000, 850_000, 900_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000,
             1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000};
-
-    /** "COMBAT" or "combat": the skill; null for none. */
-    public static Skill parse(String name) {
-        if (name == null) return null;
-        try {
-            return valueOf(name.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
 }

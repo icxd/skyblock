@@ -10,9 +10,9 @@ import java.util.Map;
 
 /**
  * A profile's skill XP and levels: XP is a double under {@code skills.<key>} ({@link Skill#key}), and
- * older profiles' whole numbers read the same (the next gain writes a double). A skill with no XP yet
- * has no key at all. Functions on the profile's document, with no server needed, and a few on the
- * profile a player plays on. Main thread.
+ * older profiles' whole numbers read the same (the next gain writes a double). New profiles have every
+ * skill's key at 0.0; older ones may lack some, which read as no XP. Functions on the profile's
+ * document, with no server needed, and a few on the profile a player plays on. Main thread.
  */
 public final class Skills {
     private Skills() {
