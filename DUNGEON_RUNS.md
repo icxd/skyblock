@@ -200,7 +200,8 @@ Experience (`RunRewards`) follows the chat's score: the floor's base at 300 (55 
 x score/300, with 300 more score for the first five completions of a floor and 40% more for the
 first five runs of the day. Repeat completions add Catacombs experience (up to 76 of them below
 Floor VI), and so do secrets over the floor's share (0.5% a percent, up to Floor VI). Class
-experience is the base x 1.1, and the others in the party get a quarter of it in their classes.
+experience is the base x 1.1, and each member also gets a quarter of their class experience in
+each other class in the party.
 Those multipliers are community reverse-engineering, unverified.
 
 ## Not yet

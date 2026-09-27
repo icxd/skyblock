@@ -29,8 +29,8 @@ final class RunRewards {
     /** UNVERIFIED (the forum thread's constant): class experience before anything else multiplies it. */
     static final double CLASS_BASE = 1.1;
     /**
-     * UNVERIFIED: the others in the party get a quarter of a class's experience as a team bonus in
-     * theirs (a community calculator's assumption; Hypixel gives no number).
+     * UNVERIFIED: each member also gets a quarter of their class experience in each other class in
+     * the party, as a team bonus (a community calculator's assumption; Hypixel gives no number).
      */
     static final double TEAM_SHARE = 0.25;
 
