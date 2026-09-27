@@ -78,7 +78,9 @@ class SkillRewardsTest {
                 "&8+&a4 &c❤ Health",
                 "&8+&6150,000 &7Coins",
                 "&8+&b10 SkyBlock XP"), SkillRewards.lines(Skill.FARMING, 22));
-        assertEquals(List.of("&eTreasure Hunter XVIII",
+        assertEquals(List.of("&5???&3 Sea Creature",
+                "&5???&3 Sea Creature",
+                "&eTreasure Hunter XVIII",
                 "  &fGrants &a+&81.7➜&a1.8&f &6⛃ Treasure Chance&f.",
                 "&8+&a3 &c❤ Health",
                 "&8+&665,000 &7Coins",

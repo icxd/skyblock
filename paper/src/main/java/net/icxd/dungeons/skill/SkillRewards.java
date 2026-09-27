@@ -38,6 +38,14 @@ public final class SkillRewards {
             30, List.of("&9Mandraa &7Power Stone", "&6Hazmat Enderman &7Power Stone", "&6Vitamin Death &7Power Stone"),
             35, List.of("&dScorched Books &7Power Stone"));
 
+    /**
+     * Fishing XVIII's two sea creatures, recorded before its perk and with their names hidden as "???"
+     * (REC3 "Your Skills" slot 21). The plugin has no sea creatures, so the hidden names are kept as
+     * recorded. The other levels' sea creatures are UNKNOWN, so they have none.
+     */
+    private static final Map<Integer, List<String>> FISHING_BEFORE = Map.of(
+            18, List.of("&5???&3 Sea Creature", "&5???&3 Sea Creature"));
+
     private SkillRewards() {
     }
 
@@ -49,6 +57,7 @@ public final class SkillRewards {
     public static List<String> lines(Skill skill, int level) {
         List<String> lines = new ArrayList<>();
         if (skill == Skill.COMBAT) lines.addAll(COMBAT_BEFORE.getOrDefault(level, List.of()));
+        if (skill == Skill.FISHING) lines.addAll(FISHING_BEFORE.getOrDefault(level, List.of()));
         String perk = perkName(skill);
         if (perk != null) {
             lines.add("&e" + perk + " " + Utils.getRomanNumeral(level));
