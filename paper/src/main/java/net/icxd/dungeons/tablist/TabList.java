@@ -34,6 +34,7 @@ import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.skill.SkillText;
@@ -146,7 +147,7 @@ public class TabList {
         for (int i = 0; i < PLAYER_SLOTS; i++) {
             if (i < players.size()) {
                 Player p = players.get(i);
-                lines.add(new Line("" + ranks.get(p).getColor() + p.getName(), skin(p), p.getPing()));
+                lines.add(new Line(Utils.color(SkyBlockLevels.tabName(p, ranks.get(p))), skin(p), p.getPing()));
             } else {
                 lines.add(new Line("§3 ", GRAY));
             }
@@ -189,6 +190,7 @@ public class TabList {
         // Column 4: account info.
         lines.add(new Line("§6§l      Account Info", GOLD));
         lines.add(new Line("§e§lProfile: §a" + user.profileName(), GRAY));
+        lines.add(new Line(Utils.color(SkyBlockLevels.tabLine(viewer)), GRAY));
         // " Bank: &60" as recorded (research coins.md 1.1); a big balance short, "1B" (as in Skyblocker's tab example).
         lines.add(new Line("§f Bank: §6" + Utils.formatNumber(user.getBankBalance()), GRAY));
         lines.add(new Line("§8§1 ", GRAY));

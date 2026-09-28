@@ -18,6 +18,7 @@ import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
@@ -128,8 +129,9 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * "[MVP+] name: text", in the rank's colours. Off the main thread. The player's own text is shown
-     * as typed: colour codes are for ranks.
+     * "[88] ♦ [MVP+] name: text", in the rank's colours, the SkyBlock level and emblem only for those who
+     * see them (SkyBlock Levels in Chat, see {@link SkyBlockLevels}). Off the main thread. The player's own
+     * text is shown as typed: colour codes are for ranks.
      */
     @EventHandler
     public void onChat(AsyncChatEvent event) {
@@ -141,8 +143,10 @@ public class PlayerListener implements Listener {
         }
         Rank rank = user.getRank();
         Component name = Text.line(rank.getPrefix() + player.getName() + (rank == Rank.DEFAULT ? "&7" : "&f") + ": ");
+        Component level = Text.line(SkyBlockLevels.chatPrefix(player.getUniqueId()));
         NamedTextColor text = rank == Rank.DEFAULT ? NamedTextColor.GRAY : NamedTextColor.WHITE;
-        event.renderer((source, displayName, message, viewer) -> name.append(message.colorIfAbsent(text)));
+        event.renderer((source, displayName, message, viewer) -> (viewer instanceof Player p && !SkyBlockLevels.levelsInChat(p.getUniqueId())
+                ? name : level.append(name)).append(message.colorIfAbsent(text)));
     }
 
     /**
