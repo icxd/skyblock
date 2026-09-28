@@ -20,7 +20,7 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.menu.Icon;
 
 /**
- * On a Sandbox profile only, and our own design (the owner's "easier customization"; Hypixel's grinder has no gem
+ * On a Sandbox profile only, and our own design, so UNKNOWN (the owner's "easier customization"; Hypixel's grinder has no gem
  * picker): the gems an open slot takes, in all five qualities, to put one in without having it, for nothing. Each
  * gem a column (centred as the grinder's slots are, seven a page), each quality a row, Rough at the top; Go Back to
  * the grinder in 48, Close in 49, pages in 45 and 53. Main thread.

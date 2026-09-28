@@ -33,7 +33,8 @@ import net.icxd.dungeons.utils.Text;
  * and Next Page in 45 and 53, Go Back to the grinder in 48 and Close in 49. Each item is as it is made new, then
  * "&7Available Gemstone Slots" and its slots' types, the same ones together ("  &b✎ Sapphire &8x2"). An armour set
  * shows once, as its first piece with slots (the helmet) named after the set ("&6Divan Armor"; the sets are the
- * gemstone table's, see {@link GemstoneTable#armorSets}). The item stays with the session meanwhile. Main thread.
+ * gemstone table's, see {@link GemstoneTable#armorSets}; UNKNOWN: Hypixel's set names, "Divan's Armor" in the wiki's
+ * copy). The item stays with the session meanwhile. Main thread.
  */
 final class GemstoneGuide extends HexScreen {
     static final int HEADER = 4;

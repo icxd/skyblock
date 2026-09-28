@@ -76,7 +76,7 @@ public final class GemstoneGrinder extends HexScreen {
             "&7Gemstones to it!");
     /** The wiki's (Geo/UI), which Swofty's recreation has word for word. */
     static final Icon GUIDE_BUTTON = new Icon(Material.REDSTONE_TORCH, "&aGemstone Guide", guideLore(true));
-    /** A design choice, not Hypixel's (whose grinder is only Geo's): the usual Go Back of a menu reached from another. */
+    /** UNKNOWN (a design choice, not Hypixel's, whose grinder is only Geo's): the usual Go Back of a menu reached from another. */
     static final Icon BACK_TO_HEX = new Icon(Material.ARROW, "&aGo Back", "&7To The Hex");
 
     private final boolean fromHex;
@@ -320,7 +320,7 @@ public final class GemstoneGrinder extends HexScreen {
 
     /**
      * The removal's cost block: free on a Sandbox profile and for a gem its slot no longer takes; without the table
-     * (so without the fees), it can't be taken out (our own words).
+     * (so without the fees), it can't be taken out (UNKNOWN: our own words).
      */
     static List<String> removalBlock(HexCosts cost, HexSession session, String action) {
         boolean free = session.sandbox() || cost != null && cost.parts().isEmpty();
@@ -362,7 +362,7 @@ public final class GemstoneGrinder extends HexScreen {
      * A cost block as the grinder's lore has it (the screenshot and Skyblock-Tweaks): {@code header}, each part on a
      * line ("&6250,000 Coins", "&5✎ Flawless Sapphire Gemstone &8x4", no "x1"), a blank line and {@code action}; or,
      * when they can't pay, what's missing in its place (the Hex's lines, decision 3: there's no Bazaar here). Free
-     * (a Sandbox profile), "&aFree" for the parts (our own wording, as the Hex's).
+     * (a Sandbox profile), "&aFree" for the parts (UNKNOWN: our own wording, as the Hex's).
      */
     static List<String> costBlock(String header, List<Check> checks, boolean free, String action) {
         return costBlock(header, checks, free, action, GemstoneGrinder::itemName);
