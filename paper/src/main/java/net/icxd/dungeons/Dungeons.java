@@ -31,6 +31,7 @@ import net.icxd.dungeons.command.commands.user.BackpackCommand;
 import net.icxd.dungeons.command.commands.user.BagsCommand;
 import net.icxd.dungeons.command.commands.user.EnderChestCommand;
 import net.icxd.dungeons.command.commands.user.HotmCommand;
+import net.icxd.dungeons.command.commands.user.LevelsCommand;
 import net.icxd.dungeons.command.commands.user.LoadoutsCommand;
 import net.icxd.dungeons.command.commands.user.PickupStashCommand;
 import net.icxd.dungeons.command.commands.user.ProfilesCommand;
@@ -38,6 +39,7 @@ import net.icxd.dungeons.command.commands.user.SacksCommand;
 import net.icxd.dungeons.command.commands.user.SbMenuCommand;
 import net.icxd.dungeons.command.commands.user.ShowExtraStatsCommand;
 import net.icxd.dungeons.command.commands.user.SkillsCommand;
+import net.icxd.dungeons.command.commands.user.SkyBlockXpCommand;
 import net.icxd.dungeons.command.commands.user.StatsCommand;
 import net.icxd.dungeons.command.commands.user.StorageCommand;
 import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
@@ -187,7 +189,7 @@ public class Dungeons extends JavaPlugin {
                 new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand(), new StorageCommand(),
                 new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
-                new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand());
+                new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {

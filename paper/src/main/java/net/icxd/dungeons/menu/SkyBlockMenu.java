@@ -17,6 +17,7 @@ import net.icxd.dungeons.collection.Collections;
 import net.icxd.dungeons.collection.CollectionsMenu;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
+import net.icxd.dungeons.leveling.LevelingMenu;
 import net.icxd.dungeons.leveling.SkyBlockXp;
 import net.icxd.dungeons.profile.ProfileManagementMenu;
 import net.icxd.dungeons.profile.Profiles;
@@ -44,7 +45,7 @@ import net.icxd.dungeons.utils.Text;
  * the date, and the collections and recipes found. What it doesn't have yet (pets, the bank's banker,
  * fast travel) is shown as Lemon's menu showed it, a profile with none of it; the Booster Cookie, which
  * Lemon's didn't have, is left out, and so are the calendar's events. Stats & Equipment, Your Skills,
- * Storage, Your Bags, Loadouts, Collections, the Recipe Book, the Crafting Table and Profile Management
+ * SkyBlock Leveling, Storage, Your Bags, Loadouts, Collections, the Recipe Book, the Crafting Table and Profile Management
  * open; the rest do nothing yet. Stat icons are the classic symbols (Hypixel's are its resource pack's
  * glyphs). Main thread.
  */
@@ -125,6 +126,7 @@ public final class SkyBlockMenu extends GUI {
             switch (slot) {
                 case STATS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new StatsMenu(viewer).open(viewer)));
                 case SKILLS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new SkillsMenu(viewer).open(viewer)));
+                case LEVELING -> set(GUIClickableItem.button(slot, stack, viewer, () -> new LevelingMenu(viewer).open(viewer)));
                 case PROFILES -> set(GUIClickableItem.button(slot, stack, viewer, () -> new ProfileManagementMenu(viewer).open(viewer)));
                 case STORAGE -> set(GUIClickableItem.button(slot, stack, viewer, () -> new StorageMenu(viewer).open(viewer)));
                 case BAGS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new YourBagsMenu(viewer).open(viewer)));
