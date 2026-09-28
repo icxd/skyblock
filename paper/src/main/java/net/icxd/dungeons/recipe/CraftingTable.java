@@ -52,8 +52,10 @@ import net.icxd.dungeons.user.User;
  * doesn't fit). Items can be shift-clicked in, as the wiki's Crafting Table says of Hypixel's.
  *
  * <p>UNKNOWN, not recorded: the bottom glass turning lime while there's a result (Hypixel's, as players know
- * it); the result item has only its own lore. Quick Crafting itself (VIP and up, Carpentry III) isn't here
- * yet (LATER): its slots show as the recording's empty ones. Main thread.
+ * it); the result item has only its own lore; a recipe the player hasn't unlocked shows as no recipe ("Recipe
+ * Required"); an ingredient's enchantments, reforge and upgrades go with it, none to the result. Quick
+ * Crafting itself (VIP and up, Carpentry III) isn't here yet (LATER): its slots show as the recording's
+ * empty ones. Main thread.
  */
 public final class CraftingTable extends GUI {
     public static final String TITLE = "Craft Item";
@@ -266,7 +268,10 @@ public final class CraftingTable extends GUI {
         if (xp > 0) SkillGains.give(viewer, Skill.CARPENTRY, xp);
     }
 
-    /** The Carpentry XP {@code times} crafts of the match give. */
+    /**
+     * The Carpentry XP {@code times} crafts of the match give. UNKNOWN which vanilla recipes give none (the wiki's
+     * Carpentry: "most vanilla recipes do not"), so all of them give it.
+     */
     static double xp(Match match, int times) {
         double price = 0;
         for (RecipeData.Ingredient ingredient : match.shape().cells()) {
