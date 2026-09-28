@@ -237,6 +237,10 @@ def book_page(wiki, page):
     for m in re.finditer(r'^\|(\d+), ?(\d+)\s*=\s*([^,\n]+),\s*([^,\n]*),\s*([^,\n]*)', text, re.M):
         row, col, image, _link, title = m.groups()
         name = plain((image if '%inherit%' in title else title).replace('\\\'', "'"))
+        # Items that share a name are told apart by their image's rarity ("Wisp Upgrade Stone (Epic)").
+        rarity = re.fullmatch(re.escape(name) + r' \((Common|Uncommon|Rare|Epic|Legendary|Mythic)\)', plain(image))
+        if rarity:
+            name = rarity.group(0)
         if (row, col.strip()) == ('1', '5') or name in ('Next Page', 'Previous Page', 'Go Back', 'Close'):
             continue
         names.append(name)
@@ -546,6 +550,10 @@ class Builder:
                 got['amount'] = int(recorded or amount)
             else:
                 self.note('essence rewards with no amount', f'{boss_id} {to_roman(tier)}: {name}')
+            # Its head, NEU's ESSENCE_GOLD (the wiki's Collection UI shows the "Gold Essence" item).
+            texture = self.neu.texture('ESSENCE_' + name.upper())
+            if texture:
+                got['texture'] = texture
             return got
         item = self.resolve(name)
         got = {'type': 'ITEM' if kind == 'Reward' else 'RECIPE', 'name': plain(name)}
@@ -723,7 +731,7 @@ class Builder:
             for name in names:
                 if name.endswith(' Minion Recipes') or name.startswith('Mystery ') and name.endswith(' Pet'):
                     continue  # the collections' (above); pets as they were once sold
-                item = self.resolve(name)
+                item = self.resolve_rarity(name)
                 if item in recipes:
                     entry = {'category': category, 'name': name, 'item': item}
                     if not recipes[item].get('requires') and category == 'SLAYER':

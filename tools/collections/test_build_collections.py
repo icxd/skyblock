@@ -131,6 +131,18 @@ class Slayers(unittest.TestCase):
                                                     'Enderman Slayer: no page Enderman Slayer', 'Blaze Slayer: no page Blaze Slayer',
                                                     'Vampire Slayer: no page Vampire Slayer'])
 
+    def test_book_names_told_apart_by_rarity(self):
+        page = ('|1, 5=Blaze, none, &aBlaze Recipes\n'
+                '|5, 3=Wisp Upgrade Stone (Legendary), none, &6Wisp Upgrade Stone, &8Consumed on use\n'
+                '|5, 4=Wisp Upgrade Stone (Rare), none, &9Wisp Upgrade Stone, &8Consumed on use\n'
+                '|5, 5=Burststopper Talisman, none, &9Burststopper Talisman, &8text\n')
+        names = bc.book_page(FakeWiki({'Recipe Book/UI/Blaze': page}), 'Blaze')
+        self.assertEqual(names, ['Wisp Upgrade Stone (Legendary)', 'Wisp Upgrade Stone (Rare)', 'Burststopper Talisman'])
+        items = {'UPGRADE_STONE_FROST': {'name': 'Wisp Upgrade Stone', 'rarity': 'RARE'},
+                 'UPGRADE_STONE_SUBZERO': {'name': 'Wisp Upgrade Stone', 'rarity': 'LEGENDARY'}}
+        b = builder(items)
+        self.assertEqual([b.resolve_rarity(n) for n in names[:2]], ['UPGRADE_STONE_SUBZERO', 'UPGRADE_STONE_FROST'])
+
     def test_crafttext(self):
         neu = FakeNeu(crafttext={'X': 'Requires: Blaze Rod IV', 'Y': 'Requires: Wolf Slayer 7', 'Z': 'Requires: a Museum rank'})
         b = builder({}, neu, api_items={'COMBAT': {'BLAZE_ROD': {'name': 'Blaze Rod', 'tiers': []}}})
