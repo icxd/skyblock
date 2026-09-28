@@ -61,8 +61,8 @@ public final class ReforgeLore {
 
     /**
      * "&9Withered &7(&6Legendary&7):" and "&7Strength: &c+147", a line a stat in the order item lore lists them, the
-     * value coloured as on items (the item data's stone lore); none if it gives nothing at that rarity (Divine, but
-     * on mining tools).
+     * value coloured as on items (the item data's stone lore; the wiki's older screenshot has red and green); none
+     * if it gives nothing at that rarity (Divine, but on mining tools; UNKNOWN what Hypixel shows then).
      */
     static List<String> stats(Reforge reforge, Rarity rarity, int catacombsLevel) {
         List<String> lines = new ArrayList<>();

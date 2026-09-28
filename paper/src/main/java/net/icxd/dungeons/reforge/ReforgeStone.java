@@ -22,7 +22,7 @@ public record ReforgeStone(String item, Reforge reforge, String type, Set<String
     /**
      * The kinds of item the data's types are, by the items' Hypixel type (SkyHanni's ReforgeApi, which reads the
      * same NEU names): a pool's or a stone's "SWORD/ROD" is a sword, longsword, gauntlet or fishing rod.
-     * Our reading: a Hoe with the Farming Tools (no item is one yet).
+     * UNKNOWN: a Hoe, taken as a Farming Tool (no item is one yet).
      */
     public static final Map<String, Set<String>> TYPES = Map.ofEntries(
             Map.entry("SWORD", Set.of("SWORD", "LONGSWORD", "GAUNTLET")),

@@ -29,7 +29,8 @@ import net.icxd.dungeons.reforge.ReforgeTable;
  * stone costs its fee at that rarity and the stone itself; the random reforge its price at that rarity (Hypixel's
  * first reforge for 10 Coal is the Blacksmith's, not the Hex's). On a Sandbox profile every stone is there to apply
  * without having it, and it's all free (HexCosts). Applying one sets the item's reforge, makes it again, and says
- * "You reforged your <old name> into a <new name>!". Main thread.
+ * "You reforged your <old name> into a <new name>!". LATER: a stone's skill requirement (the Wither Blood's Mining
+ * 30) isn't checked; UNKNOWN whether the Hex checks it. Main thread.
  */
 public final class ReforgePage extends HexPage {
     public static final String TITLE = "The Hex ➜ Reforges";
