@@ -5,6 +5,8 @@ import net.icxd.dungeons.item.ability.abilities.InstantlyShoots;
 import net.icxd.dungeons.item.ability.utility.UtilityAbilities;
 import net.icxd.dungeons.item.ability.weapons.WeaponAbilities;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -82,9 +84,18 @@ public final class Abilities {
 
     /** What using the block costs this player: {@link #manaCost(ItemBlock, int)} times their factors, rounded. */
     public static int manaCost(ItemBlock block, int maxMana, Player player) {
+        return manaCost(block, maxMana, player, new NBTTagCompound());
+    }
+
+    /**
+     * {@link #manaCost(ItemBlock, int, Player)} with the item's Mana Disintegrators ({@code tag} is its data): 1% off
+     * its mana each, 2% off its share of max mana (see ItemModifiers). UNKNOWN how Hypixel rounds it; to the nearest.
+     */
+    public static int manaCost(ItemBlock block, int maxMana, Player player, NBTTagCompound tag) {
         double factor = 1;
         for (ToDoubleFunction<Player> f : COST_FACTORS) factor *= f.applyAsDouble(player);
-        return (int) Math.round((block.mana() + block.manaPercent() * maxMana / 100) * factor);
+        double own = block.mana() * ItemModifiers.manaFactor(tag) + block.manaPercent() * ItemModifiers.shareFactor(tag) * maxMana / 100;
+        return (int) Math.round(own * factor);
     }
 
     /** Whole seconds left on a cooldown, as "on cooldown for 17s" shows 16.9 (UNKNOWN whether it rounds up or to nearest). */

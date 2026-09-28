@@ -20,6 +20,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.ability.abilities.InstantTransmission;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.bonus.SetBonuses;
 
@@ -130,7 +131,8 @@ final class Strikes {
         /** 4 blocks forward, and a red line where they went, hitting every mob on it. */
         private static void zap(Player player, NBTTagCompound tag) {
             Location from = player.getLocation().add(0, 1, 0);
-            InstantTransmission.Landing landing = InstantTransmission.landing(player, ZAP);
+            // A block further for each Transmission Tuner (the wiki's Transmission Tuner: the Sinseeker Scythe takes them).
+            InstantTransmission.Landing landing = InstantTransmission.landing(player, ZAP + ItemModifiers.tuners(tag));
             if (landing != null) {
                 Location to = new Location(from.getWorld(), landing.x() + 0.5, landing.y(), landing.z() + 0.5, from.getYaw(), from.getPitch());
                 player.teleport(to);
