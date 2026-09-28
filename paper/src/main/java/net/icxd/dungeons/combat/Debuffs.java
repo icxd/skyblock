@@ -104,6 +104,7 @@ public final class Debuffs {
 
     /** What its debuffs of this kind come to at {@code now}: the share they take off (DEFENSE, SLOW), or the factor on what it takes (TAKEN). */
     public double of(Kind kind, long now) {
+        if (debuffs.isEmpty()) return kind == Kind.TAKEN ? 1 : 0;
         if (kind == Kind.TAKEN) {
             double factor = 1;
             for (Debuff debuff : debuffs.values()) {
@@ -155,6 +156,7 @@ public final class Debuffs {
 
     /** A tick: each damage over time that's due deals its damage to {@code sink}, and those that are done end. */
     public void tick(DotSink sink) {
+        if (dots.isEmpty()) return;
         for (Iterator<Map.Entry<String, Dot>> it = dots.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<String, Dot> entry = it.next();
             Dot dot = entry.getValue();
@@ -167,7 +169,9 @@ public final class Debuffs {
 
     /** Takes off what has run out by {@code now}; whether nothing is left (no debuff, no damage over time). */
     public boolean expire(long now) {
-        for (Iterator<Debuff> it = debuffs.values().iterator(); it.hasNext(); ) if (it.next().until <= now) it.remove();
+        if (!debuffs.isEmpty()) {
+            for (Iterator<Debuff> it = debuffs.values().iterator(); it.hasNext(); ) if (it.next().until <= now) it.remove();
+        }
         return debuffs.isEmpty() && dots.isEmpty();
     }
 }
