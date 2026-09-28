@@ -52,7 +52,9 @@ the player's data is loaded, while their items are frozen (a hand-off) or while 
 - The category buttons for the item, in order, fill the 3x3 block (15-17, 24-26, 33-35), filled
   columns-first (see Approximated). Each button is `&a<name>`, then the description, a blank line, the
   category's summary, a blank line and "&eClick to view!".
-- Everything is redrawn on the tick after any click.
+- Everything is redrawn on the tick after any click. A button's click also runs on the next tick, and
+  only if the item is still the one the button was drawn for; if it was swapped in between, the click
+  only redraws. So nothing worked out for one item is ever done to another.
 
 **The item's life** (`HexSession`, `HexScreen`, `HexListener`). One session per player owns the item from
 the first Hex screen they open until the last one closes. It passes the item between screens without
@@ -78,6 +80,8 @@ that never opened) gives the item back before the save. Two cases need more:
   - If the death was called off (a dungeon ghost), the copy comes back out of the drops, and the menu
     stays open with the item.
 
+  (Paper's drop list keeps the very stack a listener adds, so the copy is found again by identity.)
+
 **Pages** (`HexPage`), laid out as on the wiki and in NEU's Hex:
 - 6 rows of glass, the item in 19, a header in 28, Go Back in 45 ("To The Hex" or the page's own line),
   and Close in 49.
@@ -93,7 +97,8 @@ that never opened) gives the item back before the save. Two cases need more:
   from the profile, and Exp levels from vanilla levels. Storage means the Ender Chest pages, then the
   backpacks (`storage/StoredItems`), and never while a storage page is open.
 - **Checking and paying:** everything is checked before anything is taken; it's all taken or nothing is.
-  Then it saves.
+  Parts of a kind are added up first (coins twice, two parts of one item or essence), so what's checked
+  is what's taken. Then it saves.
 - **The Cost block:** follows the wiki's grammar without the Bazaar lines, since there's no Bazaar. A
   missing item shows "You don't have that in your inventories!", and missing coins "You don't have enough
   Coins!".
@@ -148,24 +153,39 @@ Until its part is built, a stub opens `Placeholder`, a page with only its title 
     `skyBlockItem()`.
   - `upgrade(cost, newTag, "&6Recombobulator 3000")`: pays, rebuilds the item
     (`ItemBuilder.build(item, tag, amount, player)`), redraws, saves both together, and sends "You applied
-    ...". Pass null as the name to send your own message. It returns false and changes nothing if they
-    can't pay.
-  - `replace(tag)`: just the rebuild and redraw.
+    ...". Pass null as the name to send your own message. It returns false and takes and changes nothing
+    if they can't pay, or if the tag's id isn't a SkyBlock item.
+  - `upgrade(cost, newTag, name, back...)`: the same, and it also gives them `back` (what comes off the
+    item, such as a gemstone removed in the grinder) in the same save.
+  - `replace(tag)`: just the rebuild and redraw, with no payment and no save. It returns whether it made
+    the item.
   - `open(screen)`: passes the item to another screen.
   - `sandbox()`, `user()`, `player()`, `have(id)` (inventory plus storage), `applied(name)`.
   - `HexSession.open(player, Screen::new)`: opens a screen on its own, such as the grinder without the
     Hex; the session starts empty.
 - **`HexPage`** (abstract), for a page:
   - Required: `header()` and `entries()` (a list of `Entry(icon, click -> ...)`, built from the item as it
-    is now on every draw).
+    is now on every draw). `entries()` and `extras()` are only called while there's an item
+    (`session.hexItem()` isn't null). Without one, the page draws its frame alone.
   - Optional: `placement()` (`ROW_MAJOR` or `CENTRED`), `extras()` (48/50/51), `backTo()` and `back()`
     (for example "To Enchant Item" for the level page and bottles), and `page(n)` / `redraw()` after
     state changes such as sorting.
-  - An entry's click runs on the next tick, and only while the page is still open (`HexScreen.button`).
-- **`HexScreen`** (abstract), for a screen with an input slot (the grinder): override `inputSlot()`
-  (13) and `draw()`. The item then goes in and out of that slot by the same rules as slot 22, with the
-  same refusals, cooldown, shift-click and redraw. For Go Back to The Hex, call
-  `session.open(new HexMenu(session))`.
+  - An entry's click runs on the next tick, only while the page is still open, and only for the item it
+    was drawn for (`HexScreen.button`). So an entry's action may use a tag worked out when it was drawn.
+- **`HexScreen`** (abstract), for a screen with an input slot (the grinder), or any other screen that
+  keeps the item in the session (the grinder's confirmation, say):
+  - Override `inputSlot()` (13) and `draw()`. The item then goes in and out of that slot by the same rules
+    as slot 22, with the same refusals, cooldown, shift-click and redraw.
+  - `refuses(item)`: what this slot refuses beyond those rules, and the line to say ("" says nothing).
+    For example, the grinder's "Only items that can have Gemstones applied to them can be put in the
+    Grinder!".
+  - `button(slot, stack, action)`: a button, guarded as above.
+  - `later(action)`: runs something on the next tick while the screen is open and the items aren't
+    frozen, for a click that isn't a button's. An example is a gem clicked in the inventory: override
+    `onPlayerInventoryClick`, cancel the click, and apply it in `later`.
+  - `say(line)`: a line in chat.
+  - A constructor with a size, for a screen that isn't six rows.
+  - For Go Back to The Hex, call `session.open(new HexMenu(session))`.
 - **`HexCosts`**:
   - Build a cost with `HexCosts.of(new Coins(n), new Items(id, n), new Essence(type, n), new Levels(n))`.
   - `lore(session, "&eClick to apply!")` gives the Cost block and the action line (or what's missing).
