@@ -318,5 +318,7 @@ public final class SkyBlockLevels implements Listener {
         UUID id = event.getPlayer().getUniqueId();
         snapshots.remove(id);
         levelsHidden.remove(id);
+        WaysMenu.forget(id);
+        TasksMenu.forget(id);
     }
 }
