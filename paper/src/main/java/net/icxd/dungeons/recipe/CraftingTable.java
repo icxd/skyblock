@@ -34,6 +34,7 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.menu.Icon;
 import net.icxd.dungeons.menu.SkyBlockMenu;
+import net.icxd.dungeons.menu.SkyBlockMenuItem;
 import net.icxd.dungeons.recipe.Crafting.Cell;
 import net.icxd.dungeons.recipe.Crafting.Match;
 import net.icxd.dungeons.skill.Skill;
@@ -319,12 +320,15 @@ public final class CraftingTable extends GUI {
         if (!left.isEmpty() && event.getPlayer() instanceof Player player) ItemStash.give(player, left.toArray(new ItemStack[0]));
     }
 
-    /** Dragging items across the grid spreads them there, as in any crafting grid: GUIListener stops drags over a menu. */
+    /**
+     * Dragging items across the grid spreads them there, as in any crafting grid: GUIListener stops drags over a menu.
+     * Not the SkyBlock Menu item, whose drags SkyBlockMenuListener stops, nor a frozen player's.
+     */
     public static final class Drags implements Listener {
         @EventHandler(priority = EventPriority.HIGH)
         public void onDrag(InventoryDragEvent event) {
             if (!(event.getWhoClicked() instanceof Player player) || !(GUI.GUI_MAP.get(player.getUniqueId()) instanceof CraftingTable table)) return;
-            if (InventorySyncListener.frozen(player)) return;
+            if (InventorySyncListener.frozen(player) || SkyBlockMenuItem.is(event.getOldCursor())) return;
             int top = event.getView().getTopInventory().getSize();
             for (int slot : event.getRawSlots()) if (slot < top && !grid(slot)) return;
             event.setCancelled(false);
