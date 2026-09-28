@@ -79,7 +79,7 @@ open when it isn't locked or has a gem in it (Hypixel's older items have gems in
 
 **The Gemstone Guide** (`GemstoneGuide`), "(1/9) Gemstone Guide": the torch in 4, 28 items a page in rows
 2-5, columns 2-8, Previous and Next Page in 45 and 53, Go Back to the grinder in 48 (with the item) and
-Close in 49. Every item with slots (230 entries today), each as it's made new, then `&7Available Gemstone
+Close in 49. Every item with slots (233 entries today), each as it's made new, then `&7Available Gemstone
 Slots` and its slot types, the same ones together (`  &6⸕ Amber &8x2`). An armour set shows once, as its
 first piece with slots (its helmet), by the name the wiki's copy gives it (`&6Divan's Armor`, `&6Goldor's
 Armor`, `&6Aurora Armor` for each Kuudra tier, `&5⚚ Adaptive Armor`); the Shimmering Light Armor shows
