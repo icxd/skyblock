@@ -520,6 +520,11 @@ public final class DungeonRun implements ScoreCounts {
         return secrets;
     }
 
+    /** Whether it's a Master Mode floor (where master stars count: ItemStats). */
+    public boolean masterMode() {
+        return floor.isMasterMode();
+    }
+
     /** Every secret on the floor, as Hypixel counts them room by room (for the score and the tab list). */
     public int totalSecrets() {
         return secrets == null ? 0 : secrets.total();
