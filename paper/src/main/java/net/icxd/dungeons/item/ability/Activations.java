@@ -129,8 +129,12 @@ public final class Activations implements Listener {
         }
     }
 
-    /** A drawn bow shot: its ON_SHOOT abilities, with the arrow (already recorded, so they can change its damage). */
-    private static void shot(Player player, Projectile projectile, NBTTagCompound bow, boolean fullyDrawn) {
+    /**
+     * A drawn bow shot: its ON_SHOOT abilities, with the arrow (already recorded, so they can change its damage).
+     * Not a shortbow's arrows: it shoots through its own ability, several arrows at once (none has ON_SHOOT).
+     */
+    private static void shot(Player player, Projectile projectile, NBTTagCompound bow, boolean fullyDrawn, boolean shortbow) {
+        if (shortbow) return;
         SkyBlockItem item = bow == null ? null : ItemRegistry.get(bow.getString("id"));
         if (item == null) return;
         List<ItemBlock> blocks = ItemBehaviours.of(item).blocks(item, bow, item.blocks());

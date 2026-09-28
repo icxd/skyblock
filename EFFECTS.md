@@ -131,10 +131,16 @@ itself is unchanged: a SkyBlock item's hit on a player is still called off, and 
 - `Shots.bow(projectile)` returns that bow.
 - `Shots.scale(projectile, factor)` multiplies the recorded arrow's damage (Arrow Infusion's "double the
   damage").
-- `Shots.addShotListener((player, projectile, bow, fullyDrawn) -> ...)`:
-  - It fires when a player shoots a drawn bow (vanilla's `EntityShootBowEvent`), after the arrow is recorded.
-  - Shortbows shoot through their ability and don't fire it.
-  - The ON_SHOOT abilities come through it.
+- `Shots.pierce(projectile, mobs, share)`: the recorded arrow goes on through `mobs` more mobs after the first
+  it hits, each hit with `share` of the shot's damage (Piercing's "The extra targets hit take 25% of the
+  damage": 1, 0.25). It raises the arrow's own pierce level too, so it flies on. Without it, an arrow's shot is
+  used up by its first hit, as before.
+- `Shots.addShotListener((player, projectile, bow, fullyDrawn, shortbow) -> ...)`:
+  - It fires when a player shoots a drawn bow (vanilla's `EntityShootBowEvent`), and for each arrow of a
+    shortbow's shot (`shortbow` true; a Terminator's three), after the arrow is recorded, so a listener can
+    `scale` or `pierce` it (Duplex, Piercing, Infinite Quiver's arrow saving is the event's own).
+  - Arrows that abilities fire (Rapid-fire, Nasty Bite) don't fire it.
+  - The ON_SHOOT abilities come through it, from drawn bows only.
 
 ### Kills: `SkyBlockMobDeathEvent` (hook 18)
 
