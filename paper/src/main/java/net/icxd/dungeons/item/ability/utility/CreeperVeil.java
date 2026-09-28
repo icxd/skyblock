@@ -16,6 +16,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -74,7 +75,8 @@ final class CreeperVeil implements AbilityHandler {
         veil.cooldownMillis = (long) (block.cooldown() * 1000);
         veil.layerVitality = AbilityText.after(plain, "consuming").orElse(LAYER_VITALITY);
         double boost = RunManager.inRun(player) ? ItemBuilder.catacombsBoost(player) : 0;
-        veil.layerDamage = AbilityText.after(plain, "block up to").orElse(LAYER_DAMAGE) * (1 + boost);
+        // At least a point a layer, so a hit always runs out of layers or Vitality.
+        veil.layerDamage = Math.max(1, AbilityText.after(plain, "block up to").orElse(LAYER_DAMAGE) * (1 + boost));
         // Its cooldown runs from when it's down.
         PlayerSession.of(player).startCooldown(cooldownKey(), 0);
         forget(player.getUniqueId());
@@ -152,14 +154,20 @@ final class CreeperVeil implements AbilityHandler {
         return byThem ? cooldownMillis / 2 : cooldownMillis;
     }
 
-    /** Every tick: the creepers keep up, and the veil goes when it's over or the sword has gone. */
+    /**
+     * Every tick: the creepers keep up, and the veil goes when it's over, the sword has gone or they've died
+     * (in a run that's being a ghost: the death itself is called off).
+     */
     static void tick() {
         long now = System.currentTimeMillis();
         for (Map.Entry<UUID, Veil> entry : List.copyOf(VEILS.entrySet())) {
             Player player = Bukkit.getPlayer(entry.getKey());
             Veil veil = entry.getValue();
-            if (player == null || player.isDead()) {
+            if (player == null) {
                 forget(entry.getKey());
+            } else if (player.isDead() || ghost(player)) {
+                // Its no attacking goes with it, and its cooldown starts.
+                takeDown(player, false, null);
             } else if (now >= veil.until) {
                 takeDown(player, false, "&dCreeper Veil &cDe-activated! &8(Expired)");
             } else if (++veil.ticks % 20 == 0 && !carries(player)) {
@@ -169,6 +177,11 @@ final class CreeperVeil implements AbilityHandler {
                 for (Creeper creeper : veil.creepers) if (creeper.isValid()) creeper.teleport(at);
             }
         }
+    }
+
+    private static boolean ghost(Player player) {
+        DungeonRun run = RunManager.of(player);
+        return run != null && run.isGhost(player.getUniqueId());
     }
 
     /** Whether something in their inventory has Creeper Veil. */
