@@ -139,10 +139,11 @@ public final class HexSession {
     /**
      * An upgrade bought: takes its cost (see HexCosts#take; nothing on a Sandbox profile), makes the item from
      * {@code tag} ({@link #replace}), saves the two together, and says "You applied a <upgrade> to your <item>!"
-     * ({@code upgrade} null for nothing said). False, and nothing changed, if they can't pay.
+     * ({@code upgrade} null for nothing said). False, and nothing paid or changed, if they can't pay or the data
+     * isn't a SkyBlock item's.
      */
     public boolean upgrade(HexCosts cost, NBTTagCompound tag, String upgrade) {
-        if (ended || item() == null || !cost.take(this)) return false;
+        if (ended || item() == null || screen == null || kind(tag) == null || !cost.take(this)) return false;
         replace(tag);
         User user = user();
         if (user != null) user.save();
@@ -152,15 +153,21 @@ public final class HexSession {
 
     /**
      * Makes the item again from this data (ItemBuilder#build, for them), in its place, and draws the screen
-     * again: after an upgrade (see {@link #upgrade}, which also pays for it).
+     * again: after an upgrade (see {@link #upgrade}, which also pays for it and saves). False, and nothing
+     * changed, if there's no item or the data isn't a SkyBlock item's.
      */
-    public void replace(NBTTagCompound tag) {
+    public boolean replace(NBTTagCompound tag) {
         ItemStack current = item();
-        SkyBlockItem kind = tag == null ? null : ItemRegistry.get(tag.getString("id"));
-        if (ended || current == null || kind == null || screen == null) return;
+        SkyBlockItem kind = kind(tag);
+        if (ended || current == null || kind == null || screen == null) return false;
         ItemStack rebuilt = ItemBuilder.build(kind, tag, current.getAmount(), player);
         if (held != null || !screen.putInput(rebuilt)) held = rebuilt;
         screen.redraw();
+        return true;
+    }
+
+    private static SkyBlockItem kind(NBTTagCompound tag) {
+        return tag == null ? null : ItemRegistry.get(tag.getString("id"));
     }
 
     // Screens
