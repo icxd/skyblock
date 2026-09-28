@@ -1,6 +1,7 @@
 package net.icxd.dungeons.hex;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,12 +81,15 @@ public final class HexCosts {
 
     // Checking
 
-    /** Each part, and whether they have it (on a Sandbox profile, all of it). Items of the same id count together. */
+    /**
+     * Each part, and whether they have it (on a Sandbox profile, all of it). Parts of a kind count together (two
+     * of an item's, coins twice), so what's checked is what's taken.
+     */
     public List<Check> check(HexSession session) {
         boolean free = session.sandbox();
-        Map<String, Integer> needed = itemTotals();
+        Totals totals = totals();
         List<Check> checks = new ArrayList<>(parts.size());
-        for (Part part : parts) checks.add(new Check(part, free || has(session, part, needed)));
+        for (Part part : parts) checks.add(new Check(part, free || has(session, part, totals)));
         return checks;
     }
 
@@ -94,23 +98,36 @@ public final class HexCosts {
         return check(session).stream().allMatch(Check::owned);
     }
 
-    private boolean has(HexSession session, Part part, Map<String, Integer> needed) {
+    private static boolean has(HexSession session, Part part, Totals totals) {
         Player player = session.player();
         User user = session.user();
         if (user == null) return false;
         return switch (part) {
-            case Coins c -> Purse.has(user, c.amount());
-            case Items i -> session.have(i.id()) >= needed.get(i.id().toUpperCase());
-            case Essence e -> new EssenceCost(e.type(), e.amount()).canPay(player, user);
-            case Levels l -> player.getLevel() >= l.levels();
+            case Coins c -> Purse.has(user, totals.coins());
+            case Items i -> session.have(i.id()) >= totals.items().get(i.id().toUpperCase());
+            case Essence e -> new EssenceCost(e.type(), totals.essence().get(e.type())).canPay(player, user);
+            case Levels l -> player.getLevel() >= totals.levels();
         };
     }
 
-    /** How many of each item it costs, by id (upper case). */
-    private Map<String, Integer> itemTotals() {
-        Map<String, Integer> totals = new LinkedHashMap<>();
-        for (Part part : parts) if (part instanceof Items i) totals.merge(i.id().toUpperCase(), i.amount(), Integer::sum);
-        return totals;
+    /** All of it added up by kind: coins, Exp levels, each essence, and each item by id (upper case). */
+    record Totals(double coins, int levels, Map<EssenceType, Integer> essence, Map<String, Integer> items) {
+    }
+
+    Totals totals() {
+        double coins = 0;
+        int levels = 0;
+        Map<EssenceType, Integer> essence = new EnumMap<>(EssenceType.class);
+        Map<String, Integer> items = new LinkedHashMap<>();
+        for (Part part : parts) {
+            switch (part) {
+                case Coins c -> coins += c.amount();
+                case Items i -> items.merge(i.id().toUpperCase(), i.amount(), Integer::sum);
+                case Essence e -> essence.merge(e.type(), e.amount(), Integer::sum);
+                case Levels l -> levels += l.levels();
+            }
+        }
+        return new Totals(coins, levels, essence, items);
     }
 
     // The block
@@ -217,9 +234,9 @@ public final class HexCosts {
             return true;
         }
         session.recount();
-        Map<String, Integer> needed = itemTotals();
+        Totals totals = totals();
         for (Part part : parts) {
-            if (!has(session, part, needed)) return false;
+            if (!has(session, part, totals)) return false;
         }
         for (Part part : parts) {
             switch (part) {

@@ -3,6 +3,7 @@ package net.icxd.dungeons.hex;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,20 @@ class HexCostsTest {
     void sandboxIsFree() {
         List<Check> checks = List.of(new Check(new Coins(10_000), true), new Check(new Items("WITHER_BLOOD", 1), true));
         assertEquals(List.of("&7Cost", "&aFree", "", "&eClick to reforge!"), HexCosts.lore(checks, true, "&eClick to reforge!", NAMES));
+    }
+
+    @Test
+    void partsOfAKindCountTogether() {
+        // Checked as they're taken: coins twice are both, an item's two parts (any case) are three of it.
+        HexCosts cost = HexCosts.of(new Coins(10_000), new Items("wither_blood", 1), new Coins(5_000), new Items("WITHER_BLOOD", 2),
+                new Essence(EssenceType.WITHER, 30), new Essence(EssenceType.WITHER, 60), new Essence(EssenceType.DRAGON, 5), new Levels(3),
+                new Levels(4));
+        HexCosts.Totals totals = cost.totals();
+        assertEquals(15_000, totals.coins());
+        assertEquals(7, totals.levels());
+        assertEquals(Map.of(EssenceType.WITHER, 90, EssenceType.DRAGON, 5), totals.essence());
+        assertEquals(Map.of("WITHER_BLOOD", 3), totals.items());
+        assertEquals(new HexCosts.Totals(0, 0, Map.of(), Map.of()), HexCosts.NOTHING.totals());
     }
 
     @Test
