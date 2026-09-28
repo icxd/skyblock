@@ -32,7 +32,9 @@ Skyblocker mods filter. Where they say nothing, the code says UNKNOWN and takes 
   they hold when it lands.
 - **Dealing it**: through `Mobs.damage` / `DungeonMobs.damage`, as melee's damage is: the mob's health,
   its gray (or crit) number, kills, drops and a run's damage dealt. Only SkyBlock's mobs that can be hurt
-  are hit; never players.
+  are hit; never players. A room mob still waiting for its room to open (behind a wall, say) opens the
+  room first, as a melee hit or an arrow on it does (`RunManager.abilityHit`), so it dies with the room's
+  health, not its waiting one.
 - **Missiles** (`Missile`): moved by the server a step a tick, stopped by the first block (unless said)
   and by the first mob unless they pierce, carrying an item display (or a bat) along; they stop when their
   caster leaves, dies or is a dungeon ghost.

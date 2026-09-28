@@ -2,6 +2,7 @@ package net.icxd.dungeons.dungeons.instance;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -36,8 +37,13 @@ final class RoomEvents implements Listener {
     /** Hitting a mob that waits for its room to open (through a window, say) opens the room. */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onHit(EntityDamageByEntityEvent event) {
-        Mobs.Live live = Mobs.of(event.getEntity());
-        if (live == null || !(live.type() instanceof DataMob mob) || !mob.dormant() || Combat.playerBehind(event.getDamager()) == null) return;
+        if (Combat.playerBehind(event.getDamager()) != null) hitWaiting(event.getEntity());
+    }
+
+    /** A player's hit on it: if it's a mob waiting for its room to open, the room opens. */
+    static void hitWaiting(Entity entity) {
+        Mobs.Live live = Mobs.of(entity);
+        if (live == null || !(live.type() instanceof DataMob mob) || !mob.dormant()) return;
         RoomMobs.Tracked tracked = RoomMobs.tracked(mob);
         if (tracked != null) tracked.owner.open(tracked.room.room);
     }

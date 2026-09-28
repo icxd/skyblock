@@ -468,6 +468,14 @@ public final class RunManager {
         return manager == null ? null : manager.runOf(player);
     }
 
+    /**
+     * A player's ability is about to hurt this entity (no vanilla hit, so RoomEvents doesn't see it): if it's
+     * a mob waiting for its room to open, the room opens first, as it does for a melee hit or an arrow.
+     */
+    public static void abilityHit(Entity entity) {
+        RoomEvents.hitWaiting(entity);
+    }
+
     /** The run a player is in, once its floor is built; null if none. */
     public DungeonRun runOf(Player player) {
         Run run = byMember.get(player.getUniqueId());

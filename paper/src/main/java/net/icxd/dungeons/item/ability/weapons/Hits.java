@@ -260,9 +260,13 @@ final class Hits {
         if (cost > 0) PlayerHealth.damage(player, cost);
     }
 
-    /** Hurts one of SkyBlock's mobs for this much, with its damage number; false if it can't be hurt. */
+    /**
+     * Hurts one of SkyBlock's mobs for this much, with its damage number; false if it can't be hurt. A room
+     * mob waiting for its room to open wakes it first, as a melee hit on one does (through a wall too).
+     */
     static boolean hurt(Player by, LivingEntity entity, double damage, DamageIndicators.Look look) {
         if (!hittable(entity)) return false;
+        RunManager.abilityHit(entity);
         if (DungeonMobs.of(entity) != null) {
             DungeonMobs.damage(entity, by, damage, look);
         } else {
