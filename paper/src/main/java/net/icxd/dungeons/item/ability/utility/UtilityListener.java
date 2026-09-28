@@ -20,6 +20,8 @@ import org.bukkit.inventory.EquipmentSlot;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.item.ability.Abilities;
+import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerHealth;
 
@@ -27,8 +29,9 @@ import net.icxd.dungeons.session.PlayerHealth;
  * What the utility abilities need besides their clicks: every tick their heals, veils, deployables and
  * glides; what immunity does to vanilla damage (SkyBlock hits go through {@link Protection}'s shields); hits
  * from players who can't attack now; a Spirit Leap's immunity ending with a hit; Shadowstep ready again on a
- * kill; the Creeper Veil taken down with a right click; Spirit Glide on sneaking; and what a player who
- * leaves had going. Registered by {@link Dungeons}, which is when the shields and stat hooks go in.
+ * kill; the Creeper Veil taken down with a right click; no vanilla use of the items they're on (a thrown
+ * ender pearl); Spirit Glide on sneaking; and what a player who leaves had going. Registered by {@link
+ * Dungeons}, which is when the shields and stat hooks go in.
  */
 public final class UtilityListener implements Listener {
     /** On what abilities put in the world (a veil's creepers, an orb's stand): not a mob, and never hit. */
@@ -118,6 +121,23 @@ public final class UtilityListener implements Listener {
             event.setUseItemInHand(Event.Result.DENY);
             event.setUseInteractedBlock(Event.Result.DENY);
         }
+    }
+
+    /**
+     * A right click that one of these abilities answers isn't the item's vanilla use as well: a Spirit Leap is
+     * an ender pearl and a Flare a firework rocket, which would be thrown or launched and used up, and a Power
+     * Orb or a Lantern a head, which would be put down. After the click's ability (see {@link
+     * net.icxd.dungeons.listeners.PlayerListener#onAbilityUse}), which a denied use would stop, and whether it
+     * cast or not (one on cooldown is no ender pearl either).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onItemUse(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        Worn held = Worn.of(event.getItem());
+        if (held == null) return;
+        ItemBlock block = Abilities.forClick(held.blocks(), true, event.getPlayer().isSneaking(), name -> Abilities.get(name) != null);
+        if (block != null && block.isAbility() && UtilityAbilities.has(block.name())) event.setUseItemInHand(Event.Result.DENY);
     }
 
     @EventHandler(ignoreCancelled = true)

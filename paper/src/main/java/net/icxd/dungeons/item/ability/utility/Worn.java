@@ -1,5 +1,7 @@
 package net.icxd.dungeons.item.ability.utility;
 
+import java.util.List;
+
 import org.bukkit.inventory.ItemStack;
 
 import net.icxd.dungeons.item.ItemRegistry;
@@ -19,9 +21,14 @@ record Worn(SkyBlockItem item, NBTTagCompound tag) {
         return item == null ? null : new Worn(item, tag);
     }
 
+    /** Its blocks, as its behaviour has them. */
+    List<ItemBlock> blocks() {
+        return ItemBehaviours.of(item).blocks(item, tag, item.blocks());
+    }
+
     /** Its ABILITY block with this name (as its behaviour has its blocks); null if it has none. */
     ItemBlock ability(String name) {
-        for (ItemBlock block : ItemBehaviours.of(item).blocks(item, tag, item.blocks())) {
+        for (ItemBlock block : blocks()) {
             if (block.isAbility() && name.equals(block.name())) return block;
         }
         return null;

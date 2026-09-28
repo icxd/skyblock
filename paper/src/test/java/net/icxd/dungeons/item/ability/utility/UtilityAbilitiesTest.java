@@ -54,6 +54,9 @@ class UtilityAbilitiesTest {
         }
         // Done by the run itself (a Revive Stone's right click is the run's).
         assertFalse(handlers.containsKey("Revive"));
+        // What a right click with one of these doesn't do the vanilla way too (a Spirit Leap's ender pearl).
+        assertTrue(UtilityAbilities.has("Spirit Leap") && UtilityAbilities.has("Deploy"));
+        assertFalse(UtilityAbilities.has("Revive") || UtilityAbilities.has("Instant Transmission"));
     }
 
     /** "Dead players and players who have left the Dungeon cannot be teleported to": they're in the menu, but not to click. */

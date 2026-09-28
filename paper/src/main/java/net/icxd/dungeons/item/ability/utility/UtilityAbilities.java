@@ -1,7 +1,8 @@
 package net.icxd.dungeons.item.ability.utility;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.BiConsumer;
-
 
 import net.icxd.dungeons.item.ability.AbilityHandler;
 
@@ -11,11 +12,18 @@ import net.icxd.dungeons.item.ability.AbilityHandler;
  * tick, shields on hits, what's worn) is {@link UtilityListener}'s.
  */
 public final class UtilityAbilities {
+    /** The names registered here (see {@link #has}). */
+    private static final Set<String> NAMES = new HashSet<>();
+
     private UtilityAbilities() {
     }
 
-    /** Hands each of them to {@code to}, by ability name as items' ABILITY blocks have it. */
-    public static void register(BiConsumer<String, AbilityHandler> to) {
+    /** Hands each of them to {@code registry}, by ability name as items' ABILITY blocks have it. */
+    public static void register(BiConsumer<String, AbilityHandler> registry) {
+        BiConsumer<String, AbilityHandler> to = (name, handler) -> {
+            NAMES.add(name);
+            registry.accept(name, handler);
+        };
         // Dungeons
         to.accept(SpiritLeap.NAME, new SpiritLeap());
         to.accept("Aspiring Leap", new Refusal("&cYou can only use this item on your private island!"));
@@ -37,5 +45,10 @@ public final class UtilityAbilities {
         to.accept("Jingle Bells", new Taunt("block.note_block.bell"));
         // Movement
         to.accept("Ether Transmission", new EtherTransmission());
+    }
+
+    /** Whether the ability with this name is one of these (once they're registered). */
+    static boolean has(String name) {
+        return NAMES.contains(name);
     }
 }
