@@ -8,6 +8,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
+import net.icxd.dungeons.item.gemstone.GemSlots;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -67,6 +68,8 @@ public final class ItemStats {
             Enchantment enchant = Enchantment.getByIdentifiable(enchantments.get(i).getString("name") + "." + enchantments.get(i).getInt("lvl"));
             if (enchant.getType() != null) stats.add(enchant.getType().getStats(enchant.getLevel()));
         }
+        // Its gemstones', which a dungeon scales with the rest (the recorded Shadow Assassin Helmet's).
+        stats.add(GemSlots.stats(item, tag));
 
         if (!item.dungeonItem()) return stats;
         int stars = Math.min(ItemBuilder.starCount(tag), 5);
