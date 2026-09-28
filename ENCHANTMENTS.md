@@ -56,9 +56,9 @@ item). So weapons, armor, equipment, tools, fishing rods, and wands for Ultimate
   at once (`EnchantRules.atOnce`): one of each group of listed ones that all conflict with each other, which is
   every group but one; of Silk Touch, Fortune and Smelting Touch two, since only Silk Touch conflicts with the others.
   The wiki's 26 for a sword is that rule on its 34 enchantments of 2022 with Sharpness, Smite and Bane of Arthropods
-  conflicting (tested). They don't conflict now (the books; 933 live items have all three), and a sword
-  lists 35 today (Pyroclasm is new), so a sword shows 29 now. The count turns green once it's full (the official
-  screenshot's "10/10").
+  conflicting (tested). They don't conflict now (the books; 933 live items have all three), and a sword lists 35
+  today (Pyroclasm is new), so a sword shows 29 now. The count turns green once it's full (the official screenshot's
+  "10/10").
 - Ultimate: `  &7Ultimate Enchantments &e<n>&7/&a1`.
 
 **The Hex ➜ Enchant Item** (`EnchantItemPage`), the wiki's Weapon and Armor tabs: the header (Enchant Item) in 28,
@@ -75,15 +75,15 @@ the wiki's Champion), `  &c<Name>&c ✖`, "&eClick to view!". It opens the level
 
 **The Hex ➜ Enchant Item ➜ <Enchant>** (`EnchantLevelPage`): one enchanted book a level, lowest to highest, row by
 row from 12, and the item's own level too if it's past them (Efficiency X from a Silex, 56 live items; a level set
-with `/addenchantment`), so it can be taken off; the header, Experience Bottles in 50, no Sort, Go Back "To Enchant Item" (to the list as it was). A
-book: `&a<Name> <Roman>` (ultimate `&d&l`), the level's lines, what it would take off the item, then the Cost block
-(HexCosts: `&3<N> Exp Levels`) and what a click does.
+with `/addenchantment`), so it can be taken off; the header, Experience Bottles in 50, no Sort, Go Back "To Enchant
+Item" (to the list as it was). A book: `&a<Name> <Roman>` (ultimate `&d&l`), the level's lines, what it would take
+off the item, then the Cost block (HexCosts: `&3<N> Exp Levels`) and what a click does.
 - **Clicking** (`EnchantRules.choose`): the item's own level takes it off, for the same Exp levels (the wiki's
   Enchantments), a higher one upgrades it, a new one goes on. What conflicts with it comes off; an ultimate takes the
   other ultimate's place; One For All goes with no other enchantment ("Removes all other enchants"): it takes every
   other off, and any other takes it off (of 119 live items with it, none has another but the retired Telekinesis,
-  where a third of swords have Champion). The data keeps each other enchantment as
-  stored, a changed level in place, a new one last.
+  where a third of swords have Champion). The data keeps each other enchantment as stored, a changed level in place,
+  a new one last.
 - **Levels offered**: from the lowest that exists (Counter-Strike from III, Vicious from III...) to the highest: the
   books', or a tiered enchantment's last tier (Champion, Absorb, Compact, Cultivating, Expertise, Hecatomb,
   Toxophilite to X), so Sandbox can set a tier.
@@ -127,9 +127,9 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
 - **The Experience Bottles button and the bottles' header** without their Bazaar lines; the bottles' action "Click to
   consume!" (Hypixel's is the Bazaar's).
 - **Orbs** rounded down (the wiki's table); the screen's example (19 for 8) is some other multiplier.
-- **Conflicts**: the books' Conflicts lists (no pair they name is on more than one live item). NEU's pools are older and
-  have more, which live items carry together (Fortune and Smelting Touch on 131, the Turbos with each other on
-  dozens), so they're only in the generator's report.
+- **Conflicts**: the books' Conflicts lists (no pair they name is on more than one live item). NEU's pools are
+  older and have more, which live items carry together (Fortune and Smelting Touch on 131, the Turbos with each
+  other on dozens), so they're only in the generator's report.
 - **Highest levels**: the books' where the wiki says more (Efficiency X is Silex's; Drain VI, Life Steal VI,
   Vampirism VII, Karma VI, Scuba VI, Forest Pledge VI in the wiki's module only).
 
