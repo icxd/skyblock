@@ -25,13 +25,13 @@ class SkyBlockMenuTest {
     private static final SkyBlockTime BANANA_TIME = SkyBlockTime.at(Instant.parse("2026-09-26T22:15:34.200Z").toEpochMilli());
 
     /** A new profile: base stats, no skills, no SkyBlock XP. */
-    private static final SkyBlockMenu.View FRESH = new SkyBlockMenu.View(Stats.base(), 0, 0, 4, 4, "Lemon", LEMON_TIME);
+    private static final SkyBlockMenu.View FRESH = new SkyBlockMenu.View(Stats.base(), 0, 0, 4, 4, "Lemon", LEMON_TIME, 0, 83, 111, 1016);
 
     /** Banana's numbers. */
     private static SkyBlockMenu.View levelled() {
         Stats stats = Stats.base().set(Stat.SPEED, 400).set(Stat.STRENGTH, 589.25).set(Stat.DEFENSE, 744.5).set(Stat.CRIT_DAMAGE, 834.03)
                 .set(Stat.CRIT_CHANCE, 140.5).set(Stat.HEALTH, 2206).set(Stat.INTELLIGENCE, 692);
-        return new SkyBlockMenu.View(stats, 21.6, 8834, 4, 4, "Banana", BANANA_TIME);
+        return new SkyBlockMenu.View(stats, 21.6, 8834, 4, 4, "Banana", BANANA_TIME, 61, 83, 492, 1016);
     }
 
     private static List<String> lore(Map<Integer, Icon> icons, int slot) {
@@ -83,6 +83,13 @@ class SkyBlockMenuTest {
                 " &b✎ Intelligence &f692", " &8and more...", "", "&8Also accessible via /stats", "", "&eClick to view!"), lore(icons, 13));
         assertEquals(List.of("&7View your Skill progression and", "&7rewards.", "", "&621.6 Skill Avg. &8(non-cosmetic)", "",
                 "&8Also accessible via /skills.", "", "&eClick to view!"), lore(icons, 19));
+        // 61 of 83 collections found, 492 of the book's recipes unlocked (Banana's, 00:18.0).
+        assertEquals(List.of("&7View all of the items available in", "&7SkyBlock. Collect more of an item to", "&7unlock rewards on your way to",
+                "&7becoming a master of SkyBlock!", "", "&7Collections Unlocked: &e73.5&6%", "&2&l&m                   &f&l&m      &r &e61&6/&e83",
+                "", "&8Also accessible via /collection.", "", "&eClick to view!"), lore(icons, 20));
+        assertEquals(List.of("&7Through your adventure, you will", "&7unlock recipes for all kinds of", "&7special items! You can view how to",
+                "&7craft these items here.", "", "&7Recipes Unlocked: &e48.4&6%", "&2&l&m             &f&l&m            &r &e492&6/&e1k", "",
+                "&8Also accessible via /recipes.", "", "&eClick to view!"), lore(icons, 21));
         assertEquals(new Icon(Material.PLAYER_HEAD, "&aSkyBlock Leveling", List.of("&7Your SkyBlock Level: &8[&e88&8]", "",
                 "&7Determine how far you've", "&7progressed in SkyBlock and earn", "&7rewards from completing unique", "&7tasks.", "",
                 "&7Progress to Level 89:", "&3&l&m         &f&l&m                &r &b34&3/&b100 XP", "", "&8Also accessible via /levels", "",

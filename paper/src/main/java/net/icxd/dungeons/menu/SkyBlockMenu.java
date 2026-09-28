@@ -12,11 +12,17 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.collection.CollectionMenus;
+import net.icxd.dungeons.collection.Collections;
+import net.icxd.dungeons.collection.CollectionsMenu;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.profile.ProfileManagementMenu;
 import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.recipe.CraftingTable;
+import net.icxd.dungeons.recipe.RecipeBook;
+import net.icxd.dungeons.recipe.RecipeMenus;
+import net.icxd.dungeons.recipe.Recipes;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.skill.SkillText;
 import net.icxd.dungeons.skill.Skills;
@@ -33,12 +39,13 @@ import net.icxd.dungeons.utils.Text;
 /**
  * The SkyBlock Menu ({@code /sbmenu}, or the nether star in hotbar slot 9), as recorded on Hypixel
  * (the SkyBlock Menu tour, 2026-09-27: Banana's at 00:18.2 and the new profile Lemon's at 04:29.1).
- * What this plugin has is filled in: the stats, the skill average, the SkyBlock level, the profiles
- * and the date. What it doesn't have yet (collections, the recipe book, pets, the bank's banker, fast
- * travel) is shown as Lemon's menu showed it, a profile with none of it; the Booster Cookie, which
+ * What this plugin has is filled in: the stats, the skill average, the SkyBlock level, the profiles,
+ * the date, and the collections and recipes found. What it doesn't have yet (pets, the bank's banker,
+ * fast travel) is shown as Lemon's menu showed it, a profile with none of it; the Booster Cookie, which
  * Lemon's didn't have, is left out, and so are the calendar's events. Stats & Equipment, Your Skills,
- * Storage, Your Bags, Loadouts, the Crafting Table and Profile Management open; the rest do nothing yet.
- * Stat icons are the classic symbols (Hypixel's are its resource pack's glyphs). Main thread.
+ * Storage, Your Bags, Loadouts, Collections, the Recipe Book, the Crafting Table and Profile Management
+ * open; the rest do nothing yet. Stat icons are the classic symbols (Hypixel's are its resource pack's
+ * glyphs). Main thread.
  */
 public final class SkyBlockMenu extends GUI {
     public static final String TITLE = "SkyBlock Menu";
@@ -75,12 +82,16 @@ public final class SkyBlockMenu extends GUI {
 
     /**
      * What the menu shows of a player: their stats, the mean of their skill levels, their SkyBlock XP,
-     * how many profiles they have of how many slots, the one they play on, and the SkyBlock date.
+     * how many profiles they have of how many slots, the one they play on, the SkyBlock date, and how many
+     * collections they've found and recipes they've unlocked, of how many.
      */
-    record View(Stats stats, double skillAverage, int skyBlockXp, int profiles, int profileSlots, String profileName, SkyBlockTime time) {
+    record View(Stats stats, double skillAverage, int skyBlockXp, int profiles, int profileSlots, String profileName, SkyBlockTime time,
+                int collectionsFound, int collections, int recipesUnlocked, int recipes) {
         static View of(Player player, User user) {
+            int[] found = Collections.foundOfAll(user.profile());
             return new View(PlayerSession.of(player).stats(), Skills.average(user.profile()), user.getSkyBlockXp(),
-                    Profiles.ordered(user.getDocument()).size(), Profiles.slots(user.getRank()), user.profileName(), SkyBlockTime.now());
+                    Profiles.ordered(user.getDocument()).size(), Profiles.slots(user.getRank()), user.profileName(), SkyBlockTime.now(),
+                    found[0], found[1], Recipes.unlocked(user.profile(), Recipes.data().book()), Recipes.data().book().size());
         }
     }
 
@@ -119,6 +130,8 @@ public final class SkyBlockMenu extends GUI {
                 case STORAGE -> set(GUIClickableItem.button(slot, stack, viewer, () -> new StorageMenu(viewer).open(viewer)));
                 case BAGS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new YourBagsMenu(viewer).open(viewer)));
                 case LOADOUTS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new LoadoutsMenu(viewer, 0).open(viewer)));
+                case COLLECTIONS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new CollectionsMenu(viewer).open(viewer)));
+                case RECIPES -> set(GUIClickableItem.button(slot, stack, viewer, () -> new RecipeBook(viewer).open(viewer)));
                 case CRAFTING -> set(GUIClickableItem.button(slot, stack, viewer, () -> new CraftingTable(viewer).open(viewer)));
                 default -> set(slot, stack);
             }
@@ -133,8 +146,8 @@ public final class SkyBlockMenu extends GUI {
         Map<Integer, Icon> icons = new LinkedHashMap<>();
         icons.put(STATS, stats(view.stats()));
         icons.put(SKILLS, new Icon(Material.DIAMOND_SWORD, "&aYour Skills", SkillsMenu.summary(view.skillAverage(), true)));
-        icons.put(COLLECTIONS, collections());
-        icons.put(RECIPES, recipes());
+        icons.put(COLLECTIONS, CollectionMenus.summary(view.collectionsFound(), view.collections(), true));
+        icons.put(RECIPES, RecipeMenus.summary(view.recipesUnlocked(), view.recipes(), true));
         icons.put(LEVELING, leveling(view.skyBlockXp()));
         icons.put(QUESTS, new Icon(Material.WRITABLE_BOOK, "&aQuests & Chapters", "&7Each island has its own series of",
                 "&bChapters &7for you to complete!", "", "&7Complete tasks within a Chapter to", "&7earn small &6rewards&7, or complete",
@@ -151,7 +164,7 @@ public final class SkyBlockMenu extends GUI {
                 "&8Also accessible via /craft", "", "&eClick to open!"));
         icons.put(LOADOUTS, new Icon(Material.BARREL, "&aLoadouts", "&7View and edit preset armor and", "&7equipment sets with other settings to",
                 "&7make switching activities easy.", "", "&8Also accessible via /loadouts", "", "&eClick to view!"));
-        // No collections yet, so no Emerald VI.
+        // No Personal Bank yet, even with Emerald VI.
         icons.put(BANK, new Icon(Material.GRAY_DYE, "&cPersonal Bank", "&7Contact your Banker from anywhere.", "",
                 "&cRequires &aEmerald Collection VI"));
         // Nowhere visited yet.
@@ -177,20 +190,6 @@ public final class SkyBlockMenu extends GUI {
      */
     static String statLine(Stat stat, double value) {
         return " " + stat.label() + " " + (stat.getColor() == 'f' ? "" : "&f") + Text.number(value) + stat.getUnit();
-    }
-
-    /** None unlocked, of the 83 Hypixel counts. */
-    static Icon collections() {
-        return new Icon(Material.PAINTING, "&aCollections", "&7View all of the items available in", "&7SkyBlock. Collect more of an item to",
-                "&7unlock rewards on your way to", "&7becoming a master of SkyBlock!", "", "&7Collections Unlocked: &e0&6%",
-                SkillText.strip(0) + " &e0&6/&e83", "", "&8Also accessible via /collection.", "", "&eClick to view!");
-    }
-
-    /** The 111 recipes a new profile has on Hypixel. */
-    static Icon recipes() {
-        return new Icon(Material.BOOK, "&aRecipe Book", "&7Through your adventure, you will", "&7unlock recipes for all kinds of",
-                "&7special items! You can view how to", "&7craft these items here.", "", "&7Recipes Unlocked: &e10.9&6%",
-                SkillText.strip(0.109) + " &e111&6/&e1k", "", "&8Also accessible via /recipes.", "", "&eClick to view!");
     }
 
     static int level(int skyBlockXp) {

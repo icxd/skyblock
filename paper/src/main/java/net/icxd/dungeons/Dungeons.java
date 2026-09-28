@@ -8,7 +8,12 @@ import net.icxd.dungeons.anticheat.check.CheckListener;
 import net.icxd.dungeons.collection.CollectionFiles;
 import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.command.commands.admin.SetCollectionCommand;
+import net.icxd.dungeons.command.commands.user.CollectionCommand;
 import net.icxd.dungeons.command.commands.user.CraftCommand;
+import net.icxd.dungeons.command.commands.user.RecipesCommand;
+import net.icxd.dungeons.command.commands.user.ViewBossCollectionCommand;
+import net.icxd.dungeons.command.commands.user.ViewCollectionCommand;
+import net.icxd.dungeons.command.commands.user.ViewRecipeCommand;
 import net.icxd.dungeons.recipe.CraftingTable;
 import net.icxd.dungeons.command.commands.admin.AddEnchantmentCommand;
 import net.icxd.dungeons.command.commands.admin.DataCommand;
@@ -168,7 +173,8 @@ public class Dungeons extends JavaPlugin {
                 new ShowExtraStatsCommand(), new ToggleReadyUpCommand(), new ProfilesCommand(), new SkillsCommand(),
                 new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand(), new StorageCommand(),
                 new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
-                new CraftCommand(), new SetCollectionCommand());
+                new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
+                new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {
