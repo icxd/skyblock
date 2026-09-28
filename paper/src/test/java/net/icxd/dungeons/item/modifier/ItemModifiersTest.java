@@ -31,6 +31,9 @@ class ItemModifiersTest {
         assertEquals(List.of("&7Teleport &a12 blocks&7 ahead of you.", "&7Then &a8 blocks&7 more."),
                 ItemModifiers.farther(List.of("&7Teleport &a8 blocks&7 ahead of you.", "&7Then &a8 blocks&7 more."), 4));
         assertEquals(List.of("&7Zap a line &56 &7blocks forward."), ItemModifiers.farther(List.of("&7Zap a line &54 &7blocks forward."), 2));
+        // A colour that's a digit isn't part of the number: 8 and 4 are 12, not "&58" and 4 "&62".
+        assertEquals(List.of("&7Zap a line &512 &7blocks forward."), ItemModifiers.farther(List.of("&7Zap a line &58 &7blocks forward."), 4));
+        assertEquals(List.of("&7Go &a&l9 blocks&7."), ItemModifiers.farther(List.of("&7Go &a&l8 blocks&7."), 1));
         assertEquals(List.of("&7Teleport to your block", "&7up to &a60 blocks &7away."),
                 ItemModifiers.farther(List.of("&7Teleport to your block", "&7up to &a57 blocks &7away."), 3));
         assertEquals(List.of("&7No range here."), ItemModifiers.farther(List.of("&7No range here."), 4));

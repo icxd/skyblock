@@ -54,8 +54,11 @@ public final class ItemModifiers {
 
     /** "&5• ": a deployable's buff line starts with its colour and a bullet. */
     private static final Pattern BULLET = Pattern.compile("^(?:&[0-9a-fk-or])*• ");
-    /** "&a8 blocks", "&54 &7blocks": a Transmission's range in its text, with the colours between. */
-    private static final Pattern RANGE = Pattern.compile("(\\d+)((?:\\s*&[0-9a-fk-or])*\\s*blocks?\\b)");
+    /**
+     * "&a8 blocks", "&54 &7blocks": a Transmission's range in its text, with the colours before and between (so a
+     * colour that's a digit, the "&5" of "&54", isn't read as part of the number).
+     */
+    private static final Pattern RANGE = Pattern.compile("((?:&[0-9a-fk-or])*)(\\d+)((?:\\s*&[0-9a-fk-or])*\\s*blocks?\\b)");
     /** "Costs 50% of max mana": a Lantern's cost in its text (see Deployables). */
     private static final Pattern SHARE = Pattern.compile("(Costs )([\\d.]+)(% of max mana)");
 
@@ -192,14 +195,14 @@ public final class ItemModifiers {
         return out;
     }
 
-    /** The first number of blocks in the text, {@code tuners} more. */
+    /** The first number of blocks in the text, {@code tuners} more (UNKNOWN: which one, in a text with two). */
     static List<String> farther(List<String> text, int tuners) {
         List<String> out = new ArrayList<>(text);
         for (int i = 0; i < out.size(); i++) {
             Matcher m = RANGE.matcher(out.get(i));
             if (!m.find()) continue;
             String line = out.get(i);
-            out.set(i, line.substring(0, m.start()) + (Integer.parseInt(m.group(1)) + tuners) + m.group(2) + line.substring(m.end()));
+            out.set(i, line.substring(0, m.start()) + m.group(1) + (Integer.parseInt(m.group(2)) + tuners) + m.group(3) + line.substring(m.end()));
             break;
         }
         return out;
