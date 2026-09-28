@@ -46,8 +46,8 @@ class HexCategoriesTest {
     void noneAppliesUntilItsPartIsBuilt() {
         HexItem sword = HexFakes.sword();
         for (HexCategory category : HexCategories.all()) {
-            // Built: see ReforgesCategoryTest.
-            if (category == HexCategories.REFORGES) continue;
+            // Built: see ReforgesCategoryTest, and books go on swords (see hex/book/BooksPageTest).
+            if (category == HexCategories.REFORGES || category == HexCategories.BOOKS) continue;
             assertFalse(category.applies(sword), category.name());
         }
     }

@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.item.DungeonItems;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.SpecificItemType;
@@ -143,7 +144,7 @@ public final class AccessoryBag {
         SkyBlockItem item = StorageItems.skyBlockItem(stack);
         if (item == null || item.specificItemType() != SpecificItemType.ACCESSORY) return null;
         NBTTagCompound tag = StorageItems.tag(stack);
-        return new Accessories.Held(item.id(), ItemBuilder.rarity(item, tag), item.dungeonItem());
+        return new Accessories.Held(item.id(), ItemBuilder.rarity(item, tag), DungeonItems.is(item, tag));
     }
 
     /** Accessory Power from the bag alone; stats from the bag and the inventory together, and the power's. */

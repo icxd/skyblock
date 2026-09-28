@@ -10,6 +10,7 @@ import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
+import net.icxd.dungeons.item.upgrade.Stars;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -27,16 +28,15 @@ public class UpgradeCommand extends SCommand {
         ItemNBT nmsItem = ItemNBT.of(item);
         NBTTagCompound tag = nmsItem.getTag();
         SkyBlockItem skyBlockItem = tag == null ? null : ItemRegistry.get(tag.getString("id"));
-        if (skyBlockItem == null || skyBlockItem.upgradeCosts() == null) {
+        if (skyBlockItem == null || Stars.max(skyBlockItem) == 0) {
             player.sendMessage("§cThis item cannot be upgraded");
             return;
         }
-        if (tag.getInt("upgrade_count") >= skyBlockItem.upgradeCosts().getCosts().size()) {
+        UpgradeCost upgradeCost = Stars.next(skyBlockItem, tag);
+        if (upgradeCost == null) {
             player.sendMessage("§cThis item is already fully upgraded");
             return;
         }
-        int upgradeCount = tag.getInt("upgrade_count");
-        UpgradeCost upgradeCost = skyBlockItem.upgradeCosts().getCosts().get(upgradeCount);
         User user = source.getUser();
         // All of it or nothing: check every cost before taking any.
         for (Cost cost : upgradeCost.getCosts()) {
@@ -47,7 +47,7 @@ public class UpgradeCommand extends SCommand {
         }
         for (Cost cost : upgradeCost.getCosts()) cost.pay(player, user);
         user.save();
-        tag.setInt("upgrade_count", upgradeCount + 1);
+        Stars.add(tag);
 
         ItemStack stack = ItemBuilder.build(skyBlockItem, tag);
         player.getInventory().setItemInMainHand(stack);

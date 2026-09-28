@@ -1,5 +1,6 @@
 package net.icxd.dungeons.hex.category;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
@@ -7,14 +8,21 @@ import org.bukkit.Material;
 import net.icxd.dungeons.hex.HexCategory;
 import net.icxd.dungeons.hex.HexItem;
 import net.icxd.dungeons.hex.HexSession;
-import net.icxd.dungeons.menu.Icon;
+import net.icxd.dungeons.hex.upgrade.UpgradesPage;
+import net.icxd.dungeons.item.DungeonItems;
+import net.icxd.dungeons.item.ItemBuilder;
+import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.upgrade.Stars;
 
 /**
- * Item Upgrades: Convert to Dungeon Item and Star Upgrades, "The Hex ➜ Item Upgrades" (the wiki's The Hex).
- * Carpentry 25. Its button is Dragon Essence's head, as the wiki's table of categories pictures it (the item
- * data's, else NEU's ESSENCE_DRAGON skin). UNKNOWN (U1, U12): the button's words (ours, below) and the page's
- * header. Stage 1: the button; LATER (the books, modifiers and item upgrades part): which items, the summary
- * ("  &7Dungeon Item &a✔", "  &7Upgrade Level &6✪✪✪✪✪"), the page.
+ * Item Upgrades: Star Upgrades and Convert to Dungeon Item, "The Hex ➜ Item Upgrades" ({@link UpgradesPage}; the
+ * wiki's The Hex). Carpentry 25. For an item that takes stars or can be made a dungeon item. Its button is Dragon
+ * Essence's head, as the wiki's table of categories pictures it (the item data's, else NEU's ESSENCE_DRAGON skin).
+ * Its summary, as the official screenshot has it: "  &7Dungeon Item &a✔" and "  &7Upgrade Level  &6✪✪✪✪✪" (the
+ * stars as the item's name shows them, after two spaces). UNKNOWN (U1, U12): the button's words (ours, below); the
+ * Dungeon Item line on an item that can't be made one (none, here), and the Upgrade Level line with no stars ("&c✖",
+ * as the other lines without their upgrade).
  */
 public final class ItemUpgrades extends HexCategory {
     /** NEU's ESSENCE_DRAGON head, for when the item data has no Dragon Essence (it doesn't, today). */
@@ -32,17 +40,29 @@ public final class ItemUpgrades extends HexCategory {
 
     @Override
     public boolean applies(HexItem item) {
-        return false;
+        return Stars.max(item.item()) > 0 || item.item().dungeonConversionCost() != null;
     }
 
     @Override
     public List<String> summary(HexItem item) {
-        return List.of();
+        return summary(item.item(), item.tag());
+    }
+
+    static List<String> summary(SkyBlockItem item, NBTTagCompound tag) {
+        List<String> lines = new ArrayList<>();
+        boolean dungeon = DungeonItems.is(item, tag);
+        if (dungeon || item.dungeonConversionCost() != null) lines.add("  &7Dungeon Item " + (dungeon ? "&a✔" : "&c✖"));
+        if (Stars.max(item) > 0) {
+            // The stars as the item's name ends with them, their space too: the screenshot has two spaces before the
+            // stars (measured), and one before "Dungeon Item"'s ✔.
+            String stars = ItemBuilder.stars(item, tag);
+            lines.add("  &7Upgrade Level " + (stars.isEmpty() ? "&c✖" : stars));
+        }
+        return lines;
     }
 
     @Override
     public void open(HexSession session) {
-        // UNKNOWN: the header (NEU's Hex only says it's an anvil or an enchantment table).
-        session.open(new Placeholder(session, "The Hex ➜ Item Upgrades", new Icon(Material.ANVIL, "&aItem Upgrades", description())));
+        session.open(new UpgradesPage(session, description()));
     }
 }
