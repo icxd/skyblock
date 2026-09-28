@@ -1,6 +1,7 @@
 package net.icxd.dungeons.item.enchanting;
 
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.enchanting.weapon.WeaponStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 
@@ -96,7 +97,9 @@ public final class EnchantmentType {
      * nothing if it grants none, or only sometimes ("against explosions", "while out of combat").
      */
     public Stats getStats(int level) {
-        return stats(getDescription(level));
+        String text = getDescription(level);
+        // With what weapon enchantments' texts grant further on (Tabasco's, Toxophilite's: ENCHANTS_WEAPONS.md).
+        return WeaponStats.listed(namespace, text, stats(text));
     }
 
     /** What a description's text grants (see {@link #getStats}); nothing for null. */

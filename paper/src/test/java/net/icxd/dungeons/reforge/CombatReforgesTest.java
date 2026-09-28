@@ -5,6 +5,8 @@ import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.data.ItemData;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.stats.ItemStats;
+import net.icxd.dungeons.stats.Stat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,5 +76,12 @@ class CombatReforgesTest {
         assertEquals(0, CombatReforges.number(fanged, SWORD, reforged("fanged"), 2));
         assertNotNull(CombatReforges.reforge(reforged("FANGED"), "fanged"));
         assertNull(CombatReforges.reforge(reforged("warped"), "fanged"));
+    }
+
+    /** Suspicious's "+15" weapon damage counts in the stats, not the lore (live Twilight Daggers show their own). */
+    @Test
+    void suspicious() {
+        assertEquals(115, ItemStats.of(SWORD, reforged("suspicious"), null).get(Stat.DAMAGE), 1e-9);
+        assertEquals(100, ItemStats.of(SWORD, reforged("fanged"), null).get(Stat.DAMAGE), 1e-9);
     }
 }

@@ -64,7 +64,7 @@ public final class CombatReforges implements Listener {
     }
 
     /** The {@code index}th number of the reforge's bonus on this item; 0 if there's none. */
-    static double number(Reforge reforge, SkyBlockItem item, NBTTagCompound tag, int index) {
+    public static double number(Reforge reforge, SkyBlockItem item, NBTTagCompound tag, int index) {
         double[] numbers = item == null ? NONE : numbers(reforge, ItemBuilder.rarity(item, tag));
         return index < numbers.length ? numbers[index] : 0;
     }

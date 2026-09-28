@@ -8,6 +8,7 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
+import net.icxd.dungeons.item.enchanting.weapon.WeaponStats;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.gemstone.GemSlots;
 import net.icxd.dungeons.item.modifier.ItemModifiers;
@@ -96,6 +97,8 @@ public final class ItemStats {
             if (boosted) stats.set(stat, stats.get(stat) * ItemBuilder.dungeonFactor(stat, stars, masterStars, catacombs));
             else stats.add(stat, ItemBuilder.starBonus(stat, base.get(stat), stars));
         }
+        // What weapon enchantments and reforges give that the lore doesn't list (Ultimate Jerry's, Suspicious's).
+        WeaponStats.addUnlisted(item, tag, stats);
         return stats;
     }
 

@@ -14,6 +14,14 @@ class SkillGainsTest {
         assertEquals(10, SkillGains.champion(10));
     }
 
+    /** A bow's Toxophilite gives Champion's percents ("Gain 3% extra Combat XP" at I); they'd add up on one item. */
+    @Test
+    void toxophilite() {
+        assertEquals(3, SkillGains.combatXpPercent(java.util.Map.of("toxophilite", 1)), 1e-9);
+        assertEquals(16.11, SkillGains.combatXpPercent(java.util.Map.of("champion", 5, "toxophilite", 10)), 1e-9);
+        assertEquals(0, SkillGains.combatXpPercent(java.util.Map.of("sharpness", 5)), 1e-9);
+    }
+
     /** Research's arithmetic for the recorded kills with Champion V: 40 x 1.418 x 1.0611 = 60.19, shown "+60.2". */
     @Test
     void perKill() {
