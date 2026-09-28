@@ -9,6 +9,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
+import net.icxd.dungeons.combat.CombatState;
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.combat.HitKind;
 import net.icxd.dungeons.combat.MobDebuffs;
@@ -142,6 +143,8 @@ public final class DungeonMobs {
         } finally {
             KillingBlow.dealing(before);
         }
-        if (!mob.invulnerable()) DamageIndicators.show(entity, damage, look);
+        if (mob.invulnerable()) return;
+        DamageIndicators.show(entity, damage, look);
+        CombatState.dealt(player);
     }
 }

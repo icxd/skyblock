@@ -46,6 +46,9 @@ public final class PlayerSession {
     @Getter @Setter private long nextBreakPhase;
     /** The skill that last gained XP (the dungeon tab list shows it); null until one has. */
     @Getter @Setter private Skill lastSkill;
+    /** When they last dealt a mob damage and last took a mob's hit (see CombatState); 0 for not yet. */
+    @Getter @Setter private long lastDealtMillis;
+    @Getter @Setter private long lastTakenMillis;
 
     private PlayerSession(Player player) {
         this.player = player;

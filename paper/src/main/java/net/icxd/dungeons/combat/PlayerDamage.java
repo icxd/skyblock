@@ -166,6 +166,7 @@ public final class PlayerDamage {
         // A shield that takes all of it leaves them as they were: no number, flinch or knockback.
         taken = shielded(player, taken, by);
         if (taken <= 0) return 0;
+        if (by != null) CombatState.took(player);
         PlayerHealth.damage(player, taken);
         DamageIndicators.show(player, taken, false);
         if (player.isDead()) return taken;

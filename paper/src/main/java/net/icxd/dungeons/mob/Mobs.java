@@ -3,6 +3,7 @@ package net.icxd.dungeons.mob;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.combat.CombatState;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.combat.HitKind;
@@ -260,6 +261,7 @@ public final class Mobs implements Listener {
         double before = live.health;
         live.health -= damage;
         DamageIndicators.show(live.entity, damage, look);
+        CombatState.dealt(player);
         DungeonRun run = RunManager.of(player);
         if (run != null) run.damageDealt(player.getUniqueId(), damage);
         if (live.health <= 0) {
