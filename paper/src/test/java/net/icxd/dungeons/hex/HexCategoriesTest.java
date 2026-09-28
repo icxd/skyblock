@@ -45,7 +45,11 @@ class HexCategoriesTest {
     @Test
     void noneAppliesUntilItsPartIsBuilt() {
         HexItem sword = HexFakes.sword();
-        for (HexCategory category : HexCategories.all()) assertFalse(category.applies(sword), category.name());
+        for (HexCategory category : HexCategories.all()) {
+            // Built: books go on swords (see hex/book/BooksPageTest).
+            if (category == HexCategories.BOOKS) continue;
+            assertFalse(category.applies(sword), category.name());
+        }
     }
 
     @Test
