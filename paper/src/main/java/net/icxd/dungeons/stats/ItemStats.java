@@ -7,11 +7,11 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
-import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
+import net.icxd.dungeons.item.upgrade.Book;
 import net.icxd.dungeons.reforge.Reforge;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -44,7 +44,7 @@ public final class ItemStats {
     }
 
     /**
-     * The stats its lore lists: its own, its reforge's, its hot potato books', Art of War's and its
+     * The stats its lore lists: its own, its reforge's, its books' (see {@link Book}) and its
      * enchantments'. On a dungeon item (see {@link DungeonItems}) each star adds 2% of its own stats
      * ({@link ItemBuilder#starBonus});
      * in a dungeon ({@code catacombs} is the wearer's Catacombs boost there, null elsewhere) the whole
@@ -56,13 +56,10 @@ public final class ItemStats {
         Stats stats = new Stats();
         Stats base = item.stats();
         stats.add(base);
-        if (tag.getBoolean("art_of_war")) stats.add(Stat.STRENGTH, 5);
         Rarity rarity = ItemBuilder.rarity(item, tag);
         if (!tag.getString("reforge").isEmpty()) stats.add(Reforge.valueOf(tag.getString("reforge")).getStats().at(rarity));
 
-        int books = tag.getInt("hot_potato_books");
-        if (item.genericItemType() == GenericItemType.WEAPON) stats.add(Stat.DAMAGE, books * 2).add(Stat.STRENGTH, books * 2);
-        if (item.genericItemType() == GenericItemType.ARMOR) stats.add(Stat.HEALTH, books * 4).add(Stat.DEFENSE, books * 2);
+        for (Stats books : Book.bonuses(item, tag).values()) stats.add(books);
 
         NBTTagList enchantments = tag.getList("enchantments", 10);
         for (int i = 0; i < enchantments.size(); i++) {

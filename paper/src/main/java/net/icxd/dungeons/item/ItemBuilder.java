@@ -27,6 +27,7 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.item.requirement.Requirement;
+import net.icxd.dungeons.item.upgrade.Book;
 import net.icxd.dungeons.reforge.Reforge;
 import net.icxd.dungeons.rune.Rune;
 import net.icxd.dungeons.stats.Stat;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -54,13 +56,14 @@ import java.util.UUID;
  *   <li>name: rarity colour, reforge, name, stars ({@code ✪}, master stars {@code ➊}-{@code ➎})</li>
  *   <li>dark gray lines: breaking power, categories ("Collection Item")</li>
  *   <li>gear score, then stats in Hypixel's order, each with its bonuses: {@code &e(hot potato books)
- *       &6[Art of War] &9(reforge) &8(in a dungeon)}, the last on dungeon items (see {@link DungeonItems})</li>
+ *       &6[Art of War]} and the other books' (see {@link Book}), {@code &9(reforge) &8(in a dungeon)}, the last
+ *       on dungeon items (see {@link DungeonItems})</li>
  *   <li>gemstone slots</li>
  *   <li>enchantments: with descriptions when there are up to 5 (and it isn't a dungeon item), one
  *       a line up to 9, else three a line</li>
  *   <li>attributes, the item's own text, rune, then its abilities and bonuses (text and abilities as its
  *       {@link ItemBehaviour} has them with the item's data; set bonuses count what the item's holder
- *       wears, see {@link SetBonusLore})</li>
+ *       wears, see {@link SetBonusLore}), then its Book of Stats' count</li>
  *   <li>"This item can be reforged!", requirements the owner doesn't meet, soulbound, rarity line</li>
  * </ol>
  * Every line is one {@code &}-coded string turned into a component (see {@link Text#line}).
@@ -291,6 +294,7 @@ public final class ItemBuilder {
         sections.add(behaviour.lore(item, tag, item.lore()));
         sections.add(runeLines(tag));
         for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(SetBonusLore.shown(block, holder), rarity));
+        sections.add(Book.statsLines(item, tag));
 
         List<String> lore = new ArrayList<>();
         for (List<String> section : sections) {
@@ -320,8 +324,7 @@ public final class ItemBuilder {
         if (item.gearScore() > 0) lines.add("&7Gear Score: &d" + item.gearScore());
         Stats base = item.stats();
         Reforge reforge = reforge(tag);
-        GenericItemType generic = item.genericItemType();
-        int books = tag.getInt("hot_potato_books");
+        Map<Book, Stats> books = Book.bonuses(item, tag);
         boolean dungeon = DungeonItems.is(item, tag);
         int stars = dungeon ? Math.min(starCount(tag), 5) : 0;
         double catacombs = dungeon ? catacombsBoost(owner) : 0;
@@ -329,21 +332,25 @@ public final class ItemBuilder {
         for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
         for (Stat stat : Stat.values()) {
             if (stat == Stat.BREAKING_POWER || stat == Stat.WEAPON_ABILITY_DAMAGE) continue;
-            double potatoBooks = generic == GenericItemType.WEAPON && (stat == Stat.DAMAGE || stat == Stat.STRENGTH) ? books * 2
-                    : generic == GenericItemType.ARMOR && stat == Stat.HEALTH ? books * 4
-                    : generic == GenericItemType.ARMOR && stat == Stat.DEFENSE ? books * 2 : 0;
-            double artOfWar = stat == Stat.STRENGTH && tag.getBoolean("art_of_war") ? 5 : 0;
+            // Each book's in its own bracket, in the live order: potato books, then The Art of War or Peace, ...
+            double fromBooks = 0;
+            StringBuilder bookBrackets = new StringBuilder();
+            for (Map.Entry<Book, Stats> book : books.entrySet()) {
+                double value = book.getValue().get(stat);
+                if (value == 0) continue;
+                fromBooks += value;
+                bookBrackets.append(" ").append(book.getKey().bracket(value));
+            }
             double reforged = reforge == null || reforge.getStats().get(stat) == null ? 0 : reforge.getStats().get(stat).at(rarity);
             // Stars add 2% of the base stat each out of a dungeon; in one, the dungeon boost replaces that.
             double starBonus = starBonus(stat, base.get(stat), stars);
             // What enchantments grant counts in the total, with no bracket of its own.
-            double shown = base.get(stat) + starBonus + potatoBooks + artOfWar + reforged + enchanted.get(stat);
+            double shown = base.get(stat) + starBonus + fromBooks + reforged + enchanted.get(stat);
             if (shown == 0) continue;
             String unit = stat.getUnit();
             StringBuilder line = new StringBuilder("&7").append(stat.getDisplayName()).append(": &").append(stat.getLoreColor())
                     .append(Text.signed(shown)).append(unit);
-            if (potatoBooks != 0) line.append(" &e(").append(Text.signed(potatoBooks)).append(")");
-            if (artOfWar != 0) line.append(" &6[").append(Text.signed(artOfWar)).append("]");
+            line.append(bookBrackets);
             if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(unit).append(")");
             if (dungeon && shown > 0) {
                 line.append(" &8(").append(Text.signed((shown - starBonus) * dungeonFactor(stat, stars, catacombs))).append(unit).append(")");

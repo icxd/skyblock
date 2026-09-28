@@ -72,6 +72,7 @@ import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
 import net.icxd.dungeons.item.bonus.SetBonuses;
+import net.icxd.dungeons.item.upgrade.BookOfStats;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.npc.Ophelia;
@@ -186,6 +187,7 @@ public class Dungeons extends JavaPlugin {
         listen(WeaponEvents.class, WeaponEvents::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
+        listen(BookOfStats.class, BookOfStats::new);
         listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
