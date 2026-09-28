@@ -34,11 +34,12 @@ recorded-menu checks without it.
   and the tier's rewards), the tier's Skill XP given, its stats (Obsidian's "+1☘ Mining Fortune",
   through `PlayerStats.addModifier`), its recipes unlocked; the profile is saved.
 - **Boss collections**: a finished floor adds a kill to its boss (+2 in Master Mode, as the recorded
-  Bonzo Collection says), from `RunEnd`. Their items are claimed from the tier's Rewards menu, once.
+  Bonzo Collection says), from `RunEnd`. A reached tier's items and essence (onto the profile's, as
+  dungeon mobs' essence is: `mob/Essences`) are claimed from its Rewards menu, once.
 - **Menus**, as recorded, with the profile's numbers: Collections (the five categories, Boss
   Collections, Crafted Minions, the rankings sign), a category's collections (found or the gray dye),
   a collection's tiers (lime, yellow, red panes with the tier as the count), a tier's Rewards (recipes
-  open their recipe, boss items are claimed). `/collection` (and the wiki's other names),
+  with a crafting recipe open it, boss items and essence are claimed). `/collection` (and the wiki's other names),
   `/viewcollection <item id>`, `/viewbosscollection <boss id>`.
 - **Recipe Book**: its eleven categories, pages of 28 (unlocked first, then locked, each by name),
   "???" with what unlocks a locked one, a recipe's view (the wiki's Crafting UI: none was opened in the
@@ -47,8 +48,9 @@ recorded-menu checks without it.
 - **Crafting** ("Craft Item", `/craft` for everyone as the wiki's Commands has it, and the SkyBlock
   Menu's Crafting Table): the recorded 54-slot table; SkyBlock items from NEU's recipes once unlocked
   (and vanilla items NEU has a recipe for, like a Block of Iron), matched by SkyBlock id and amount, a
-  shaped recipe anywhere it fits in the grid; a click takes one onto the cursor, a shift-click as many
-  as the grid and the inventory allow; the inputs are consumed; the result is built with ItemBuilder;
+  shaped recipe anywhere it fits in the grid, and an item with no SkyBlock id in the grid in the way of
+  any; a click takes one onto the cursor, a shift-click as many as the grid and the inventory allow (an
+  unstackable result one to a slot, each its own item); the inputs are consumed; the result is built with ItemBuilder;
   Carpentry XP (3% of the inputs' NPC sell price, the wiki's Carpentry). Items go in by click, drag,
   number key or shift-click, and whatever is left comes back when it closes. On a Sandbox profile it
   works the same, and its items stay in the profile (SandboxStorage).
@@ -65,8 +67,13 @@ recorded-menu checks without it.
   item says once it can be claimed and after; that a never-found collection does nothing on a click.
 - The Collections "Unlocked" percentage at 100% (the Recipe Book's green is recorded).
 - Crafting: a shaped recipe smaller than the grid fits anywhere it can be moved (vanilla's way), not
-  mirrored; the bottom glass turns lime while there's a result (not recorded).
-- The Recipe Book's lists are the wiki's (966 recipes in May 2026; the data has 950 entries, the
+  mirrored; the bottom glass turns lime while there's a result (not recorded); a locked recipe shows as
+  none ("Recipe Required"); an ingredient's enchantments, reforge and upgrades go with it, none to the
+  result; vanilla recipes give Carpentry XP too (the wiki: "most vanilla recipes do not", not which).
+- Boss essence: only Bonzo's amounts are known (the recording's III and VI); the other bosses' essence
+  rewards show no amount and add none. How a tier is claimed (a click on any of its items, all at once).
+- A recipe's Go Back from the Recipe Book says the page it came from ("To (1/4) Combat Recipes").
+- The Recipe Book's lists are the wiki's (966 recipes in May 2026; the data has 952 entries, the
   recording's total was about 1,016), so the counts differ: a new profile has 30 unlocked here, 111
   recorded. The Pets' Z-to-A order on a page is as recorded, reason unknown.
 - Slayer recipes whose level no source gives are taken as the slayer's first (five of them; the report
@@ -81,7 +88,9 @@ recorded-menu checks without it.
 - **Slayers**: slayer recipes stay locked; the book says the level.
 - **Trades menu, Search Recipes, Collection Rankings, Quick Crafting** (VIP and up, Carpentry III) and
   Supercrafting: shown as recorded, they do nothing.
-- **Essence, the Dwarven Forge, enchanting (Exp Discounts), bags (Quiver, Potion Bag, Sack of Sacks
-  slots), the Personal Bank (Emerald VI)**: their rewards are shown only.
+- **The Dwarven Forge, enchanting (Exp Discounts), bags (Quiver, Potion Bag, Sack of Sacks slots),
+  the Personal Bank (Emerald VI)**: their rewards are shown only.
+- **Kuudra**: its boss collection counts nothing (no Kuudra fights). The dungeon bosses' count a
+  finished Floor I-VII (the Entrance has no boss collection).
 - **Sacks**: items going into a sack would count too.
 - **Rift collections**: there's no Rift.
