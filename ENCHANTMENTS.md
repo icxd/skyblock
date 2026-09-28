@@ -35,8 +35,9 @@ recording of the Hex. Where the sources say nothing the code says UNKNOWN and ta
   Tabasco I, Delicate I-IV (they started at III, III, II and V).
 - **Stats** still come from the text (`EnchantmentType.getStats`), now also "Grants A and B." and a line ending
   without its gray code. New ones that grant stats that way: Absorb, Divine Gift, Pesterminator, Forest Pledge, Ice
-  Cold, Respiration, Scuba, Sunder and ten Turbo enchantments (their crop's fortune). None of the 76 old ones reads
-  differently (checked on every level).
+  Cold, Respiration, Scuba, Sunder and ten Turbo enchantments (their crop's fortune; not at IV and V, whose text
+  goes on "Requires Bronze in a Carrot Contest!": see Later). None of the 76 old ones reads differently (checked on
+  every level).
 - **Effects in code** keep going by id: Damage (Sharpness, Smite, Bane of Arthropods, Ender Slayer, Cubism,
   Smoldering, Gravity, Giant Killer, Prosecute, Execute, Titan Killer, First Strike, Triple-Strike, Power, Snipe,
   One For All), Scavenger (KillCoins), Champion (SkillGains), Overload (Shots), Growth, Protection, Sugar Rush and
@@ -48,13 +49,13 @@ recording of the Hex. Where the sources say nothing the code says UNKNOWN and ta
 
 **Categories** (`Enchantments`, `UltimateEnchantments`). No requirement. Each is for every item one of its
 enchantments goes on: an enchantment goes on the item kinds its books' "Applied To" names, mapped onto the plugin's
-types (`EnchantmentData.is`: "Armor" is the four pieces, "Tools" pickaxes, drills, axes, shovels and shears, "Hoe" and
-"Farming Tool" the farming tools, "Vacuum" vacuums, a name like "Precursor Eye" that item). So weapons, armor,
-equipment, tools, fishing rods, and wands for Ultimate Wise.
+types (`EnchantmentData.is`: "Armor" is the four pieces, "Tools" pickaxes, drills, axes, shovels, shears, gauntlets
+and farming tools, "Hoe" and "Farming Tool" the farming tools, "Vacuum" vacuums, a name like "Precursor Eye" that
+item). So weapons, armor, equipment, tools, fishing rods, and wands for Ultimate Wise.
 - Summary: `  &7Enchantments &e<n>&7/&a<max>`: n is how many of the listed ones are on the item, max how many can be
   at once: the groups the listed ones make when every two that conflict are in one group (`EnchantRules.groups`).
   The wiki's 26 for a sword is that rule on its 34 enchantments of 2022 with Sharpness, Smite and Bane of Arthropods
-  conflicting (tested). They don't conflict now (NEU's books and pools; 933 live items have all three), and a sword
+  conflicting (tested). They don't conflict now (the books; 933 live items have all three), and a sword
   lists 35 today (Pyroclasm is new), so a sword shows 29 now. The count turns green once it's full (the official
   screenshot's "10/10").
 - Ultimate: `  &7Ultimate Enchantments &e<n>&7/&a1`.
@@ -65,20 +66,22 @@ Go Back "To The Hex". Both categories open it, with their own list. Each book: `
 its lowest level's lines as its book has them, the next tier's line for a tiered one ("&850k Combat XP to tier up!",
 the wiki's Champion), `  &c<Name>&c ✖`, "&eClick to view!". It opens the level page.
 - Order: the wiki's for a sword (its three pages) and its ultimates, and armor's ultimates; every other enchantment
-  after those, by name.
+  after those, by name (UNKNOWN: a bow's or armor's own order).
 - Sort: Default, Missing Enchantments First, A to Z, Z to A, cycled, the one in use "&b▶ " (the wiki's); a new sort
   goes back to page 1. The sort and page are kept through the level page and back.
 - Not offered: Telekinesis (Hypixel replaced it with auto-pickup in 2022; items that have it keep it).
 - 48 is glass: Bookshelf Power is gone from SkyBlock since 0.26.1.
 
 **The Hex ➜ Enchant Item ➜ <Enchant>** (`EnchantLevelPage`): one enchanted book a level, lowest to highest, row by
-row from 12; the header, Experience Bottles in 50, no Sort, Go Back "To Enchant Item" (to the list as it was). A
+row from 12, and the item's own level too if it's past them (Efficiency X from a Silex, 56 live items; a level set
+with `/addenchantment`), so it can be taken off; the header, Experience Bottles in 50, no Sort, Go Back "To Enchant Item" (to the list as it was). A
 book: `&a<Name> <Roman>` (ultimate `&d&l`), the level's lines, what it would take off the item, then the Cost block
 (HexCosts: `&3<N> Exp Levels`) and what a click does.
 - **Clicking** (`EnchantRules.choose`): the item's own level takes it off, for the same Exp levels (the wiki's
   Enchantments), a higher one upgrades it, a new one goes on. What conflicts with it comes off; an ultimate takes the
-  other ultimate's place; One For All takes every other enchantment off ("Removes all other enchants"); another
-  enchantment takes One For All off only if they conflict (NEU's pools). The data keeps each other enchantment as
+  other ultimate's place; One For All goes with no other enchantment ("Removes all other enchants"): it takes every
+  other off, and any other takes it off (of 119 live items with it, none has another but the retired Telekinesis,
+  where a third of swords have Champion). The data keeps each other enchantment as
   stored, a changed level in place, a new one last.
 - **Levels offered**: from the lowest that exists (Counter-Strike from III, Vicious from III...) to the highest: the
   books', or a tiered enchantment's last tier (Champion, Absorb, Compact, Cultivating, Expertise, Hecatomb,
@@ -109,8 +112,6 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
   Level"); take the higher one off first.
 - **What's replaced**: "&cReplaces Life Steal, Mana Steal" under the level's text.
 - **The enchanted book's cost line**: "&9Enchanted Book (Sharpness VI) &c✖", in the book's rarity's colour.
-- **One For All** takes every other enchantment off; NEU's pools spare Champion, Tabasco and Divine Gift (and
-  Pyroclasm is newer than them). Whether Hypixel keeps those is unknown.
 - **Not enough Exp levels** (U11): the core's "You don't have enough Exp Levels!". Taking one off: our message.
 - **Exp costs**: NEU's, the wiki's where NEU has none. They disagree on 25 levels (NEU's used): Champion I (10 vs
   25), Critical VII (200 vs 100), Gravity I-V (50-250 vs 10-30: NEU's are Dragon Hunter's), Frost Walker (10/20 vs
@@ -120,11 +121,14 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
   Scavenger VI, the fishing ones' last...): they cost no Exp levels. All of them are above the Enchantment Table's
   levels, so a Normal profile can't have them anyway.
 - **Which items are which kind**: "Fishing Weapon" (no item has that type), "Hoe" (Harvesting's; taken as the
-  farming tools), "Tools" (no shears or hoes in NEU's lists; the wiki's Enchantments), a Carnival Mask (NEU gives it a
-  chestplate's).
+  farming tools), "Tools" (the wiki's Enchantments' pickaxes, drills, axes, shovels and shears, and the gauntlets and
+  farming tools live items have Efficiency and Silk Touch on), a Carnival Mask (NEU gives it a chestplate's).
 - **The Experience Bottles button and the bottles' header** without their Bazaar lines; the bottles' action "Click to
   consume!" (Hypixel's is the Bazaar's).
 - **Orbs** rounded down (the wiki's table); the screen's example (19 for 8) is some other multiplier.
+- **Conflicts**: the books' Conflicts lists (every pair they name is on no live item). NEU's pools are older and
+  have more, which live items carry together (Fortune and Smelting Touch on 131, the Turbos with each other on
+  dozens), so they're only in the generator's report.
 - **Highest levels**: the books' where the wiki says more (Efficiency X is Silex's; Drain VI, Life Steal VI,
   Vampirism VII, Karma VI, Scuba VI, Forest Pledge VI in the wiki's module only).
 
@@ -152,7 +156,12 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
     Walker, Stealth (Timid mobs).
   - Others: Quantum (weekdays), Small Brain (a negative Intelligence the parsing doesn't read), The One (maxed
     collections), Great Spook (Great Spook Armor).
-- **Efficiency VI-X** (Silex): no text (the book's text has no numbers to put the wiki's in).
+- **Efficiency VI-X** (Silex): no text (the book's text has no numbers to put the wiki's in). Nor Thorns V,
+  Respiration V, Feather Falling XX or Sharpness X, which a few live items have past the books.
+- **Jacob's Farming Contests**: Turbo IV and V "Require Bronze / Silver in a <crop> Contest"; with no contests here
+  their text grants no stat (the parsing reads none from a text that goes on), though III and VI do.
+- **Stats in longer texts**: Reflection's "+2 Intelligence" and "+1 True Defense" come with an effect after them, so
+  the parsing reads neither.
 - **Three glyphs with no classic symbol** (tools/items' table): Bug Blender's and Pesterminator's Pest (E018),
   Petalfall's (E02E), Stealth's Timid (E088): dropped from their text.
 - **`/addenchantment`** checks nothing still (the rules aren't a one-liner there); it now finds an enchantment by any
@@ -166,4 +175,3 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
   now (the books, and 933 live items) and Pyroclasm is new. Right?
 - Tiered enchantments (Champion...) are offered up to their last tier (Sandbox can set any). On Hypixel only tier I is
   sold. Keep?
-- One For All takes every other enchantment off, Champion and Divine Gift too. Keep, or spare what NEU spares?
