@@ -300,10 +300,13 @@ final class OtherSets {
     }
 
     /**
-     * Each Armor of the Pack piece: "+225 additional Defense and 20 True Defence against Animal mobs" (the
-     * wiki). The True Defense isn't here: no hook lessens true damage by what hit them yet.
+     * Each Armor of the Pack piece's own text: "Gain +50 Defense against Animal mobs" (the chestplate's
+     * +75: the wiki's "+225 additional Defense" is the set's), and "Gain +5 True Defense", always, as the
+     * text reads (UNKNOWN: the wiki has the set's 20 True Defence against Animal mobs only).
      */
     static final class PackPieces implements Bonus {
+        static final String CHESTPLATE = "CHESTPLATE_OF_THE_PACK";
+
         @Override
         public String kind() {
             return ITEM;
@@ -320,8 +323,20 @@ final class OtherSets {
         }
 
         @Override
+        public void stats(Player player, Active active, Stats stats) {
+            stats.add(Stat.TRUE_DEFENSE, 5 * active.count());
+        }
+
+        @Override
         public double defenseAgainst(Player player, Active active, Entity by) {
-            return SetBonuses.types(by).contains(MobType.ANIMAL) ? 225 * active.count() : 0;
+            return SetBonuses.types(by).contains(MobType.ANIMAL) ? defense(active.pieces()) : 0;
+        }
+
+        /** What these pieces add to Defense against Animal mobs. */
+        static double defense(List<Worn.Piece> pieces) {
+            double defense = 0;
+            for (Worn.Piece piece : pieces) defense += piece.id().equals(CHESTPLATE) ? 75 : 50;
+            return defense;
         }
     }
 

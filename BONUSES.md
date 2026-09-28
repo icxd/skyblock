@@ -203,7 +203,7 @@ What armor pieces' own lines (not a bonus block) say they do while worn.
 | Mending (and Vitality) while in Dungeons | MENDER_HELMET, MENDER_FEDORA, MENDER_CROWN (3) | **DONE** +50 Mending; +65 and +80 Mending and Vitality (0.26.1), in a run; the run's stat boost doesn't grow them (UNKNOWN: the text has no bracket) | [Mender Helmet](https://hypixelskyblock.minecraft.wiki/w/Mender_Helmet), [Mender Fedora](https://hypixelskyblock.minecraft.wiki/w/Mender_Fedora), [Mender Crown](https://hypixelskyblock.minecraft.wiki/w/Mender_Crown) |
 | "Players within 10 blocks of you take 5% less damage" in Dungeons, 30 blocks as a Tank | STONE_CHESTPLATE, METAL_CHESTPLATE, STEEL_CHESTPLATE (3) | **DONE** 5/8/10% off hits on players in the wearer's run, the wearer included; of several wearers the one that takes off most counts (UNKNOWN both) | [Stone Chestplate](https://hypixelskyblock.minecraft.wiki/w/Stone_Chestplate), [Metal Chestplate](https://hypixelskyblock.minecraft.wiki/w/Metal_Chestplate), [Steel Chestplate](https://hypixelskyblock.minecraft.wiki/w/Steel_Chestplate) |
 | Arrows +1% for every 2 blocks traveled above 20 | SNIPER_HELMET (1) | **DONE** whole steps, from where the arrow was shot to where it hit (as Snipe measures), additive as Snipe's is (UNKNOWN both) | [Sniper Helmet](https://hypixelskyblock.minecraft.wiki/w/Sniper_Helmet) |
-| +225 Defense and 20 True Defense against Animal mobs | THE_PACK (4) | **APPROX** the Defense; the True Defense LATER (no true-damage hook by attacker) | [Armor of the Pack](https://hypixelskyblock.minecraft.wiki/w/Armor_of_the_Pack) |
+| +50 Defense against Animal mobs (the chestplate's +75) and +5 True Defense a piece | THE_PACK (4) | **DONE** the pieces' own numbers, 225 Defense against Animal mobs for the set (the wiki's set total); the True Defense always, as the text reads (UNKNOWN: the wiki has 20 against Animal mobs only) | [Armor of the Pack](https://hypixelskyblock.minecraft.wiki/w/Armor_of_the_Pack) |
 | Combat Stats x2 at night, x3 in the Spooky Festival | BAT_PERSON (4) | **APPROX** each piece's Combat Stats (the Stats menu's group; its reforge's and enchantments' too) count twice from 7pm to 6am SkyBlock time; the festival's x3 and its candy LATER | [Bat Person Armor](https://hypixelskyblock.minecraft.wiki/w/Bat_Person_Armor) |
 | "Arthropod mobs deal -30% damage" | SPIDER_HAT (1) | **DONE** | [Spider Hat](https://hypixelskyblock.minecraft.wiki/w/Spider_Hat) |
 | "Grants +100 Speed Cap" | RACING_HELMET (1) | **DONE** the cap (its +400 Speed isn't a stat in the data, see the wiring above) | [Racing Helmet](https://hypixelskyblock.minecraft.wiki/w/Racing_Helmet) |
@@ -258,5 +258,5 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   Workshop, the Spooky Festival, Mythological mobs, pets, necromancy, soulflow, Heat, the Mining Spread
   stat, fairy souls, experience orbs, the End: the bonuses named for them above.
 - Hooks not in the combat core yet: the Attack Speed cap (Newton's Demise), Ferocity strikes
-  (Regenerative Howl), true damage by attacker (the Pack's True Defense), health costs (Berserk's cut),
-  explosions and fall damage (the Creeper and Chicken Hats, the Spring Boots).
+  (Regenerative Howl), health costs (Berserk's cut), explosions and fall damage (the Creeper and
+  Chicken Hats, the Spring Boots).

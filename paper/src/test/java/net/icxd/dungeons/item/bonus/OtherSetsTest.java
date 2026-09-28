@@ -57,6 +57,19 @@ class OtherSetsTest {
         assertEquals(new Stats().set(Stat.DEFENSE, 130).set(Stat.STRENGTH, 10).set(Stat.SPEED, 100), stats);
     }
 
+    /** Armor of the Pack's pieces against Animal mobs: +50 Defense each, the chestplate's +75, 225 for the set. */
+    @Test
+    void packPieces() {
+        List<Worn.Piece> set = List.of(worn(item("HELMET_OF_THE_PACK")), worn(item("CHESTPLATE_OF_THE_PACK")),
+                worn(item("LEGGINGS_OF_THE_PACK")), worn(item("BOOTS_OF_THE_PACK")));
+        assertEquals(225, OtherSets.PackPieces.defense(set), EPSILON);
+        assertEquals(50, OtherSets.PackPieces.defense(set.subList(0, 1)), EPSILON);
+        Bonus pack = new OtherSets.PackPieces();
+        Stats stats = new Stats();
+        pack.stats(null, new Bonus.Active(pack, null, 4, set), stats);
+        assertEquals(new Stats().set(Stat.TRUE_DEFENSE, 20), stats);
+    }
+
     /** The hats are their own items only; the Racing Helmet raises the Speed cap by 100. */
     @Test
     void hats() {
