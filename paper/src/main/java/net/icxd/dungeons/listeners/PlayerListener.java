@@ -8,22 +8,21 @@ import net.icxd.dungeons.profile.ProfileActions;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.session.PlayerSession;
-import net.icxd.dungeons.session.Vitality;
 import net.icxd.dungeons.stats.PlayerAttributes;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
+import net.icxd.dungeons.item.ability.AbilityActivation;
 import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.ability.Activations;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.data.ItemBlock;
-import net.icxd.dungeons.item.modifier.PowerScroll;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
-import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -31,7 +30,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -52,6 +50,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public class PlayerListener implements Listener {
     /** Hypixel says which profile you're on about 3 seconds after you join. */
@@ -205,7 +204,9 @@ public class PlayerListener implements Listener {
     /**
      * A click with a SkyBlock item uses the ability its blocks (with what its behaviour adds) have for that
      * click, if something does what it says (see {@link Abilities#forClick}); else a shortbow shoots, except
-     * on a right click that uses the block they clicked (a chest, a door): that one is the block's.
+     * on a right click that uses the block they clicked (a chest, a door): that one is the block's. A left
+     * click on a block with an item that has a DIG ability uses that first. What it costs is taken as for
+     * every ability (see {@link Activations#use}).
      */
     @EventHandler
     public void onAbilityUse(PlayerInteractEvent event) {
@@ -224,10 +225,18 @@ public class PlayerListener implements Listener {
         SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
         if (sbItem == null) return;
         List<ItemBlock> blocks = ItemBehaviours.of(sbItem).blocks(sbItem, tag, sbItem.blocks());
-        ItemBlock block = Abilities.forClick(blocks, right, player.isSneaking(), name -> {
+        Predicate<String> handled = name -> {
             AbilityHandler handler = Abilities.get(name);
             return handler != null && handler.casts(player, sbItem, tag);
-        });
+        };
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            List<ItemBlock> dig = Abilities.withActivation(blocks, AbilityActivation.DIG, handled);
+            if (!dig.isEmpty()) {
+                Activations.use(player, sbItem, tag, dig.get(0), AbilityHandler.Trigger.of(AbilityActivation.DIG, null, event.getClickedBlock()));
+                return;
+            }
+        }
+        ItemBlock block = Abilities.forClick(blocks, right, player.isSneaking(), handled);
         if (block == null) return;
         if (block.isShortbow()) {
             if (right && usesBlock(event)) return;
@@ -235,7 +244,8 @@ public class PlayerListener implements Listener {
             if (right) event.setUseItemInHand(Event.Result.DENY);
             shoot(player, sbItem, tag, block);
         } else {
-            useAbility(player, sbItem, tag, block);
+            Activations.use(player, sbItem, tag, block,
+                    AbilityHandler.Trigger.click(AbilityActivation.of(block.activation()), right, event.getClickedBlock()));
         }
     }
 
@@ -247,55 +257,6 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * Cooldown, then mana, then Vitality, then whether it can happen at all (see
-     * {@link AbilityHandler#usable}): a cast that fails for any of them doesn't start the cooldown
-     * (cooldowns are per ability) or take anything. Its mana cost is what it says, and its share of their
-     * max mana, less the item's Mana Disintegrators' and what makes their abilities cheaper (see {@link
-     * Abilities#addManaCostFactor}); its Vitality cost what it says. Too little Vitality is recorded once:
-     * Wither Impact still casts, without the Wither Shield its 50 Vitality pays for (0.26.1's release notes,
-     * and its June 10 alpha), so a handler can say its Vitality part is optional ({@link
-     * AbilityHandler#vitalityOptional}) and it casts without it, spending none. For the rest "Vitality is now
-     * a resource akin to Mana" (the June 10 changelog), so it's what too little mana does. Once it's used, the
-     * item's Power Scroll does what it does (see {@link PowerScroll#used}).
-     */
-    private void useAbility(Player player, SkyBlockItem sbItem, NBTTagCompound tag, ItemBlock ability) {
-        PlayerSession session = PlayerSession.of(player);
-        String cooldown = "ability:" + ability.name();
-        long left = session.cooldownLeft(cooldown);
-        if (left > 0) {
-            player.sendMessage("§cThis ability is on cooldown for " + Abilities.cooldownSeconds(left) + "s.");
-            return;
-        }
-
-        int mana = Math.max(0, session.getMana());
-        int cost = Abilities.manaCost(ability, session.maxMana(), player, tag);
-        if (mana < cost) {
-            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
-            session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
-            return;
-        }
-        AbilityHandler handler = Abilities.handler(ability);
-        boolean vitalityPaid = Vitality.has(player, ability.vitality());
-        if (!vitalityPaid && !handler.vitalityOptional()) {
-            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
-            session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH VITALITY", 2000));
-            return;
-        }
-        if (!handler.usable(player, sbItem, tag, ability)) return;
-
-        if (ability.cooldown() > 0) session.startCooldown(cooldown, (long) (ability.cooldown() * 1000));
-        session.setMana(mana - cost);
-        if (vitalityPaid) Vitality.spend(player, ability.vitality());
-        handler.use(player, sbItem, tag, ability, vitalityPaid);
-        PowerScroll.used(player, tag, ability);
-
-        if (cost > 0) {
-            session.setDefenseReplacement(Replacement.forMillis(
-                    "§b-" + cost + " Mana (§6" + ability.name() + "§b)", 400));
-        }
-    }
-
-    /**
      * A shortbow's shot, at most one per its shot cooldown (whichever shortbow they shot last), which their
      * Attack Speed shortens.
      */
@@ -303,7 +264,7 @@ public class PlayerListener implements Listener {
         PlayerSession session = PlayerSession.of(player);
         if (session.cooldownLeft("shortbow") > 0) return;
         if (sbItem.shotCooldown() > 0) {
-            int ticks = Damage.shotCooldownTicks(sbItem.shotCooldown(), session.stats().get(Stat.ATTACK_SPEED));
+            int ticks = Damage.shotCooldownTicks(sbItem.shotCooldown(), session.stats().get(Stat.ATTACK_SPEED), Combat.attackSpeedCap(player));
             session.startCooldown("shortbow", ticks * 50L);
         }
         Abilities.handler(shortbow).use(player, sbItem, tag, shortbow);

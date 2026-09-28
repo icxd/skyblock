@@ -12,14 +12,16 @@ import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
  * What this server keeps about an online player while they're on it: their stats (worked out at
- * most once a tick), health, mana, vitality, ability cooldowns, the region they're in, what the action bar
- * shows in place of defense or mana and the skill that last gained XP. It ends when they leave (see
+ * most once a tick), health, mana, vitality, absorption, when they were last in combat, ability
+ * cooldowns, the region they're in, what the action bar shows in place of defense or mana and the
+ * skill that last gained XP. It ends when they leave (see
  * PlayerListener), so nothing of theirs stays behind, and a rejoin starts from full health and mana.
  * Main thread.
  */
@@ -35,17 +37,23 @@ public final class PlayerSession {
     @Getter @Setter private int mana = -1;
     /** What's left of their Vitality pool; -1 for full (see {@link Vitality}). */
     @Getter @Setter private double vitality = -1;
+    /** Their absorption, source by source (see {@link Absorption}). */
+    @Getter private final Absorption absorption = new Absorption();
     private Replacement defenseReplacement;
     private Replacement manaReplacement;
     private final Map<String, Long> cooldownEnds = new HashMap<>();
-    /** Stats they have for a while, by what gave them (see {@link #buff}). */
+    /** Stats they have for a while, by what gave them (see {@link #buff}), and shares more of stats (see {@link #buffPercent}). */
     private final Map<String, Buff> buffs = new HashMap<>();
+    private final Map<String, PercentBuff> percentBuffs = new HashMap<>();
     /** Null until they've moved. */
     @Getter @Setter private RegionType region;
     /** When their next mining break animation may start (see MiningManager). */
     @Getter @Setter private long nextBreakPhase;
     /** The skill that last gained XP (the dungeon tab list shows it); null until one has. */
     @Getter @Setter private Skill lastSkill;
+    /** When they last dealt a mob damage and last took a mob's hit (see CombatState); 0 for not yet. */
+    @Getter @Setter private long lastDealtMillis;
+    @Getter @Setter private long lastTakenMillis;
 
     private PlayerSession(Player player) {
         this.player = player;
@@ -67,7 +75,10 @@ public final class PlayerSession {
         sessions.remove(player);
     }
 
-    /** Their stats now: the base, their armor and held item and what they have for a while, worked out once per tick. */
+    /**
+     * Their stats now: the base, their armor and held item and what they have for a while (flat buffs, then
+     * the percent ones on what that comes to), worked out once per tick.
+     */
     public Stats stats() {
         int tick = Bukkit.getCurrentTick();
         if (stats == null || statsTick != tick) {
@@ -75,9 +86,33 @@ public final class PlayerSession {
             long now = System.currentTimeMillis();
             buffs.values().removeIf(buff -> buff.endMillis <= now);
             for (Buff buff : buffs.values()) stats.add(buff.stats);
+            if (!percentBuffs.isEmpty()) {
+                percentBuffs.values().removeIf(buff -> buff.endMillis <= now);
+                Map<Stat, Double> percents = new EnumMap<>(Stat.class);
+                for (PercentBuff buff : percentBuffs.values()) percents.merge(buff.stat, buff.percent, Double::sum);
+                for (Map.Entry<Stat, Double> e : percents.entrySet()) stats.set(e.getKey(), percentBuffed(stats.get(e.getKey()), e.getValue()));
+            }
             statsTick = tick;
         }
         return stats;
+    }
+
+    /**
+     * Gives them {@code percent} more of a stat for this long (Last Stand's "+12.5% Defense for 10s"), in place of
+     * what the same source gave them before; on the stat as their other stats and flat buffs make it. Percent
+     * buffs on the same stat add up (UNKNOWN whether Hypixel's do).
+     */
+    public void buffPercent(String source, Stat stat, double percent, long millis) {
+        percentBuffs.put(source, new PercentBuff(stat, percent, System.currentTimeMillis() + millis));
+        this.stats = null;
+    }
+
+    /** A stat with this many percent more (never below none). */
+    static double percentBuffed(double value, double percent) {
+        return value * Math.max(0, 1 + percent / 100);
+    }
+
+    private record PercentBuff(Stat stat, double percent, long endMillis) {
     }
 
     /**

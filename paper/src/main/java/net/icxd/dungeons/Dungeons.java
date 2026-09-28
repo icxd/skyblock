@@ -66,6 +66,7 @@ import net.icxd.dungeons.common.Runs;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.combat.Shots;
+import net.icxd.dungeons.item.ability.Activations;
 import net.icxd.dungeons.item.ability.weapons.WeaponEvents;
 import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
@@ -192,6 +193,7 @@ public class Dungeons extends JavaPlugin {
         listen(Npcs.class, Npcs::new);
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         listen(UtilityListener.class, UtilityListener::new);
+        listen(Activations.class, Activations::new);
         try {
             SetBonuses.enable(this);
         } catch (RuntimeException e) {

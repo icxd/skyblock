@@ -18,14 +18,14 @@ import net.icxd.dungeons.stats.Stats;
 /**
  * Stats for a while, from an ability ("gain +30❁ Strength ... for 20 seconds"), on {@link PlayerSession#buff}:
  * the same ability again starts them again rather than adding to them ("Effect doesn't stack."), and walk
- * speed follows at once and again when they run out.
+ * speed follows at once and again when they run out. Public for effects elsewhere (EFFECTS.md).
  */
-final class Buffs {
+public final class Buffs {
     private Buffs() {
     }
 
     /** Gives them {@code stats} for {@code millis}, in place of what {@code source} gave them before. */
-    static void give(Player player, String source, Stats stats, long millis) {
+    public static void give(Player player, String source, Stats stats, long millis) {
         PlayerSession session = PlayerSession.of(player);
         session.buff(source, stats, millis);
         PlayerAttributes.apply(player, session.stats());
@@ -39,7 +39,7 @@ final class Buffs {
      * (nearest first), {@code others} of them at most (all of them for a negative number). Dungeon ghosts
      * aren't anyone's nearby players.
      */
-    static List<Player> youAndNearby(Player caster, double radius, int others) {
+    public static List<Player> youAndNearby(Player caster, double radius, int others) {
         Location at = caster.getLocation();
         List<Player> nearby = new ArrayList<>();
         for (Player other : caster.getWorld().getPlayers()) {

@@ -3,14 +3,19 @@ package net.icxd.dungeons.mob;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.combat.CombatState;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
+import net.icxd.dungeons.combat.HitKind;
+import net.icxd.dungeons.combat.MobDebuffs;
 import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.economy.ExpOrbs;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
@@ -55,7 +60,7 @@ import java.util.UUID;
 
 /**
  * SkyBlock's mobs: the ones alive now, and how they fight. Every kind ({@link MobKinds}) is spawned
- * here, as a {@link DataMob}, and shares this one path: hits, damage numbers, drops, death (a
+ * here, as a {@link DataMob}, and shares this one path: hits, damage numbers, drops and experience, death (a
  * {@link SkyBlockMobDeathEvent} after the drops) and removal. A mob's health is SkyBlock health,
  * kept here; hits on it do no vanilla damage (it still flinches and takes knockback), and its hits on
  * players do SkyBlock damage less their defense. Its name tag is a text display riding it. Mobs
@@ -66,6 +71,18 @@ public final class Mobs implements Listener {
     public static final NamespacedKey TYPE = new NamespacedKey("skyblock", "mob");
 
     private static final Map<UUID, Live> LIVE = new HashMap<>();
+    private static final List<DropChance> DROP_CHANCES = new ArrayList<>();
+
+    /**
+     * What changes the chance of a kill's drops, by the killer and how they killed it (Looting on the weapon
+     * that dealt the killing blow, Chance on the bow its arrow left, Luck on armor drops): a factor on one drop's
+     * chance, after Magic Find (1 for none); they multiply. {@code blow} is the killing blow (see {@link
+     * KillingBlow}; null when it isn't known).
+     */
+    @FunctionalInterface
+    public interface DropChance {
+        double factor(Player killer, KillingBlow blow, MobDrop drop);
+    }
 
     /** A spawned mob: its entity, its health, its name tag and whatever rides it. */
     public static final class Live {
@@ -105,6 +122,11 @@ public final class Mobs implements Listener {
     /** The kind with this id ("zombie_grunt" too); null for none. */
     public static MobKind kind(String id) {
         return MobKinds.get(id);
+    }
+
+    /** Adds what changes the chance of a kill's drops (see {@link DropChance}). */
+    public static void addDropChance(DropChance chance) {
+        DROP_CHANCES.add(chance);
     }
 
     /** Every kind, by id. */
@@ -227,28 +249,41 @@ public final class Mobs implements Listener {
      * through with no vanilla damage, so it still flinches and is knocked back; not if that killed it.
      */
     public static void playerHit(EntityDamageByEntityEvent event, Player player, Live live, double damage, DamageIndicators.Look look) {
+        playerHit(event, player, live, damage, look, HitKind.MELEE, null);
+    }
+
+    /** The same, saying what the hit was and what it was dealt with (for the death event's killing blow). */
+    public static void playerHit(EntityDamageByEntityEvent event, Player player, Live live, double damage, DamageIndicators.Look look,
+                                 HitKind kind, NBTTagCompound weapon) {
         if (live.type.isInvulnerable()) {
             event.setCancelled(true);
             return;
         }
         event.setDamage(0);
         live.hits++;
-        if (damage(live, player, damage, look)) event.setCancelled(true);
+        if (damage(live, player, damage, look, kind, weapon)) event.setCancelled(true);
     }
 
     /**
      * A player deals a mob this much SkyBlock damage, with no vanilla hit needed (an ability's, say): it
      * loses that much health, with its damage number, or dies, dropping what it drops for them. Returns
-     * whether it died.
+     * whether it died. What dealt it isn't said: its killing blow is {@link HitKind#OTHER}'s.
      */
     public static boolean damage(Live live, Player player, double damage, DamageIndicators.Look look) {
+        return damage(live, player, damage, look, HitKind.OTHER, null);
+    }
+
+    /** The same, saying what dealt it and with what (see {@link KillingBlow}). */
+    public static boolean damage(Live live, Player player, double damage, DamageIndicators.Look look, HitKind kind, NBTTagCompound weapon) {
         if (live.type.isInvulnerable() || live.health <= 0) return false;
+        double before = live.health;
         live.health -= damage;
         DamageIndicators.show(live.entity, damage, look);
+        CombatState.dealt(player);
         DungeonRun run = RunManager.of(player);
         if (run != null) run.damageDealt(player.getUniqueId(), damage);
         if (live.health <= 0) {
-            die(live, player);
+            die(live, player, KillingBlow.of(kind, weapon, damage, before));
             return true;
         }
         live.type.onDamaged(live.entity, player, damage);
@@ -256,48 +291,57 @@ public final class Mobs implements Listener {
         return false;
     }
 
-    private static void die(Live live, Player killer) {
+    private static void die(Live live, Player killer, KillingBlow blow) {
         DungeonRun run = killer == null ? null : RunManager.of(killer);
         if (run != null) run.killed(killer.getUniqueId());
         live.type.onDeath(live.entity, killer);
         Location at = live.entity.getLocation();
-        if (killer != null && !live.type.isBoss()) drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer);
+        if (killer != null && !live.type.isBoss()) {
+            drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer, blow);
+            // Its experience goes the way its drops do: straight to them from a dungeon mob, else as orbs where it died.
+            ExpOrbs.grant(killer, live.type.getOrbs(), ExpOrbs.Source.MOB, at, live.type.dropsToInventory());
+        }
         remove(live);
-        died(live, killer, at);
+        died(live, killer, at, blow);
     }
 
     /** Tells the rest of the plugin (Combat XP, coins, the room's starred mobs), once its drops are out. */
-    private static void died(Live live, Player killer, Location at) {
-        if (live.type instanceof DataMob mob) Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, mob, at));
+    private static void died(Live live, Player killer, Location at, KillingBlow blow) {
+        if (live.type instanceof DataMob mob) Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, mob, at, blow));
     }
 
     /**
      * A mob of this kind that isn't spawned here (the Watcher's undeads, which the Blood Room keeps) died
      * on this floor: its drops for the killer (none if nobody killed it), then the same death event as
-     * the others'. Nothing on a floor the kind has no variant on yet.
+     * the others'. Nothing on a floor the kind has no variant on yet. Its killing blow is the one
+     * {@code DungeonMobs.damage} is dealing (see {@link KillingBlow#dealing(KillingBlow)}).
      */
     public static void kindDied(MobKind kind, DungeonFloor floor, Location at, Player killer) {
         MobKind.Variant variant = kind.variant(floor, null);
         if (variant == null) return;
-        if (killer != null) drop(variant.drops(), kind.dungeon(), at, killer);
-        Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, kind, variant, false, null, at));
+        if (killer != null) {
+            drop(variant.drops(), kind.dungeon(), at, killer, KillingBlow.dealing());
+            ExpOrbs.grant(killer, variant.orbs(), ExpOrbs.Source.MOB, at, kind.dungeon());
+        }
+        Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, kind, variant, false, null, at, KillingBlow.dealing()));
     }
 
     /**
-     * Each drop rolls on its own: Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind});
-     * Pet Luck would raise a pet's, but no mob drops a pet yet. A dungeon mob's go straight into the
+     * Each drop rolls on its own: Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind}),
+     * and what changes a kill's drops by how it was made its factor on each (see {@link DropChance}); Pet Luck
+     * would raise a pet's, but no mob drops a pet yet. A dungeon mob's go straight into the
      * killer's inventory, as recorded on Hypixel (into their item stash if there's no room), and
      * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
      * on the ground, and each is announced.
      */
-    private static void drop(List<MobDrop> drops, boolean dungeon, Location at, Player killer) {
+    private static void drop(List<MobDrop> drops, boolean dungeon, Location at, Player killer, KillingBlow blow) {
         Stats stats = PlayerSession.of(killer).stats();
         double magicFind = MobDrop.magicFind(stats.get(Stat.MAGIC_FIND));
         double petLuck = stats.get(Stat.PET_LUCK);
         boolean toInventory = dungeon && !InventorySyncListener.frozen(killer);
         for (MobDrop drop : drops) {
             SkyBlockItem item = drop.item();
-            if (item == null || Math.random() >= MobDrop.withMagicFind(drop.chance(), magicFind, petLuck, false) / 100) continue;
+            if (item == null || Math.random() >= chance(drop, magicFind, petLuck, dropFactor(killer, blow, drop)) / 100) continue;
             ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
             // Collected as it comes from the world: now if it goes straight to them, else when it's picked up.
             if (toInventory) {
@@ -308,6 +352,18 @@ public final class Mobs implements Listener {
             }
             if (announced(dungeon, drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
         }
+    }
+
+    /** A drop's chance for a kill, in percent: with the killer's Magic Find (and Pet Luck), times {@code factor}. */
+    static double chance(MobDrop drop, double magicFind, double petLuck, double factor) {
+        return MobDrop.withMagicFind(drop.chance(), magicFind, petLuck, false) * Math.max(0, factor);
+    }
+
+    /** The product of what changes this drop's chance for this kill (see {@link DropChance}). */
+    private static double dropFactor(Player killer, KillingBlow blow, MobDrop drop) {
+        double factor = 1;
+        for (DropChance chance : DROP_CHANCES) factor *= chance.factor(killer, blow, drop);
+        return factor;
     }
 
     /**
@@ -336,6 +392,7 @@ public final class Mobs implements Listener {
     /** It, its name tag and its passenger, gone. */
     public static void remove(Live live) {
         LIVE.remove(live.entity.getUniqueId());
+        MobDebuffs.forget(live.entity);
         if (live.nameTag != null) live.nameTag.remove();
         if (live.passenger != null) {
             Live passenger = LIVE.remove(live.passenger.getUniqueId());
@@ -345,7 +402,7 @@ public final class Mobs implements Listener {
         live.entity.remove();
     }
 
-    /** Every tick: each mob's own behaviour; mobs whose entity has gone are forgotten. */
+    /** Every tick: each mob's own behaviour, and players' debuffs and damages over time on mobs; mobs whose entity has gone are forgotten. */
     public static void tick() {
         for (Live live : new ArrayList<>(LIVE.values())) {
             if (!live.entity.isValid()) {
@@ -354,6 +411,7 @@ public final class Mobs implements Listener {
             }
             live.type.onTick(live.entity);
         }
+        MobDebuffs.tick();
     }
 
     public static void start() {
@@ -430,7 +488,7 @@ public final class Mobs implements Listener {
         event.getDrops().clear();
         event.setDroppedExp(0);
         remove(live);
-        died(live, null, event.getEntity().getLocation());
+        died(live, null, event.getEntity().getLocation(), null);
     }
 
     /** Their wither skulls don't blow up the world. */

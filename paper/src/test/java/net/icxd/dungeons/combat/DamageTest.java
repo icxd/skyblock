@@ -246,6 +246,21 @@ class DamageTest {
     }
 
     /**
+     * A raised cap ("The cap can be increased to 150 using the Thermodynamic Armor's Full Set Bonus", the
+     * wiki's Attack Speed) lets Attack Speed past 100 count, up to it; a cap below 100 is 100.
+     */
+    @Test
+    void attackSpeedCapRaised() {
+        assertEquals(5, Damage.invulnerabilityTicks(150));
+        assertEquals(4, Damage.invulnerabilityTicks(150, 150));
+        assertEquals(4, Damage.invulnerabilityTicks(400, 150));
+        assertEquals(5, Damage.invulnerabilityTicks(100, 150));
+        assertEquals(4, Damage.shotCooldownTicks(0.5, 150, 150));
+        assertEquals(5, Damage.shotCooldownTicks(0.5, 149, 150));
+        assertEquals(5, Damage.shotCooldownTicks(0.5, 150, 50));
+    }
+
+    /**
      * Wiki, the Scarf example: a 7,000 ability hit on a target with 15% magic resistance, a 6,000 cap and no
      * Defense is 5,950 after the resistance and still under the cap. (The example's last steps, the Scarf's
      * own reduction and Extra Infliction, are special mechanics none of this plugin's mobs have: 5,950 x 0.28

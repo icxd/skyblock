@@ -83,4 +83,16 @@ class WitherBladeTest {
         // Too little Vitality leaves out the shield, not the cast.
         assertTrue(Abilities.get("Wither Impact").vitalityOptional());
     }
+
+    /** The shield's absorption, 984 to 1,400 as the wiki has it, and its Vitality back by the share of it left. */
+    @Test
+    void shieldAbsorption() {
+        assertEquals(600, WitherBlade.shieldAbsorption(0), 1e-9);
+        assertEquals(984, WitherBlade.shieldAbsorption(24), 1e-9);
+        assertEquals(1_400, WitherBlade.shieldAbsorption(50), 1e-9);
+        assertEquals(50, WitherBlade.refund(50, 1_400, 1_400), 1e-9);
+        assertEquals(25, WitherBlade.refund(50, 700, 1_400), 1e-9);
+        assertEquals(0, WitherBlade.refund(50, 0, 1_400), 1e-9);
+        assertEquals(50, WitherBlade.refund(50, 0, 0), 1e-9);
+    }
 }

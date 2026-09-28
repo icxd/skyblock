@@ -9,8 +9,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
+import net.icxd.dungeons.combat.CombatState;
 import net.icxd.dungeons.combat.DamageIndicators;
+import net.icxd.dungeons.combat.HitKind;
+import net.icxd.dungeons.combat.MobDebuffs;
 import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.mob.KillingBlow;
 import net.icxd.dungeons.mob.MobType;
 
 /**
@@ -82,6 +87,7 @@ public final class DungeonMobs {
     static void remove(Entity entity) {
         MOBS.remove(entity.getUniqueId());
         HITS.remove(entity.getUniqueId());
+        MobDebuffs.forget(entity);
     }
 
     /** How many hits it has taken from players so far. */
@@ -100,24 +106,45 @@ public final class DungeonMobs {
      * it's invulnerable.
      */
     public static void playerHit(EntityDamageByEntityEvent event, Player player, Mob mob, double damage, DamageIndicators.Look look) {
+        playerHit(event, player, mob, damage, look, HitKind.MELEE, null);
+    }
+
+    /** The same, saying what the hit was and what it was dealt with (for the death event's killing blow). */
+    public static void playerHit(EntityDamageByEntityEvent event, Player player, Mob mob, double damage, DamageIndicators.Look look,
+                                 HitKind kind, NBTTagCompound weapon) {
         if (mob.invulnerable()) {
             event.setCancelled(true);
         } else {
             event.setDamage(0);
             HITS.merge(event.getEntity().getUniqueId(), 1, Integer::sum);
         }
-        damage(event.getEntity(), player, damage, look);
+        damage(event.getEntity(), player, damage, look, kind, weapon);
     }
 
     /**
      * A player deals one of our mobs this much SkyBlock damage, with no vanilla hit needed (an ability's,
      * say), with its damage number as for SkyBlock's other mobs. The Watcher can't be hurt: he zaps them
-     * for trying. Nothing for an entity that isn't one of ours.
+     * for trying. Nothing for an entity that isn't one of ours. What dealt it isn't said ({@link HitKind#OTHER}).
      */
     public static void damage(Entity entity, Player player, double damage, DamageIndicators.Look look) {
+        damage(entity, player, damage, look, HitKind.OTHER, null);
+    }
+
+    /**
+     * The same, saying what dealt it and with what: if it kills, that's the death event's killing blow
+     * (the undeads' deaths come from their own {@link Mob#hurt}, so it's set around that).
+     */
+    public static void damage(Entity entity, Player player, double damage, DamageIndicators.Look look, HitKind kind, NBTTagCompound weapon) {
         Mob mob = of(entity);
         if (mob == null) return;
-        mob.hurt(player, damage);
-        if (!mob.invulnerable()) DamageIndicators.show(entity, damage, look);
+        KillingBlow before = KillingBlow.dealing(mob.invulnerable() ? null : KillingBlow.of(kind, weapon, damage, mob.health()));
+        try {
+            mob.hurt(player, damage);
+        } finally {
+            KillingBlow.dealing(before);
+        }
+        if (mob.invulnerable()) return;
+        DamageIndicators.show(entity, damage, look);
+        CombatState.dealt(player);
     }
 }

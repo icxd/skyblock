@@ -155,7 +155,7 @@ final class Bows {
                         caster.setFallDistance(0);
                         caster.getWorld().playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
                         for (LivingEntity mob : Hits.near(to, RADIUS)) {
-                            if (Hits.hittable(mob)) Hits.hurt(caster, mob, damage(Hits.target(mob).health()), DamageIndicators.Look.NORMAL);
+                            if (Hits.hittable(mob)) Hits.hurt(caster, mob, damage(Hits.target(mob).health()), DamageIndicators.Look.NORMAL, tag);
                         }
                     })
                     .launch();

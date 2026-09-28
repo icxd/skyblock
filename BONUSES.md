@@ -88,7 +88,7 @@ LATER: waits for the system named.
 | Trolling The Reaper | full set | REAPER, REVENANT (6) | **DONE** +100 Defense against Undead; Reaper's +100 additive against Undead, x0.01 else (all three Reaper pieces); healing wands' +50% is the wands' (SetBonuses.active) | [Revenant Armor](https://hypixelskyblock.minecraft.wiki/w/Revenant_Armor), [Reaper Armor](https://hypixelskyblock.minecraft.wiki/w/Reaper_Armor) |
 | Zombie Knight | full set | ZOMBIE_KNIGHT (5) | **DONE** +50 Defense and the sword's +30 Strength with the full set and the sword held | [Zombie Knight Armor](https://hypixelskyblock.minecraft.wiki/w/Zombie_Knight_Armor), [Zombie Knight Sword](https://hypixelskyblock.minecraft.wiki/w/Zombie_Knight_Sword) |
 | Absolute Unit | full set | MASTIFF (4) | **DONE** Defense cap 300, +1 Crit Damage per 2 Defense, +1% Health per 25 Crit Damage (40% max), -20% from Animal mobs, heal 150 for 5 Vitality when hit (1 s) | [Mastiff Armor](https://hypixelskyblock.minecraft.wiki/w/Mastiff_Armor) |
-| Absorption | full set | GOLEM_ARMOR (4) | **LATER** absorption hearts on SkyBlock health | [Golem Armor](https://hypixelskyblock.minecraft.wiki/w/Golem_Armor) |
+| Absorption | full set | GOLEM_ARMOR (4) | **LATER** not built yet; absorption on SkyBlock health exists now (`Absorption`, EFFECTS.md) | [Golem Armor](https://hypixelskyblock.minecraft.wiki/w/Golem_Armor) |
 | Armor of the Pack | full set | THE_PACK (4) | **DONE** +35 Strength, +80 Defense per wearer within 30 blocks (max 3, the wearer counted: UNKNOWN) | [Armor of the Pack](https://hypixelskyblock.minecraft.wiki/w/Armor_of_the_Pack) |
 | Bat Powers Activate! | full set | BAT_PERSON (4) | **LATER** the Grappling Hook upgrade and Spooky Festival candy | [Bat Person Armor](https://hypixelskyblock.minecraft.wiki/w/Bat_Person_Armor) |
 | Battalion | full set | NUTCRACKER (4) | **LATER** Jerry's Workshop, Gift Attack (the aura could be done like Holy Blood's) |  |
@@ -154,7 +154,7 @@ LATER: waits for the system named.
 | Fireproof | tiered | MAGMA_LORD (5) | **LATER** the Crimson Isle |  |
 | Lord's Blessing | tiered | MAGMA_LORD (5) | **LATER** the Crimson Isle, Magmatic mobs, fishing |  |
 | Static Charge | tiered | THUNDER, THUNDERBOLT (5) | **LATER** the Crimson Isle, Magmatic mobs (the charges could be done) |  |
-| Berserk | tiered | BERSERKER (4) | **APPROX** Health and Defense halved (DONE); the health-cost cut 20/40/60% LATER (health costs aren't taken) | [Berserker Armor](https://hypixelskyblock.minecraft.wiki/w/Berserker_Armor) |
+| Berserk | tiered | BERSERKER (4) | **APPROX** Health and Defense halved (DONE); the health-cost cut 20/40/60% LATER, not built yet (health costs are taken now, with `Abilities.addHealthCostFactor`: EFFECTS.md) | [Berserker Armor](https://hypixelskyblock.minecraft.wiki/w/Berserker_Armor) |
 | Cropier Crops | tiered | MELON (4) | **LATER** farming |  |
 | Eradicator | tiered | PESTHUNTERS (4) | **LATER** pests |  |
 | Familiarity | tiered | MYTHOS (4) | **LATER** Mythological mobs |  |

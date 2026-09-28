@@ -25,10 +25,11 @@ public final class DamageIndicators {
     /**
      * How a hit's number looks: gray; a critical hit's between ✧ in the cycling colours; an Overload Mega
      * Critical Hit's between ✯ (the mods that read Hypixel's numbers know it by that symbol; its colours
-     * aren't recorded, so they're a crit's).
+     * aren't recorded, so they're a crit's); fire damage gold and poison dark green ("&6123,456" for Fire
+     * Aspect, "&2123,456" for Venomous: the wiki's Damage Calculation, Damage Indicator).
      */
     public enum Look {
-        NORMAL, CRITICAL, MEGA_CRITICAL;
+        NORMAL, CRITICAL, MEGA_CRITICAL, FIRE, POISON;
 
         public static Look of(boolean critical, boolean mega) {
             return !critical ? NORMAL : mega ? MEGA_CRITICAL : CRITICAL;
@@ -46,6 +47,8 @@ public final class DamageIndicators {
             case NORMAL -> "&7" + number;
             case CRITICAL -> Utils.rainbowize("✧" + number + "✧");
             case MEGA_CRITICAL -> Utils.rainbowize("✯" + number + "✯");
+            case FIRE -> "&6" + number;
+            case POISON -> "&2" + number;
         };
     }
 

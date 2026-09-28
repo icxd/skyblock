@@ -34,5 +34,8 @@ class PlayerDamageTest {
         // An Overload Mega Critical Hit: ✯ in place of ✧.
         assertEquals("§f✯§f7§e1§64§c,§c9§f1§f9§e✯", DamageIndicators.text(714_919, DamageIndicators.Look.MEGA_CRITICAL));
         assertEquals(DamageIndicators.text(714_919, true), DamageIndicators.text(714_919, DamageIndicators.Look.CRITICAL));
+        // Fire gold, poison dark green (the wiki's Damage Indicator table: "&6123,456", "&2123,456").
+        assertEquals("&6123,456", DamageIndicators.text(123_456, DamageIndicators.Look.FIRE));
+        assertEquals("&2123,456", DamageIndicators.text(123_456.9, DamageIndicators.Look.POISON));
     }
 }

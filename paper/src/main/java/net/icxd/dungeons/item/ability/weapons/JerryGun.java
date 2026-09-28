@@ -91,7 +91,7 @@ final class JerryGun implements AbilityHandler {
                 .trail(at -> at.getWorld().spawnParticle(Particle.CRIT, at, 1, 0, 0, 0, 0))
                 .onHit((missile, mob) -> {
                     double damage = Hits.magic(missile.caster(), item, tag, spell, mob) * Hits.takenFactor(mob);
-                    Hits.hurt(missile.caster(), mob, damage, DamageIndicators.Look.NORMAL);
+                    Hits.hurt(missile.caster(), mob, damage, DamageIndicators.Look.NORMAL, tag);
                     return false;
                 })
                 .onEnd((missile, at, impact) -> {

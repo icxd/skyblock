@@ -3,11 +3,31 @@ package net.icxd.dungeons.item.ability;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 
 /** What an ability does (see {@link Abilities}). By the time it's used, its costs are paid and its cooldown started. */
 @FunctionalInterface
 public interface AbilityHandler {
+    /**
+     * What set a use off, for the activations that need more than that it happened (see {@link AbilityActivation}):
+     * the block's activation, whether it was a right click (a LEFT_RIGHT_CLICK or CLICK ability tells the two
+     * apart), the arrow an ON_SHOOT ability's bow has just shot, and the block a click (or a DIG) was on; null
+     * for what doesn't apply.
+     */
+    record Trigger(AbilityActivation activation, boolean right, Projectile projectile, Block block) {
+        /** A click, on {@code block} (null for none). */
+        public static Trigger click(AbilityActivation activation, boolean right, Block block) {
+            return new Trigger(activation, right, null, block);
+        }
+
+        /** Something other than a click: a sneak, a shot (its arrow), a dig (its block). */
+        public static Trigger of(AbilityActivation activation, Projectile projectile, Block block) {
+            return new Trigger(activation, false, projectile, block);
+        }
+    }
+
     /** {@code tag} is the held item's data; {@code block} the ability or shortbow block being used. */
     void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block);
 
@@ -17,6 +37,14 @@ public interface AbilityHandler {
      */
     default void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block, boolean vitalityPaid) {
         use(player, item, tag, block);
+    }
+
+    /**
+     * The use with what set it off (see {@link Trigger}); for a worn piece's SNEAK ability, {@code item} and
+     * {@code tag} are that piece's. By default the use without it.
+     */
+    default void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block, boolean vitalityPaid, Trigger trigger) {
+        use(player, item, tag, block, vitalityPaid);
     }
 
     /**
@@ -46,5 +74,20 @@ public interface AbilityHandler {
      */
     default boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
         return true;
+    }
+
+    /** {@link #usable(Player, SkyBlockItem, NBTTagCompound, ItemBlock)} with what set the use off. */
+    default boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block, Trigger trigger) {
+        return usable(player, item, tag, block);
+    }
+
+    /**
+     * The health it costs, before what lowers health costs (see {@link Abilities#addHealthCostFactor}): its
+     * block's by default; one whose cost is a share of their health says so ("Use 10% of your max health").
+     * It's charged with the rest of its costs: "This ability cannot be used if the user does not have enough
+     * health to be consumed" (the wiki's Flower of Truth).
+     */
+    default double healthCost(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+        return block.healthCost();
     }
 }

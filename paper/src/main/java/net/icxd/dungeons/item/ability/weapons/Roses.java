@@ -60,14 +60,8 @@ final class Roses implements AbilityHandler {
     }
 
     @Override
-    public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        return Hits.canPayHealth(player, block.healthCost());
-    }
-
-    @Override
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        // The barrage's bonus is for the health missing when it's fired, after its cost.
-        Hits.payHealth(player, block.healthCost());
+        // The barrage's bonus is for the health missing when it's fired, after its cost (charged before the use, see Activations#use).
         double bonus = multiplies ? 1 : missingHealthFactor(PlayerHealth.get(player), PlayerHealth.max(player));
         // The roses hit as they were fired, whatever they hold when one lands.
         Damage.Attacker fired = Hits.striker(player, tag, new Hits.Strike(false, 0, 1, false, true));

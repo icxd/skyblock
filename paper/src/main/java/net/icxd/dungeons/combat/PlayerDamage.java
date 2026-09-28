@@ -1,5 +1,6 @@
 package net.icxd.dungeons.combat;
 
+import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
@@ -151,9 +152,10 @@ public final class PlayerDamage {
     /**
      * Hits a player. {@code by} is what hit them and what they're knocked away from (a mob or its
      * projectile; null for no knockback), and {@code knockback} how much of the usual knockback they get.
-     * What they have against {@code by} counts (see {@link #addDefenseAgainst}). Returns the health it
-     * took (0 if they can't be hurt: dead, invulnerable (a dungeon ghost), or in creative or spectator; or
-     * if a shield, see {@link #addShield}, took it all).
+     * What they have against {@code by} counts (see {@link #addDefenseAgainst}). Their absorption takes it
+     * before their health does (see {@link Absorption}). Returns what it took, absorption included (0 if they
+     * can't be hurt: dead, invulnerable (a dungeon ghost), or in creative or spectator; or if a shield, see
+     * {@link #addShield}, took it all).
      */
     public static double hit(Player player, double amount, Kind kind, Entity by, double knockback) {
         if (player.isDead() || player.isInvulnerable() || player.getGameMode() == GameMode.CREATIVE
@@ -166,7 +168,10 @@ public final class PlayerDamage {
         // A shield that takes all of it leaves them as they were: no number, flinch or knockback.
         taken = shielded(player, taken, by);
         if (taken <= 0) return 0;
-        PlayerHealth.damage(player, taken);
+        if (by != null) CombatState.took(player);
+        // Their absorption takes it first (see Absorption); the hit is still a hit, number and all.
+        double toHealth = Absorption.absorb(player, taken);
+        if (toHealth > 0) PlayerHealth.damage(player, toHealth);
         DamageIndicators.show(player, taken, false);
         if (player.isDead()) return taken;
         knockback *= Math.max(0, 1 - sum(KNOCKBACK_RESISTANCE, player, by));

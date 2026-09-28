@@ -40,7 +40,8 @@ final class Buffs {
 
     /**
      * The Sword of Bad Health's Bad Health: "Gain +5 Strength for every 5% of total HP you have for 5s.
-     * Capped at +100 Strength", after its 100 health (not from the last of it).
+     * Capped at +100 Strength", after its 100 health (not from the last of it: its cost, which every use
+     * charges, see Activations#use).
      */
     static final class BadHealth implements AbilityHandler {
         static final long MILLIS = 5_000;
@@ -53,13 +54,7 @@ final class Buffs {
         }
 
         @Override
-        public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            return Hits.canPayHealth(player, block.healthCost());
-        }
-
-        @Override
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            Hits.payHealth(player, block.healthCost());
             double strength = strength(PlayerHealth.get(player), PlayerHealth.max(player));
             PlayerSession.of(player).buff("Bad Health", new Stats().set(Stat.STRENGTH, strength), MILLIS);
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITCH_DRINK, 1, 0.8f);

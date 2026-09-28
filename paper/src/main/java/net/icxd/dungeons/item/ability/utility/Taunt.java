@@ -10,6 +10,8 @@ import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.Mobs;
+import net.icxd.dungeons.session.Mana;
+import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 
 /**
@@ -19,9 +21,15 @@ import net.icxd.dungeons.session.PlayerSession;
  * causing them to run towards you": the item's data has no mana cost, so the ability takes half their max mana
  * itself, down to none if they have less: UNKNOWN whether it then works). The mobs are SkyBlock's (the Blood
  * Room's undead choose for themselves, as for a Tank's Castle of Stone). The sounds are UNKNOWN: plain ones.
+ * Enrage costs a tenth of their max health too (see {@link #healthCost}).
  */
 final class Taunt implements AbilityHandler {
     private static final double RADIUS = 10;
+    /**
+     * Enrage's health cost: "item_ability_health_cost = 10% of HP" (the wiki's Enrager). Its data's is 15.6,
+     * which isn't health: the Wand of Strength's is 15.6 too, and its text says "Use 10% of your max health".
+     */
+    static final double HEALTH_SHARE = 0.1;
     /** Its sound's key ("entity.bat.takeoff"), not a {@link org.bukkit.Sound}: those need a server to exist. */
     private final String sound;
 
@@ -39,6 +47,12 @@ final class Taunt implements AbilityHandler {
         return plain.contains("% of your max mana") ? AbilityText.after(plain, "consuming").orElse(0) / 100 : 0;
     }
 
+    /** A tenth of their max health for one whose data has a health cost at all (Enrage; Jingle Bells has none). */
+    @Override
+    public double healthCost(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+        return block.healthCost() > 0 ? HEALTH_SHARE * PlayerHealth.max(player) : 0;
+    }
+
     @Override
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
         String plain = AbilityText.plain(block.text());
@@ -46,11 +60,7 @@ final class Taunt implements AbilityHandler {
         double factor = factor(plain);
         long millis = (long) AbilityText.millis(plain).orElse(0);
         double manaShare = manaShare(plain);
-        if (manaShare > 0) {
-            PlayerSession session = PlayerSession.of(player);
-            int mana = session.getMana() < 0 ? session.maxMana() : session.getMana();
-            session.setMana((int) Math.max(0, mana - Math.round(manaShare * session.maxMana())));
-        }
+        if (manaShare > 0) Mana.spend(player, (int) Math.round(manaShare * PlayerSession.of(player).maxMana()), block.name());
         for (Entity entity : player.getNearbyEntities(radius, radius, radius)) {
             if (!(entity instanceof Mob mob) || entity.getLocation().distanceSquared(player.getLocation()) > radius * radius) continue;
             if (Mobs.of(mob) == null && DungeonMobs.of(mob) == null) continue;

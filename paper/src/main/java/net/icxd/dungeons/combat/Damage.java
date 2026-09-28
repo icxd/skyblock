@@ -39,6 +39,8 @@ public final class Damage {
     private static final double[] SNIPE = {1, 2, 3, 4};
     /** "Removes all other enchants but increases your weapon damage by 500%": additive, not x5. */
     private static final double ONE_FOR_ALL = 500;
+    /** Attack Speed's cap (the wiki's Attack Speed, "max_value=100"), before anything raises it. */
+    public static final double ATTACK_SPEED_CAP = 100;
 
     private Damage() {
     }
@@ -188,10 +190,21 @@ public final class Damage {
 
     /** What the hit does to the target, before rounding. */
     public static double exact(Attacker attacker, Target target, boolean critical) {
+        return exact(attacker, target, critical, 0);
+    }
+
+    /**
+     * The same with {@code added} damage that only the crit multiplier counts for, not the additive or
+     * multiplicative buffs (the wiki's "Add Damage" mechanics: "(Weapon Damage Multiplier x Strength Multiplier
+     * x multipliers + mult_SoulEater x Damage_MobSoul) x Crit Damage Multiplier"), before the caps and Defense.
+     */
+    public static double exact(Attacker attacker, Target target, boolean critical, double added) {
         double damage = initial(attacker.damage(), attacker.strength());
         if (critical) damage *= critMultiplier(attacker.critDamage());
         damage *= 1 + additive(attacker, target) / 100;
         damage *= attacker.multiplier();
+        // (hit + added) x crit is hit x crit + added x crit.
+        if (added > 0) damage += critical ? added * critMultiplier(attacker.critDamage()) : added;
         damage = cap(damage, target.caps());
         return damage * defenseMultiplier(target.defense());
     }
@@ -261,7 +274,12 @@ public final class Damage {
      * 10 / (1 + Attack Speed / 100), rounded.
      */
     public static int invulnerabilityTicks(double attackSpeed) {
-        return (int) Math.round(10 / (1 + attackSpeedShare(attackSpeed)));
+        return invulnerabilityTicks(attackSpeed, ATTACK_SPEED_CAP);
+    }
+
+    /** The same with the cap raised to {@code cap} (Newton's Demise: 150; see {@code Combat#attackSpeedCap}). */
+    public static int invulnerabilityTicks(double attackSpeed, double cap) {
+        return (int) Math.round(10 / (1 + attackSpeedShare(attackSpeed, cap)));
     }
 
     /**
@@ -271,12 +289,17 @@ public final class Damage {
      * gives it for 10 ticks; that other cooldowns shorten the same way is an approximation.
      */
     public static int shotCooldownTicks(double seconds, double attackSpeed) {
-        // Less a hair, so a whole number of ticks that doubles don't quite hit exactly isn't rounded up past it.
-        return (int) Math.ceil(Math.max(0, seconds) * 20 / (1 + attackSpeedShare(attackSpeed)) - 1e-9);
+        return shotCooldownTicks(seconds, attackSpeed, ATTACK_SPEED_CAP);
     }
 
-    /** Attack Speed as a share (0.25 for 25), between 0 and its cap of 100. */
-    private static double attackSpeedShare(double attackSpeed) {
-        return Math.max(0, Math.min(attackSpeed, 100)) / 100;
+    /** The same with the cap raised to {@code cap}. */
+    public static int shotCooldownTicks(double seconds, double attackSpeed, double cap) {
+        // Less a hair, so a whole number of ticks that doubles don't quite hit exactly isn't rounded up past it.
+        return (int) Math.ceil(Math.max(0, seconds) * 20 / (1 + attackSpeedShare(attackSpeed, cap)) - 1e-9);
+    }
+
+    /** Attack Speed as a share (0.25 for 25), between 0 and its cap (100, unless something raises it). */
+    static double attackSpeedShare(double attackSpeed, double cap) {
+        return Math.max(0, Math.min(attackSpeed, Math.max(ATTACK_SPEED_CAP, cap))) / 100;
     }
 }

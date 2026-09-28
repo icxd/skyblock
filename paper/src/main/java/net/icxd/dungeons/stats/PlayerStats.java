@@ -42,7 +42,8 @@ public final class PlayerStats {
         Stats stats = Stats.base();
         PlayerInventory inventory = player.getInventory();
         ItemStack hand = inventory.getItemInMainHand();
-        SkyBlockItem held = skyBlockItem(hand);
+        NBTTagCompound handTag = ItemNBT.read(hand);
+        SkyBlockItem held = handTag == null ? null : ItemRegistry.get(handTag.getString("id"));
         if (held == null || held.statsWhenHeld()) stats.add(ItemStats.of(hand, player));
         for (ItemStack armor : inventory.getArmorContents()) stats.add(ItemStats.of(armor, player));
         User user = User.ifLoaded(player.getUniqueId());
@@ -57,14 +58,7 @@ public final class PlayerStats {
         DungeonRun run = RunManager.of(player);
         if (run != null) run.applyBlessings(stats);
         // Last: the Terminator divides Crit Chance, whatever it came from.
-        if (held != null) ItemBehaviours.of(held).whileHeld(stats);
+        if (held != null) ItemBehaviours.of(held).whileHeld(player, handTag, stats);
         return stats;
-    }
-
-    /** The SkyBlock item this stack is; null for none (nothing, or a vanilla item). */
-    private static SkyBlockItem skyBlockItem(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return null;
-        NBTTagCompound tag = ItemNBT.read(stack);
-        return tag == null ? null : ItemRegistry.get(tag.getString("id"));
     }
 }

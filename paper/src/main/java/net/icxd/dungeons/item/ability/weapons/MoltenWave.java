@@ -66,7 +66,7 @@ final class MoltenWave implements AbilityHandler {
                 for (LivingEntity mob : Hits.near(at.clone().add(0, 0.5, 0), REACH)) {
                     if (!struck.add(mob.getUniqueId())) continue;
                     double damage = Hits.magic(player, item, tag, spell, mob) * Hits.takenFactor(mob);
-                    if (Hits.hurt(player, mob, damage, DamageIndicators.Look.NORMAL)) tally.add(damage);
+                    if (Hits.hurt(player, mob, damage, DamageIndicators.Look.NORMAL, tag)) tally.add(damage);
                 }
                 i++;
             }

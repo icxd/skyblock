@@ -77,7 +77,7 @@ final class TerrainToss implements AbilityHandler {
         for (LivingEntity mob : Hits.near(at, RADIUS)) {
             double share = falloff(mob.getBoundingBox().getCenter().distance(at.toVector()), RADIUS);
             double damage = Hits.magic(caster, item, tag, spell, mob) * share * Hits.takenFactor(mob);
-            if (damage > 0 && Hits.hurt(caster, mob, damage, DamageIndicators.Look.NORMAL)) tally.add(damage);
+            if (damage > 0 && Hits.hurt(caster, mob, damage, DamageIndicators.Look.NORMAL, tag)) tally.add(damage);
         }
         Hits.report(caster, "Terrain Toss", tally);
     }

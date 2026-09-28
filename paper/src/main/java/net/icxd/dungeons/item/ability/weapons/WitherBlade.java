@@ -14,11 +14,13 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.ability.abilities.InstantTransmission;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.session.Vitality;
 import net.icxd.dungeons.item.bonus.SetBonuses;
@@ -38,6 +40,8 @@ final class WitherBlade {
     /** Wither Shield: "Reduces damage taken by 10% for 5 seconds". */
     static final double SHIELD_TAKEN = 0.9;
     static final long SHIELD_MILLIS = 5_000;
+    /** The shield's absorption's source (see {@link Absorption}). */
+    static final String SHIELD = "Wither Shield";
     /** Wither Impact's "0.15s" cooldown, not shown in game ("nerfed with a 3 tick cooldown due to autoclickers"). */
     static final long IMPACT_COOLDOWN_MILLIS = 150;
     /** Shadow Warp: "Use this ability again within 5 seconds to detonate the warp". */
@@ -48,10 +52,27 @@ final class WitherBlade {
 
     /** Whose Wither Shield is up, until when. */
     private static final Map<UUID, Long> SHIELDED = new HashMap<>();
+    /** Each player's shield that's up (the latest cast's; see {@link ShieldUp}). */
+    private static final Map<UUID, ShieldUp> SHIELDS = new HashMap<>();
     /** Each player's Shadow Warp waiting to go off. */
     private static final Map<UUID, Warp> WARPS = new HashMap<>();
 
     private record Warp(Location at, BukkitRunnable pull) {
+    }
+
+    /**
+     * A cast's shield: the Vitality it cost and the absorption it gave, and, once it isn't the one up any more (a
+     * new cast took its place, or they left), the absorption it had left then (negative while it's up).
+     */
+    private static final class ShieldUp {
+        final double vitality;
+        final double absorption;
+        double leftWhenDown = -1;
+
+        ShieldUp(double vitality, double absorption) {
+            this.vitality = vitality;
+            this.absorption = absorption;
+        }
     }
 
     private WitherBlade() {
@@ -60,6 +81,9 @@ final class WitherBlade {
     /** They left: their shield is down, and a warp waiting to go off is gone. */
     static void forget(UUID player) {
         SHIELDED.remove(player);
+        // Its end still comes, and gives nothing back.
+        ShieldUp shield = SHIELDS.remove(player);
+        if (shield != null) shield.leftWhenDown = 0;
         Warp warp = WARPS.remove(player);
         if (warp != null) warp.pull().cancel();
     }
@@ -82,18 +106,51 @@ final class WitherBlade {
     }
 
     /**
-     * Wither Shield: 10% less damage taken for 5 seconds (see {@link #takenFactor}). Its absorption shield,
-     * "(12 + CatacombsLevel * 0.32) * 50", isn't built (players have no absorption yet: LATER); since 0.26.1 "Vitality is refunded based on how much of
-     * it wasn't used" after the 5 seconds, and none of it can be, so the 50 Vitality comes back then (APPROX).
+     * Wither Shield: 10% less damage taken for 5 seconds (see {@link #takenFactor}), and its absorption shield
+     * for as long, "(12 + CatacombsLevel * 0.32) * 50" (the wiki's Absorption has it at 984 to 1,400: levels 24
+     * to 50); since 0.26.1 "After 5 seconds of having the Absorption shield active, Vitality is refunded based
+     * on how much of it wasn't used" (the wiki's Necron's Blade Scrolls): 5 seconds after each cast, by the share
+     * of its absorption left when it ended, then or when a new cast's took its place. So a cast's Vitality comes
+     * back no sooner than it did before absorption, however fast they cast (UNKNOWN whether Hypixel's refund
+     * is worked out so).
      */
     static void shield(Player player, double vitality) {
-        SHIELDED.put(player.getUniqueId(), System.currentTimeMillis() + SHIELD_MILLIS);
+        UUID id = player.getUniqueId();
+        SHIELDED.put(id, System.currentTimeMillis() + SHIELD_MILLIS);
+        ShieldUp before = SHIELDS.get(id);
+        if (before != null) before.leftWhenDown = Absorption.left(player, SHIELD);
+        ShieldUp up = new ShieldUp(vitality, shieldAbsorption(ItemBuilder.catacombsLevel(player)));
+        SHIELDS.put(id, up);
+        // The shield's end (a task, 5 seconds of ticks) takes it off; its own time is only in case that runs late.
+        Absorption.give(player, SHIELD, up.absorption, SHIELD_MILLIS * 2);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.4f, 1.5f); // UNKNOWN
-        if (vitality <= 0) return;
-        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
-            if (!player.isOnline()) return;
-            PlayerSession.of(player).setVitality(Math.min(Vitality.max(player), Vitality.get(player) + vitality));
-        }, SHIELD_MILLIS / 50);
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> shieldEnd(id, up), SHIELD_MILLIS / 50);
+    }
+
+    /**
+     * A cast's 5 seconds are up: if its shield is still the one up, its absorption goes; either way the Vitality
+     * its unused share paid for comes back.
+     */
+    private static void shieldEnd(UUID id, ShieldUp shield) {
+        Player player = Bukkit.getPlayer(id);
+        if (player == null) return;
+        double left = shield.leftWhenDown;
+        if (SHIELDS.remove(id, shield)) {
+            left = Absorption.left(player, SHIELD);
+            Absorption.remove(player, SHIELD);
+        }
+        double refund = refund(shield.vitality, Math.max(0, left), shield.absorption);
+        if (refund > 0) PlayerSession.of(player).setVitality(Math.min(Vitality.max(player), Vitality.get(player) + refund));
+    }
+
+    /** The shield's absorption at this Catacombs level (at most 50): (12 + level x 0.32) x 50. */
+    static double shieldAbsorption(int catacombsLevel) {
+        return (12 + Math.max(0, catacombsLevel) * 0.32) * 50;
+    }
+
+    /** The Vitality back once the shield is down: the share of its absorption that wasn't used. */
+    static double refund(double vitality, double left, double absorption) {
+        return absorption <= 0 ? vitality : vitality * Math.max(0, Math.min(1, left / absorption));
     }
 
     /**

@@ -24,9 +24,10 @@ import net.icxd.dungeons.stats.Stat;
  * "Ally Healing". A ghost (dead in a run) isn't healed.
  *
  * <p>Heals over time ("Heal 60❤ per second for 5s") heal once a second; one of each kind at a time per
- * player (see {@link #overTime}). Main thread.
+ * player (see {@link #overTime}). Public, so effects outside this package heal the same way (EFFECTS.md).
+ * Main thread.
  */
-final class Heals {
+public final class Heals {
     /** A heal over time: {@code amount} each second from {@code healer}, {@code pulses} more times. */
     private static final class OverTime {
         final UUID healer;
@@ -52,13 +53,13 @@ final class Heals {
      * What a heal of {@code base} comes to: times Mending / 100 when it's on someone else, and times 1 + the
      * Catacombs boost ({@code catacombsBoost} is 0 outside the Catacombs).
      */
-    static double amount(double base, boolean other, double mending, double catacombsBoost) {
+    public static double amount(double base, boolean other, double mending, double catacombsBoost) {
         double amount = other ? PlayerHealth.outgoing(base, mending) : Math.max(0, base);
         return amount * (1 + Math.max(0, catacombsBoost));
     }
 
     /** Heals {@code target} for {@code base} from {@code healer} (themselves too); what it healed, 0 for nobody. */
-    static double give(Player healer, Player target, double base) {
+    public static double give(Player healer, Player target, double base) {
         if (target == null || !target.isOnline() || target.isDead()) return 0;
         DungeonRun run = RunManager.of(target);
         if (run != null && run.isGhost(target.getUniqueId())) return 0;
@@ -80,7 +81,7 @@ final class Heals {
      * ("Wand heals don't stack", yet "the first healing tick is applied immediately. With enough Vitality,
      * repeatedly casting the ability can heal 120 per second": the wiki's Wand of Healing).
      */
-    static void overTime(Player healer, Player target, String kind, double amount, int seconds, boolean now) {
+    public static void overTime(Player healer, Player target, String kind, double amount, int seconds, boolean now) {
         int pulses = pulses(seconds, now);
         if (now) give(healer, target, amount);
         if (pulses <= 0) return;
@@ -115,7 +116,7 @@ final class Heals {
     }
 
     /** Pulses of a heal over time that has {@code seconds}, the first at once when {@code now}: one a second in all. */
-    static int pulses(int seconds, boolean now) {
+    public static int pulses(int seconds, boolean now) {
         return now ? Math.max(0, seconds - 1) : Math.max(0, seconds);
     }
 }

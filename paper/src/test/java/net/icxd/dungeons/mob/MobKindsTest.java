@@ -68,6 +68,23 @@ class MobKindsTest {
         assertTrue(MobKinds.WATCHER_UNDEAD.dungeon());
     }
 
+    /** Experience orbs, each mob's wiki page's "orbs": 30 for the Entrance's, more for the minibosses by level. */
+    @Test
+    void orbs() {
+        for (MobKind kind : MobKinds.ENTRANCE_KINDS) {
+            for (MobKind.Variant variant : kind.variants(DungeonFloor.ENTRANCE)) assertTrue(variant.orbs() > 0, kind.id());
+        }
+        assertEquals(30, MobKinds.ZOMBIE_GRUNT.firstVariant().orbs());
+        assertEquals(100, MobKinds.LOST_ADVENTURER.variant(DungeonFloor.ENTRANCE, 80).orbs());
+        assertEquals(125, MobKinds.LOST_ADVENTURER.variant(DungeonFloor.ENTRANCE, 90).orbs());
+        assertEquals(List.of(100, 115, 130),
+                MobKinds.ANGRY_ARCHAEOLOGIST.variants(DungeonFloor.ENTRANCE).stream().map(MobKind.Variant::orbs).toList());
+        assertEquals(30, MobKinds.WATCHER_UNDEAD.firstVariant().orbs());
+        assertEquals(30, MobKinds.SECRET_BAT.variant(DungeonFloor.FLOOR_7, null).orbs());
+        assertEquals(200, MobKinds.MAGMA_CUBE.firstVariant().orbs());
+        assertEquals(5_000, MobKinds.BLADESOUL.firstVariant().orbs());
+    }
+
     /** Whatever order a kind lists them in, its variants are lowest level first, and its first is the Entrance's lowest. */
     @Test
     void variantOrder() {
