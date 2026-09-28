@@ -458,3 +458,8 @@ What each part owns in full:
   when it ended (a new cast ends the one before).
 - Class dungeon abilities (Seismic Wave and others) deal `OTHER` damage, not `ABILITY`: UNKNOWN whether
   Hypixel counts them as ability hits.
+- Where a debuff's "takes more" comes in: on the hit as worked out, after damage caps (no mob here has caps
+  yet; a boss with them would need it before).
+- How a piercing arrow's later mobs are hit: each with the share of the shot's damage (not of the mob
+  before's), crit or not as the shot was.
+- Where a kill's drop factors (Looting) come in: after Magic Find, on every drop, the 5% and more too.
