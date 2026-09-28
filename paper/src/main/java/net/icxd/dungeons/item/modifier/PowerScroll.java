@@ -111,6 +111,7 @@ public enum PowerScroll {
         if (item == null) return;
         Effect effect = effect(item.lore());
         PlayerSession session = PlayerSession.of(player);
+        // One cooldown a scroll, whichever item it's on (UNKNOWN: whether it's the item's own).
         String key = "power_scroll:" + scroll.name();
         if (session.cooldownLeft(key) > 0) return;
         if (effect.cooldown() > 0) session.startCooldown(key, effect.cooldown());

@@ -133,8 +133,11 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
   types is recombobulated either (see Questions). Unobtainable (the API's rarity for admin items) stays as
   it was, rather than the wiki's cosmetics' rarity going to Very Special.
 - **Master Stars.** How the 5% adds up with the stars' and the Catacombs boost: added to the stars' 10%
-  each. Not in the lore's dungeon bracket, nor in ability damage (`Hits.dungeonFactor`). The next star is
-  offered only once the item has its five; before that the line shows and nothing is offered.
+  each. Not in ability damage (`Hits.dungeonFactor`). Not in the lore's dungeon bracket either, as live
+  items show (Hyperions with ➊ to ➎ mostly have the same Ferocity bracket as five-star ones, 1.4 times).
+  The next star is offered only once the item has its five; before that the line shows and nothing is
+  offered. It costs the star alone: an anvil also takes 300 to 500 Exp for one (the wiki's Master Star),
+  and whether the Hex does is unseen (see Questions).
 - **Silex on gauntlets.** The wiki says pickaxes and drills; live Gemstone Gauntlets have Efficiency VI
   to X, which only a Silex gives, so they take it too. Below Efficiency V it isn't offered (as NEU's Hex
   lists it).
@@ -143,8 +146,11 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
 - **Mana Disintegrators.** Rounding: to the nearest. The lore keeps the cost's number (live Alert Flares
   and Gyrokinetic Wands with 10 show their full cost; a live Fire Veil Wand's is lower, by a rule not
   found). A text cost's 2% is from live Umberellas and Will-o'-wisps, which show "40% of max" with 10.
+  The Ray of Hope staves' cost, which is only in their text ("Costs 10% of your total mana", Bolts), is
+  paid in full: whether a wand's share goes down 1% or 2% a disintegrator is unknown.
 - **Power Scrolls.** A new one takes the old one's place, and the old one is gone (whether Hypixel gives
-  it back is unknown). Each RIGHT CLICK ability's header gets the "⦾" (no live item with two has a
+  it back is unknown). A Ruby's or Sapphire's 5s cooldown is the player's, one a scroll, whichever item
+  it's on. Each RIGHT CLICK ability's header gets the "⦾" (no live item with two has a
   scroll). Eligibility is the wiki's "RIGHT CLICK ability" in the item data (with a Necron's blade's
   scroll abilities) or the API's flag: live items also have them on drills and the Jungle Pickaxe, whose
   HOTM ability isn't in the data.
@@ -171,3 +177,5 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
   lassos, masks, watering cans, mementos, shears, nets, traps, portals, ores, chisels. The wiki says "any
   item with a named category". Should the Recombobulator be left off those too? (Pet items already are.)
 - A Power Scroll or an Enrichment put over another: should the old one come back to them?
+- A master star costs the star alone in the Hex here. An anvil also takes 300 to 500 Exp levels for one
+  (the wiki's Master Star). Should the Hex take them too, on a Normal profile?

@@ -29,7 +29,8 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
  *   <li>Wither Scrolls: Implosion, Shadow Warp and Wither Shield, one of each, on Necron's Blade and its swords.</li>
  *   <li>Transmission Tuner: up to 4 on an item with a Transmission ability (see ItemModifiers#maxTuners).</li>
  *   <li>Silex: a level of Efficiency each on a pickaxe, drill or gauntlet with Efficiency V, up to X; not on the
- *       Stonk (the 0.19.1 fix). The gauntlet from live items: Gemstone Gauntlets have Efficiency VI to X.</li>
+ *       Stonk (the 0.19.1 fix). The gauntlet from live items (UNKNOWN: its item says "a pickaxe or a drill"):
+ *       Gemstone Gauntlets have Efficiency VI to X.</li>
  *   <li>Wood Singularity: once, on an axe.</li>
  *   <li>Mana Disintegrator: up to 10 on a wand or deployable.</li>
  *   <li>Jalapeno Book: once, on a deployable.</li>
@@ -127,7 +128,8 @@ public final class HexModifiers {
     /**
      * Master stars: on a dungeon item (its kind's, or made one: the tag) that takes stars; the next one is offered
      * once it has all five (FIRST_MASTER_STAR for ➊), the fifth done once it has ➎. The line is ✖ until the first
-     * (the screenshot's, on a five-star Livid Dagger), then a count (UNKNOWN).
+     * (the screenshot's, on a five-star Livid Dagger), then a count (UNKNOWN). UNKNOWN: whether the Hex also takes
+     * Exp levels for one, as an anvil does (the wiki's Master Star: 300 to 500); here only the star.
      */
     private static Modifier masterStars(SkyBlockItem item, NBTTagCompound tag) {
         boolean dungeon = item.dungeonItem() || tag.getBoolean("dungeon_item");
