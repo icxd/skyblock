@@ -93,9 +93,9 @@ public interface Bonus {
     }
 
     /**
-     * A factor on what a hit takes from {@code hurt}, a player who may be near {@code wearer}, whom it
-     * counts for (or {@code wearer} themselves): 1 for nothing. Of all wearers', the least counts (the
-     * Stone Chestplate's "players within 10 blocks of you take 5% less damage").
+     * A factor on what any hit (a trap's too) takes from {@code hurt}, a player who may be near
+     * {@code wearer}, whom it counts for (or {@code wearer} themselves): 1 for nothing. Of all wearers',
+     * the least counts (the Stone Chestplate's "players within 10 blocks of you take 5% less damage").
      */
     default double takenNear(Player wearer, Active active, Player hurt) {
         return 1;

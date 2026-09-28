@@ -129,8 +129,10 @@ public final class SetBonuses implements Listener {
         PlayerDamage.addTakenFrom((player, by) -> {
             double factor = 1;
             for (Bonus.Active a : active(player)) factor *= a.bonus().takenFrom(player, a, by);
-            return factor * takenNear(player);
+            return factor;
         });
+        // Every hit, a trap's (nothing hit them) too: "players within 10 blocks of you take 5% less damage".
+        PlayerDamage.addTakenMultiplier(SetBonuses::takenNear);
         PlayerDamage.addKnockbackResistance((player, by) -> {
             double share = 0;
             for (Bonus.Active a : active(player)) share += a.bonus().knockbackResistance(player, a, by);
