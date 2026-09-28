@@ -70,6 +70,7 @@ public final class WeaponAbilities {
         to.accept("Hellstorm", new Buffs.Hellstorm());
         to.accept("ME SMASH HEAD", new Buffs.SmashHead());
         to.accept("Gravity Storm", new Buffs.GravityStorm());
+        to.accept("Fire Freeze", new Buffs.FireFreeze());
     }
 
     /**

@@ -96,6 +96,7 @@ Skyblocker mods filter. Where they say nothing, the code says UNKNOWN and takes 
 | Hellstorm | Hellstorm Wand (1) | DONE | +5 Ability Damage, double damage taken, 30 s. | its data |
 | ME SMASH HEAD | Edible Mace (1) | APPROX | The next melee hit doubled. Weakening Animal mobs LATER (mobs' damage has no per-target factor). | [Edible Mace](https://hypixelskyblock.minecraft.wiki/w/Edible_Mace) |
 | Gravity Storm | Gyrokinetic Wand (1 of its 2) | APPROX | A rift at the crosshair pulling mobs in 8 for 3 s (UNKNOWN). Slower mana regen LATER (no hook), Soulflow not charged. | its data |
+| Fire Freeze | Fire Freeze Staff (1) | APPROX | A 5 block circle where they cast it; 5 s on, every mob in it rooted for 10 s. Where the circle is, and the wiki's "does not work on regular Dungeon minibosses", UNKNOWN; look UNKNOWN. | [Fire Freeze Staff](https://hypixelskyblock.minecraft.wiki/w/Fire_Freeze_Staff) |
 | Juju's "Hits 3 mobs on impact" | Juju Shortbow (1) | DONE | Its lore's number: the arrow's own hit, and one each on the rest within 3 blocks of where it landed. | [Juju Shortbow](https://hypixelskyblock.minecraft.wiki/w/Juju_Shortbow) |
 | Instant Transmission | Aspect of the End / Void (2) | DONE | Already built; its teleport path is reused by Wither Impact, Shadow Warp and Sinrecall. | |
 
@@ -127,10 +128,11 @@ the 26.2 server's `AbstractArrow.setOwner`).
 | Hollow Spirit | 1 | LEFT_RIGHT_CLICK activations (not loaded) |
 | Gorilla Tactics | 1 | not done: the burn is a share of all damage dealt in 3 s |
 | Raise Souls | 3 | necromancy (summons) |
+| Cells Alignment | Gyrokinetic Wand (1) | damage taken spread over 3 s (PlayerDamage has only factors), and a run's nearby teammates |
 | Salvation's T1/T2/T3!, Wither Shield's absorption, Midas' Greed | - | a place on the action bar; absorption; the Dark Auction |
 
 Not this part's (utility abilities, or armor): Enrage (the Enrager's taunt and its 10% less damage from
 the taunted mobs: the utility part's), Instant Heal, Speed Boost, Weird Transmission, Shadowstep,
-Creeper Veil, Fire Freeze, Cells Alignment, Soulward, Spirit Leap, the wands of healing, Deploy, Homing
+Creeper Veil, Soulward, Spirit Leap, the wands of healing, Deploy, Homing
 Missiles, Ground Pound. Parley (Aspect of the Jerry: a sound) and Time Warp! (Wizard Wand: "a work in
 progress") are left to whoever does them.

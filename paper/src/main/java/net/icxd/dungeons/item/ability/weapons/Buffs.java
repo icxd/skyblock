@@ -10,6 +10,7 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -26,7 +27,7 @@ import net.icxd.dungeons.stats.Stats;
 
 /**
  * Weapons' abilities that don't hit by themselves: they make their holder (or their next hit) stronger, or
- * move their enemies. None has a message (UNKNOWN).
+ * move (or hold) their enemies. None has a message (UNKNOWN).
  */
 final class Buffs {
     private Buffs() {
@@ -107,6 +108,44 @@ final class Buffs {
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             PENDING.add(player.getUniqueId());
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_HURT, 1, 0.6f);
+        }
+    }
+
+    /**
+     * The Fire Freeze Staff's Fire Freeze: "Creates a circle with a radius of 5 blocks. After 5s, all mobs
+     * inside are frozen for 10s." The circle is where they stood as they cast it, and inside is any part of a
+     * mob within 5 blocks of its middle (both UNKNOWN); frozen is rooted, as Ice Spray's is, but without its
+     * 10% more damage taken (not in this text). The wiki's "it does not work on regular Dungeon minibosses"
+     * isn't built (which mobs it means is UNKNOWN). Its look is UNKNOWN (a ring of flames, then snowflakes).
+     */
+    static final class FireFreeze implements AbilityHandler {
+        static final double RADIUS = 5;
+        static final int DELAY_TICKS = 100;
+        static final int FROZEN_TICKS = 200;
+
+        @Override
+        public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+            Location at = player.getLocation();
+            new BukkitRunnable() {
+                private int ticks;
+
+                @Override
+                public void run() {
+                    if (!Hits.canStillHit(player)) {
+                        cancel();
+                        return;
+                    }
+                    if ((ticks += 5) < DELAY_TICKS) {
+                        Areas.ring(at, RADIUS, Particle.FLAME);
+                        return;
+                    }
+                    cancel();
+                    for (LivingEntity mob : Hits.near(at, RADIUS)) Hits.root(mob, FROZEN_TICKS);
+                    at.getWorld().spawnParticle(Particle.SNOWFLAKE, at, 80, RADIUS / 2, 0.5, RADIUS / 2, 0.02);
+                    at.getWorld().playSound(at, Sound.BLOCK_GLASS_BREAK, 1, 0.6f);
+                }
+            }.runTaskTimer(Dungeons.getInstance(), 0, 5);
+            player.getWorld().playSound(at, Sound.ITEM_FIRECHARGE_USE, 1, 1.2f);
         }
     }
 

@@ -36,7 +36,7 @@ final class Areas {
     }
 
     /** A ring of particles around a spot. */
-    private static void ring(Location at, double radius, Particle particle) {
+    static void ring(Location at, double radius, Particle particle) {
         for (int i = 0; i < 24; i++) {
             double angle = Math.PI * 2 * i / 24;
             at.getWorld().spawnParticle(particle, at.clone().add(Math.cos(angle) * radius, 0.2, Math.sin(angle) * radius), 1, 0, 0, 0, 0);
