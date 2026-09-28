@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ReforgeTableTest {
     /**
      * Two basic pools and three stones: "Keen" (made up) from a stone on swords, with a bonus and a Strength a
-     * Catacombs level, "Shiny" on vacuums, "Odd One" only on one item, and a Divine row on the pickaxe one.
+     * Catacombs level, "Shiny" on vacuums, "Odd One" only on one item, and a Divine row (and bonus) on the pickaxe one.
      */
     static final String TABLE = """
             {"format": 1,
@@ -42,7 +42,8 @@ class ReforgeTableTest {
               "shiny": {"name": "Shiny", "stats": {"RARE": {"SPEED": 1}}},
               "odd_one": {"name": "Odd One", "bonus_title": "&9Test's Gift &8(Odd One)", "stats": {},
                           "bonus": {"COMMON": ["&7A gift."]}},
-              "deep": {"name": "Deep", "stats": {"MYTHIC": {"MINING_SPEED": 4}, "DIVINE": {"MINING_SPEED": 6}}},
+              "deep": {"name": "Deep", "stats": {"MYTHIC": {"MINING_SPEED": 4}, "DIVINE": {"MINING_SPEED": 6}},
+                       "bonus": {"MYTHIC": ["&7Mythic's."], "DIVINE": ["&7Divine's."]}},
               "wise": {"name": "Wise", "stats": {}}
              },
              "pools": [{"type": "SWORD/ROD", "reforges": ["gentle", "heroic", "sharp"]}, {"type": "ARMOR", "reforges": ["clean", "wise"]},
@@ -172,6 +173,11 @@ class ReforgeTableTest {
         assertEquals(List.of("&9Keen Bonus", "&7Grants a test."), keen.bonusSection(Rarity.EPIC));
         assertEquals(List.of("&9Keen Bonus", "&7Grants more", "&7of a test."), keen.bonusSection(Rarity.DIVINE));
         assertEquals(List.of("&9Test's Gift &8(Odd One)", "&7A gift."), table.reforges().get("odd_one").bonusSection(Rarity.EPIC));
+        // Special and Very Special have Mythic's, as their numbers are, not Divine's.
+        Reforge deep = table.reforges().get("deep");
+        assertEquals(List.of("&7Divine's."), deep.bonusLines(Rarity.DIVINE));
+        assertEquals(List.of("&7Mythic's."), deep.bonusLines(Rarity.SPECIAL));
+        assertEquals(List.of("&7Mythic's."), deep.bonusLines(Rarity.VERY_SPECIAL));
     }
 
     @Test

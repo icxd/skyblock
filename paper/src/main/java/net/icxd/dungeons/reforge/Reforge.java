@@ -85,10 +85,11 @@ public record Reforge(String id, String name, ReforgeStats stats, String bonusTi
 
     /**
      * The bonus's lines on an item of that rarity: that rarity's, else the nearest lower one's (an item above the
-     * data's rarities keeps the bonus: "only the reforge abilities" on Divine); none if it has no bonus.
+     * data's rarities keeps the bonus: "only the reforge abilities" on Divine); none if it has no bonus. Special and
+     * Very Special have Mythic's, as their stats are, not Divine's (Scraped's +50 Mining Fortune there is +35).
      */
     public List<String> bonusLines(Rarity rarity) {
-        for (int i = rarity.ordinal(); i >= 0; i--) {
+        for (int i = ReforgeStats.numbersFor(rarity).ordinal(); i >= 0; i--) {
             List<String> lines = bonus.get(Rarity.values()[i]);
             if (lines != null) return lines;
         }
