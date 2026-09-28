@@ -44,7 +44,9 @@ cap and what it adds) are single constants in `Book`, as the potato books' were.
 - **Every item**: each star adds 2% of the item's own stats, with no bracket (live: the Crimson Chestplate's 230
   Health is 234.6 with one star, 257.6 with six). Every star counts, to 15. Nothing for Swing Range (as before),
   Health Regen or Vitality (live: a 10-star Gillsplash Belt's 2 Health Regen shows +2, a 5-star Reaper Mask's 60
-  Vitality +60). In `ItemStats.of` and `ItemBuilder.statLines`.
+  Vitality +60, and its 5 Health Regen +5; the live Reaper Masks are dungeon items, so that's dungeon items outside a
+  dungeon too, though none in the item data has those stats and stars today). In `ItemStats.of` and
+  `ItemBuilder.statLines`.
 - **Dungeon items** keep their rule: up to 5 count, and in a dungeon the dungeon boost replaces the 2%. Master stars
   (past 5) look as before and add nothing (the modifiers part's).
 - **Buying one**: `Stars.next` (the next star's cost from the item data's upgrade costs) and `Stars.add`, shared by
@@ -72,12 +74,14 @@ one yet.
   21, 22, 24, 25; armor's three in 21, 23, 25, as the wiki's tabs). Each is its book's item: its name, its own text
   (the item data's), a blank line, then the Cost block (one of the book; "&aFree" on a Sandbox profile) and
   "&eClick to apply!". A click applies one ("You applied a Hot Potato Book to your ...!"). A full book stays,
-  saying "&aItem Maxed Out!"; the Fuming Potato Book says it needs 10 Hot Potato Books until then (NEU's Hex:
-  it's applicable from 10 to 15).
+  saying "&aItem Maxed Out!"; the Fuming Potato Book says it needs 10 Hot Potato Books until then (the 20 January
+  2026 patch: "All 10 Hot Potato Books now must be applied before applying any Fuming Potato Books"; NEU's Hex
+  offers it from 10 to 15). The wiki's screens, older, still show its Cost block with none on.
 
 **Item Upgrades** (Carpentry 25). For an item that takes stars or can be made a dungeon item.
 - Summary: `  &7Dungeon Item &a✔` (`&c✖` while it can still be made one; no line for an item that can't) and
-  `  &7Upgrade Level &6✪✪✪✪✪` (the stars as its name shows them, master stars too; `&c✖` for none).
+  `  &7Upgrade Level  &6✪✪✪✪✪` (the stars as its name ends with them, master stars too; `&c✖` for none). The two
+  spaces are the screenshot's: measured, there are two before the stars and one before "Dungeon Item"'s ✔.
 - **"The Hex ➜ Item Upgrades"**: the header an anvil, "Item Upgrades"; an entry a star (5, 10 or 15), centred,
   named by its stars as the item would show them (NEU reads the ✪ in the names). Each says what a star gives (the
   Essence Guide's words), then: the next star's Cost block (its essence and items, "&eClick to upgrade!"), or that
@@ -85,6 +89,9 @@ one yet.
 - **Convert to Dungeon Item** in 48 (an anvil, NEU's): Malik's text on it, then its cost (the item data's conversion
   cost, essence), "&eClick to convert!"; once it's one, "This item is already a Dungeon Item" (the fragment NEU
   looks for). Only on items that are one or can be made one.
+
+The private golden (`items/golden.json`) changes with the stars: only the 7-star renders of the 364 items that
+aren't dungeon items and have stats and star costs (their stats now 14% more of their own); nothing else.
 
 The core's tests that used a sword as an item no category is for (`HexCategoriesTest`, `HexMenuTest`) now use an
 item of no type, since books go on swords.
@@ -119,8 +126,8 @@ item of no type, since books go on swords.
 
 ## Questions for the owner
 
-- Stars give Health Regen and Vitality nothing, as live items show; that changes dungeon items' numbers outside a
-  dungeon too (none in the item data has those stats and stars, today). Right?
 - Wands lose potato books' stats (no live wand has them; only `/data` could put them on one). Right?
 - The Book of Stats goes on farming tools and shows 0 crops until farming exists. Keep it, or only on weapons?
 - Should stars from the 4th on also cost NEU's coins (10k to 10m), or stay essence and items as the API has them?
+- The core's chat line reads "You applied a The Art of War to your ...!" (SkyHanni's `You applied an? .+ to your
+  .+!`). Keep it, or leave out the "a" before "The"?
