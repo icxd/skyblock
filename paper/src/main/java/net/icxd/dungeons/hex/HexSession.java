@@ -250,13 +250,12 @@ public final class HexSession {
     }
 
     /**
-     * The item's gone (dropped where they died): the session no longer has it, and nothing is given back. Main
-     * thread.
+     * The item's gone (dropped where they died): the session no longer has it, and nothing is given back when the
+     * menu closes, which it does next (Paper closes it on a death). Main thread.
      */
     void forget() {
         held = null;
         if (screen != null) screen.removeInput();
-        if (screen != null && GUI.GUI_MAP.get(player.getUniqueId()) == screen) screen.redraw();
     }
 
     // Costs

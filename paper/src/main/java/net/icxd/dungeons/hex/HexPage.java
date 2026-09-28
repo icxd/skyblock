@@ -101,9 +101,14 @@ public abstract class HexPage extends HexScreen {
         redraw();
     }
 
+    /**
+     * The frame, and the entries and extras for the item; without one (on the way out, when they die with it),
+     * the frame alone, so {@link #entries} and {@link #extras} always have an item ({@code session.hexItem()}).
+     */
     @Override
     protected void draw() {
-        List<Entry> entries = entries();
+        boolean item = session.hexItem() != null;
+        List<Entry> entries = item ? entries() : List.of();
         int pages = pages(entries.size());
         page = Math.max(0, Math.min(page, pages - 1));
         fill(filler());
@@ -118,10 +123,10 @@ public abstract class HexPage extends HexScreen {
             }
         }
         set(GUIClickableItem.close(CLOSE));
-        ItemStack item = session.item();
-        set(ITEM, item == null ? filler() : item.clone());
+        ItemStack shown = session.item();
+        set(ITEM, shown == null ? filler() : shown.clone());
         for (Map.Entry<Integer, Integer> e : grid(entries.size(), page, placement()).entrySet()) put(e.getKey(), entries.get(e.getValue()));
-        for (Map.Entry<Integer, Entry> e : extras().entrySet()) put(e.getKey(), e.getValue());
+        if (item) for (Map.Entry<Integer, Entry> e : extras().entrySet()) put(e.getKey(), e.getValue());
     }
 
     private void put(int slot, Entry entry) {
