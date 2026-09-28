@@ -62,6 +62,9 @@ class PrivateReforgesTest {
         assertEquals(170 + 36, table.reforge("WITHERED").stat(Stat.STRENGTH, Rarity.MYTHIC, 36));
         assertEquals(135, table.reforge("WITHERED").stat(Stat.STRENGTH, Rarity.LEGENDARY, 0));
         assertEquals(15, table.reforge("ANCIENT").stat(Stat.CRIT_CHANCE, Rarity.MYTHIC, 0));
+        // NEU's Common Crit Damage is the wiki's (and the old table's) Crit Chance.
+        assertEquals(3, table.reforge("ANCIENT").stat(Stat.CRIT_CHANCE, Rarity.COMMON, 0));
+        assertEquals(0, table.reforge("ANCIENT").stat(Stat.CRIT_DAMAGE, Rarity.COMMON, 0));
         assertEquals(38, table.reforge("ANCIENT").stat(Stat.CRIT_DAMAGE, Rarity.SPECIAL, 38));
         assertEquals(60, table.reforge("HASTY").stat(Stat.CRIT_CHANCE, Rarity.MYTHIC, 0));
         assertEquals(List.of("&9Withered Bonus"), table.reforge("withered").bonusSection(Rarity.MYTHIC).subList(0, 1));

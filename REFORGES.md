@@ -87,7 +87,9 @@ and `reforges_report.md` next to it, which lists every disagreement and what was
   Hypixel's, so it's kept with the private sources.
 
 How they're put together (`tools/hex/test_build_reforges.py` has made-up cases of each):
-1. NEU's numbers are the base; the wiki fills rarities NEU lacks, and Geometric (NEU doesn't have it).
+1. NEU's numbers are the base; the wiki fills rarities NEU lacks, and Geometric (NEU doesn't have it). A stat NEU
+   names at one rarity alone, where the wiki has the same number under the stat NEU gives at every other rarity, is
+   NEU's slip: Ancient's Common Crit Damage 3 is the wiki's (and the plugin's old table's) Crit Chance 3.
 2. Where most live items of a reforge and rarity show another number, that's taken. Where the wiki agrees with
    every such live number, its other rarities of that stat are taken too. That gives:
    - Groovy: half NEU's Foraging Fortune.
@@ -109,8 +111,8 @@ How they're put together (`tools/hex/test_build_reforges.py` has made-up cases o
 ## Approximated (UNKNOWN in the code)
 
 - **Numbers no item settles.** Where NEU and the wiki differ and no live item shows the reforge at that rarity, NEU's
-  is taken. That's 43 stat cells (Rich on bows, Odd, Pure, Wise, Hasty Mythic, Rapid Mythic, Neat Mythic, Spiked
-  Rare, Hyper Mythic, Magnetic and Fortified Divine, Toil Rare, Ancient Common's Crit Damage...) and 19 fees
+  is taken. That's 41 stat cells (Rich on bows, Odd, Pure, Wise, Hasty Mythic, Rapid Mythic, Neat Mythic, Spiked
+  Rare, Hyper Mythic, Magnetic and Fortified Divine, Toil Rare...) and 19 fees
   (Warped, Dimensional, Majestic, Perfect, Spiked, Necrotic, Fruitful, Undead, Sunny). Costs never show on items.
   Both lists are in reforges_report.md.
 - **Firestone**: no source has its reforge, so it's not in the table.

@@ -185,8 +185,9 @@ class Builder:
         for rarity, stats in (neu_stats or {}).items():
             if rarity not in SAME_AS_MYTHIC:
                 rows[rarity] = self.row(stats, f'{name} {rarity}')
-        neu_rows = {r: dict(row) for r, row in rows.items()}
         wiki = self.wiki_stats(name, entry)
+        self.misnamed(name, rows, wiki)
+        neu_rows = {r: dict(row) for r, row in rows.items()}
         for rarity, stats in wiki.items():
             if rarity not in rows and rarity not in SAME_AS_MYTHIC:
                 rows[rarity] = dict(stats)
@@ -207,6 +208,21 @@ class Builder:
             if row:
                 out[rarity] = {s: int(v) if float(v).is_integer() else v for s, v in row.items()}
         return out
+
+    def misnamed(self, name, rows, wiki):
+        """A stat NEU names at one rarity alone, where the wiki has the same number under the stat NEU gives at
+        every other rarity (and the wiki never gives NEU's), is a slip of NEU's: Ancient's Common "Crit Damage 3",
+        the wiki's (and the plugin's old table's) Crit Chance 3."""
+        for rarity, row in rows.items():
+            for stat, value in list(row.items()):
+                others = [r for r in rows if r != rarity]
+                if not others or any(stat in rows[r] for r in others) or any(stat in w for w in wiki.values()):
+                    continue
+                for right in (wiki.get(rarity) or {}):
+                    if right not in row and wiki[rarity][right] == value and all(right in rows[r] for r in others):
+                        row[right] = row.pop(stat)
+                        self.note('a slip of NEU\'s, the wiki\'s taken', f'{name} {rarity}: {stat} {value:g} is {right}')
+                        break
 
     def live_stats(self, name, modifier, rows, wiki, per_level):
         live = self.src.live.get(modifier)

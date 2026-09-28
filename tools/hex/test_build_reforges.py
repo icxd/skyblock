@@ -123,6 +123,13 @@ class Merging(unittest.TestCase):
         keen, b = self.build(live)
         self.assertEqual(4, keen['stats']['RARE']['STRENGTH'])
 
+    def test_a_stat_neu_misnamed(self):
+        basic = {'Keen': dict(self.BASIC['Keen'], reforgeStats={'COMMON': {'strength': 2, 'crit_damage': 3},
+                                                               'RARE': {'strength': 4, 'crit_chance': 5}})}
+        wiki = {'Sword': {'Keen': {'source': 'Basic', 'stats': {'c': {'str': 2, 'cc': 3}, 'r': {'str': 4, 'cc': 5}}}}}
+        keen, b = self.build(wiki=wiki, basic=basic)
+        self.assertEqual({'STRENGTH': 2, 'CRIT_CHANCE': 3}, keen['stats']['COMMON'])
+
     def test_special_is_mythics(self):
         basic = {'Keen': dict(self.BASIC['Keen'], reforgeStats={'MYTHIC': {'strength': 9}, 'SPECIAL': {'strength': 1}})}
         live = {'keen': {'SPECIAL': {'items': 5, 'stats': {'Strength': {'+2': 5}}}}}
