@@ -138,13 +138,17 @@ public final class HexSession {
 
     /**
      * An upgrade bought: takes its cost (see HexCosts#take; nothing on a Sandbox profile), makes the item from
-     * {@code tag} ({@link #replace}), saves the two together, and says "You applied a <upgrade> to your <item>!"
+     * {@code tag} ({@link #replace}), gives them {@code back} (what the upgrade takes off the item, a gemstone
+     * removed: ItemStash#give), saves it all together, and says "You applied a <upgrade> to your <item>!"
      * ({@code upgrade} null for nothing said). False, and nothing paid or changed, if they can't pay or the data
      * isn't a SkyBlock item's.
      */
-    public boolean upgrade(HexCosts cost, NBTTagCompound tag, String upgrade) {
+    public boolean upgrade(HexCosts cost, NBTTagCompound tag, String upgrade, ItemStack... back) {
         if (ended || item() == null || screen == null || kind(tag) == null || !cost.take(this)) return false;
         replace(tag);
+        List<ItemStack> given = new ArrayList<>();
+        for (ItemStack item : back) if (item != null && !item.isEmpty()) given.add(item);
+        if (!given.isEmpty()) ItemStash.give(player, given.toArray(new ItemStack[0]));
         User user = user();
         if (user != null) user.save();
         if (upgrade != null) applied(upgrade);
