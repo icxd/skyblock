@@ -124,6 +124,12 @@ public abstract class GUI {
      */
     public boolean onPlayerInventoryClick(InventoryClickEvent event) { return false; }
 
+    /**
+     * Whether the click waits out the short cooldown between clicks (GUIListener). A menu that keeps
+     * items (storage's pages) lets them be moved as fast as anywhere else, and keeps it for its buttons.
+     */
+    public boolean rateLimited(InventoryClickEvent event) { return true; }
+
     /** Glass with no tooltip, where Hypixel's menus have it. */
     protected static ItemStack filler() {
         ItemStack pane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);

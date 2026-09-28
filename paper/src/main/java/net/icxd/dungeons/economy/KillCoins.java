@@ -1,14 +1,12 @@
 package net.icxd.dungeons.economy;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import net.icxd.dungeons.item.enchanting.EnchantmentType;
@@ -16,6 +14,7 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
+import net.icxd.dungeons.storage.AccessoryBag;
 import net.icxd.dungeons.user.User;
 
 /**
@@ -23,7 +22,8 @@ import net.icxd.dungeons.user.User;
  * coins.md 1.3): the mob's own (its kind's where it spawned: 1 for the Entrance's, 20 for the Hub's
  * Magma Cube, 1,000 for the Bladesoul), and per level of the mob, the Scavenger enchantment on what
  * they hold (0.3 a tier: I-VI give 0.3-1.8, the wiki's Scavenger) and their best Scavenger accessory
- * (Talisman 0.5, Ring 0.6, Artifact 0.75, as the items' lore says). They add up: "2.3 per level with
+ * in their inventory or Accessory Bag (Talisman 0.5, Ring 0.6, Artifact 0.75, as the items' lore
+ * says; see storage/AccessoryBag#countedIds). They add up: "2.3 per level with
  * Scavenger VI and the Accessory" (the wiki's Scavenger Talisman).
  *
  * <p>Only the killer gets them (whether a party shares them isn't known), and nothing's said: the
@@ -42,7 +42,7 @@ public final class KillCoins implements Listener {
         if (user == null || user.isReleased()) return;
         PlayerInventory inventory = killer.getInventory();
         double coins = coins(event.variant().coins(), event.variant().level(), scavenger(ItemNBT.read(inventory.getItemInMainHand())),
-                accessory(ids(inventory.getStorageContents())));
+                accessory(AccessoryBag.countedIds(killer)));
         if (coins > 0) Purse.add(user, coins);
     }
 
@@ -71,14 +71,4 @@ public final class KillCoins implements Listener {
         return best;
     }
 
-    /** The SkyBlock ids of what they carry (accessories work anywhere in the inventory; there's no bag yet). */
-    private static List<String> ids(ItemStack[] items) {
-        List<String> ids = new ArrayList<>();
-        for (ItemStack item : items) {
-            if (item == null || item.isEmpty()) continue;
-            NBTTagCompound tag = ItemNBT.read(item);
-            if (tag != null) ids.add(tag.getString("id"));
-        }
-        return ids;
-    }
 }

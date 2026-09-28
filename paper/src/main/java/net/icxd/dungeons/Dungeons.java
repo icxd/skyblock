@@ -16,13 +16,19 @@ import net.icxd.dungeons.command.commands.admin.SpawnEntityCommand;
 import net.icxd.dungeons.command.commands.admin.SpawnRewardChestCommand;
 import net.icxd.dungeons.command.commands.admin.UnlockCommand;
 import net.icxd.dungeons.command.commands.admin.UpgradeCommand;
+import net.icxd.dungeons.command.commands.user.BackpackCommand;
+import net.icxd.dungeons.command.commands.user.BagsCommand;
+import net.icxd.dungeons.command.commands.user.EnderChestCommand;
 import net.icxd.dungeons.command.commands.user.HotmCommand;
+import net.icxd.dungeons.command.commands.user.LoadoutsCommand;
 import net.icxd.dungeons.command.commands.user.PickupStashCommand;
 import net.icxd.dungeons.command.commands.user.ProfilesCommand;
+import net.icxd.dungeons.command.commands.user.SacksCommand;
 import net.icxd.dungeons.command.commands.user.SbMenuCommand;
 import net.icxd.dungeons.command.commands.user.ShowExtraStatsCommand;
 import net.icxd.dungeons.command.commands.user.SkillsCommand;
 import net.icxd.dungeons.command.commands.user.StatsCommand;
+import net.icxd.dungeons.command.commands.user.StorageCommand;
 import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.command.commands.user.ViewStashCommand;
 import net.icxd.dungeons.economy.KillCoins;
@@ -59,6 +65,8 @@ import net.icxd.dungeons.rune.RuneRunnable;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.StatsRunnable;
+import net.icxd.dungeons.storage.Storage;
+import net.icxd.dungeons.storage.StorageListener;
 import net.icxd.dungeons.tablist.TabList;
 import net.icxd.dungeons.user.ItemStash;
 import net.icxd.dungeons.user.UserStore;
@@ -94,6 +102,8 @@ public class Dungeons extends JavaPlugin {
 
         // Hypixel's items, as data kept out of this repository (servermgr links it in); without it, there are no items.
         ItemRegistry.loadData(getDataFolder().toPath().resolve("items/items.json"));
+        // Storage, bags and Loadouts; their tables are data kept out of it too (storage/), read off the main thread.
+        Storage.start(this);
 
         skyBlockServer = new SkyBlockServer(getConfig());
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
@@ -134,6 +144,7 @@ public class Dungeons extends JavaPlugin {
         } catch (RuntimeException e) {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable set bonuses", e);
         }
+        listen(StorageListener.class, StorageListener::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));
@@ -146,7 +157,8 @@ public class Dungeons extends JavaPlugin {
                 new NBTCommand(), new PlayerDataCommand(), new RecombobulateCommand(), new SpawnEntityCommand(),
                 new SpawnRewardChestCommand(), new UnlockCommand(), new UpgradeCommand(), new HotmCommand(),
                 new ShowExtraStatsCommand(), new ToggleReadyUpCommand(), new ProfilesCommand(), new SkillsCommand(),
-                new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand());
+                new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand(), new StorageCommand(),
+                new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {

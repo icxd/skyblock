@@ -48,7 +48,8 @@ public class GUIListener implements Listener {
             return;
         }
 
-        if (GUI_COOLDOWN.containsKey(player.getUniqueId()) && System.currentTimeMillis() - GUI_COOLDOWN.get(player.getUniqueId()) < 100L) {
+        if (gui.rateLimited(event) && GUI_COOLDOWN.containsKey(player.getUniqueId())
+                && System.currentTimeMillis() - GUI_COOLDOWN.get(player.getUniqueId()) < 100L) {
             event.setCancelled(true);
             player.sendMessage(Utils.color("&cYou must wait a bit before doing this!"));
             return;

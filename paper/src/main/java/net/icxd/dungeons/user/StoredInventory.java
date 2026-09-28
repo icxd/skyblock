@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
 import org.bson.Document;
@@ -26,8 +27,8 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
 /**
  * A player's inventory, armor and off-hand, kept in the profile they play on under {@code storage}
  * (each profile has its own; see Profiles), so they follow the player between servers. The methods
- * here take that profile's document. There's no ender chest in it: vanilla's is closed (see
- * SandboxStorage).
+ * here take that profile's document. The SkyBlock ender chest, backpacks and bags are kept there too,
+ * the same way (see storage/StorageDocument); vanilla's ender chest is closed (see SandboxStorage).
  *
  * <p>Each slot is its own {@link ItemStack#serializeAsBytes()} blob (gzipped NBT with the
  * Minecraft data version, so Paper upgrades it after a Minecraft update), or null when empty. A
@@ -112,6 +113,18 @@ public final class StoredInventory {
         for (PotionEffect effect : player.getActivePotionEffects()) player.removePotionEffect(effect.getType());
     }
 
+    /** What else is written with the inventory, so it's saved at the same moment (see {@link #captureWith}). */
+    private static final List<BiConsumer<Player, Document>> CAPTURED_WITH = new ArrayList<>();
+
+    /**
+     * Also writes this into the document whenever the inventory is (a storage menu's items, while it's
+     * open, see storage/ItemPage): an item moved between the two is then saved in one place, never both
+     * or neither. Once, at startup.
+     */
+    public static void captureWith(BiConsumer<Player, Document> capture) {
+        CAPTURED_WITH.add(capture);
+    }
+
     /**
      * Writes the player's inventory, armor and off-hand into their document. Main thread. Throws if
      * an item can't be saved, leaving the stored copy as it was.
@@ -127,6 +140,7 @@ public final class StoredInventory {
         storage.put(OFFHAND, offhand);
         storage.put(HELD_SLOT, inventory.getHeldItemSlot());
         storage.put(DATA_VERSION, dataVersion());
+        for (BiConsumer<Player, Document> capture : CAPTURED_WITH) capture.accept(player, doc);
     }
 
     /**
@@ -190,8 +204,11 @@ public final class StoredInventory {
         return out;
     }
 
-    /** One slot's item, or null. A slot that can't be read is kept in {@code storage.unreadable}. */
-    private static ItemStack read(Player player, Object entry, String section, int slot, Document storage, Logger log) {
+    /**
+     * One slot's item, or null. A slot that can't be read is kept in {@code storage.unreadable} (with
+     * {@code section} and {@code slot} to say where it was), and the rest still load.
+     */
+    public static ItemStack read(Player player, Object entry, String section, int slot, Document storage, Logger log) {
         byte[] bytes = bytes(entry);
         if (bytes == null) return null;
         try {
@@ -207,14 +224,15 @@ public final class StoredInventory {
         }
     }
 
-    private static List<Binary> encode(ItemStack[] items) {
+    /** Each item as a slot's blob; null for an empty slot and for what's never saved (see {@link #saved}). */
+    public static List<Binary> encode(ItemStack[] items) {
         List<Binary> out = new ArrayList<>(items.length);
         for (ItemStack item : items) out.add(saved(item) ? write(item) : null);
         return out;
     }
 
     /** Whether it goes into the stored inventory: not empty, not marked, and not of an id that never does. */
-    private static boolean saved(ItemStack item) {
+    public static boolean saved(ItemStack item) {
         if (item == null || item.isEmpty() || isNotSaved(item)) return false;
         if (NEVER_SAVED.isEmpty()) return true;
         NBTTagCompound tag = ItemNBT.read(item);
@@ -261,7 +279,8 @@ public final class StoredInventory {
         return doc.get(key) instanceof List<?> list ? list : List.of();
     }
 
-    static Document storage(Document doc) {
+    /** The profile's {@code storage} (made if it has none), where storage/ keeps its items too. */
+    public static Document storage(Document doc) {
         Document storage = doc.get(STORAGE, Document.class);
         if (storage == null) {
             storage = new Document();

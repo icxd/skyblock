@@ -22,6 +22,9 @@ import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.skill.SkillsMenu;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
+import net.icxd.dungeons.storage.LoadoutsMenu;
+import net.icxd.dungeons.storage.StorageMenu;
+import net.icxd.dungeons.storage.YourBagsMenu;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.SkyBlockTime;
 import net.icxd.dungeons.utils.Text;
@@ -32,9 +35,9 @@ import net.icxd.dungeons.utils.Text;
  * What this plugin has is filled in: the stats, the skill average, the SkyBlock level, the profiles
  * and the date. What it doesn't have yet (collections, the recipe book, pets, the bank's banker, fast
  * travel) is shown as Lemon's menu showed it, a profile with none of it; the Booster Cookie, which
- * Lemon's didn't have, is left out, and so are the calendar's events. Stats & Equipment, Your Skills
- * and Profile Management open; the rest do nothing yet. Stat icons are the classic symbols (Hypixel's
- * are its resource pack's glyphs). Main thread.
+ * Lemon's didn't have, is left out, and so are the calendar's events. Stats & Equipment, Your Skills,
+ * Storage, Your Bags, Loadouts and Profile Management open; the rest do nothing yet. Stat icons are the
+ * classic symbols (Hypixel's are its resource pack's glyphs). Main thread.
  */
 public final class SkyBlockMenu extends GUI {
     public static final String TITLE = "SkyBlock Menu";
@@ -112,6 +115,9 @@ public final class SkyBlockMenu extends GUI {
                 case STATS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new StatsMenu(viewer).open(viewer)));
                 case SKILLS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new SkillsMenu(viewer).open(viewer)));
                 case PROFILES -> set(GUIClickableItem.button(slot, stack, viewer, () -> new ProfileManagementMenu(viewer).open(viewer)));
+                case STORAGE -> set(GUIClickableItem.button(slot, stack, viewer, () -> new StorageMenu(viewer).open(viewer)));
+                case BAGS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new YourBagsMenu(viewer).open(viewer)));
+                case LOADOUTS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new LoadoutsMenu(viewer, 0).open(viewer)));
                 default -> set(slot, stack);
             }
         }

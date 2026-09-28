@@ -515,10 +515,16 @@ func (n *Network) installProxyPlugin(progress func(string)) {
 	}
 }
 
+// optionalData: the checkout's folders of tables for parts of the plugin that run without them
+// (storage/: Accessory Powers and bag sizes), linked into every server when the checkout has them.
+// One it doesn't have yet is skipped quietly: the plugin says so in its log.
+var optionalData = []string{"storage"}
+
 // linkData links the private data checkout into servers: the item definitions (items/) into
-// every server, and the captured rooms (rooms/) into dungeon servers. Hypixel's data stays in that
-// checkout, out of the plugin and this repository. Links that are already there are left alone, so
-// it runs on every deploy. What the checkout lacks is the same for every server, so it's said once.
+// every server, and the captured rooms (rooms/) into dungeon servers, and the optionalData folders.
+// Hypixel's data stays in that checkout, out of the plugin and this repository. Links that are
+// already there are left alone, so it runs on every deploy. What the checkout lacks is the same for
+// every server, so it's said once.
 func (n *Network) linkData(servers []*Server, progress func(string)) {
 	if len(servers) == 0 {
 		return
@@ -552,7 +558,17 @@ func (n *Network) linkData(servers []*Server, progress func(string)) {
 			}
 			linkDataDir(s, name, target, link, progress)
 		}
+		for _, name := range optionalData {
+			if target := filepath.Join(data, name); isDir(target) {
+				linkDataDir(s, name, target, filepath.Join(plugin, name), progress)
+			}
+		}
 	}
+}
+
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }
 
 // linkDataDir links one of the data checkout's folders (target, which is there) into a server.

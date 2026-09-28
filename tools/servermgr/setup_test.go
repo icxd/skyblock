@@ -39,6 +39,22 @@ func TestLinkData(t *testing.T) {
 	if _, err := os.Lstat(filepath.Join(plugin(hub), "dungeon-rooms")); err == nil {
 		t.Error("hub01 got the dungeon rooms")
 	}
+	// No storage/ in the checkout: nothing said, nothing made. Once it's there, every server gets it.
+	if _, err := os.Lstat(filepath.Join(plugin(hub), "storage")); err == nil {
+		t.Error("hub01 got a link to a storage/ the data doesn't have")
+	}
+	if err := os.MkdirAll(filepath.Join(data, "storage"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	n.linkData([]*Server{hub, dungeon}, progress)
+	if len(messages) > 0 {
+		t.Fatalf("unexpected messages: %v", messages)
+	}
+	for _, s := range []*Server{hub, dungeon} {
+		if !samePath(filepath.Join(plugin(s), "storage"), filepath.Join(data, "storage")) {
+			t.Errorf("%s: storage not linked", s.Name)
+		}
+	}
 
 	// A folder of the server's own isn't replaced.
 	other := &Server{Name: "hub02", Type: "LOBBY"}
