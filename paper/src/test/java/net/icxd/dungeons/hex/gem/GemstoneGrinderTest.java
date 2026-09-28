@@ -183,13 +183,14 @@ class GemstoneGrinderTest {
                 "TEST_DIVAN_BOOTS":{"gemstone_slots":[{"type":"AMBER"}],"material":"LEATHER_BOOTS","name":"Boots of Test",\
                 "rarity":"LEGENDARY","type":"BOOTS"},
                 "TEST_AOTV":{"gemstone_slots":[{"type":"SAPPHIRE"}],"material":"DIAMOND_SHOVEL","name":"Aspect of the Test","rarity":"EPIC"},
-                "TEST_ROD":{"gemstone_slots":[{"type":"AQUAMARINE"}],"material":"FISHING_ROD","name":"Zeta Rod","rarity":"RARE"},
+                "TEST_ROD":{"gemstone_slots":[{"type":"AQUAMARINE"}],"material":"FISHING_ROD","name":"Swift Rod","rarity":"RARE"},
                 "TEST_STICK":{"material":"STICK","name":"Plain Stick"}""");
         List<SkyBlockItem> all = new ArrayList<>(items);
         Map<String, ArmorSet> sets = Map.of("TEST_DIVAN", new ArmorSet("Test Armor", List.of("TEST_DIVAN_HELMET", "TEST_DIVAN_BOOTS")));
         List<GemstoneGuide.Entry> entries = GemstoneGuide.entries(all, sets);
-        // By name: the set once, as its helmet named after it; nothing for an item without slots.
-        assertEquals(List.of("Aspect of the Test", "Helmet of Test", "Zeta Rod"), entries.stream().map(e -> e.item().name()).toList());
+        // By the item's own name (the helmet's, not its set's, as the wiki's copy sorts the Helmet of Divan): the set
+        // once, as its helmet named after it; nothing for an item without slots.
+        assertEquals(List.of("Aspect of the Test", "Helmet of Test", "Swift Rod"), entries.stream().map(e -> e.item().name()).toList());
         GemstoneGuide.Entry set = entries.get(1);
         assertEquals("§6Test Armor", set.name());
         assertEquals(List.of("&7Available Gemstone Slots", "  &6⸕ Amber &8x2", "  &a☘ Jade &8x2", "  &e✧ Topaz"), set.slots());

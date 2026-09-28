@@ -133,8 +133,10 @@ final class GemstoneGuide extends HexScreen {
     // The entries
 
     /**
-     * Every item with slots, a set once (see the class's doc), sorted by the name it shows without its colours
-     * (UNKNOWN: Hypixel's order; the wiki's copy is by name, roughly: a patch sorted it in October 2023).
+     * Every item with slots, a set once (see the class's doc), sorted by the item's own name without its colours,
+     * not its set's: the wiki's copy has the Helmet of Divan ("Divan's Armor") under H, the Yog Helmet ("Armor of
+     * Yog") under Y and the fragged ("⚚") pieces last (a patch sorted it in October 2023). UNKNOWN: Hypixel's
+     * exact key (the copy has some Mk. I to III tools out of order).
      */
     static List<Entry> entries(Collection<SkyBlockItem> items, Map<String, ArmorSet> sets) {
         Map<String, SkyBlockItem> byId = new HashMap<>();
@@ -167,7 +169,7 @@ final class GemstoneGuide extends HexScreen {
     }
 
     private static String sortName(Entry entry) {
-        return (entry.name() != null ? entry.name() : entry.item().name()).replaceAll("[&§][0-9a-fk-or]", "");
+        return entry.item().name().replaceAll("[&§][0-9a-fk-or]", "");
     }
 
     /**
