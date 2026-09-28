@@ -10,8 +10,6 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -87,34 +85,6 @@ final class Buffs {
             UNTIL.put(player.getUniqueId(), System.currentTimeMillis() + MILLIS);
             player.getWorld().spawnParticle(Particle.FLAME, player.getLocation().add(0, 1, 0), 30, 0.5, 0.8, 0.5, 0.05);
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1, 0.5f);
-        }
-    }
-
-    /**
-     * The Enrager's Enrage: "Taunt enemies in a 10 block radius and reduce their damage against you by 10% for
-     * 10s", for "10% of HP" (the wiki: of their max health; its data's 15.6 is one player's). The taunt is
-     * built; the 10% less from them isn't (a player's damage taken knows nothing of who hit: LATER).
-     */
-    static final class Enrage implements AbilityHandler {
-        static final double RADIUS = 10;
-        static final double HEALTH_SHARE = 0.1;
-
-        private static double cost(Player player) {
-            return HEALTH_SHARE * PlayerHealth.max(player);
-        }
-
-        @Override
-        public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            return Hits.canPayHealth(player, cost(player));
-        }
-
-        @Override
-        public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            Hits.payHealth(player, cost(player));
-            for (LivingEntity mob : Hits.near(player.getLocation(), RADIUS)) {
-                if (mob instanceof Mob vanilla) vanilla.setTarget(player);
-            }
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_RAVAGER_ROAR, 1, 1);
         }
     }
 

@@ -68,7 +68,6 @@ public final class WeaponAbilities {
         to.accept("Sinrecall Transmission", new Strikes.SinrecallTransmission());
         to.accept("Bad Health", new Buffs.BadHealth());
         to.accept("Hellstorm", new Buffs.Hellstorm());
-        to.accept("Enrage", new Buffs.Enrage());
         to.accept("ME SMASH HEAD", new Buffs.SmashHead());
         to.accept("Gravity Storm", new Buffs.GravityStorm());
     }
