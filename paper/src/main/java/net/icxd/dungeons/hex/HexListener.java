@@ -20,7 +20,8 @@ import net.icxd.dungeons.utils.Text;
  * they die or leave with it in the Hex (see {@link HexSession}).
  *
  * <p>An input slot takes one item: what storage would keep (not an item that belongs to where they are, like a
- * dungeon's map, nor the SkyBlock Menu), one at a time. Hypixel's Hex upgrades one item; a stack is refused
+ * dungeon's map, nor the SkyBlock Menu) and the screen takes (HexScreen#refuses: the grinder only items with
+ * gemstone slots), one at a time. Hypixel's Hex upgrades one item; a stack is refused
  * rather than split (UNKNOWN what Hypixel does with one), so nothing is left over to go anywhere. Taking it out is
  * always fine; nothing goes in from or into a bundle.
  */
@@ -48,14 +49,15 @@ public final class HexListener implements Listener {
             case HOTBAR_SWAP -> player.getInventory().getItem(event.getHotbarButton());
             default -> null;
         };
+        String refused = amount(coming) == 0 ? null : screen.refuses(coming);
         Refusal refusal = switch (event.getAction()) {
             case PICKUP_FROM_BUNDLE, PICKUP_ALL_INTO_BUNDLE, PICKUP_SOME_INTO_BUNDLE, PLACE_FROM_BUNDLE, PLACE_ALL_INTO_BUNDLE,
                  PLACE_SOME_INTO_BUNDLE, UNKNOWN -> SILENT;
             case PLACE_ALL, SWAP_WITH_CURSOR, HOTBAR_SWAP -> refusal(event.getAction() == InventoryAction.PLACE_ALL ? inSlot : 0,
-                    amount(coming), takes(coming));
-            case PLACE_ONE -> refusal(inSlot, amount(coming) == 0 ? 0 : 1, takes(coming));
+                    amount(coming), takes(coming), refused);
+            case PLACE_ONE -> refusal(inSlot, amount(coming) == 0 ? 0 : 1, takes(coming), refused);
             // Onto what's there already, so more than one.
-            case PLACE_SOME -> refusal(inSlot, Math.max(1, amount(coming)), takes(coming));
+            case PLACE_SOME -> refusal(inSlot, Math.max(1, amount(coming)), takes(coming), refused);
             default -> null;
         };
         if (refusal == null) return;
@@ -75,11 +77,13 @@ public final class HexListener implements Listener {
     /**
      * Whether {@code coming} more items may go on the {@code inSlot} in the input slot: null if so. Nothing coming
      * (taking it out) is always fine; an item the slot doesn't take is refused quietly (as storage refuses it);
-     * more than one in the slot after is refused with {@link #ONE_ITEM}.
+     * then what the screen itself refuses ({@code refused}, HexScreen#refuses: its line, "" for none); more than one
+     * in the slot after is refused with {@link #ONE_ITEM}.
      */
-    static Refusal refusal(int inSlot, int coming, boolean takes) {
+    static Refusal refusal(int inSlot, int coming, boolean takes, String refused) {
         if (coming <= 0) return null;
         if (!takes) return SILENT;
+        if (refused != null) return refused.isEmpty() ? SILENT : new Refusal(refused);
         return inSlot + coming > 1 ? new Refusal(ONE_ITEM) : null;
     }
 

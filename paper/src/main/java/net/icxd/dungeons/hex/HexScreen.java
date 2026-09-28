@@ -39,8 +39,14 @@ public abstract class HexScreen extends GUI {
     /** The item as it was when the buttons were last drawn (a copy); null for none. */
     private ItemStack drawnFor;
 
+    /** Six rows, as every screen of the Hex and the grinder has. */
     protected HexScreen(HexSession session, String title) {
-        super(title, Size.SIX);
+        this(session, title, Size.SIX);
+    }
+
+    /** Another size, for a screen of the grinder's that isn't known to have six rows (a confirmation, say). */
+    protected HexScreen(HexSession session, String title, int size) {
+        super(title, size);
         this.session = session;
         this.viewer = session.player();
     }
@@ -150,6 +156,17 @@ public abstract class HexScreen extends GUI {
         return button(slot, stack, click -> action.run());
     }
 
+    /**
+     * Runs {@code action} on the next tick, not inside the click, while this screen is still the one open with the
+     * item and their items aren't frozen: for what a click does that isn't a button's (the grinder's gem clicked in
+     * their inventory). The action reads the item as it is then.
+     */
+    protected void later(Runnable action) {
+        Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
+            if (viewer.isOnline() && ready()) action.run();
+        });
+    }
+
     private boolean ready() {
         return session.showing(this) && !InventorySyncListener.frozen(viewer);
     }
@@ -166,6 +183,14 @@ public abstract class HexScreen extends GUI {
         return inputSlot() >= 0;
     }
 
+    /**
+     * Whether the input slot refuses this item, past what every screen of the Hex refuses (see HexListener): null
+     * if it takes it, else what to say ("" for nothing). The grinder takes only items with gemstone slots.
+     */
+    protected String refuses(ItemStack item) {
+        return null;
+    }
+
     /** Only its buttons wait out the cooldown between clicks: the item moves in and out as fast as in a chest. */
     @Override
     public boolean rateLimited(InventoryClickEvent event) {
@@ -179,7 +204,7 @@ public abstract class HexScreen extends GUI {
         event.setCancelled(true);
         ItemStack moving = event.getCurrentItem();
         if (inputSlot() < 0 || inventory == null || moving == null || moving.isEmpty() || input() != null) return true;
-        HexListener.Refusal refusal = HexListener.refusal(0, moving.getAmount(), HexListener.takes(moving));
+        HexListener.Refusal refusal = HexListener.refusal(0, moving.getAmount(), HexListener.takes(moving), refuses(moving));
         if (refusal != null) {
             if (refusal.message() != null) say(refusal.message());
             return true;
