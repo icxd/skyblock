@@ -113,6 +113,25 @@ class DebuffsTest {
         assertEquals(List.of(ONE, ONE, ONE, ONE), whose);
     }
 
+    /** The tick looks through them only once one can have run out; put on again, it's looked at later. */
+    @Test
+    void dueOnlyWhenOneCanRunOut() {
+        Debuffs debuffs = new Debuffs();
+        assertFalse(debuffs.due(0));
+        debuffs.add(SHRED, ONE, 0);
+        assertFalse(debuffs.due(3_999));
+        assertTrue(debuffs.due(4_000));
+        debuffs.add(SHRED, ONE, 3_000);
+        // Its first time was up at 4 s; looked at then, it's still on (till 7 s), and not due again before.
+        assertFalse(debuffs.expire(4_000));
+        assertEquals(2, debuffs.stacks("shred", 4_000));
+        assertFalse(debuffs.due(6_999));
+        assertTrue(debuffs.due(7_000));
+        assertTrue(debuffs.expire(7_000));
+        assertTrue(debuffs.isEmpty());
+        assertFalse(debuffs.due(7_000));
+    }
+
     @Test
     void removeTakesItOff() {
         Debuffs debuffs = new Debuffs();

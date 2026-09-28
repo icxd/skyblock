@@ -68,6 +68,8 @@ public final class Debuffs {
 
     private final Map<String, Debuff> debuffs = new HashMap<>();
     private final Map<String, Dot> dots = new HashMap<>();
+    /** No debuff runs out before this (it may be earlier than the soonest: one put on again runs longer). */
+    private long nextExpiry = Long.MAX_VALUE;
 
     /** Puts it on (again), by {@code by} (null for nobody's), at {@code now}. */
     public void add(Spec spec, UUID by, long now) {
@@ -82,6 +84,7 @@ public final class Debuffs {
             debuff.by = by;
         }
         debuff.until = now + Math.max(0, spec.millis());
+        nextExpiry = Math.min(nextExpiry, debuff.until);
     }
 
     /** Its stacks of this source's debuff at {@code now}; 0 for none. */
@@ -167,11 +170,27 @@ public final class Debuffs {
         }
     }
 
+    /** Whether a debuff may have run out by {@code now}, so {@link #expire} has something to do. */
+    public boolean due(long now) {
+        return !debuffs.isEmpty() && now >= nextExpiry;
+    }
+
     /** Takes off what has run out by {@code now}; whether nothing is left (no debuff, no damage over time). */
     public boolean expire(long now) {
         if (!debuffs.isEmpty()) {
-            for (Iterator<Debuff> it = debuffs.values().iterator(); it.hasNext(); ) if (it.next().until <= now) it.remove();
+            long next = Long.MAX_VALUE;
+            for (Iterator<Debuff> it = debuffs.values().iterator(); it.hasNext(); ) {
+                long until = it.next().until;
+                if (until <= now) it.remove();
+                else next = Math.min(next, until);
+            }
+            nextExpiry = next;
         }
+        return isEmpty();
+    }
+
+    /** Whether it has nothing on: no debuff, no damage over time (one that has run out may still count till it's expired). */
+    public boolean isEmpty() {
         return debuffs.isEmpty() && dots.isEmpty();
     }
 }

@@ -130,9 +130,12 @@ public final class MobDebuffs {
             ticking = tracked.entity;
             tracked.debuffs.tick(SINK);
             ticking = null;
-            boolean empty = tracked.debuffs.expire(now);
-            slow(tracked, now);
-            if (empty) it.remove();
+            // Only when one may have run out: most ticks, nothing is looked through.
+            if (tracked.debuffs.due(now)) {
+                tracked.debuffs.expire(now);
+                slow(tracked, now);
+            }
+            if (tracked.debuffs.isEmpty()) it.remove();
         }
         if (DUE.isEmpty()) return;
         List<Due> due = new ArrayList<>(DUE);
