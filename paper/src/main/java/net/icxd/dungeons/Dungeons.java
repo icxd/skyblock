@@ -67,6 +67,7 @@ import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.item.ability.Activations;
+import net.icxd.dungeons.reforge.CombatReforges;
 import net.icxd.dungeons.item.ability.weapons.WeaponEvents;
 import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
@@ -194,6 +195,8 @@ public class Dungeons extends JavaPlugin {
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         listen(UtilityListener.class, UtilityListener::new);
         listen(Activations.class, Activations::new);
+        // What reforges do in a fight (ENCHANTS_WEAPONS.md).
+        listen(CombatReforges.class, CombatReforges::new);
         try {
             SetBonuses.enable(this);
         } catch (RuntimeException e) {

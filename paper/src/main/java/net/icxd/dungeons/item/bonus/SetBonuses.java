@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.ToDoubleBiFunction;
 
@@ -63,6 +64,7 @@ public final class SetBonuses implements Listener {
     /** What counted at the last second's tick, so a bonus that stops counting can end what it started (see {@link Bonus#ended}). */
     private static final Map<UUID, Set<Bonus>> LAST_SECOND = new HashMap<>();
     private static final Set<UUID> REFRESHING = new HashSet<>();
+    private static final List<Consumer<Player>> TELEPORTED = new ArrayList<>();
     private static Function<Player, List<ItemStack>> equipment = player -> List.of();
     private static ToDoubleBiFunction<Player, String> collections = (player, item) -> 0;
     private static Plugin plugin;
@@ -346,6 +348,12 @@ public final class SetBonuses implements Listener {
      */
     public static void teleported(Player player) {
         for (Bonus.Active a : active(player)) a.bonus().teleported(player, a);
+        for (Consumer<Player> listener : TELEPORTED) listener.accept(player);
+    }
+
+    /** Adds what else happens when they teleport (see {@link #teleported}): the Hyper reforge's Speed (CombatReforges). */
+    public static void addTeleportListener(Consumer<Player> listener) {
+        TELEPORTED.add(listener);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
