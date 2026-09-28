@@ -553,7 +553,7 @@ final class DungeonSets {
 
     /**
      * Zombie Soldier Armor's Shoal: "Gain +30 Defense for each Zombie Soldier Set within 30 blocks", theirs
-     * among them (UNKNOWN: it may only count others').
+     * among them (UNKNOWN: it may only count others'), not the dead's or ghosts'.
      */
     static final class Shoal implements Bonus {
         @Override
@@ -568,7 +568,7 @@ final class DungeonSets {
 
         @Override
         public void stats(Player player, Active active, Stats stats) {
-            stats.add(Stat.DEFENSE, 30 * Bonuses.playersNear(player, 30, other -> SetBonuses.active(other, name())));
+            stats.add(Stat.DEFENSE, 30 * Bonuses.playersNear(player, 30, other -> SetBonuses.inPlay(other) && SetBonuses.active(other, name())));
         }
     }
 

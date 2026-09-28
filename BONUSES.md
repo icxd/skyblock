@@ -42,8 +42,9 @@ Speed cap (`PlayerAttributes.addSpeedCap`, new) and mana costs (`Abilities.addMa
 kills, teleports, sneaking, bow shots, fire and a tick a second in `SetBonuses`. The dead and
 dungeon ghosts (who are invulnerable) get no second's tick, so auras that hurt mobs (Blazing Aura,
 Unstable Blood's lightning) and heals over time stop for them, and what they started ends ("Fixed
-the Witherborn full set bonus working as a ghost in Dungeons", the wiki's Wither Armor); a Stone to
-Steel Chestplate on one of them covers no one.
+the Witherborn full set bonus working as a ghost in Dungeons", the wiki's Wither Armor); what they
+wear does nothing for others either: a Stone to Steel Chestplate on one of them covers no one, Holy
+Blood reaches no one, and Shoal and Armor of the Pack don't count them.
 
 ## For the other parts (wiring after the merge)
 

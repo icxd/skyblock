@@ -279,7 +279,7 @@ final class OtherSets {
 
     /**
      * Armor of the Pack: "Gain +35 Strength and +80 Defense for each Armor of the Pack wearer within 30
-     * blocks. Max of 3 players!", them among them (UNKNOWN).
+     * blocks. Max of 3 players!", them among them (UNKNOWN), not the dead or ghosts.
      */
     static final class ArmorOfThePack implements Bonus {
         @Override
@@ -294,7 +294,7 @@ final class OtherSets {
 
         @Override
         public void stats(Player player, Active active, Stats stats) {
-            int wearers = Math.min(3, Bonuses.playersNear(player, 30, other -> SetBonuses.active(other, name())));
+            int wearers = Math.min(3, Bonuses.playersNear(player, 30, other -> SetBonuses.inPlay(other) && SetBonuses.active(other, name())));
             stats.add(Stat.STRENGTH, 35 * wearers).add(Stat.DEFENSE, 80 * wearers);
         }
     }

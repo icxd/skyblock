@@ -165,21 +165,29 @@ public final class SetBonuses implements Listener {
         }
     }
 
+    /**
+     * Whether their bonuses act: not the dead's, or dungeon ghosts' (who are invulnerable). The wiki's
+     * Wither Armor has "Fixed the Witherborn full set bonus working as a ghost in Dungeons".
+     */
+    static boolean inPlay(Player player) {
+        return !player.isDead() && !player.isInvulnerable();
+    }
+
     /** The least factor on a hit on them that wearers' bonuses give (see {@link Bonus#takenNear}); not the dead's or ghosts'. */
     private static double takenNear(Player hurt) {
         double least = 1;
         for (Player wearer : hurt.getWorld().getPlayers()) {
-            if (wearer.isDead() || wearer.isInvulnerable()) continue;
+            if (!inPlay(wearer)) continue;
             for (Bonus.Active a : active(wearer)) least = Math.min(least, a.bonus().takenNear(wearer, a, hurt));
         }
         return least;
     }
 
-    /** Whether they, or someone near enough to them, wears this aura's bonus. */
+    /** Whether they, or someone near enough to them, wears this aura's bonus (not the dead or ghosts). */
     private static boolean auraReaches(Bonus bonus, Player player) {
         double range = bonus.auraRange();
         for (Player other : player.getWorld().getPlayers()) {
-            if (other.getLocation().distanceSquared(player.getLocation()) > range * range) continue;
+            if (!inPlay(other) || other.getLocation().distanceSquared(player.getLocation()) > range * range) continue;
             for (Bonus.Active a : active(other)) if (a.bonus() == bonus) return true;
         }
         return false;
@@ -405,13 +413,12 @@ public final class SetBonuses implements Listener {
 
     /**
      * Every second: what counts does its second's work, and what stopped counting ends. The dead and
-     * dungeon ghosts (who are invulnerable) do no second's work, and what theirs started ends: the
-     * wiki's Wither Armor has "Fixed the Witherborn full set bonus working as a ghost in Dungeons".
+     * dungeon ghosts do no second's work, and what theirs started ends (see {@link #inPlay}).
      */
     private static void second() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             Set<Bonus> counting = new LinkedHashSet<>();
-            if (!player.isDead() && !player.isInvulnerable()) {
+            if (inPlay(player)) {
                 for (Bonus.Active a : active(player)) {
                     counting.add(a.bonus());
                     a.bonus().second(player, a);
