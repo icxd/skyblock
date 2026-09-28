@@ -43,8 +43,8 @@ Skyblocker mods filter. Where they say nothing, the code says UNKNOWN and takes 
 - **Chat line**: "&7Your Giant's Sword hit &c3 &7enemies for &c8,103,803 &7damage." (recorded; one decimal
   when not whole). Names: Giant's Sword (recorded), Implosion, Molten Wave, Spirit Sceptre (the mods'
   patterns); the other area spells use their ability's name (UNKNOWN); single hits have none.
-- **Frozen** mobs (Ice Spray) take 10% more from abilities' hits; from melee and arrows too on Hypixel,
-  not yet (Combat has no factor for what a mob takes).
+- **Frozen** mobs (Ice Spray) take 10% more from every hit of a player's, abilities', melee hits' and
+  arrows' ("take 10% more damage from all sources", the wiki): a mob debuff (`MobDebuffs`, EFFECTS.md).
 
 ## Done
 

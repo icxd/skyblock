@@ -5,12 +5,15 @@ import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
+import net.icxd.dungeons.combat.HitKind;
+import net.icxd.dungeons.combat.MobDebuffs;
 import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
@@ -227,28 +230,40 @@ public final class Mobs implements Listener {
      * through with no vanilla damage, so it still flinches and is knocked back; not if that killed it.
      */
     public static void playerHit(EntityDamageByEntityEvent event, Player player, Live live, double damage, DamageIndicators.Look look) {
+        playerHit(event, player, live, damage, look, HitKind.MELEE, null);
+    }
+
+    /** The same, saying what the hit was and what it was dealt with (for the death event's killing blow). */
+    public static void playerHit(EntityDamageByEntityEvent event, Player player, Live live, double damage, DamageIndicators.Look look,
+                                 HitKind kind, NBTTagCompound weapon) {
         if (live.type.isInvulnerable()) {
             event.setCancelled(true);
             return;
         }
         event.setDamage(0);
         live.hits++;
-        if (damage(live, player, damage, look)) event.setCancelled(true);
+        if (damage(live, player, damage, look, kind, weapon)) event.setCancelled(true);
     }
 
     /**
      * A player deals a mob this much SkyBlock damage, with no vanilla hit needed (an ability's, say): it
      * loses that much health, with its damage number, or dies, dropping what it drops for them. Returns
-     * whether it died.
+     * whether it died. What dealt it isn't said: its killing blow is {@link HitKind#OTHER}'s.
      */
     public static boolean damage(Live live, Player player, double damage, DamageIndicators.Look look) {
+        return damage(live, player, damage, look, HitKind.OTHER, null);
+    }
+
+    /** The same, saying what dealt it and with what (see {@link KillingBlow}). */
+    public static boolean damage(Live live, Player player, double damage, DamageIndicators.Look look, HitKind kind, NBTTagCompound weapon) {
         if (live.type.isInvulnerable() || live.health <= 0) return false;
+        double before = live.health;
         live.health -= damage;
         DamageIndicators.show(live.entity, damage, look);
         DungeonRun run = RunManager.of(player);
         if (run != null) run.damageDealt(player.getUniqueId(), damage);
         if (live.health <= 0) {
-            die(live, player);
+            die(live, player, KillingBlow.of(kind, weapon, damage, before));
             return true;
         }
         live.type.onDamaged(live.entity, player, damage);
@@ -256,31 +271,32 @@ public final class Mobs implements Listener {
         return false;
     }
 
-    private static void die(Live live, Player killer) {
+    private static void die(Live live, Player killer, KillingBlow blow) {
         DungeonRun run = killer == null ? null : RunManager.of(killer);
         if (run != null) run.killed(killer.getUniqueId());
         live.type.onDeath(live.entity, killer);
         Location at = live.entity.getLocation();
         if (killer != null && !live.type.isBoss()) drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer);
         remove(live);
-        died(live, killer, at);
+        died(live, killer, at, blow);
     }
 
     /** Tells the rest of the plugin (Combat XP, coins, the room's starred mobs), once its drops are out. */
-    private static void died(Live live, Player killer, Location at) {
-        if (live.type instanceof DataMob mob) Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, mob, at));
+    private static void died(Live live, Player killer, Location at, KillingBlow blow) {
+        if (live.type instanceof DataMob mob) Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, mob, at, blow));
     }
 
     /**
      * A mob of this kind that isn't spawned here (the Watcher's undeads, which the Blood Room keeps) died
      * on this floor: its drops for the killer (none if nobody killed it), then the same death event as
-     * the others'. Nothing on a floor the kind has no variant on yet.
+     * the others'. Nothing on a floor the kind has no variant on yet. Its killing blow is the one
+     * {@code DungeonMobs.damage} is dealing (see {@link KillingBlow#dealing(KillingBlow)}).
      */
     public static void kindDied(MobKind kind, DungeonFloor floor, Location at, Player killer) {
         MobKind.Variant variant = kind.variant(floor, null);
         if (variant == null) return;
         if (killer != null) drop(variant.drops(), kind.dungeon(), at, killer);
-        Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, kind, variant, false, null, at));
+        Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, kind, variant, false, null, at, KillingBlow.dealing()));
     }
 
     /**
@@ -336,6 +352,7 @@ public final class Mobs implements Listener {
     /** It, its name tag and its passenger, gone. */
     public static void remove(Live live) {
         LIVE.remove(live.entity.getUniqueId());
+        MobDebuffs.forget(live.entity);
         if (live.nameTag != null) live.nameTag.remove();
         if (live.passenger != null) {
             Live passenger = LIVE.remove(live.passenger.getUniqueId());
@@ -345,7 +362,7 @@ public final class Mobs implements Listener {
         live.entity.remove();
     }
 
-    /** Every tick: each mob's own behaviour; mobs whose entity has gone are forgotten. */
+    /** Every tick: each mob's own behaviour, and players' debuffs and damages over time on mobs; mobs whose entity has gone are forgotten. */
     public static void tick() {
         for (Live live : new ArrayList<>(LIVE.values())) {
             if (!live.entity.isValid()) {
@@ -354,6 +371,7 @@ public final class Mobs implements Listener {
             }
             live.type.onTick(live.entity);
         }
+        MobDebuffs.tick();
     }
 
     public static void start() {
@@ -430,7 +448,7 @@ public final class Mobs implements Listener {
         event.getDrops().clear();
         event.setDroppedExp(0);
         remove(live);
-        died(live, null, event.getEntity().getLocation());
+        died(live, null, event.getEntity().getLocation(), null);
     }
 
     /** Their wither skulls don't blow up the world. */

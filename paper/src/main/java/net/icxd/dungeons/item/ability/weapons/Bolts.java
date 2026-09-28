@@ -46,7 +46,7 @@ final class Bolts {
 
     /** The spell's damage on one mob, with its gray number; false if it couldn't be hurt. */
     private static boolean hit(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, LivingEntity mob, double share) {
-        return Hits.hurt(caster, mob, Hits.magic(caster, item, tag, spell, mob) * share * Hits.takenFactor(mob), DamageIndicators.Look.NORMAL);
+        return Hits.hurt(caster, mob, Hits.magic(caster, item, tag, spell, mob) * share * Hits.takenFactor(mob), DamageIndicators.Look.NORMAL, tag);
     }
 
     /**

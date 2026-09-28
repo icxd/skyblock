@@ -303,7 +303,7 @@ public class PlayerListener implements Listener {
         PlayerSession session = PlayerSession.of(player);
         if (session.cooldownLeft("shortbow") > 0) return;
         if (sbItem.shotCooldown() > 0) {
-            int ticks = Damage.shotCooldownTicks(sbItem.shotCooldown(), session.stats().get(Stat.ATTACK_SPEED));
+            int ticks = Damage.shotCooldownTicks(sbItem.shotCooldown(), session.stats().get(Stat.ATTACK_SPEED), Combat.attackSpeedCap(player));
             session.startCooldown("shortbow", ticks * 50L);
         }
         Abilities.handler(shortbow).use(player, sbItem, tag, shortbow);

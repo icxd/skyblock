@@ -2,10 +2,7 @@ package net.icxd.dungeons.item.ability.weapons;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -28,6 +25,10 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
+import net.icxd.dungeons.combat.Debuffs;
+import net.icxd.dungeons.combat.HitKind;
+import net.icxd.dungeons.combat.MobDebuffs;
+import net.icxd.dungeons.combat.MobHits;
 import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.DungeonItems;
@@ -53,9 +54,13 @@ import net.icxd.dungeons.utils.Utils;
  * other effects outside this package find and hurt mobs the same way (EFFECTS.md). Main thread.
  */
 public final class Hits {
-    /** Mobs frozen by an ability (Ice Spray) until when, by entity: "Frozen mobs take 10% increased damage!". */
-    private static final Map<UUID, Long> FROZEN = new HashMap<>();
-    public static final double FROZEN_TAKEN = 1.1;
+    /**
+     * An ability's freeze (Ice Spray) as a debuff on the mob (see {@link MobDebuffs}): "Frozen mobs take 10%
+     * increased damage!", from melee hits and arrows too (they "take 10% more damage from all sources", the
+     * wiki's Ice Spray Wand).
+     */
+    public static final String FROZEN = "frozen";
+    static final double FROZEN_TAKEN = 0.1;
     /** Slowness this strong stops a mob walking (each level takes 15% of its speed). */
     private static final int ROOTED = 6;
 
@@ -64,21 +69,12 @@ public final class Hits {
 
     /** Whether an ability can hurt it: one of SkyBlock's mobs, alive and not invulnerable. Never a player. */
     public static boolean hittable(Entity entity) {
-        if (!(entity instanceof LivingEntity) || entity instanceof Player || entity.isDead()) return false;
-        DungeonMobs.Mob dungeonMob = DungeonMobs.of(entity);
-        if (dungeonMob != null) return !dungeonMob.invulnerable();
-        Mobs.Live mob = Mobs.of(entity);
-        return mob != null && !mob.type().isInvulnerable() && mob.health() > 0;
+        return MobHits.hittable(entity);
     }
 
-    /** What a hit on it is worked out against (it must be {@link #hittable}). */
+    /** What a hit on it is worked out against, with its debuffs (it must be {@link #hittable}). */
     public static Damage.Target target(LivingEntity entity) {
-        DungeonMobs.Mob dungeonMob = DungeonMobs.of(entity);
-        if (dungeonMob != null) {
-            return new Damage.Target(dungeonMob.health(), dungeonMob.maxHealth(), dungeonMob.defense(), dungeonMob.magicResistance(),
-                    dungeonMob.types(), DungeonMobs.hitsTaken(entity));
-        }
-        return Mobs.of(entity).target();
+        return MobHits.target(entity);
     }
 
     /** The mobs it can hurt whose hitbox passes {@code test}, of those in {@code around}, nearest {@code from} first. */
@@ -147,7 +143,7 @@ public final class Hits {
         for (LivingEntity entity : targets) {
             if (!hittable(entity)) continue;
             double damage = magic(caster, item, tag, spell, entity) * takenFactor(entity);
-            if (hurt(caster, entity, damage, DamageIndicators.Look.NORMAL)) tally.add(damage);
+            if (hurt(caster, entity, damage, DamageIndicators.Look.NORMAL, tag)) tally.add(damage);
         }
         return tally;
     }
@@ -264,16 +260,25 @@ public final class Hits {
 
     /**
      * Hurts one of SkyBlock's mobs for this much, with its damage number; false if it can't be hurt. A room
-     * mob waiting for its room to open wakes it first, as a melee hit on one does (through a wall too).
+     * mob waiting for its room to open wakes it first, as a melee hit on one does (through a wall too). It's
+     * an ability's hit: the hit listeners hear of it ({@link Combat#addHitListener}, {@link HitKind#ABILITY}),
+     * with what they hold as the item it was cast with (see the overload with the item's data).
      */
     public static boolean hurt(Player by, LivingEntity entity, double damage, DamageIndicators.Look look) {
+        return hurt(by, entity, damage, look, Combat.skyBlockData(by.getInventory().getItemInMainHand()));
+    }
+
+    /**
+     * The same, cast with the item with this data ({@code tag}; null for none): the one the listeners and
+     * the killing blow are told of. An effect's own damage that shouldn't count as an ability's hit goes
+     * through {@link MobHits#deal} instead.
+     */
+    public static boolean hurt(Player by, LivingEntity entity, double damage, DamageIndicators.Look look, NBTTagCompound tag) {
         if (!hittable(entity)) return false;
-        RunManager.abilityHit(entity);
-        if (DungeonMobs.of(entity) != null) {
-            DungeonMobs.damage(entity, by, damage, look);
-        } else {
-            Mobs.damage(Mobs.of(entity), by, damage, look);
-        }
+        Damage.Target before = target(entity);
+        MobHits.deal(by, entity, damage, look, HitKind.ABILITY, tag);
+        boolean critical = look == DamageIndicators.Look.CRITICAL || look == DamageIndicators.Look.MEGA_CRITICAL;
+        Combat.landed(by, new Combat.Landing(entity, HitKind.ABILITY, critical, tag, null), before, damage, !MobHits.alive(entity));
         return true;
     }
 
@@ -311,7 +316,7 @@ public final class Hits {
                 }
                 for (LivingEntity mob : targets.get()) {
                     if (!hittable(mob)) continue;
-                    hurt(caster, mob, magic(caster, item, tag, spell, mob) * share * takenFactor(mob), DamageIndicators.Look.NORMAL);
+                    hurt(caster, mob, magic(caster, item, tag, spell, mob) * share * takenFactor(mob), DamageIndicators.Look.NORMAL, tag);
                 }
             }
         }.runTaskTimer(Dungeons.getInstance(), every, every);
@@ -327,15 +332,12 @@ public final class Hits {
 
     /**
      * Frozen for this long: it can't walk (its attacks and abilities go on: "Frozen mobs can still take
-     * knockback and use abilities", the wiki's Ice Spray Wand), and takes 10% more from abilities' hits
-     * (from melee and arrows too on Hypixel: not yet, Combat has no factor for what a mob takes).
+     * knockback and use abilities", the wiki's Ice Spray Wand), and takes 10% more from every hit of a
+     * player's (a {@link MobDebuffs} debuff, which melee hits and arrows read too).
      */
     public static void freeze(LivingEntity entity, int ticks) {
         root(entity, ticks);
-        long now = System.currentTimeMillis();
-        // The ones that thawed (or died frozen) are forgotten.
-        FROZEN.values().removeIf(until -> until <= now);
-        FROZEN.put(entity.getUniqueId(), now + ticks * 50L);
+        MobDebuffs.add(entity, new Debuffs.Spec(FROZEN, Debuffs.Kind.TAKEN, FROZEN_TAKEN, 1, ticks * 50L), null);
     }
 
     /** Can't walk for this long ("rooting" them, as Shadow Fury does); nothing else. */
@@ -343,12 +345,8 @@ public final class Hits {
         entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, ROOTED, false, false, false));
     }
 
-    /** What an ability's hit on it is multiplied by: 1.1 while it's frozen, else 1. */
+    /** What an ability's hit on it is multiplied by: its debuffs' (1.1 while it's frozen), else 1. */
     public static double takenFactor(Entity entity) {
-        Long until = FROZEN.get(entity.getUniqueId());
-        if (until == null) return 1;
-        if (until > System.currentTimeMillis()) return FROZEN_TAKEN;
-        FROZEN.remove(entity.getUniqueId());
-        return 1;
+        return MobDebuffs.takenFactor(entity);
     }
 }

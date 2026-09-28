@@ -36,11 +36,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.ToDoubleBiFunction;
+import java.util.function.ToDoubleFunction;
 
 /**
  * Players' hits on SkyBlock's mobs, worked out by {@link Damage}: a sword, a fist or any other item
  * (fists crit too), and arrows with the bow they left (see {@link Shots}), and their Ferocity's extra
- * strikes. Main thread.
+ * strikes. What effects hook into (EFFECTS.md): buffs on a hit as it lands ({@link #addHitBuffs}), what
+ * happens once it has ({@link #addHitListener}: melee hits, arrows, Ferocity strikes and abilities' hits),
+ * players' hits on other players ({@link #addPlayerHitListener}) and the Attack Speed cap. Main thread.
  */
 public final class Combat {
     /**
@@ -49,6 +52,10 @@ public final class Combat {
      */
     private static final List<ToDoubleBiFunction<Player, Boolean>> MULTIPLIERS = new ArrayList<>();
     private static final List<HitBuffs> HIT_BUFFS = new ArrayList<>();
+    private static final List<LandingBuffs> LANDING_BUFFS = new ArrayList<>();
+    private static final List<HitListener> HIT_LISTENERS = new ArrayList<>();
+    private static final List<PlayerHitListener> PLAYER_HIT_LISTENERS = new ArrayList<>();
+    private static final List<ToDoubleFunction<Player>> ATTACK_SPEED_CAPS = new ArrayList<>();
 
     /**
      * A buff on one hit that has landed, which may depend on what it hit (armor bonuses: Reaper Armor
@@ -69,6 +76,46 @@ public final class Combat {
         HitBuff on(Player player, Damage.Attacker attacker, Damage.Target target);
     }
 
+    /**
+     * A hit as it lands on a mob: the mob itself, what hit it (a melee hit, an arrow, a Ferocity strike or an
+     * ability's hit), whether it crits, the item it was dealt with (the held weapon's data, the bow an arrow
+     * left, the item an ability was cast with; null for a fist, or anything that isn't a SkyBlock item) and
+     * the arrow for an arrow's (null otherwise).
+     */
+    public record Landing(LivingEntity entity, HitKind kind, boolean critical, NBTTagCompound weapon, Projectile projectile) {
+    }
+
+    /**
+     * {@link HitBuffs} that need the mob or the crit roll too (Livid's crits from behind, a bow's "+100%
+     * damage to Undead"): asked for melee hits and arrows, as HitBuffs are.
+     */
+    @FunctionalInterface
+    public interface LandingBuffs {
+        HitBuff on(Player player, Damage.Attacker attacker, Damage.Target target, Landing landing);
+    }
+
+    /**
+     * Something that happens once a player's hit on a mob has landed and done its damage: {@code target} is
+     * the mob as the hit was worked out against (its health before it), {@code damage} what it did, and
+     * {@code killed} whether that killed it. Heard for melee hits, arrows, each Ferocity strike and each of an
+     * ability's hits ({@link Landing#kind}), not for an effect's own damage ({@link MobHits#deal}), so a
+     * listener that deals damage that way can't set itself off again.
+     */
+    @FunctionalInterface
+    public interface HitListener {
+        void landed(Player player, Landing landing, Damage.Target target, double damage, boolean killed);
+    }
+
+    /**
+     * A player's melee hit or arrow on another player (a teammate: the Stinger Bow's Sting), with the item
+     * it was dealt with ({@link Landing#weapon}) and the arrow. It does no damage whatever the listeners do,
+     * as before (a SkyBlock item's hit on a player is called off).
+     */
+    @FunctionalInterface
+    public interface PlayerHitListener {
+        void hit(Player attacker, Player target, HitKind kind, NBTTagCompound weapon, Projectile projectile);
+    }
+
     private Combat() {
     }
 
@@ -82,8 +129,23 @@ public final class Combat {
         HIT_BUFFS.add(buffs);
     }
 
+    /** Adds buffs on hits that need the mob or the crit roll (see {@link LandingBuffs}). */
+    public static void addHitBuffs(LandingBuffs buffs) {
+        LANDING_BUFFS.add(buffs);
+    }
+
+    /** Adds something that happens once a hit has landed (see {@link HitListener}). */
+    public static void addHitListener(HitListener listener) {
+        HIT_LISTENERS.add(listener);
+    }
+
+    /** Adds something that happens when a player hits another player (see {@link PlayerHitListener}). */
+    public static void addPlayerHitListener(PlayerHitListener listener) {
+        PLAYER_HIT_LISTENERS.add(listener);
+    }
+
     /** The attacker with the {@link HitBuff}s on this hit of theirs on this target. */
-    static Damage.Attacker buffed(Player player, Damage.Attacker attacker, Damage.Target target) {
+    static Damage.Attacker buffed(Player player, Damage.Attacker attacker, Damage.Target target, Landing landing) {
         double additive = 0;
         double multiplier = 1;
         for (HitBuffs buffs : HIT_BUFFS) {
@@ -92,7 +154,22 @@ public final class Combat {
             additive += buff.additive();
             multiplier *= buff.multiplier();
         }
+        for (LandingBuffs buffs : LANDING_BUFFS) {
+            HitBuff buff = buffs.on(player, attacker, target, landing);
+            if (buff == null) continue;
+            additive += buff.additive();
+            multiplier *= buff.multiplier();
+        }
         return Damage.buffed(attacker, target, additive, multiplier);
+    }
+
+    /**
+     * Tells the hit listeners a hit has landed (see {@link HitListener}): the hit paths call it once the
+     * damage is dealt, this class for melee hits, arrows and Ferocity strikes, {@code Hits.hurt} for abilities.
+     */
+    public static void landed(Player player, Landing landing, Damage.Target target, double damage, boolean killed) {
+        if (!landing.kind().isHit()) return;
+        for (HitListener listener : HIT_LISTENERS) listener.landed(player, landing, target, damage, killed);
     }
 
     /** The product of the multiplicative buffs on this player's hit. */
@@ -110,7 +187,7 @@ public final class Combat {
     }
 
     /** A SkyBlock item's data, or null (not one, or empty). */
-    static NBTTagCompound skyBlockData(ItemStack stack) {
+    public static NBTTagCompound skyBlockData(ItemStack stack) {
         if (stack == null || stack.getType() == Material.AIR) return null;
         NBTTagCompound tag = ItemNBT.read(stack);
         return tag == null || ItemRegistry.get(tag.getString("id")) == null ? null : tag;
@@ -143,7 +220,9 @@ public final class Combat {
     /**
      * A player's hit (or arrow) on an entity. On one of SkyBlock's mobs it does SkyBlock damage, and
      * anything else they throw at one (a snowball, an egg, a pearl) does nothing; a SkyBlock item's hit
-     * on anything else does nothing, and other hits stay vanilla.
+     * on anything else does nothing, and other hits stay vanilla. A hit on another player tells the
+     * {@link PlayerHitListener}s first. Once a hit on a mob has done its damage, the {@link HitListener}s
+     * hear of it, then its Ferocity strikes follow.
      */
     public static void playerHit(EntityDamageByEntityEvent event) {
         Player player = playerBehind(event.getDamager());
@@ -152,6 +231,7 @@ public final class Combat {
         Mobs.Live mob = dungeonMob == null ? Mobs.of(target) : null;
         Projectile projectile = event.getDamager() instanceof Projectile p ? p : null;
         Shots.Shot shot = projectile == null ? null : Shots.take(projectile);
+        if (target instanceof Player other && !other.equals(player)) hitPlayer(player, other, projectile, shot);
         if (dungeonMob == null && mob == null) {
             if (skyBlockData(player.getInventory().getItemInMainHand()) != null) event.setCancelled(true);
             return;
@@ -161,33 +241,44 @@ public final class Combat {
             return;
         }
 
-        Damage.Target on = dungeonMob != null
-                ? new Damage.Target(dungeonMob.health(), dungeonMob.maxHealth(), dungeonMob.defense(), dungeonMob.magicResistance(), dungeonMob.types(),
-                        DungeonMobs.hitsTaken(target))
-                : mob.target();
+        Damage.Target on = MobHits.target(target);
         Damage.Attacker attacker;
         boolean critical;
         DamageIndicators.Look look;
+        NBTTagCompound weapon;
         if (shot != null) {
             attacker = shot.attacker(projectile.getLocation());
             critical = shot.critical();
             look = DamageIndicators.Look.of(critical, shot.megaCritical());
+            weapon = shot.bow();
         } else {
-            attacker = attacker(player, projectile == null ? skyBlockData(player.getInventory().getItemInMainHand()) : null, projectile != null, 0);
+            weapon = projectile == null ? skyBlockData(player.getInventory().getItemInMainHand()) : null;
+            attacker = attacker(player, weapon, projectile != null, 0);
             critical = Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
             look = DamageIndicators.Look.of(critical, false);
         }
-        double damage = Damage.hit(buffed(player, attacker, on), on, critical);
+        Landing landing = new Landing(target, projectile != null ? HitKind.ARROW : HitKind.MELEE, critical, weapon, projectile);
+        // What its debuffs make it take ("Frozen mobs take 10% increased damage"), on the whole hit.
+        double damage = Math.floor(Damage.exact(buffed(player, attacker, on, landing), on, critical) * MobDebuffs.takenFactor(target));
 
         boolean invulnerable = dungeonMob != null ? dungeonMob.invulnerable() : mob.type().isInvulnerable();
-        if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED));
+        if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED), attackSpeedCap(player));
         if (!invulnerable && RunManager.inRun(player)) restoreMana(player);
-        if (dungeonMob != null) DungeonMobs.playerHit(event, player, dungeonMob, damage, look);
-        else Mobs.playerHit(event, player, mob, damage, look);
+        if (dungeonMob != null) DungeonMobs.playerHit(event, player, dungeonMob, damage, look, landing.kind(), weapon);
+        else Mobs.playerHit(event, player, mob, damage, look, landing.kind(), weapon);
         if (!invulnerable) {
+            landed(player, landing, on, damage, !MobHits.alive(target));
             double ferocity = shot != null ? shot.ferocity() : PlayerSession.of(player).stats().get(Stat.FEROCITY);
-            ferocity(player, target, damage, look, ferocity, projectile != null);
+            ferocity(player, landing, damage, look, ferocity);
         }
+    }
+
+    /** A player's melee hit or arrow on another one: the listeners hear of it (see {@link PlayerHitListener}). */
+    private static void hitPlayer(Player player, Player other, Projectile projectile, Shots.Shot shot) {
+        if (PLAYER_HIT_LISTENERS.isEmpty()) return;
+        NBTTagCompound weapon = shot != null ? shot.bow() : projectile == null ? skyBlockData(player.getInventory().getItemInMainHand()) : null;
+        HitKind kind = projectile != null ? HitKind.ARROW : HitKind.MELEE;
+        for (PlayerHitListener listener : PLAYER_HIT_LISTENERS) listener.hit(player, other, kind, weapon, projectile);
     }
 
     /**
@@ -195,16 +286,20 @@ public final class Combat {
      * hit's damage again, crit or not as the hit was (the wiki doesn't say they're worked out anew; they
      * don't roll a crit of their own), with its own damage number looking as the hit's did, and a red
      * slash across the target; they stop once it's dead, and one can kill it. They aren't hits: no mana
-     * back, no knockback, and First Strike and the like don't count them. None for a melee hit from more
-     * than 6 blocks (from their feet to its: the wiki doesn't say where it measures from), or for a
-     * Berserk in a dungeon run.
+     * back, no knockback, and First Strike and the like don't count them; the hit listeners hear of each as
+     * {@link HitKind#FEROCITY} ("Each Ferocity strike counts as a hit" for Fatal Tempo, the wiki). None for a
+     * melee hit from more than 6 blocks (from their feet to its: the wiki doesn't say where it measures
+     * from), or for a Berserk in a dungeon run.
      */
-    private static void ferocity(Player player, LivingEntity target, double damage, DamageIndicators.Look look, double ferocity, boolean ranged) {
+    private static void ferocity(Player player, Landing hit, double damage, DamageIndicators.Look look, double ferocity) {
+        LivingEntity target = hit.entity();
         if (ferocity <= 0 || !player.getWorld().equals(target.getWorld())) return;
-        if (!Ferocity.inRange(ranged, player.getLocation().distance(target.getLocation())) || ferocityDisabled(player)) return;
+        if (!Ferocity.inRange(hit.kind() == HitKind.ARROW, player.getLocation().distance(target.getLocation())) || ferocityDisabled(player)) return;
         int strikes = Ferocity.extraStrikes(ferocity, ThreadLocalRandom.current().nextDouble());
+        if (strikes <= 0) return;
+        Landing strike = new Landing(target, HitKind.FEROCITY, hit.critical(), hit.weapon(), null);
         for (int i = 1; i <= strikes; i++) {
-            Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> strike(player, target, damage, look),
+            Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> strike(player, strike, damage, look),
                     (long) i * Ferocity.STRIKE_DELAY_TICKS);
         }
     }
@@ -219,15 +314,18 @@ public final class Combat {
         return user != null && DungeonProfile.selectedClass(user) == DungeonClass.BERSERK;
     }
 
-    /** One extra strike, if the target is still one of SkyBlock's mobs that can be hurt. */
-    private static void strike(Player player, LivingEntity target, double damage, DamageIndicators.Look look) {
+    /** One extra strike, if the target is still one of SkyBlock's mobs that can be hurt; then the hit listeners hear of it. */
+    private static void strike(Player player, Landing strike, double damage, DamageIndicators.Look look) {
+        LivingEntity target = strike.entity();
         if (!player.isOnline() || !target.isValid() || target.isDead()) return;
         DungeonMobs.Mob dungeonMob = DungeonMobs.of(target);
         Mobs.Live mob = dungeonMob == null ? Mobs.of(target) : null;
         if (dungeonMob != null ? dungeonMob.invulnerable() : mob == null || mob.type().isInvulnerable()) return;
+        Damage.Target on = MobHits.target(target);
         slash(player, target);
-        if (dungeonMob != null) DungeonMobs.damage(target, player, damage, look);
-        else Mobs.damage(mob, player, damage, look);
+        if (dungeonMob != null) DungeonMobs.damage(target, player, damage, look, HitKind.FEROCITY, strike.weapon());
+        else Mobs.damage(mob, player, damage, look, HitKind.FEROCITY, strike.weapon());
+        landed(player, strike, on, damage, !MobHits.alive(target));
     }
 
     /** A strike's red slash: dust in a line across the target, sideways to the player, one way or the other at random. */
@@ -245,10 +343,26 @@ public final class Combat {
      * Attack Speed shortens how long the mob can't be hurt again: vanilla lets a hit through once the
      * invulnerability left is half its maximum, so the maximum is twice the ticks.
      */
-    private static void attackSpeed(LivingEntity target, double attackSpeed) {
-        int ticks = 2 * Damage.invulnerabilityTicks(attackSpeed);
+    private static void attackSpeed(LivingEntity target, double attackSpeed, double cap) {
+        int ticks = 2 * Damage.invulnerabilityTicks(attackSpeed, cap);
         target.setMaximumNoDamageTicks(ticks);
         target.setNoDamageTicks(ticks);
+    }
+
+    /**
+     * Adds what raises a player's Attack Speed cap (100), by how much (Newton's Demise's "+50 Attack Speed
+     * cap"): the most of them counts, as for the Speed cap (UNKNOWN whether raises add up; only one source
+     * is known).
+     */
+    public static void addAttackSpeedCap(ToDoubleFunction<Player> raise) {
+        ATTACK_SPEED_CAPS.add(raise);
+    }
+
+    /** Their Attack Speed cap: 100, and the most that raises it. Melee hits' and shortbows' Attack Speed stop there. */
+    public static double attackSpeedCap(Player player) {
+        double raise = 0;
+        for (ToDoubleFunction<Player> cap : ATTACK_SPEED_CAPS) raise = Math.max(raise, cap.applyAsDouble(player));
+        return Damage.ATTACK_SPEED_CAP + raise;
     }
 
     /** In dungeons each melee or arrow hit restores mana (fractions of a point are dropped: the pool is whole). */
