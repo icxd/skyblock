@@ -1,6 +1,5 @@
 package net.icxd.dungeons.item.bonus;
 
-import net.icxd.dungeons.item.enchanting.EnchantmentType;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.stats.ItemStats;
 import net.icxd.dungeons.stats.Stat;
@@ -81,15 +80,15 @@ final class DragonSets {
 
     /**
      * "Increases the strength of Growth, Protection, Feather Falling, Sugar Rush, and True Protection while
-     * worn", on the set's own pieces (the wiki's trivia: it doesn't change other armor's). How much is
-     * APPROX: the wiki's history's last numbers, from 2019 (Growth +25 Health a level, Protection +5
-     * Defense, Sugar Rush +3 Speed, True Protection +8 True Defense), where they're more than the
-     * enchantment's own.
+     * worn", on the set's own pieces (the wiki's trivia: it doesn't change other armor's), by the wiki's
+     * Enchantment Buffs on top of the enchantment's own: +10 Health a level of Growth, +2 Defense a level
+     * of Protection, +1 Speed of Sugar Rush, +3 True Defense of True Protection (their 2019 history's 25,
+     * 5, 3 and 8 a level were these on the enchantments of then).
      */
     static final class OldBlood extends Blood {
         private static final Map<String, Stat> STATS = Map.of("growth", Stat.HEALTH, "protection", Stat.DEFENSE, "sugar_rush", Stat.SPEED,
                 "true_protection", Stat.TRUE_DEFENSE);
-        private static final Map<String, Double> PER_LEVEL = Map.of("growth", 25.0, "protection", 5.0, "sugar_rush", 3.0, "true_protection", 8.0);
+        private static final Map<String, Double> PER_LEVEL = Map.of("growth", 10.0, "protection", 2.0, "sugar_rush", 1.0, "true_protection", 3.0);
 
         @Override
         public String name() {
@@ -103,17 +102,14 @@ final class DragonSets {
                 for (int i = 0; i < enchantments.size(); i++) {
                     String name = enchantments.get(i).getString("name").toLowerCase();
                     Stat stat = STATS.get(name);
-                    EnchantmentType type = EnchantmentType.getByNamespace(name);
-                    if (stat == null || type == null) continue;
-                    int level = enchantments.get(i).getInt("lvl");
-                    stats.add(stat, extra(PER_LEVEL.get(name), level, type.getStats(level).get(stat)));
+                    if (stat != null) stats.add(stat, extra(name, enchantments.get(i).getInt("lvl")));
                 }
             }
         }
 
-        /** What it adds to an enchantment that gives {@code own} at this level: up to {@code perLevel} a level. */
-        static double extra(double perLevel, int level, double own) {
-            return Math.max(0, perLevel * level - own);
+        /** What it adds to this enchantment (its id) at this level; 0 for one it doesn't strengthen. */
+        static double extra(String enchantment, int level) {
+            return PER_LEVEL.getOrDefault(enchantment, 0.0) * Math.max(0, level);
         }
     }
 

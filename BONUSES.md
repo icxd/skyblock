@@ -110,7 +110,7 @@ LATER: waits for the system named.
 | Newton's Demise | full set | THERMODYNAMIC (4) | **LATER** a hook on the Attack Speed cap (Damage caps it at 100) |  |
 | Night Affinity | full set | MUSHROOM (4) | **DONE** Night Vision while worn | [Mushroom Armor](https://hypixelskyblock.minecraft.wiki/w/Mushroom_Armor) |
 | Octodexterity | full set | TARANTULA (4) | **DONE** Tarantula: every 4th landed melee hit x2 (multiplicative); Venom LATER (mobs don't heal) | [Tarantula Armor](https://hypixelskyblock.minecraft.wiki/w/Tarantula_Armor) |
-| Old Blood | full set | OLD_DRAGON (4) | **APPROX** the set's own Growth/Protection/Sugar Rush/True Protection at 25/5/3/8 a level (the wiki's 2019 numbers); Feather Falling LATER (no fall damage rules) | [Old Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Old_Dragon_Armor), [Growth](https://hypixelskyblock.minecraft.wiki/w/Growth) |
+| Old Blood | full set | OLD_DRAGON (4) | **APPROX** the set's own Growth/Protection/Sugar Rush/True Protection +10 Health/+2 Defense/+1 Speed/+3 True Defense a level on top of their own (the wiki's Enchantment Buffs); Feather Falling LATER (no fall damage rules) | [Old Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Old_Dragon_Armor), [Growth](https://hypixelskyblock.minecraft.wiki/w/Growth) |
 | Protective Blood | full set | PROTECTOR_DRAGON (4) | **DONE** the pieces' Defense +1% per whole missing percent of health | [Protector Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Protector_Dragon_Armor) |
 | Refraction | full set | CRYSTAL (4) | **LATER** light-level stats with a live lore line |  |
 | Regenerative Howl | full set | WEREWOLF (4) | **LATER** a hook on Ferocity strikes |  |
@@ -242,7 +242,6 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   shows grey); Hydra Strike's numbers round to one decimal, halves to even (matches the data's 2.8
   and 4.2).
 - Strong Blood's +5 Strength lasts as long as the cast's speed; the Aspect of the Void doesn't get it.
-- Old Blood's numbers are the wiki's from 2019.
 
 ## LATER, by what they wait for
 

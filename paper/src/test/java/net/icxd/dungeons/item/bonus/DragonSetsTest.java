@@ -23,10 +23,11 @@ class DragonSetsTest {
 
     @Test
     void oldAndProtectiveBlood() {
-        // Growth V gives +75 Health; Old Blood makes it 25 a level, 125.
-        assertEquals(50, DragonSets.OldBlood.extra(25, 5, 75), EPSILON);
-        // Never less than the enchantment's own.
-        assertEquals(0, DragonSets.OldBlood.extra(5, 7, 40), EPSILON);
+        // On top of the enchantment's own: Growth V +50 Health, Protection VII +14 Defense, True Protection I +3.
+        assertEquals(50, DragonSets.OldBlood.extra("growth", 5), EPSILON);
+        assertEquals(14, DragonSets.OldBlood.extra("protection", 7), EPSILON);
+        assertEquals(3, DragonSets.OldBlood.extra("true_protection", 1), EPSILON);
+        assertEquals(0, DragonSets.OldBlood.extra("sharpness", 5), EPSILON);
         // 600 Defense on the pieces at 70% health: +30%.
         assertEquals(180, DragonSets.ProtectiveBlood.extra(600, 0.7), EPSILON);
         assertEquals(0, DragonSets.ProtectiveBlood.extra(600, 1), EPSILON);
