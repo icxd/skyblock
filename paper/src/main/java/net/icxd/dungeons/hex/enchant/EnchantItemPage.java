@@ -21,7 +21,8 @@ import net.icxd.dungeons.utils.Utils;
  * "The Hex ➜ Enchant Item", as the wiki's Weapon and Armor tabs and NEU's Hex have it: the enchantments the Hex has
  * for the item (the normal ones, or the ultimate ones: both categories open this page), 15 a page row by row, each an
  * enchanted book saying what its lowest level does and whether the item has it, that opens its levels ({@link
- * EnchantLevelPage}). The header in 28 (Enchant Item) and the Sort in 51. The wiki's screens have Bookshelf Power in 48, but SkyBlock has none since 0.26.1, so 48 is glass. Main thread.
+ * EnchantLevelPage}). The header in 28 (Enchant Item), Experience Bottles in 50 ({@link BottlesPage}) and the Sort in
+ * 51. The wiki's screens have Bookshelf Power in 48, but SkyBlock has none since 0.26.1, so 48 is glass. Main thread.
  */
 public final class EnchantItemPage extends HexPage {
     /** How the list is sorted: the Sort button goes through them in this order. */
@@ -42,7 +43,7 @@ public final class EnchantItemPage extends HexPage {
         }
     }
 
-    /** Which list, sorted how, on which page: where Go Back on a level page takes them. */
+    /** Which list, sorted how, on which page: where Go Back on a level page or the bottles takes them. */
     public record Shown(boolean ultimate, Sort sort, int page) {
         EnchantItemPage open(HexSession session) {
             EnchantItemPage page = new EnchantItemPage(session, ultimate);
@@ -84,7 +85,8 @@ public final class EnchantItemPage extends HexPage {
 
     @Override
     protected Map<Integer, Entry> extras() {
-        return Map.of(FAR_RIGHT, Entry.of(sortButton(sort), () -> {
+        return Map.of(RIGHT, Entry.of(bottlesButton(), () -> session.open(new BottlesPage(session, shown(), null))),
+                FAR_RIGHT, Entry.of(sortButton(sort), () -> {
                     sort = sort.next();
                     page(0);
                 }));
@@ -131,6 +133,15 @@ public final class EnchantItemPage extends HexPage {
         List<String> lines = new ArrayList<>(at.lines() != null ? at.lines() : Text.wrap(at.text(), Text.LORE_WIDTH));
         if (at.tierUp() != null) lines.add(at.tierUp());
         return lines;
+    }
+
+    /**
+     * Experience Bottles, in 50 (the wiki's): to Bottles of Enchanting. Hypixel's also offers the Bazaar's; there's
+     * none here, so its lines about buying are left out (ours).
+     */
+    static Icon bottlesButton() {
+        return new Icon(Material.EXPERIENCE_BOTTLE, "&3Experience Bottles", "&7Missing experience?", "&7Simple! Just consume the",
+                "&3Experience Bottles &7from your", "&7inventories directly!", "", "&eClick to view!");
     }
 
     /** The Sort, in 51 (the wiki's): the one in use marked "&b▶ ". */

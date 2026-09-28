@@ -26,7 +26,7 @@ import net.icxd.dungeons.utils.Utils;
 /**
  * "The Hex ➜ Enchant Item ➜ <Enchant>" (SkyblockAPI's and NEU's name for it): an enchantment's levels, one enchanted
  * book a level from its lowest to its highest, row by row from 12 (UNKNOWN: their order on Hypixel, U8), with the
- * header as on the list, and no Sort. Go Back is "To Enchant Item".
+ * header and Experience Bottles as on the list, and no Sort. Go Back is "To Enchant Item".
  *
  * <p>A book says what its level does, what it takes off the item, and what it costs, and a click does it (see
  * EnchantRules#choose): on the item's level it takes the enchantment off, above it puts this one on. It costs its
@@ -76,6 +76,11 @@ public final class EnchantLevelPage extends HexPage {
             entries.add(Entry.of(icon(data, offer), () -> choose(offer)));
         }
         return entries;
+    }
+
+    @Override
+    protected Map<Integer, Entry> extras() {
+        return Map.of(RIGHT, Entry.of(EnchantItemPage.bottlesButton(), () -> session.open(new BottlesPage(session, list, enchantment))));
     }
 
     @Override

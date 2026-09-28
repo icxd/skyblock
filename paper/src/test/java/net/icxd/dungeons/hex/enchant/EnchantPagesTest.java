@@ -19,7 +19,7 @@ import net.icxd.dungeons.item.enchanting.EnchantmentData;
 import net.icxd.dungeons.item.enchanting.FakeEnchantments;
 import net.icxd.dungeons.menu.Icon;
 
-/** The Enchant Item pages, as data, against the wiki's screens (a made-up table). */
+/** The Enchant Item pages and Bottles of Enchanting, as data, against the wiki's screens (a made-up table). */
 class EnchantPagesTest {
     private EnchantmentData data;
 
@@ -61,12 +61,14 @@ class EnchantPagesTest {
         return entries.stream().map(EnchantmentData.Entry::id).toList();
     }
 
-    /** The wiki's Sort. */
+    /** The wiki's Sort and Experience Bottles (without the Bazaar's lines). */
     @Test
     void buttons() {
         assertEquals(new Icon(Material.HOPPER, "&aSort", "&7Change how Enchantments are", "&7sorted.", "", "&b▶ Default",
                 "&7Missing Enchantments First", "&7A to Z", "&7Z to A", "", "&eClick to switch sort!"), EnchantItemPage.sortButton(Sort.DEFAULT));
         assertEquals("&b▶ A to Z", EnchantItemPage.sortButton(Sort.A_TO_Z).lore().get(5));
+        assertEquals(new Icon(Material.EXPERIENCE_BOTTLE, "&3Experience Bottles", "&7Missing experience?", "&7Simple! Just consume the",
+                "&3Experience Bottles &7from your", "&7inventories directly!", "", "&eClick to view!"), EnchantItemPage.bottlesButton());
     }
 
     private static final List<String> BLOCK = List.of("&7Cost", "&3100 Exp Levels &a✔", "", "&eClick to enchant!");
@@ -108,5 +110,42 @@ class EnchantPagesTest {
         assertEquals("&eClick to enchant!", EnchantLevelPage.action(Action.APPLY));
         assertEquals("&eClick to upgrade!", EnchantLevelPage.action(Action.UPGRADE));
         assertEquals("&eClick to remove!", EnchantLevelPage.action(Action.REMOVE));
+    }
+
+    /** The wiki's Experience Bottle: 5% more a level of Enchanting, rounded down; 4x at 60. */
+    @Test
+    void bottleOrbs() {
+        assertEquals(8, BottlesPage.orbs(8, 0));
+        assertEquals(8, BottlesPage.orbs(8, 2));
+        assertEquals(9, BottlesPage.orbs(8, 3));
+        assertEquals(10, BottlesPage.orbs(8, 7));
+        assertEquals(23, BottlesPage.orbs(8, 38));
+        assertEquals(32, BottlesPage.orbs(8, 60));
+        assertEquals(6_000, BottlesPage.orbs(1_500, 60));
+        assertEquals(1_000_000, BottlesPage.orbs(250_000, 60));
+        assertEquals(2_000_000, BottlesPage.orbs(500_000, 60));
+    }
+
+    /** Minecraft's levels: 7 points to level 1, 112 from 30 to 31. */
+    @Test
+    void levelsAfter() {
+        assertEquals(0, BottlesPage.levelAfter(0, 0, 6));
+        assertEquals(1, BottlesPage.levelAfter(0, 0, 7));
+        assertEquals(1, BottlesPage.levelAfter(0, 0.5f, 7));
+        assertEquals(2, BottlesPage.levelAfter(0, 0, 16));
+        assertEquals(31, BottlesPage.levelAfter(30, 0, 112));
+        // 1,395 points is level 30.
+        assertEquals(30, BottlesPage.levelAfter(0, 0, 1_395));
+    }
+
+    @Test
+    void bottles() {
+        assertEquals(List.of("EXP_BOTTLE", "GRAND_EXP_BOTTLE", "TITANIC_EXP_BOTTLE", "COLOSSAL_EXP_BOTTLE"),
+                BottlesPage.BOTTLES.stream().map(BottlesPage.Bottle::id).toList());
+        List<String> block = List.of("&7Cost", "&aGrand Experience Bottle &c✖", "", "&cYou don't have that in your", "&cinventories!");
+        assertEquals(new Icon(Material.EXPERIENCE_BOTTLE, "&aGrand Experience Bottle", "&7Grants &33,540 &7experience orbs.", "",
+                        "&7Your Exp Level: &35", "&7Level When Applied: &325", "", "&7Cost", "&aGrand Experience Bottle &c✖", "",
+                        "&cYou don't have that in your", "&cinventories!"),
+                BottlesPage.icon(BottlesPage.BOTTLES.get(1), 3_540, 5, 25, block));
     }
 }
