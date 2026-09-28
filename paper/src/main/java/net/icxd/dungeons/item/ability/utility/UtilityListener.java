@@ -11,7 +11,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
@@ -99,6 +101,20 @@ public final class UtilityListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onTarget(EntityTargetEvent event) {
         if (event.getTarget() != null && event.getTarget().getScoreboardTags().contains(NOT_A_MOB)) event.setCancelled(true);
+    }
+
+    /**
+     * Nor is it anything to use: no lead or name tag on a veil's creeper, and no flint and steel, which would
+     * set a charged creeper off (its fuse burns without AI) among the players around it.
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onUseProp(PlayerInteractEntityEvent event) {
+        if (event.getRightClicked().getScoreboardTags().contains(NOT_A_MOB)) event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPropExplode(ExplosionPrimeEvent event) {
+        if (event.getEntity().getScoreboardTags().contains(NOT_A_MOB)) event.setCancelled(true);
     }
 
     /** "Cooldown resets on kills". */
