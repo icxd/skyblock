@@ -4,6 +4,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.stats.Stats;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 
@@ -31,5 +32,13 @@ public interface ItemBehaviour {
 
     /** What holding it does to the holder's finished stats (everything else already in them); nothing unless it says. */
     default void whileHeld(Stats stats) {
+    }
+
+    /**
+     * The same, knowing who holds it and its data (the Necron's Blades' stats by the holder's Catacombs level,
+     * {@code ItemBuilder.catacombsLevel}); by default the one above.
+     */
+    default void whileHeld(Player holder, NBTTagCompound tag, Stats stats) {
+        whileHeld(stats);
     }
 }
