@@ -105,6 +105,19 @@ class EnchantPagesTest {
         assertEquals("&d&lOne For All I", EnchantLevelPage.icon(data, data.get("one_for_all"), offer(1, apply, false, null), BLOCK).name());
     }
 
+    /** Each level from the lowest, and the item's own past them (a Silex's Efficiency X), to take it off. */
+    @Test
+    void levelsShown() {
+        EnchantmentData.Entry sharpness = data.get("sharpness");
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), EnchantLevelPage.levels(sharpness, null));
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), EnchantLevelPage.levels(sharpness, 5));
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 10), EnchantLevelPage.levels(sharpness, 10));
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), EnchantLevelPage.levels(sharpness, 0));
+        // It has no text there: the book is only what a click does.
+        Change remove = new Change(Action.REMOVE, Map.of(), List.of());
+        assertEquals(List.of(EnchantLevelPage.REMOVE), EnchantLevelPage.icon(data, sharpness, offer(10, remove, false, null), List.of()).lore());
+    }
+
     @Test
     void actions() {
         assertEquals("&eClick to enchant!", EnchantLevelPage.action(Action.APPLY));

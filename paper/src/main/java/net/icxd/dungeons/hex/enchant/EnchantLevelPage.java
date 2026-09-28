@@ -25,8 +25,9 @@ import net.icxd.dungeons.utils.Utils;
 
 /**
  * "The Hex ➜ Enchant Item ➜ <Enchant>" (SkyblockAPI's and NEU's name for it): an enchantment's levels, one enchanted
- * book a level from its lowest to its highest, row by row from 12 (UNKNOWN: their order on Hypixel, U8), with the
- * header and Experience Bottles as on the list, and no Sort. Go Back is "To Enchant Item".
+ * book a level from its lowest to its highest (and the item's own, if it's past them), row by row from 12 (UNKNOWN:
+ * their order on Hypixel, U8), with the header and Experience Bottles as on the list, and no Sort. Go Back is "To
+ * Enchant Item".
  *
  * <p>A book says what its level does, what it takes off the item, and what it costs, and a click does it (see
  * EnchantRules#choose): on the item's level it takes the enchantment off, above it puts this one on. It costs its
@@ -71,11 +72,24 @@ public final class EnchantLevelPage extends HexPage {
         EnchantmentData data = EnchantmentData.current();
         Map<String, Integer> on = EnchantRules.on(item.tag());
         List<Entry> entries = new ArrayList<>();
-        for (int level = enchantment.min(); level <= enchantment.max(); level++) {
+        for (int level : levels(enchantment, on.get(enchantment.id()))) {
             Offer offer = offer(data, on, level);
             entries.add(Entry.of(icon(data, offer), () -> choose(offer)));
         }
         return entries;
+    }
+
+    /**
+     * The levels it shows, lowest first: the enchantment's, and the item's own if it's none of them (Efficiency X from
+     * a Silex, a level set with /addenchantment), so that it can be taken off too.
+     */
+    static List<Integer> levels(EnchantmentData.Entry enchantment, Integer current) {
+        List<Integer> levels = new ArrayList<>();
+        boolean outside = current != null && current >= 1 && (current < enchantment.min() || current > enchantment.max());
+        if (outside && current < enchantment.min()) levels.add(current);
+        for (int level = enchantment.min(); level <= enchantment.max(); level++) levels.add(level);
+        if (outside && current > enchantment.max()) levels.add(current);
+        return levels;
     }
 
     @Override
@@ -143,10 +157,11 @@ public final class EnchantLevelPage extends HexPage {
                 EnchantmentData.Entry other = data.get(id);
                 names.add(other == null ? id : other.name());
             }
-            lore.add("");
+            if (!lore.isEmpty()) lore.add("");
             lore.addAll(Text.wrap("&cReplaces " + String.join(", ", names), Text.LORE_WIDTH));
         }
-        lore.add("");
+        // A level with no text (the item's own, past the enchantment's) starts with the rest.
+        if (!lore.isEmpty()) lore.add("");
         if (offer.change().action() == Action.LOWER) {
             lore.add(LOWER);
         } else if (block.isEmpty()) {
