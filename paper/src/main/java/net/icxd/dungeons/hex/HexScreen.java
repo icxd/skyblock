@@ -1,5 +1,6 @@
 package net.icxd.dungeons.hex;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
@@ -27,13 +28,16 @@ import net.icxd.dungeons.utils.Text;
  * where it's put in and taken out as in a chest: by a click, a number key or a shift-click from their inventory,
  * one item at a time (see HexListener); the rest of its slots are buttons and glass. Any other screen shows the
  * item as a picture. Each draws itself from the item as it is now ({@link #draw}), and again whenever the item
- * changes: after a click on an input screen (on the next tick), and after {@link HexSession#replace}. Main thread.
+ * changes: after a click on an input screen (on the next tick), and after {@link HexSession#replace}. A button
+ * does nothing if the item isn't the one it was drawn for any more (see {@link #button}). Main thread.
  */
 public abstract class HexScreen extends GUI {
     protected final HexSession session;
     protected final Player viewer;
     private Inventory inventory;
     private boolean redrawing;
+    /** The item as it was when the buttons were last drawn (a copy); null for none. */
+    private ItemStack drawnFor;
 
     protected HexScreen(HexSession session, String title) {
         super(title, Size.SIX);
@@ -58,10 +62,16 @@ public abstract class HexScreen extends GUI {
 
     /** Draws it again, into the open menu too: after the item changed. */
     public final void redraw() {
+        drawAll();
+        if (inventory != null) refresh(inventory);
+    }
+
+    private void drawAll() {
         getItems().clear();
+        ItemStack item = session.item();
+        drawnFor = item == null ? null : item.clone();
         draw();
         if (inputSlot() >= 0) set(inputSlot(), null);
-        if (inventory != null) refresh(inventory);
     }
 
     /** Opened through the session, which passes the item on (see {@link HexSession#open}). */
@@ -76,9 +86,7 @@ public abstract class HexScreen extends GUI {
 
     @Override
     public final void beforeOpen(Player player) {
-        getItems().clear();
-        draw();
-        if (inputSlot() >= 0) set(inputSlot(), null);
+        drawAll();
     }
 
     /** The item goes in the input slot before the menu is shown. */
@@ -122,16 +130,28 @@ public abstract class HexScreen extends GUI {
 
     /**
      * A button of this screen: a left or right click (shift or not) runs {@code action} on the next tick, only
-     * while this screen is still the one open with the item and their items aren't frozen (a hand-off).
+     * while this screen is still the one open with the item, their items aren't frozen (a hand-off), and the item
+     * is still the one the button was drawn for. On an input screen they can swap the item in the tick between the
+     * click and the action, or click a button drawn for the one before; then nothing happens but a redraw, so an
+     * upgrade worked out for one item is never put on another.
      */
     protected GUIClickableItem button(int slot, ItemStack stack, Consumer<ClickType> action) {
         return GUIClickableItem.button(slot, stack, viewer, click -> {
-            if (session.showing(this) && !InventorySyncListener.frozen(viewer)) action.accept(click);
+            if (!ready()) return;
+            if (!Objects.equals(drawnFor, session.item())) {
+                redraw();
+                return;
+            }
+            action.accept(click);
         });
     }
 
     protected GUIClickableItem button(int slot, ItemStack stack, Runnable action) {
         return button(slot, stack, click -> action.run());
+    }
+
+    private boolean ready() {
+        return session.showing(this) && !InventorySyncListener.frozen(viewer);
     }
 
     /** Says a line to them in chat. */
