@@ -155,6 +155,16 @@ itself is unchanged: a SkyBlock item's hit on a player is still called off, and 
   undeads die inside their own `hurt`, so `DungeonMobs.damage` sets the blow around that call
   (`KillingBlow.dealing`).
 
+### Drops by how the kill was made: `Mobs.addDropChance`
+
+- `Mobs.addDropChance((killer, blow, drop) -> factor)`: a factor on one of a kill's drops' chance, after Magic
+  Find (Looting on the weapon that dealt the killing blow, Chance on the bow its arrow left, Luck on armor
+  drops). The factors multiply; 1 changes nothing.
+- `blow` is the kill's `KillingBlow` (the drops roll before the death event, which has it too); null when it
+  isn't known. `blow.weapon()` tells the melee weapon from the bow (`blow.kind()`).
+- It counts for drops of 5% and more too, which Magic Find leaves alone. The drop's own chance and rarity are
+  `drop.chance()` and `drop.type()`.
+
 ### Attack Speed cap: `Combat.addAttackSpeedCap` (hook 12)
 
 - `addAttackSpeedCap(player -> raise)` adds a raise (Newton's Demise: +50). The most of the raises counts, as
@@ -374,7 +384,7 @@ smallest version in its own files and says so.
 |---|---|---|---|
 | Weapon enchantments | ENCHANTS_WEAPONS.md | Every sword, longsword, bow, gauntlet and fishing-weapon enchantment the inventory marks TODO-NOW (see the list after this table). Also the weapons' reforge bonus effects (REFORGES.md "Later": Fabled, Suspicious, Fanged, Coldfused, Loving, Spiritual, Hyper, Empowered, ...). | hit listeners, landing buffs (with `added`), debuffs and damage over time, the killing blow, `Shots`, item counters, the item mana factor, `ExpOrbs.grant`, the Attack Speed cap, `MobHits.deal` |
 | Armor enchantments | ENCHANTS_ARMOR.md | Every armor and equipment enchantment the inventory marks TODO-NOW (see the list after this table). Also armor reforge bonuses (Renowned, Perfect, ...). | `PlayerDamage` (hurt listeners, Defense against, shields), `VanillaDamage`, the Mana and Vitality spent listeners, `buffPercent`, `CombatState`, `ExpOrbs`, item counters |
-| Drops, XP, mining and stats | STATS_EFFECTS.md | Looting, Luck, Chance (in `Mobs.drop` and `MobDrop`: the core added no drop hook), Experience (an `ExpOrbs` bonus), Efficiency, Compact, Flowstate and Aqua Affinity on Mithril, Mining XP and Mining Wisdom, Mithril Powder, and the other TODO-NOW stats. Champion's coins and orbs are the weapon part's. | per-skill Wisdom, `ExpOrbs`, item counters |
+| Drops, XP, mining and stats | STATS_EFFECTS.md | Looting, Luck, Chance (`Mobs.addDropChance`), Experience (an `ExpOrbs` bonus), Efficiency, Compact, Flowstate and Aqua Affinity on Mithril, Mining XP and Mining Wisdom, Mithril Powder, and the other TODO-NOW stats. Champion's coins and orbs are the weapon part's. | per-skill Wisdom, `ExpOrbs`, `Mobs.addDropChance` with the killing blow, item counters |
 | Item abilities | ABILITIES_WEAPONS.md, ABILITIES_UTILITY.md | The TODO-NOW ABILITY blocks and item passives (see the list after this table). | the activations and `Trigger`, `Activations.use`, hit listeners, landing buffs, `Absorption`, debuffs, `Shots.scale`, item counters, `whileHeld` with the holder, the player hit listener |
 | Armor bonuses and accessories | BONUSES.md, ACCESSORIES.md | The TODO-NOW set, piece and tiered bonuses (see the list after this table) and the ~50 buildable accessory effects (inv_systems.md "Accessories"). | `Bonus` hooks, the Attack Speed cap, health cost and cooldown factors, the Ferocity strike kind, `Absorption`, `CombatState`, item counters, `ExpOrbs` |
 
@@ -414,7 +424,6 @@ What each part owns in full:
 
 - **Purse loss on death** (inv_systems.md Table 3, #11) changes a game rule, so it's left for the owner.
   It blocks the Bank enchantment.
-- **Drop modifiers** (Looting's and Luck's chances) are the drops part's to add in `Mobs.drop` and `MobDrop`.
 - **Enchanting-level gating** ("will be greyed out and will not work", armor inventory X1) is left to the
   enchantment parts. It changes lore and the golden test.
 - **Counters on equipment pieces**, the vanilla absorption hearts, and SkyBlock's own fall and fire formulas

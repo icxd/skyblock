@@ -71,6 +71,18 @@ public final class Mobs implements Listener {
     public static final NamespacedKey TYPE = new NamespacedKey("skyblock", "mob");
 
     private static final Map<UUID, Live> LIVE = new HashMap<>();
+    private static final List<DropChance> DROP_CHANCES = new ArrayList<>();
+
+    /**
+     * What changes the chance of a kill's drops, by the killer and how they killed it (Looting on the weapon
+     * that dealt the killing blow, Chance on the bow its arrow left, Luck on armor drops): a factor on one drop's
+     * chance, after Magic Find (1 for none); they multiply. {@code blow} is the killing blow (see {@link
+     * KillingBlow}; null when it isn't known).
+     */
+    @FunctionalInterface
+    public interface DropChance {
+        double factor(Player killer, KillingBlow blow, MobDrop drop);
+    }
 
     /** A spawned mob: its entity, its health, its name tag and whatever rides it. */
     public static final class Live {
@@ -110,6 +122,11 @@ public final class Mobs implements Listener {
     /** The kind with this id ("zombie_grunt" too); null for none. */
     public static MobKind kind(String id) {
         return MobKinds.get(id);
+    }
+
+    /** Adds what changes the chance of a kill's drops (see {@link DropChance}). */
+    public static void addDropChance(DropChance chance) {
+        DROP_CHANCES.add(chance);
     }
 
     /** Every kind, by id. */
@@ -280,7 +297,7 @@ public final class Mobs implements Listener {
         live.type.onDeath(live.entity, killer);
         Location at = live.entity.getLocation();
         if (killer != null && !live.type.isBoss()) {
-            drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer);
+            drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer, blow);
             // Its experience goes the way its drops do: straight to them from a dungeon mob, else as orbs where it died.
             ExpOrbs.grant(killer, live.type.getOrbs(), ExpOrbs.Source.MOB, at, live.type.dropsToInventory());
         }
@@ -303,27 +320,28 @@ public final class Mobs implements Listener {
         MobKind.Variant variant = kind.variant(floor, null);
         if (variant == null) return;
         if (killer != null) {
-            drop(variant.drops(), kind.dungeon(), at, killer);
+            drop(variant.drops(), kind.dungeon(), at, killer, KillingBlow.dealing());
             ExpOrbs.grant(killer, variant.orbs(), ExpOrbs.Source.MOB, at, kind.dungeon());
         }
         Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, kind, variant, false, null, at, KillingBlow.dealing()));
     }
 
     /**
-     * Each drop rolls on its own: Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind});
-     * Pet Luck would raise a pet's, but no mob drops a pet yet. A dungeon mob's go straight into the
+     * Each drop rolls on its own: Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind}),
+     * and what changes a kill's drops by how it was made its factor on each (see {@link DropChance}); Pet Luck
+     * would raise a pet's, but no mob drops a pet yet. A dungeon mob's go straight into the
      * killer's inventory, as recorded on Hypixel (into their item stash if there's no room), and
      * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
      * on the ground, and each is announced.
      */
-    private static void drop(List<MobDrop> drops, boolean dungeon, Location at, Player killer) {
+    private static void drop(List<MobDrop> drops, boolean dungeon, Location at, Player killer, KillingBlow blow) {
         Stats stats = PlayerSession.of(killer).stats();
         double magicFind = MobDrop.magicFind(stats.get(Stat.MAGIC_FIND));
         double petLuck = stats.get(Stat.PET_LUCK);
         boolean toInventory = dungeon && !InventorySyncListener.frozen(killer);
         for (MobDrop drop : drops) {
             SkyBlockItem item = drop.item();
-            if (item == null || Math.random() >= MobDrop.withMagicFind(drop.chance(), magicFind, petLuck, false) / 100) continue;
+            if (item == null || Math.random() >= chance(drop, magicFind, petLuck, dropFactor(killer, blow, drop)) / 100) continue;
             ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
             // Collected as it comes from the world: now if it goes straight to them, else when it's picked up.
             if (toInventory) {
@@ -334,6 +352,18 @@ public final class Mobs implements Listener {
             }
             if (announced(dungeon, drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
         }
+    }
+
+    /** A drop's chance for a kill, in percent: with the killer's Magic Find (and Pet Luck), times {@code factor}. */
+    static double chance(MobDrop drop, double magicFind, double petLuck, double factor) {
+        return MobDrop.withMagicFind(drop.chance(), magicFind, petLuck, false) * Math.max(0, factor);
+    }
+
+    /** The product of what changes this drop's chance for this kill (see {@link DropChance}). */
+    private static double dropFactor(Player killer, KillingBlow blow, MobDrop drop) {
+        double factor = 1;
+        for (DropChance chance : DROP_CHANCES) factor *= chance.factor(killer, blow, drop);
+        return factor;
     }
 
     /**
