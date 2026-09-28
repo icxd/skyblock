@@ -137,7 +137,10 @@ public final class EnchantmentData {
         return entries.size();
     }
 
-    /** Every id, in the Hex's Default order: the order the wiki's Hex screens show, then the rest by name (see the generator). */
+    /**
+     * Every id, in the Hex's Default order: the order the wiki's Hex screens show (a sword's, its ultimates, armor's
+     * ultimates), then the rest by name (UNKNOWN: the Hex's order for the rest; see the generator).
+     */
     public List<String> order() {
         return order;
     }

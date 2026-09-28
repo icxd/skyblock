@@ -383,7 +383,8 @@ class Builder:
             entries[plugin_id(a)]['conflicts'].append(plugin_id(b))
 
     def order(self, entries):
-        """The wiki's order where it has one, then the rest by name."""
+        """The wiki's order where it has one, then the rest by name (UNKNOWN: the Hex's order for what the wiki's screens
+        don't show, a bow's or armor's enchantments)."""
         ids = []
         for name in self.order_names:
             hypixel = self.by_name.get(name)
