@@ -11,6 +11,8 @@ import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.enchanting.EnchantmentData;
+import net.icxd.dungeons.item.enchanting.FakeEnchantments;
 import net.icxd.dungeons.item.gemstone.GemstoneSlot;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -43,7 +45,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * starts with, and its name and lore fresh, with 7 stars, with Sharpness V, recombobulated and (on dungeon
  * items) with two enchantments. Compared with golden.json, so a change that shows on any item fails here;
  * {@code -Dgolden.update=true} writes it anew. Both files are Hypixel's text, so they're in the private data
- * repository (see {@link #itemsFile}, and -Ditems.golden for another golden); without them, this is skipped.
+ * repository (see {@link #itemsFile}, and -Ditems.golden for another golden), as is the enchantments' text (the
+ * Hex's table, -Dhex.dir); without them, this is skipped.
  */
 class GoldenItemsTest {
     /** Data that's random on every new item. */
@@ -52,6 +55,7 @@ class GoldenItemsTest {
     @AfterEach
     void noItems() {
         ItemRegistry.clearData();
+        FakeEnchantments.reset();
     }
 
     /** The private data repository's items.json: -Ditems.file, else the checkout next to this repository's. */
@@ -75,6 +79,8 @@ class GoldenItemsTest {
         assumeTrue(Files.exists(items), "no " + items);
         assumeTrue(update || Files.exists(golden), "no " + golden + "; run with -Dgolden.update=true to write it");
         assertNull(ItemRegistry.loadData(items).failure(), "the items didn't load");
+        // The enchantments' text is the Hex's table (-Dhex.dir); skipped without it.
+        EnchantmentData.use(FakeEnchantments.real());
         String actual = golden(ItemRegistry.getRegistry());
         if (update) {
             Files.writeString(golden, actual, StandardCharsets.UTF_8);

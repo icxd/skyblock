@@ -85,7 +85,7 @@ codes.
 
 - **NotEnoughUpdates-REPO** (`items/<ID>.json`, https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO):
   in-game dumps of every item's name and lore, including each enchanted book at each level. The
-  item text and the enchantment descriptions come from here.
+  item text comes from here (the enchantments' text too, made by `tools/hex/build_enchants.py`).
 - **The recordings** (the private data repository): the items in a real inventory, and what they look
   like with reforges, enchantments, stars and gemstones. The layout rules in `ItemBuilder` were checked
   against these.
@@ -93,20 +93,12 @@ codes.
   live items. These settled the rules the other two can't show: when enchantments get their
   descriptions, the order of stats, the bracket after each stat, and how wide generated text wraps.
 - **The wiki** (hypixel-skyblock.fandom.com): stat names, symbols and colours
-  (`Module:Statname/Data`), mob types, and per-level enchantment values (`data/enchant_values.json`,
-  used only for levels that have no enchanted book in-game).
+  (`Module:Statname/Data`) and mob types.
 
 Hypixel's resource pack draws icons with private-use glyphs; the plugin sends no resource pack, so it
 uses each glyph's classic symbol instead (✎ for the mana icon, ❁ for strength, and so on).
 
-## Enchantments: `gen_enchantments.py`
+## Enchantments
 
-```
-git clone --depth 1 https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO /tmp/neu
-python3 tools/items/gen_enchantments.py /tmp/neu/items   # paper/src/main/resources/enchantments.json
-```
-
-Each enchantment in `EnchantmentType` gets its name and its description at each level from the
-enchanted books. Where Hypixel has no book for a level, that level's values are put into the nearest
-level's text; where the values aren't known either, the level has no description. It writes its output
-in place; `git diff` shows what changed.
+Every enchantment's name and text is Hypixel's too, so it's in the private data repository with the Hex's
+tables (`hex/enchantments.json`), made by `tools/hex/build_enchants.py`: see `tools/hex/README.md`.

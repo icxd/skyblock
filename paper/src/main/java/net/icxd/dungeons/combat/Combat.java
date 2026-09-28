@@ -6,6 +6,7 @@ import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ItemRegistry;
+import net.icxd.dungeons.item.enchanting.EnchantmentData;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -115,12 +116,12 @@ public final class Combat {
         return tag == null || ItemRegistry.get(tag.getString("id")) == null ? null : tag;
     }
 
-    /** The item's enchantments, id to level (none for null). */
+    /** The item's enchantments, id to level (none for null); by the plugin's id, also for one stored under Hypixel's ("ultimate_one_for_all"). */
     public static Map<String, Integer> enchantments(NBTTagCompound tag) {
         Map<String, Integer> enchantments = new HashMap<>();
         if (tag == null) return enchantments;
         NBTTagList list = tag.getList("enchantments", 10);
-        for (int i = 0; i < list.size(); i++) enchantments.put(list.get(i).getString("name").toLowerCase(), list.get(i).getInt("lvl"));
+        for (int i = 0; i < list.size(); i++) enchantments.put(EnchantmentData.id(list.get(i).getString("name")), list.get(i).getInt("lvl"));
         return enchantments;
     }
 

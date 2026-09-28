@@ -45,7 +45,7 @@ public class Enchantment implements ConfigurationSerializable {
     public boolean equals(Object o) {
         if (!(o instanceof Enchantment)) return false;
         Enchantment enchantment = (Enchantment) o;
-        return enchantment.level == level && enchantment.type == type;
+        return enchantment.level == level && java.util.Objects.equals(enchantment.type, type);
     }
 
     @Override
