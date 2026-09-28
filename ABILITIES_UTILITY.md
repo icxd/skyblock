@@ -87,3 +87,7 @@ Absorptio, Arrow Infusion, Leap, Ender Warp, Sinrecall Transmission, Gorilla Tac
 Parley, Extreme Focus, Bad Health, Burning Souls, Nasty Bite, Detonate, Shoot, and every staff, wand
 and sword ability that deals damage; the Necron's Blade scrolls (Implosion, Shadow Warp, Wither
 Shield). `PlayerDamage.addShield` is where an absorption shield (Wither Shield's) can go.
+
+On a weapon, so theirs too though they don't hit: Ragnarock (Ragnarock Axe) and the Gyrokinetic
+Wand's Cells Alignment ("Splits incoming damage and applies it over 3s", in their LATER table: a
+`PlayerDamage.addShield` can hold the hit and hand it out over the 3 seconds).
