@@ -10,7 +10,7 @@ import (
 func TestLinkData(t *testing.T) {
 	root := t.TempDir()
 	data := filepath.Join(root, "data")
-	for _, d := range []string{"items", "rooms"} {
+	for _, d := range []string{"items", "collections", "rooms"} {
 		if err := os.MkdirAll(filepath.Join(data, d), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -31,6 +31,9 @@ func TestLinkData(t *testing.T) {
 	for _, s := range []*Server{hub, dungeon} {
 		if !samePath(filepath.Join(plugin(s), "items"), filepath.Join(data, "items")) {
 			t.Errorf("%s: items not linked", s.Name)
+		}
+		if !samePath(filepath.Join(plugin(s), "collections"), filepath.Join(data, "collections")) {
+			t.Errorf("%s: collections not linked", s.Name)
 		}
 	}
 	if !samePath(filepath.Join(plugin(dungeon), "dungeon-rooms", "rooms"), filepath.Join(data, "rooms")) {
@@ -68,13 +71,13 @@ func TestLinkData(t *testing.T) {
 		t.Errorf("want one warning about hub02's own items folder, got %v", messages)
 	}
 
-	// No items/ in the data checkout yet: said once, nothing made.
+	// No items/ or collections/ in the data checkout yet: each said once, nothing made.
 	n.DungeonData = filepath.Join(root, "empty")
 	messages = nil
 	fresh := &Server{Name: "hub03", Type: "LOBBY"}
 	n.linkData([]*Server{fresh}, progress)
-	if len(messages) != 1 || !strings.Contains(messages[0], "no items/") {
-		t.Errorf("want one message about the missing items/, got %v", messages)
+	if len(messages) != 2 || !strings.Contains(messages[0], "no items/") || !strings.Contains(messages[1], "no collections/") {
+		t.Errorf("want a message about the missing items/ and one about collections/, got %v", messages)
 	}
 	if _, err := os.Lstat(filepath.Join(plugin(fresh), "items")); err == nil {
 		t.Error("hub03 got a link to nothing")
@@ -126,7 +129,7 @@ func TestDeploySaysOnceWhatDataIsMissing(t *testing.T) {
 	}
 
 	// Once the checkout has them, the same deploy links them into every server.
-	for _, d := range []string{"items", "rooms"} {
+	for _, d := range []string{"items", "collections", "rooms"} {
 		if err := os.MkdirAll(filepath.Join(empty, d), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -190,8 +193,10 @@ func TestLinkDataRelativePath(t *testing.T) {
 	root := t.TempDir()
 	repo := filepath.Join(root, "skyblock")
 	data := filepath.Join(root, "skyblock-dungeon-data")
-	if err := os.MkdirAll(filepath.Join(data, "items"), 0o755); err != nil {
-		t.Fatal(err)
+	for _, d := range []string{"items", "collections"} {
+		if err := os.MkdirAll(filepath.Join(data, d), 0o755); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := os.WriteFile(filepath.Join(data, "items", "items.json"), []byte("[]"), 0o644); err != nil {
 		t.Fatal(err)

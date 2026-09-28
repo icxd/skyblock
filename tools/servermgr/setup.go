@@ -520,11 +520,11 @@ func (n *Network) installProxyPlugin(progress func(string)) {
 // One it doesn't have yet is skipped quietly: the plugin says so in its log.
 var optionalData = []string{"storage"}
 
-// linkData links the private data checkout into servers: the item definitions (items/) into
-// every server, and the captured rooms (rooms/) into dungeon servers, and the optionalData folders.
-// Hypixel's data stays in that checkout, out of the plugin and this repository. Links that are
-// already there are left alone, so it runs on every deploy. What the checkout lacks is the same for
-// every server, so it's said once.
+// linkData links the private data checkout into servers: the item definitions (items/) and the
+// collections and recipes (collections/) into every server, the captured rooms (rooms/) into
+// dungeon servers, and the optionalData folders. Hypixel's data stays in that checkout, out of the
+// plugin and this repository. Links that are already there are left alone, so it runs on every
+// deploy. What the checkout lacks is the same for every server, so it's said once.
 func (n *Network) linkData(servers []*Server, progress func(string)) {
 	if len(servers) == 0 {
 		return
@@ -543,7 +543,7 @@ func (n *Network) linkData(servers []*Server, progress func(string)) {
 	said := map[string]bool{}
 	for _, s := range servers {
 		plugin := filepath.Join(n.serverDir(s), "plugins", "dungeons")
-		dirs := [][2]string{{"items", filepath.Join(plugin, "items")}}
+		dirs := [][2]string{{"items", filepath.Join(plugin, "items")}, {"collections", filepath.Join(plugin, "collections")}}
 		if s.Type == "DUNGEONS" || s.Type == "NONE" {
 			dirs = append(dirs, [2]string{"rooms", filepath.Join(plugin, "dungeon-rooms", "rooms")})
 		}
