@@ -15,6 +15,7 @@ import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.session.Mana;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.utils.Replacement;
@@ -57,14 +58,15 @@ final class SpiritGlide {
         String cooldown = "ability:" + NAME;
         if (session.cooldownLeft(cooldown) > 0) return;
         int mana = session.getMana() < 0 ? session.maxMana() : session.getMana();
-        int cost = Abilities.manaCost(block, session.maxMana(), player);
+        int cost = Abilities.manaCost(block, session.maxMana(), player, ItemNBT.read(player.getInventory().getBoots()));
         if (mana < cost) {
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
             return;
         }
         Mana.spend(player, cost, NAME);
         if (cost > 0) session.setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + NAME + "§b)", 400));
-        if (block.cooldown() > 0) session.startCooldown(cooldown, (long) (block.cooldown() * 1000));
+        long millis = Abilities.cooldownMillis(block, player);
+        if (millis > 0) session.startCooldown(cooldown, millis);
         GLIDING.put(player.getUniqueId(), System.currentTimeMillis() + MILLIS);
         Protection.immunity(player, NAME, MILLIS);
         player.setVelocity(player.getVelocity().setY(LAUNCH));

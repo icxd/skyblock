@@ -45,20 +45,15 @@ final class Areas {
 
     /**
      * The Staff of the Volcano's Explode: "Creates an explosion around you dealing 24,000 damage and setting all
-     * mobs on fire in a 4 block radius over 1s", 1,000 health a cast (not from the last of it), scaling 1.
+     * mobs on fire in a 4 block radius over 1s", 1,000 health a cast (not from the last of it: its cost, which
+     * every use charges, see Activations#use), scaling 1.
      */
     static final class Explode implements AbilityHandler {
         static final Magic.Spell BLAST = new Magic.Spell(24_000, 1);
         static final double RADIUS = 4;
 
         @Override
-        public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            return Hits.canPayHealth(player, block.healthCost());
-        }
-
-        @Override
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            Hits.payHealth(player, block.healthCost());
             Location at = player.getLocation();
             List<LivingEntity> caught = Hits.near(at, RADIUS);
             Hits.spell(player, item, tag, Hits.spellOf(item, BLAST), caught);

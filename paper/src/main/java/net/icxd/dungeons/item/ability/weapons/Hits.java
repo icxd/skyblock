@@ -232,10 +232,14 @@ public final class Hits {
         return false;
     }
 
-    /** {@link #enoughMana} for the extra cost on top of the block's own (which isn't taken yet when it's asked). */
+    /**
+     * {@link #enoughMana} for the extra cost on top of the block's own (which isn't taken yet when it's asked),
+     * that cost as it's charged for the item they hold (with its factors, see Abilities#manaCost).
+     */
     public static boolean enoughMana(Player player, ItemBlock block, int extra) {
         if (extra <= 0) return true;
-        return enoughMana(player, Abilities.manaCost(block, PlayerSession.of(player).maxMana()) + extra);
+        NBTTagCompound held = Combat.skyBlockData(player.getInventory().getItemInMainHand());
+        return enoughMana(player, Abilities.manaCost(block, PlayerSession.of(player).maxMana(), player, held) + extra);
     }
 
     /** Takes that mana (see {@link Mana#spend}), shown as a block's cost is ("-60 Mana (Rapid-fire)"). */
@@ -246,12 +250,13 @@ public final class Hits {
     }
 
     /**
-     * Whether they can pay an ability's health cost ("This ability cannot be used if the user does not have
-     * enough health to be consumed, so using it repeatedly cannot cause fatal damage", the wiki's Flower of
-     * Truth): more health than it costs.
+     * Whether they can pay a health cost ("This ability cannot be used if the user does not have enough health
+     * to be consumed, so using it repeatedly cannot cause fatal damage", the wiki's Flower of Truth): more health
+     * than it costs. A block's own health cost is charged with its other costs (see Activations#use); this is
+     * for costs beyond it.
      */
     public static boolean canPayHealth(Player player, double cost) {
-        return cost <= 0 || PlayerHealth.get(player) > cost;
+        return Abilities.canPayHealth(PlayerHealth.get(player), cost);
     }
 
     public static void payHealth(Player player, double cost) {

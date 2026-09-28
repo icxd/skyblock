@@ -18,8 +18,8 @@ import net.icxd.dungeons.stats.Stats;
  * using it; the Weird and Weirder Tubas' Howl on them and the 4 nearest players; the Wand of Strength's Life
  * Blood ("Use 10% of your max health to boost your nearby allies by +30❁ Strength for 10 seconds") on them
  * and everyone near (the wiki's use of it for solo Bingo goals has it on the caster too), for a tenth of their
- * max health, which the ability takes itself (its data's health cost isn't that). How near "nearby" is is
- * UNKNOWN ({@link #NEARBY} blocks). The sounds are UNKNOWN: plain ones.
+ * max health, its health cost (its data's isn't that), charged as every use's is (see Activations#use). How
+ * near "nearby" is is UNKNOWN ({@link #NEARBY} blocks). The sounds are UNKNOWN: plain ones.
  */
 final class TimedBuff implements AbilityHandler {
     /** "Nearby" players: UNKNOWN, taken as within 20 blocks. */
@@ -51,10 +51,14 @@ final class TimedBuff implements AbilityHandler {
 
     @Override
     public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        String plain = AbilityText.plain(block.text());
-        if (AbilityText.millis(plain).isEmpty()) return false;
-        // Life Blood can't take the last of their health (UNKNOWN on Hypixel: here it just doesn't cast).
-        return who != Who.ALLIES_FOR_HEALTH || PlayerHealth.get(player) > healthShare(plain) * PlayerHealth.max(player);
+        return AbilityText.millis(AbilityText.plain(block.text())).isPresent();
+    }
+
+    /** Life Blood's tenth of their max health (it can't take the last of their health: UNKNOWN on Hypixel, here it doesn't cast). */
+    @Override
+    public double healthCost(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+        if (who != Who.ALLIES_FOR_HEALTH) return block.healthCost();
+        return healthShare(AbilityText.plain(block.text())) * PlayerHealth.max(player);
     }
 
     @Override
@@ -63,7 +67,6 @@ final class TimedBuff implements AbilityHandler {
         Stats stats = AbilityText.stats(plain);
         long millis = (long) AbilityText.millis(plain).orElse(0);
         if (millis <= 0) return;
-        if (who == Who.ALLIES_FOR_HEALTH) PlayerHealth.damage(player, healthShare(plain) * PlayerHealth.max(player));
         int others = switch (who) {
             case SELF -> 0;
             case YOU_AND_NEARBY -> (int) AbilityText.players(plain).orElse(4);
