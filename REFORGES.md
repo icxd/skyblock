@@ -21,7 +21,7 @@ Geometric). It's read with the Hex's tables (off the main thread, see HexData) b
   give Mythic's (the wiki's Reforging/Prices), which fixes "above Mythic gives 0". Divine gives nothing, but where
   the data has Divine numbers (mining tools and a few others), as the wiki's Reforging says: "Except for mining
   tools, reforges on Divine items provide no stat buff, only the reforge abilities". Special and Very Special show
-  Mythic's bonus text too, not Divine's (Scraped's +35 Mining Fortune, not +50).
+  Mythic's bonus text too, not Divine's (a mining bonus's Mythic numbers, not Divine's bigger ones).
 - **Lore**, as live items show it:
   - The reforge's word before the name. On an item named like a reforge it's the wiki's other word instead ("Very
     Wise Dragon Helmet", "Extremely Heavy", "Not So Heavy", "Thicc Super Heavy"; live items agree).
