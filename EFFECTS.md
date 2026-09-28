@@ -9,8 +9,8 @@ part keeps its own status document (see "Who owns what").
 Everything here runs on the main thread. The code is in `paper/src/main/java/net/icxd/dungeons`. The rules
 are pure functions with tests under `paper/src/test`: `DebuffsTest`, `KillingBlowTest`, `ActivationsTest`,
 `CombatStateTest`, `VanillaDamageTest`, `AbsorptionTest`, `ExpOrbsTest`, `ManaTest`, `PercentBuffTest`,
-`ItemCountersTest`, and cases added to `DamageTest`, `HitBuffTest`, `PlayerDamageTest`, `SkillGainsTest`,
-`MobKindsTest`, `StatsRunnableTest` and `WitherBladeTest`.
+`ItemCountersTest`, `ShotsTest`, `HitListenersTest`, and cases added to `DamageTest`, `HitBuffTest`,
+`PlayerDamageTest`, `SkillGainsTest`, `MobKindsTest`, `MobDropTest`, `StatsRunnableTest` and `WitherBladeTest`.
 
 Where the sources say nothing, the code comment says UNKNOWN and takes the simplest reading. Each UNKNOWN is
 also listed at the end.
@@ -69,7 +69,8 @@ on-hit effects is UNKNOWN; here they can't.
   - `killed` is true if the hit killed the mob.
 - **It doesn't fire for** invulnerable mobs (the Watcher) or `DOT` and `OTHER` damage.
 - **Rule for listeners:** a listener that deals damage should use `MobHits.deal` (see "An effect's own damage"),
-  never `Hits.hurt`. `Hits.hurt` is an ability's hit and would fire the listeners again.
+  not `Hits.hurt`, which is an ability's hit. A hit dealt from inside a listener never tells the listeners
+  again either way (`Combat.landed` doesn't nest), so no effect can set itself off over and over.
 - `Combat.landed(...)` is the call the hit paths use. Effects don't call it.
 
 ### Players hitting players: `Combat.addPlayerHitListener` (F6)

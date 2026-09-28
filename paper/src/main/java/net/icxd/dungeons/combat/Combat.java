@@ -56,6 +56,8 @@ public final class Combat {
     private static final List<HitListener> HIT_LISTENERS = new ArrayList<>();
     private static final List<PlayerHitListener> PLAYER_HIT_LISTENERS = new ArrayList<>();
     private static final List<ToDoubleFunction<Player>> ATTACK_SPEED_CAPS = new ArrayList<>();
+    /** The hit listeners are hearing of a hit now (see {@link #landed}). */
+    private static boolean hearing;
 
     /**
      * A buff on one hit that has landed, which may depend on what it hit (armor bonuses: Reaper Armor
@@ -175,10 +177,17 @@ public final class Combat {
     /**
      * Tells the hit listeners a hit has landed (see {@link HitListener}): the hit paths call it once the
      * damage is dealt, this class for melee hits, arrows and Ferocity strikes, {@code Hits.hurt} for abilities.
+     * A hit a listener deals itself (it should use {@link MobHits#deal}, but an ability's {@code Hits.hurt}
+     * would do) doesn't tell them again, so no effect can set itself off over and over.
      */
-    public static void landed(Player player, Landing landing, Damage.Target target, double damage, boolean killed) {
-        if (!landing.kind().isHit()) return;
-        for (HitListener listener : HIT_LISTENERS) listener.landed(player, landing, target, damage, killed);
+    public static void landed(Player player, Landing hit, Damage.Target target, double damage, boolean killed) {
+        if (!hit.kind().isHit() || hearing || HIT_LISTENERS.isEmpty()) return;
+        hearing = true;
+        try {
+            for (HitListener listener : HIT_LISTENERS) listener.landed(player, hit, target, damage, killed);
+        } finally {
+            hearing = false;
+        }
     }
 
     /** The product of the multiplicative buffs on this player's hit. */
