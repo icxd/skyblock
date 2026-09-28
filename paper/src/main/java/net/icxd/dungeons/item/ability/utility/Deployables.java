@@ -30,9 +30,11 @@ import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.stats.StatsRunnable;
+import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 
@@ -41,7 +43,8 @@ import net.icxd.dungeons.utils.Utils;
  * ("Shoot the flare up in the sky for 3m buffing up to 8 players within 40 blocks") and Lanterns, each with
  * the buff its item lists ("Orb Buff: Radiant": "Heal yourself for 30❤ per second.", "Heal others for 15❤ per
  * second.", "Gain +25❣ Health Regen.", "Grants +50% base mana regen.", stats; a Flare's "Heal 30❤ per second
- * while on the Crimson Isle and Kuudra"). Everything is the item's text, read once per item.
+ * while on the Crimson Isle and Kuudra"). Everything is the item's text, read once per item, and so is a
+ * Lantern's cost, "Costs 50% of max mana", which its data doesn't have (the orbs' 50% is their data's).
  *
  * <p>One of theirs at a time: deploying again takes the old one down with "§eYour previous §6Plasmaflux
  * Power Orb §ewas removed!" (the chat line SkyHanni filters). Each buffs the players nearest it within its
@@ -61,6 +64,8 @@ import net.icxd.dungeons.utils.Utils;
 final class Deployables implements AbilityHandler {
     /** "Grants +50% base mana regen". */
     private static final Pattern MANA_REGEN = Pattern.compile("\\+([\\d.]+)% base mana regen");
+    /** "Costs 50% of max mana": a Lantern's and the Umberella's, which their data doesn't have as a cost. */
+    private static final Pattern MANA_SHARE = Pattern.compile("Costs ([\\d.]+)% of max mana");
     /** "&aOrb Buff: Radiant", "&9Flare Buff: Alert Flare": its colour and name. */
     private static final Pattern BUFF = Pattern.compile("^(?:&[0-9a-fk-or])*&([0-9a-f])(?:&[0-9a-fk-or])*[A-Za-z]+ Buff: (.+)$");
     private static final double FLARE_HEIGHT = 8;
@@ -185,16 +190,43 @@ final class Deployables implements AbilityHandler {
         return rarity != 0 ? rarity > 0 : a.placedAt() >= b.placedAt();
     }
 
+    /**
+     * The share of their max mana its text says it costs where its data has no mana cost: a Lantern's "Costs
+     * 50% of max mana" (0.5), taken here as the framework takes a Power Orb's, whose data has it. 0 for the
+     * rest.
+     */
+    static double textManaShare(ItemBlock block) {
+        if (block.mana() > 0 || block.manaPercent() > 0) return 0;
+        Matcher m = MANA_SHARE.matcher(AbilityText.plain(block.text()));
+        return m.find() ? Double.parseDouble(m.group(1)) / 100 : 0;
+    }
+
+    private static int textManaCost(Player player, ItemBlock block) {
+        return (int) Math.round(textManaShare(block) * PlayerSession.of(player).maxMana());
+    }
+
+    /** Whether it does anything here, and they have the mana its text asks for (else "NOT ENOUGH MANA", as for the data's). */
     @Override
     public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
         Kind kind = kind(item, block);
-        return kind != null && kind.doesSomething();
+        if (kind == null || !kind.doesSomething()) return false;
+        PlayerSession session = PlayerSession.of(player);
+        if (textManaCost(player, block) <= Math.max(0, session.getMana())) return true;
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
+        session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
+        return false;
     }
 
     @Override
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
         Kind kind = kind(item, block);
         if (kind == null) return;
+        int cost = textManaCost(player, block);
+        if (cost > 0) {
+            PlayerSession session = PlayerSession.of(player);
+            session.setMana(Math.max(0, Math.max(0, session.getMana()) - cost));
+            session.setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + block.name() + "§b)", 400));
+        }
         Out previous = OUT.remove(player.getUniqueId());
         if (previous != null) {
             previous.stand.remove();

@@ -67,6 +67,8 @@ class DeployablesTest {
         assertEquals(0.5, kind.manaRegen(), 1e-9);
         assertEquals(new Stats().set(Stat.HEALTH_REGEN, 25), kind.stats());
         assertTrue(kind.doesSomething());
+        // Its 50% of max mana is its data's, which the framework takes.
+        assertEquals(0, Deployables.textManaShare(block), 1e-9);
     }
 
     /** What the stand shows, as SkyHanni and Skytils read it. */
@@ -142,6 +144,9 @@ class DeployablesTest {
                     assertTrue(kind.healOwner() > kind.healOthers() && kind.healOthers() > 0, item.id());
                     assertEquals(5, kind.players(), item.id());
                 }
+                // A Lantern's "Costs 50% of max mana" is only its text's; the orbs' is their data's.
+                boolean costInText = item.id().endsWith("LANTERN") || item.id().equals("WILL_O_WISP") || item.id().equals("UMBERELLA");
+                assertEquals(costInText ? 0.5 : 0, Deployables.textManaShare(block), 1e-9, item.id());
                 if (item.id().endsWith("_FLARE")) {
                     assertTrue(kind.flare() && kind.islandHeal() > 0 && kind.stats().get(Stat.VITALITY) > 0, item.id());
                     assertEquals(40, kind.radius(), 1e-9);
