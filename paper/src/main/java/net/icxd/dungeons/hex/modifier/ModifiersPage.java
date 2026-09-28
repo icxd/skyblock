@@ -19,8 +19,9 @@ import net.icxd.dungeons.menu.Icon;
 /**
  * "The Hex ➜ Modifiers" (the wiki's The Hex/UI tabs): the frame, an Anvil "Apply Modifiers" in 28, and what the
  * Hex offers the item (see HexModifiers), centred. Each is its item as the item data has it: its look, its name
- * (a Power Scroll's in its gem's colour, as the wiki's screen has them), its own text, then the Cost block, one of
- * the item, and "&eClick to apply!" (UNKNOWN, U4: Hypixel's words when it can be paid). A click applies it, paid
+ * (a Power Scroll's in its gem's colour, as the wiki's screen has them, and so is its Cost line), its own text,
+ * then the Cost block, one of the item, and "&eClick to apply!" (UNKNOWN, U4: Hypixel's words when it can be paid).
+ * A click applies it, paid
  * for (nothing on a Sandbox profile), and says "You applied a <modifier> to your <item>!" (HexSession#upgrade).
  * One that's done stays, saying so, and does nothing.
  */
@@ -67,13 +68,31 @@ public final class ModifiersPage extends HexPage {
     private Entry entry(HexModifiers.Offer offer) {
         HexCosts cost = HexCosts.of(new HexCosts.Items(offer.itemId(), 1));
         String name = name(offer);
+        Look look = looks.apply(offer.itemId());
+        Icon icon = new Icon(look.material(), name, lore(offer, offer.done() ? List.of() : cost.lore(session, APPLY)), look.texture());
+        return offer.done() ? Entry.shown(icon) : Entry.of(icon, () -> apply(offer, cost, name));
+    }
+
+    /**
+     * An entry's lore: its item's own text, a blank line, then the {@code cost} block, whose line for the item is in
+     * the offer's colour when it has one ("&cRuby Power Scroll &c✖", the wiki's screen; the block's own is its
+     * rarity's). One that's done says so instead.
+     */
+    static List<String> lore(HexModifiers.Offer offer, List<String> cost) {
         List<String> lore = new ArrayList<>(description(offer.itemId()));
         if (!lore.isEmpty()) lore.add("");
-        if (offer.done()) lore.add(offer.counted() ? MAXED : APPLIED);
-        else lore.addAll(cost.lore(session, APPLY));
-        Look look = looks.apply(offer.itemId());
-        Icon icon = new Icon(look.material(), name, lore, look.texture());
-        return offer.done() ? Entry.shown(icon) : Entry.of(icon, () -> apply(offer, cost, name));
+        if (offer.done()) {
+            lore.add(offer.counted() ? MAXED : APPLIED);
+            return lore;
+        }
+        SkyBlockItem item = ItemRegistry.get(offer.itemId());
+        // The block's line for the item: its name in its rarity's colour, then ✔ or ✖ (HexCosts).
+        String own = item == null ? null : item.rarity().getColor() + item.name() + " ";
+        for (String line : cost) {
+            boolean recolour = offer.colour() != null && own != null && line.startsWith(own);
+            lore.add(recolour ? offer.colour() + item.name() + line.substring(own.length() - 1) : line);
+        }
+        return lore;
     }
 
     /** Paid for and applied to the item as it is now (the one it was drawn for: HexScreen#button). */

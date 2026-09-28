@@ -46,7 +46,8 @@ wiki's tabs show them). Each is the modifier's item as the item data has it:
 - its look;
 - its name in its rarity's colour (a Power Scroll's in its gem's, as the wiki's screen has them);
 - its own text;
-- the Cost block: one of the item, then "&eClick to apply!".
+- the Cost block: one of the item (a Power Scroll's line in its gem's colour too, `&cRuby Power Scroll &c✖`, as on
+  the wiki's screen), then "&eClick to apply!".
 
 A click pays and applies it ("You applied a Recombobulator 3000 to your ...!"). If they don't have the
 item, the Cost block says so, and a click says "You don't have that in your inventories!" in chat. On a
@@ -126,8 +127,6 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
   where Hypixel's "Item Maxed Out" goes). The chat line when they don't have the item.
 - **Where 2 and 7-11 entries sit** (the core's U3). A weapon with a RIGHT CLICK ability has 7 or 8, so
   they go row by row.
-- **The Cost line of a Power Scroll** is in its rarity's colour (Epic, the core's rule for every item),
-  where the wiki's screen shows the gem's.
 - **Recombobulator 3000.** "Any item with a named category" (the wiki's table) is items.json's type,
   minus the API's 89 that can't. Pet items are left out too: the wiki says they can't be, and none of 925
   live ones is. Live, no cosmetic (of 1,331), travel scroll, rod part, reforge stone and several other
