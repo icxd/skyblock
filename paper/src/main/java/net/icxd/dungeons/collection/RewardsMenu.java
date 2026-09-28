@@ -14,6 +14,7 @@ import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.recipe.RecipeView;
+import net.icxd.dungeons.recipe.Recipes;
 import net.icxd.dungeons.user.ItemStash;
 import net.icxd.dungeons.user.User;
 
@@ -53,7 +54,8 @@ public final class RewardsMenu extends CollectionGUI {
         int[] slots = CollectionMenus.rowSlots(shown.size());
         for (int i = 0; i < shown.size() && i < slots.length; i++) {
             Reward reward = shown.get(i);
-            if (reward.type() == Reward.Type.RECIPE && reward.item() != null) {
+            // Not one there's no crafting recipe for (a potion's is brewed): its view would be empty.
+            if (reward.type() == Reward.Type.RECIPE && Recipes.data().recipe(reward.item()) != null) {
                 on(slots[i], () -> new RecipeView(viewer, reward.item(), () -> new RewardsMenu(viewer, id, tier).open(viewer),
                         getTitle()).open(viewer));
             } else if (reward.type() == Reward.Type.ITEM && collection.boss()) {
