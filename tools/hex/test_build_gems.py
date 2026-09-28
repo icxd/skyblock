@@ -2,7 +2,7 @@
 # python3 tools/hex/test_build_gems.py
 #
 # Checks of build_gems.py on made-up input (no Hypixel data needed): the stat table with Citrine doubled, the
-# fees by quality, and the armour sets the Gemstone Guide shows once.
+# fees by quality, and the armour sets the Gemstone Guide shows once, named as the wiki's copy names them.
 import json
 import os
 import sys
@@ -35,6 +35,18 @@ def piece(item_id, category, name, sets=None, slots=True):
     return item
 
 
+# Lines as the wiki's Geo/UI has them (its UI Pager of the guide).
+WIKI = '''{{UI Pager|Gemstone Guide
+|Blaze Helmet, none, %inherit%, %inherit%//&7Available Gemstone Slots/  &d❁ Jasper
+|Burning Terror Helmet, none, &6Terror Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat &8x2
+|Helmet of Divan, none, &6Divan's Armor, %inherit%//&7Available Gemstone Slots/  &6⸕ Amber &8x2
+|Hyperion, none, %inherit%, %inherit%//&7Available Gemstone Slots/  &b✎ Sapphire
+|Shimmer Hood, none, &9Shimmer Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat
+|Shimmer Tunic, none, &9Shimmer Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat
+|Test Helmet (fragged), none, &5\ue068 Test Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat
+}}'''
+
+
 class Build(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -53,11 +65,21 @@ class Build(unittest.TestCase):
             piece('HOT_AURORA_BOOTS', 'BOOTS', 'Hot Aurora Boots'),
             piece('LONE_HELMET', 'HELMET', 'Lone Helmet'),
             piece('HYPERION', 'SWORD', 'Hyperion'),
+            # Named by the wiki's copy: a fragged set, a Kuudra tier, and a set it lists piece by piece.
+            piece('STARRED_TEST_HELMET', 'HELMET', 'Test Helmet', ['STARRED_TEST']),
+            piece('BURNING_TERROR_HELMET', 'HELMET', 'Burning Terror Helmet'),
+            piece('BURNING_TERROR_BOOTS', 'BOOTS', 'Burning Terror Boots'),
+            piece('SHIMMER_HOOD', 'HELMET', 'Shimmer Hood', ['SHIMMER']),
+            piece('SHIMMER_TUNIC', 'CHESTPLATE', 'Shimmer Tunic', ['SHIMMER']),
         ]
         self.api = os.path.join(self.tmp.name, 'items.json')
         with open(self.api, 'w') as f:
             json.dump({'lastUpdated': 5, 'items': items}, f)
         self.data = bg.build(self.neu, self.api)
+        self.wiki = os.path.join(self.tmp.name, 'geo_ui.txt')
+        with open(self.wiki, 'w', encoding='utf-8') as f:
+            f.write(WIKI)
+        self.named = bg.build(self.neu, self.api, self.wiki)
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -87,6 +109,27 @@ class Build(unittest.TestCase):
         self.assertEqual(sets['HOT_AURORA'], {'name': 'Hot Aurora Armor', 'pieces': ['HOT_AURORA_HELMET', 'HOT_AURORA_BOOTS']})
         self.assertNotIn('LONE', sets)
         self.assertEqual(self.data['source']['api_last_updated'], 5)
+
+    def test_wiki_names(self):
+        self.assertEqual(bg.wiki_names(WIKI), {'Blaze Helmet': None, 'Burning Terror Helmet': 'Terror Armor',
+                                               'Helmet of Divan': "Divan's Armor", 'Hyperion': None,
+                                               'Shimmer Hood': 'Shimmer Armor', 'Shimmer Tunic': 'Shimmer Armor',
+                                               'Test Helmet (fragged)': '⚚ Test Armor'})
+        sets = self.named['armor_sets']
+        self.assertEqual(sets['DIVAN'], {'name': "Divan's Armor", 'pieces': ['DIVAN_HELMET', 'DIVAN_BOOTS']})
+        self.assertEqual(sets['BURNING_TERROR']['name'], 'Terror Armor')
+        self.assertEqual(sets['STARRED_TEST']['name'], '⚚ Test Armor')
+        # Shown by the piece's own name there.
+        self.assertEqual(sets['BLAZE'], {'name': 'Blaze Helmet', 'pieces': ['BLAZE_HELMET']})
+        # Not in the wiki's copy: named after its id.
+        self.assertEqual(sets['ARMOR_OF_YOG']['name'], 'Armor of Yog')
+        # Listed piece by piece: a set each.
+        self.assertNotIn('SHIMMER', sets)
+        self.assertEqual(sets['SHIMMER_HOOD'], {'name': 'Shimmer Armor', 'pieces': ['SHIMMER_HOOD']})
+        self.assertEqual(sets['SHIMMER_TUNIC'], {'name': 'Shimmer Armor', 'pieces': ['SHIMMER_TUNIC']})
+        # Without the wiki, the names from the ids.
+        self.assertEqual(self.data['armor_sets']['BURNING_TERROR']['name'], 'Burning Terror Armor')
+        self.assertEqual(self.data['armor_sets']['SHIMMER']['pieces'], ['SHIMMER_HOOD', 'SHIMMER_TUNIC'])
 
     def test_names(self):
         self.assertEqual(bg.stat_name('Crit Damage'), 'CRIT_DAMAGE')

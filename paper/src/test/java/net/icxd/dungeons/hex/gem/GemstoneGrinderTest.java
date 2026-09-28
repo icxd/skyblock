@@ -199,7 +199,7 @@ class GemstoneGrinderTest {
         assertEquals(null, entries.getFirst().name());
     }
 
-    /** The guide from the private item data and table: Divan's Armor once, as the report's example has it. */
+    /** The guide from the private item data and table: Divan's Armor once, as the report's example and the wiki's copy have it. */
     @Test
     void theGuideFromTheRealItems() throws IOException {
         String property = System.getProperty("items.file");
@@ -214,9 +214,12 @@ class GemstoneGrinderTest {
         }
         List<GemstoneGuide.Entry> entries = GemstoneGuide.entries(all, table.armorSets());
         GemstoneGuide.Entry divan = entries.stream().filter(e -> e.item().id().equals("DIVAN_HELMET")).findFirst().orElseThrow();
-        assertEquals("§6Divan Armor", divan.name());
+        assertEquals("§6Divan's Armor", divan.name());
         assertEquals(List.of("&7Available Gemstone Slots", "  &6⸕ Amber &8x2", "  &a☘ Jade &8x2", "  &e✧ Topaz"), divan.slots());
         assertTrue(entries.stream().noneMatch(e -> e.item().id().equals("DIVAN_CHESTPLATE")));
+        // Named as the wiki's copy names them: Necron's pieces, and the Shimmering Light Armor's each on its own.
+        assertEquals("§6Necron's Armor", entries.stream().filter(e -> e.item().id().equals("POWER_WITHER_HELMET")).findFirst().orElseThrow().name());
+        assertEquals(4, entries.stream().filter(e -> "§9Shimmering Light Armor".equals(e.name())).count());
         GemstoneGuide.Entry hyperion = entries.stream().filter(e -> e.item().id().equals("HYPERION")).findFirst().orElseThrow();
         assertEquals(List.of("&7Available Gemstone Slots", "  &b✎ Sapphire", "  &4⚔ Combat"), hyperion.slots());
     }

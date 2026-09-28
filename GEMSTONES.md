@@ -21,8 +21,9 @@ what a slot takes), `hex/gem` (`GemstoneGrinder`, `GemRemoval`, `GemPicker`, `Ge
 
 **The gem table** (`GemstoneTable`) is Hypixel's, so it's private: the data repository's
 `hex/gemstones.json`, which the Hex's Gemstones category reads at startup (`HexData`, off the main
-thread). `tools/hex/build_gems.py --neu NEU-REPO [--api ITEMS_API] [--out DIR]` makes it from public
-sources (NEU's `constants/gemstones.json`, the items API's `museum_data`); `test_build_gems.py` checks it.
+thread). `tools/hex/build_gems.py --neu NEU-REPO [--api ITEMS_API] [--wiki GEO_UI] [--out DIR]` makes it
+from public sources (NEU's `constants/gemstones.json`, the items API's `museum_data`, and the set names in
+the wiki's copy of the guide, Geo/UI); `test_build_gems.py` checks it.
 It has each gem's stat and what one gives by quality and item rarity (Common to Mythic, Divine for Amber,
 Topaz and Jade as NEU has them), the removal fee by quality (Rough 1, Flawed 100, Fine 10,000, Flawless
 100,000, Perfect 500,000 coins), the chisel percentages and perk words, and the armour sets the guide
@@ -81,8 +82,10 @@ open when it isn't locked or has a gem in it (Hypixel's older items have gems in
 2-5, columns 2-8, Previous and Next Page in 45 and 53, Go Back to the grinder in 48 (with the item) and
 Close in 49. Every item with slots (230 entries today), each as it's made new, then `&7Available Gemstone
 Slots` and its slot types, the same ones together (`  &6⸕ Amber &8x2`). An armour set shows once, as its
-first piece with slots (its helmet), named after the set (`&6Divan Armor`). Sorted by the item's own
-name, not its set's, as the wiki's copy is (the Helmet of Divan under H, the fragged pieces last).
+first piece with slots (its helmet), by the name the wiki's copy gives it (`&6Divan's Armor`, `&6Goldor's
+Armor`, `&6Aurora Armor` for each Kuudra tier, `&5⚚ Adaptive Armor`); the Shimmering Light Armor shows
+piece by piece, as there. Sorted by the item's own name, not its set's, as the wiki's copy is (the Helmet
+of Divan under H, the fragged pieces last).
 
 **The Hex's Gemstones** (`hex/category/Gemstones.java`): for items with gemstone slots, Carpentry 25 on a
 Normal profile (the core's gate), the Perfect Ruby Gemstone button, the summary `  &7Gemstones &8[✎]
@@ -113,12 +116,12 @@ Normal profile (the core's gate), the Perfect Ruby Gemstone button, the summary 
   in 13, Cancel (red terracotta) in 15, and their words: none of it is known.
 - **Without the table** a gem can't be taken out on a Normal profile ("You can't remove Gemstones right
   now!"): the fee isn't known.
-- **The guide.** Set names come from the Museum's set ids ("Divan Armor", where Hypixel's is "Divan's
-  Armor"); sets the Museum doesn't have (Kuudra's tiers, most Perfect Armor tiers) by their pieces' ids,
-  named after the helmet ("Hot Aurora Armor", "Perfect Armor - Tier I"). The sort key beyond the item's
-  name (the wiki's copy has some Mk. I to III tools out of order). Aquamarine's icon is ☂, as its gems'
-  names have it (the wiki's copy of the guide has α). The guide's items leave out the random attributes a
-  new item rolls.
+- **The guide.** Which pieces are one set: the Museum's sets, else the pieces' ids without the piece
+  (Kuudra's tiers, most Perfect Armor tiers). Sets newer than the wiki's copy are named from their ids
+  ("Abyssal Armor", "Perfect Armor - Tier XII"). The fragged sets' "⚚" is the item data's character for
+  the copy's 26.x glyph. The sort key beyond the item's name (the wiki's copy has some Mk. I to III tools
+  out of order). Aquamarine's icon is ☂, as its gems' names have it (the wiki's copy of the guide has α).
+  The guide's items leave out the random attributes a new item rolls.
 - **The Hex's button words** ("Apply Gemstones to your item at the Gemstone Grinder!") are the core's own.
 - **Stored gems** are plain gem and quality: Hypixel keeps some as `{uuid, quality}`, so a gem that comes
   out is a new item (an unstackable one gets a new uuid).
@@ -135,7 +138,8 @@ Normal profile (the core's gate), the Perfect Ruby Gemstone button, the summary 
 ## Private files
 
 - `hex/gemstones.json` in the data repository (servermgr links it as `plugins/dungeons/hex/`), made by
-  `tools/hex/build_gems.py`. Tests read it through `-Dhex.dir` and skip what needs it without it.
+  `tools/hex/build_gems.py`. Tests read it through `-Dhex.dir` and skip what needs it without it (also
+  when the folder has only the other categories' tables).
 
 ## Questions for the owner
 

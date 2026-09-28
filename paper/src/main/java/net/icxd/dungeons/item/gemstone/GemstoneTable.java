@@ -24,7 +24,8 @@ import net.icxd.dungeons.stats.Stat;
  * @param removalCosts      coins by quality (Rough 1 to Perfect 500,000)
  * @param chiselPercentages a chisel perk's percentage by quality (LATER: the Fossil Excavator)
  * @param chiselPerks       the perks' words by gem, "{}" for the percentage (LATER)
- * @param armorSets         sets by id (the Museum's, else pieces' ids without the piece), each with its name and pieces
+ * @param armorSets         sets by id (the Museum's, else pieces' ids without the piece), each with its name (the
+ *                          wiki's copy of the guide's) and pieces
  */
 public record GemstoneTable(Map<GemstoneType, Stone> gems, Map<GemstoneQuality, Double> removalCosts,
                             Map<GemstoneQuality, Integer> chiselPercentages, Map<GemstoneType, String> chiselPerks,
@@ -35,7 +36,10 @@ public record GemstoneTable(Map<GemstoneType, Stone> gems, Map<GemstoneQuality, 
     public record Stone(Stat stat, Map<GemstoneQuality, Map<Rarity, Double>> values) {
     }
 
-    /** An armour set: its name ("Divan Armor") and its pieces by id, helmet first. */
+    /**
+     * An armour set as the Gemstone Guide shows it: its name ("Divan's Armor") and its pieces by id, helmet first (a
+     * set the guide shows piece by piece, the Shimmering Light Armor, is a set a piece).
+     */
     public record ArmorSet(String name, List<String> pieces) {
     }
 
