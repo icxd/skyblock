@@ -255,7 +255,7 @@ public final class ItemBuilder {
      * " &6✪✪✪": dungeon items show five gold stars, then a red master star (➊ to ➎); others turn their
      * stars purple from the left after five (and aqua after ten).
      */
-    static String stars(SkyBlockItem item, NBTTagCompound tag) {
+    public static String stars(SkyBlockItem item, NBTTagCompound tag) {
         int stars = starCount(tag);
         if (stars <= 0) return "";
         if (DungeonItems.is(item, tag)) {
@@ -326,7 +326,7 @@ public final class ItemBuilder {
         Reforge reforge = reforge(tag);
         Map<Book, Stats> books = Book.bonuses(item, tag);
         boolean dungeon = DungeonItems.is(item, tag);
-        int stars = dungeon ? Math.min(starCount(tag), 5) : 0;
+        int stars = dungeon ? Math.min(starCount(tag), 5) : starCount(tag);
         double catacombs = dungeon ? catacombsBoost(owner) : 0;
         Stats enchanted = new Stats();
         for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
@@ -342,7 +342,7 @@ public final class ItemBuilder {
                 bookBrackets.append(" ").append(book.getKey().bracket(value));
             }
             double reforged = reforge == null || reforge.getStats().get(stat) == null ? 0 : reforge.getStats().get(stat).at(rarity);
-            // Stars add 2% of the base stat each out of a dungeon; in one, the dungeon boost replaces that.
+            // Stars add 2% of the base stat each out of a dungeon (with no bracket); in one, the dungeon boost replaces that.
             double starBonus = starBonus(stat, base.get(stat), stars);
             // What enchantments grant counts in the total, with no bracket of its own.
             double shown = base.get(stat) + starBonus + fromBooks + reforged + enchanted.get(stat);
@@ -362,11 +362,12 @@ public final class ItemBuilder {
     }
 
     /**
-     * What a dungeon item's stars add to one of its own stats out of a dungeon: 2% of it a star, but
-     * nothing to Swing Range (the recorded 5-star Giant's Sword showed its 1 as {@code +1} in the Hub).
+     * What an item's stars add to one of its own stats out of a dungeon: 2% of it a star, but nothing to
+     * Swing Range (the recorded 5-star Giant's Sword showed its 1 as {@code +1} in the Hub), Health Regen or
+     * Vitality (live: a 10-star Gillsplash Belt's 2 Health Regen shows +2, a 5-star Reaper Mask's 60 Vitality +60).
      */
     public static double starBonus(Stat stat, double base, int stars) {
-        return stat == Stat.SWING_RANGE ? 0 : base * 0.02 * stars;
+        return stat == Stat.SWING_RANGE || stat == Stat.HEALTH_REGEN || stat == Stat.VITALITY ? 0 : base * 0.02 * stars;
     }
 
     /**

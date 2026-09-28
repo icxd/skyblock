@@ -44,11 +44,11 @@ public final class ItemStats {
     }
 
     /**
-     * The stats its lore lists: its own, its reforge's, its books' (see {@link Book}) and its
-     * enchantments'. On a dungeon item (see {@link DungeonItems}) each star adds 2% of its own stats
-     * ({@link ItemBuilder#starBonus});
-     * in a dungeon ({@code catacombs} is the wearer's Catacombs boost there, null elsewhere) the whole
-     * line is multiplied instead by
+     * The stats its lore lists: its own, its reforge's, its books' (see {@link Book}) and its enchantments'.
+     * Each star adds 2% of its own stats ({@link ItemBuilder#starBonus}; every star, on any item: the live
+     * Crimson Chestplate's 230 Health is 257.6 with 6); on a dungeon item (see {@link DungeonItems}) up to 5
+     * count, and in a dungeon ({@code catacombs} is the wearer's Catacombs boost there, null elsewhere) the
+     * whole line is multiplied instead by
      * {@link ItemBuilder#dungeonFactor} (+10% a star and the Catacombs boost), as Hypixel does: the
      * recorded Giant's Sword's 265 Strength was 922.2 in a dungeon.
      */
@@ -67,12 +67,12 @@ public final class ItemStats {
             if (enchant.getType() != null) stats.add(enchant.getType().getStats(enchant.getLevel()));
         }
 
-        if (!DungeonItems.is(item, tag)) return stats;
-        int stars = Math.min(ItemBuilder.starCount(tag), 5);
+        boolean dungeon = DungeonItems.is(item, tag);
+        int stars = dungeon ? Math.min(ItemBuilder.starCount(tag), 5) : ItemBuilder.starCount(tag);
         for (Stat stat : Stat.values()) {
             // In a dungeon only what the lore gives a bracket grows: stats above 0, not breaking power or
             // a weapon's own ability damage.
-            boolean boosted = catacombs != null && stats.get(stat) > 0 && stat != Stat.BREAKING_POWER && stat != Stat.WEAPON_ABILITY_DAMAGE;
+            boolean boosted = dungeon && catacombs != null && stats.get(stat) > 0 && stat != Stat.BREAKING_POWER && stat != Stat.WEAPON_ABILITY_DAMAGE;
             if (boosted) stats.set(stat, stats.get(stat) * ItemBuilder.dungeonFactor(stat, stars, catacombs));
             else stats.add(stat, ItemBuilder.starBonus(stat, base.get(stat), stars));
         }
