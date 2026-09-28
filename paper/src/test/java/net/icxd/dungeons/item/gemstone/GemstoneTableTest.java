@@ -25,16 +25,16 @@ class GemstoneTableTest {
                  "gems": {"JASPER": {"stat": "STRENGTH", "values": {"FINE": {"RARE": 4, "MYTHIC": 7, "SUPREME": 9}}},
                           "COMBAT": {"stat": "STRENGTH", "values": {}},
                           "RUBY": {"stat": "NOT_A_STAT", "values": {}}},
-                 "removal_costs": {"ROUGH": 1, "FLAWED": 100, "FINE": 10000, "FLAWLESS": 100000},
-                 "chisel_percentages": {"FINE": 50},
+                 "removal_costs": {"ROUGH": 2, "FLAWED": 20, "FINE": 200, "FLAWLESS": 2000},
+                 "chisel_percentages": {"FINE": 7},
                  "chisel_perks": {"PERIDOT": "§7Gain §a+{}%"},
                  "armor_sets": {"DIVAN": {"name": "Divan Armor", "pieces": ["DIVAN_HELMET", "DIVAN_BOOTS"]}}}"""), problems);
         assertNotNull(table);
         assertEquals(Stat.STRENGTH, table.stat(GemstoneType.JASPER));
         assertEquals(7, table.value(new Gem(GemstoneType.JASPER, GemstoneQuality.FINE), Rarity.MYTHIC));
         assertNull(table.stat(GemstoneType.RUBY));
-        assertEquals(10000, table.removalCost(GemstoneQuality.FINE));
-        assertEquals(50, table.chiselPercentages().get(GemstoneQuality.FINE));
+        assertEquals(200, table.removalCost(GemstoneQuality.FINE));
+        assertEquals(7, table.chiselPercentages().get(GemstoneQuality.FINE));
         assertEquals(List.of("DIVAN_HELMET", "DIVAN_BOOTS"), table.armorSets().get("DIVAN").pieces());
         // What it doesn't know: a rarity, a slot type as a gem, a stat, and Perfect's fee.
         assertEquals(4, problems.size(), problems.toString());
@@ -61,9 +61,10 @@ class GemstoneTableTest {
         assertEquals(54, value(table, "FINE_AMBER_GEM", Rarity.DIVINE));
         assertEquals(Stat.FORAGING_FORTUNE, table.stat(GemstoneType.CITRINE));
         assertEquals(Stat.CRIT_DAMAGE, table.stat(GemstoneType.ONYX));
-        assertEquals(List.of(1.0, 100.0, 10000.0, 100000.0, 500000.0),
-                List.of(GemstoneQuality.values()).stream().map(table::removalCost).toList());
-        assertEquals(100, table.chiselPercentages().get(GemstoneQuality.PERFECT));
+        // A Fine gem's fee as the Ring of Power screenshot shows it ("Cost to remove - 10.0k"); every quality has one.
+        assertEquals(10000, table.removalCost(GemstoneQuality.FINE));
+        assertEquals(GemstoneQuality.values().length, table.removalCosts().size());
+        assertEquals(GemstoneQuality.values().length, table.chiselPercentages().size());
         assertTrue(table.armorSets().get("DIVAN").pieces().contains("DIVAN_HELMET"));
     }
 

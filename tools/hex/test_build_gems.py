@@ -12,7 +12,8 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_gems as bg  # noqa: E402
 
-QUALITIES = {'ROUGH': 1, 'FLAWED': 100, 'FINE': 10000, 'FLAWLESS': 100000, 'PERFECT': 500000}
+# Made-up fees and percentages (the real ones are Hypixel's: they stay in the private data).
+QUALITIES = {'ROUGH': 2, 'FLAWED': 20, 'FINE': 200, 'FLAWLESS': 2000, 'PERFECT': 20000}
 
 
 def neu_repo(folder):
@@ -23,7 +24,7 @@ def neu_repo(folder):
     os.makedirs(os.path.join(folder, 'constants'))
     with open(os.path.join(folder, 'constants', 'gemstones.json'), 'w') as f:
         json.dump({'gemstoneTypes': types, 'removalCosts': QUALITIES,
-                   'chiselPercentages': {'ROUGH': 30, 'FLAWED': 40, 'FINE': 50, 'FLAWLESS': 60, 'PERFECT': 100}}, f)
+                   'chiselPercentages': {'ROUGH': 1, 'FLAWED': 2, 'FINE': 3, 'FLAWLESS': 4, 'PERFECT': 5}}, f)
 
 
 def piece(item_id, category, name, sets=None, slots=True):
@@ -95,7 +96,7 @@ class Build(unittest.TestCase):
 
     def test_by_quality(self):
         self.assertEqual(self.data['removal_costs'], QUALITIES)
-        self.assertEqual(self.data['chisel_percentages']['PERFECT'], 100)
+        self.assertEqual(self.data['chisel_percentages']['PERFECT'], 5)
         self.assertEqual(self.data['chisel_perks'], {'PERIDOT': '§7Gain §a+{}% §fFossil Essence'})
 
     def test_armor_sets(self):

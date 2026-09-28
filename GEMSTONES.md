@@ -25,9 +25,8 @@ thread). `tools/hex/build_gems.py --neu NEU-REPO [--api ITEMS_API] [--wiki GEO_U
 from public sources (NEU's `constants/gemstones.json`, the items API's `museum_data`, and the set names in
 the wiki's copy of the guide, Geo/UI); `test_build_gems.py` checks it.
 It has each gem's stat and what one gives by quality and item rarity (Common to Mythic, Divine for Amber,
-Topaz and Jade as NEU has them), the removal fee by quality (Rough 1, Flawed 100, Fine 10,000, Flawless
-100,000, Perfect 500,000 coins), the chisel percentages and perk words, and the armour sets the guide
-shows once. **Citrine is doubled**: NEU has the values from before 0.23.3 doubled them (the same as
+Topaz and Jade as NEU has them), the removal fee by quality (Rough 1 coin up to Perfect 500,000), the
+chisel percentages and perk words, and the armour sets the guide shows once. **Citrine is doubled**: NEU has the values from before 0.23.3 doubled them (the same as
 Peridot's); every Citrine value on the live auction house (11 cells) is exactly twice NEU's, so all of
 them are doubled. Unlock costs aren't in it: the item data has them (`gemstone_slots[].costs`, the same as
 NEU's on all 1015 slots). Until the table is read, or without it, gems show but give nothing.
