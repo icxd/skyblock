@@ -145,7 +145,8 @@ Until its part is built, a stub opens `Placeholder`, a page with only its title 
   - `summary(HexItem)`: its group's lines, each indented two spaces ("  &7Reforge &c✖").
   - `open(HexSession)`: usually `session.open(new MyPage(session))`.
 
-  `applies` and `summary` are plain functions, so they can be tested with `HexFakes`.
+  `applies` and `summary` are plain functions, so they can be tested with `HexFakes`. They only read
+  the `HexItem`: the main menu hands the same one to every category.
 - **`HexItem`**: the item's `SkyBlockItem`, a copy of its data (`tag`) and its holder, plus `name()`,
   `rarity()` and `accessory()`.
 - **`HexSession`**, the item's owner:

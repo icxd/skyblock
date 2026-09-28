@@ -14,7 +14,9 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
 /**
  * The item in the Hex as the categories see it: what kind of SkyBlock item it is, its data, and who holds it
  * (for the lore's set bonuses; null in tests). {@code tag} is a copy of the data, read when this was made: a
- * category may change it and hand it to {@link HexSession#replace}, which is what changes the item.
+ * category may change it and hand it to {@link HexSession#replace}, which is what changes the item. Not in
+ * {@link HexCategory#applies} or {@link HexCategory#summary}, though: the main menu hands the same one to every
+ * category, so those only read it (a page takes its own, {@code session.hexItem()} or {@code session.tag()}).
  */
 public record HexItem(SkyBlockItem item, NBTTagCompound tag, Player holder) {
     /** The SkyBlock item this stack is; null for nothing, or a stack that isn't one (a vanilla item). */
