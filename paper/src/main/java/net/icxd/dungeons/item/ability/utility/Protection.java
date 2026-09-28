@@ -18,9 +18,10 @@ import net.icxd.dungeons.session.Vitality;
  * able to attack ("You cannot attack ... while the veil is up", "can't deal damage"), their hits doing less
  * ("Halves your damage for 2s afterwards") and the mobs an Enrage taunted hitting them for less. Immunity
  * takes whole SkyBlock hits (see {@link #register}) and vanilla damage ({@link UtilityListener}); the veil
- * and the saves from death come after it on a hit's way. Main thread.
+ * and the saves from death come after it on a hit's way. Public for effects elsewhere (EFFECTS.md);
+ * {@link #register} and {@link #forget} stay the listener's. Main thread.
  */
-final class Protection {
+public final class Protection {
     /** Until when, by player and then by what gave it. */
     private static final Map<UUID, Map<String, Long>> IMMUNE = new HashMap<>();
     private static final Map<UUID, Map<String, Long>> NO_ATTACK = new HashMap<>();
@@ -41,43 +42,43 @@ final class Protection {
         Vitality.addRegenPause(CreeperVeil::isUp);
     }
 
-    static void immunity(Player player, String source, long millis) {
+    public static void immunity(Player player, String source, long millis) {
         put(IMMUNE, player.getUniqueId(), source, System.currentTimeMillis() + millis);
     }
 
-    static void endImmunity(Player player, String source) {
+    public static void endImmunity(Player player, String source) {
         Map<String, Long> sources = IMMUNE.get(player.getUniqueId());
         if (sources != null) sources.remove(source);
     }
 
-    static boolean immune(Player player) {
+    public static boolean immune(Player player) {
         return active(IMMUNE.get(player.getUniqueId()), System.currentTimeMillis());
     }
 
-    static void noAttack(Player player, String source, long millis) {
+    public static void noAttack(Player player, String source, long millis) {
         put(NO_ATTACK, player.getUniqueId(), source, System.currentTimeMillis() + millis);
     }
 
-    static void endNoAttack(Player player, String source) {
+    public static void endNoAttack(Player player, String source) {
         Map<String, Long> sources = NO_ATTACK.get(player.getUniqueId());
         if (sources != null) sources.remove(source);
     }
 
-    static boolean cantAttack(Player player) {
+    public static boolean cantAttack(Player player) {
         return active(NO_ATTACK.get(player.getUniqueId()), System.currentTimeMillis());
     }
 
     /** Their hits are times {@code factor} for {@code millis} from {@code fromMillis} on (a delay: "afterwards"). */
-    static void dealt(Player player, String source, double factor, long fromMillis, long millis) {
+    public static void dealt(Player player, String source, double factor, long fromMillis, long millis) {
         dealt(player.getUniqueId(), source, factor, fromMillis, millis);
     }
 
-    static void dealt(UUID player, String source, double factor, long fromMillis, long millis) {
+    public static void dealt(UUID player, String source, double factor, long fromMillis, long millis) {
         DEALT.computeIfAbsent(player, id -> new HashMap<>()).put(source, new double[] {factor, fromMillis, fromMillis + millis});
     }
 
     /** Those mobs' hits on them are times {@code factor} for {@code millis}. */
-    static void taunted(Player player, Entity mob, double factor, long millis) {
+    public static void taunted(Player player, Entity mob, double factor, long millis) {
         TAUNTED.computeIfAbsent(player.getUniqueId(), id -> new HashMap<>())
                 .put(mob.getUniqueId(), new double[] {factor, System.currentTimeMillis() + millis});
     }
@@ -90,7 +91,7 @@ final class Protection {
     }
 
     /** The product of the factors on their hits that are on at {@code now}. */
-    static double dealtFactor(UUID player, long now) {
+    public static double dealtFactor(UUID player, long now) {
         Map<String, double[]> factors = DEALT.get(player);
         if (factors == null) return 1;
         factors.values().removeIf(f -> f[2] <= now);

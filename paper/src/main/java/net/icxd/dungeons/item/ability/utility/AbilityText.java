@@ -12,8 +12,9 @@ import net.icxd.dungeons.stats.Stats;
  * The numbers in an ability's text, as items.json has it ("&7Grants &f+100✦ Speed &7for &a30s&7."): the
  * text is Hypixel's, so what an ability does follows what its item says, whatever the item (a Weirder Tuba's
  * Howl lasts the 30 seconds its text gives). The text is read without its colour codes, all lines as one.
+ * Public, so bonuses and enchantments read their numbers from their text the same way (EFFECTS.md).
  */
-final class AbilityText {
+public final class AbilityText {
     /** "+30❁ Strength", "+2.5▚ Gemstone Spread": a number, then a symbol and a name. */
     private static final Pattern STAT = Pattern.compile("\\+([\\d,]+(?:\\.\\d+)?)%?\\s*(\\S)\\s*([A-Z][A-Za-z']*(?: [A-Z][A-Za-z']*)*)");
     /** "for 20 seconds", "for 5s", "for 1m", "for 1.5s". */
@@ -27,7 +28,7 @@ final class AbilityText {
     }
 
     /** The lines as one, without colour codes and with single spaces. */
-    static String plain(List<String> lines) {
+    public static String plain(List<String> lines) {
         return String.join(" ", lines).replaceAll("[&§][0-9a-fk-orA-FK-OR]", "").replaceAll("\\s+", " ").trim();
     }
 
@@ -36,7 +37,7 @@ final class AbilityText {
      * stats, whose names are the same as others', never. A number with a "%" is its percent ("+5% ..."
      * counts 5).
      */
-    static Stats stats(String plain) {
+    public static Stats stats(String plain) {
         Stats stats = new Stats();
         Matcher m = STAT.matcher(plain);
         while (m.find()) {
@@ -60,7 +61,7 @@ final class AbilityText {
     }
 
     /** How long, in milliseconds: the first "for 20 seconds" in it. */
-    static OptionalDouble millis(String plain) {
+    public static OptionalDouble millis(String plain) {
         Matcher m = FOR.matcher(plain);
         if (!m.find()) return OptionalDouble.empty();
         double amount = Double.parseDouble(m.group(1));
@@ -68,19 +69,19 @@ final class AbilityText {
     }
 
     /** How far, in blocks: the first "within 18 blocks" in it. */
-    static OptionalDouble blocks(String plain) {
+    public static OptionalDouble blocks(String plain) {
         Matcher m = BLOCKS.matcher(plain);
         return m.find() ? OptionalDouble.of(Double.parseDouble(m.group(1))) : OptionalDouble.empty();
     }
 
     /** How many players: the first "up to 5 players" or "You and 4 nearby players" in it. */
-    static OptionalDouble players(String plain) {
+    public static OptionalDouble players(String plain) {
         Matcher m = PLAYERS.matcher(plain);
         return m.find() ? OptionalDouble.of(Double.parseDouble(m.group(1))) : OptionalDouble.empty();
     }
 
     /** The first number after {@code before} in it ("Heal for " in "Heal for 1,000❤."), commas and all. */
-    static OptionalDouble after(String plain, String before) {
+    public static OptionalDouble after(String plain, String before) {
         Matcher m = Pattern.compile(Pattern.quote(before) + "\\s*\\+?([\\d,]+(?:\\.\\d+)?)").matcher(plain);
         return m.find() ? OptionalDouble.of(number(m.group(1))) : OptionalDouble.empty();
     }
