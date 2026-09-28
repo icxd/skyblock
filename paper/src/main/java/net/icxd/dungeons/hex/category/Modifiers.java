@@ -7,13 +7,14 @@ import org.bukkit.Material;
 import net.icxd.dungeons.hex.HexCategory;
 import net.icxd.dungeons.hex.HexItem;
 import net.icxd.dungeons.hex.HexSession;
-import net.icxd.dungeons.menu.Icon;
+import net.icxd.dungeons.hex.modifier.HexModifiers;
+import net.icxd.dungeons.hex.modifier.ModifiersPage;
 
 /**
  * Modifiers: the Recombobulator 3000, Master Stars, Wither Scrolls, Power Scrolls, Enrichments and the like,
  * "The Hex ➜ Modifiers" (the wiki's tabs). Carpentry 20. Its button is the Recombobulator 3000's head (from the
- * item data). Stage 1: the button as the wiki has it; LATER (the books, modifiers and item upgrades part): which
- * items, the summary ("  &6Recombobulator 3000 &c✖" ...), the page.
+ * item data). It's for an item that takes any of them, and its summary is a line for each (see HexModifiers; the
+ * page is ModifiersPage).
  */
 public final class Modifiers extends HexCategory {
     private static final List<String> DESCRIPTION = List.of("&7Apply miscellaneous item", "&7modifiers like the", "&6Recombobulator 3000&7,",
@@ -30,16 +31,17 @@ public final class Modifiers extends HexCategory {
 
     @Override
     public boolean applies(HexItem item) {
-        return false;
+        return !HexModifiers.of(item).isEmpty();
     }
 
     @Override
     public List<String> summary(HexItem item) {
-        return List.of();
+        return HexModifiers.summary(item);
     }
 
     @Override
     public void open(HexSession session) {
-        session.open(new Placeholder(session, "The Hex ➜ Modifiers", new Icon(Material.ANVIL, "&aApply Modifiers", DESCRIPTION)));
+        // The header's lore is the button's, without its summary (the wiki's screens).
+        session.open(new ModifiersPage(session, DESCRIPTION, id -> lookOf(id, new Look(Material.PAPER, null))));
     }
 }

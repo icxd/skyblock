@@ -25,4 +25,9 @@ public final class ItemBehaviours {
     public static ItemBehaviour of(SkyBlockItem item) {
         return BY_ID.getOrDefault(item.id().toUpperCase(Locale.ROOT), NONE);
     }
+
+    /** Whether it's Necron's Blade or a sword made from it, which the Wither Scrolls go on (see NecronsBlade). */
+    public static boolean takesWitherScrolls(SkyBlockItem item) {
+        return NecronsBlade.IDS.contains(item.id().toUpperCase(Locale.ROOT));
+    }
 }
