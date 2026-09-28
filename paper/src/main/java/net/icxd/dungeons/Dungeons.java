@@ -8,6 +8,8 @@ import net.icxd.dungeons.anticheat.check.CheckListener;
 import net.icxd.dungeons.collection.CollectionFiles;
 import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.command.commands.admin.SetCollectionCommand;
+import net.icxd.dungeons.command.commands.user.CraftCommand;
+import net.icxd.dungeons.recipe.CraftingTable;
 import net.icxd.dungeons.command.commands.admin.AddEnchantmentCommand;
 import net.icxd.dungeons.command.commands.admin.DataCommand;
 import net.icxd.dungeons.command.commands.admin.DungeonCommand;
@@ -151,6 +153,7 @@ public class Dungeons extends JavaPlugin {
         }
         listen(StorageListener.class, StorageListener::new);
         listen(CollectionGains.class, CollectionGains::new);
+        listen(CraftingTable.Drags.class, CraftingTable.Drags::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));
@@ -165,7 +168,7 @@ public class Dungeons extends JavaPlugin {
                 new ShowExtraStatsCommand(), new ToggleReadyUpCommand(), new ProfilesCommand(), new SkillsCommand(),
                 new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand(), new StorageCommand(),
                 new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
-                new SetCollectionCommand());
+                new CraftCommand(), new SetCollectionCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {
