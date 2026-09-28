@@ -22,6 +22,8 @@ import net.icxd.dungeons.hex.enchant.EnchantRules;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.SpecificItemType;
+import net.icxd.dungeons.stats.Stat;
+import net.icxd.dungeons.stats.Stats;
 
 /** The enchantments' table: reading it, finding one by any name, what goes on what; and the private one as it is. */
 class EnchantmentDataTest {
@@ -133,6 +135,18 @@ class EnchantmentDataTest {
         assertEquals(EnchantmentType.getByNamespace("ultimate_wise"), EnchantmentType.getByNamespace("wise"));
         assertTrue(EnchantmentType.getByNamespace("wise").isUltimate());
         assertEquals(13, EnchantmentType.all().size());
+    }
+
+    /** Plain stats read from the text: one, two, and not those that depend on something. */
+    @Test
+    void statsFromTheText() {
+        Stats absorb = EnchantmentType.stats("&7Grants &3+1☯ Foraging Wisdom &7and &6+2☘ Foraging Fortune&7.");
+        assertEquals(1, absorb.get(Stat.FORAGING_WISDOM), 1e-9);
+        assertEquals(2, absorb.get(Stat.FORAGING_FORTUNE), 1e-9);
+        assertEquals(6, EnchantmentType.stats("&7Grants &b+6✯ Magic Find.").get(Stat.MAGIC_FIND), 1e-9);
+        assertEquals(new Stats(), EnchantmentType.stats("&7Grants &c+1❤ Health &7and &f+0.5❂ True Defense &7per digit in your &6Accessory Power&7."));
+        assertEquals(new Stats(), EnchantmentType.stats("&7Grants &60.25☘ Farming Fortune &7per unique visitor served."));
+        assertEquals(new Stats(), EnchantmentType.stats(null));
     }
 
     // The private table as it is

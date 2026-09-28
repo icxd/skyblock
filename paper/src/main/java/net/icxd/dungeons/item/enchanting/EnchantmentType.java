@@ -91,9 +91,9 @@ public final class EnchantmentType {
     }
 
     /**
-     * The stats it grants at a level, read from its description ("Grants +75 ❤ Health.", Critical's
-     * "Increases ☠ Crit Damage by 10%.", Overload's two); nothing if it grants none, or only sometimes
-     * ("against explosions", "while out of combat").
+     * The stats it grants at a level, read from its description ("Grants +75 ❤ Health.", Absorb's "Grants +1☯
+     * Foraging Wisdom and +2☘ Foraging Fortune.", Critical's "Increases ☠ Crit Damage by 10%.", Overload's two);
+     * nothing if it grants none, or only sometimes ("against explosions", "while out of combat").
      */
     public Stats getStats(int level) {
         return stats(getDescription(level));
@@ -104,7 +104,10 @@ public final class EnchantmentType {
         Stats stats = new Stats();
         if (text == null) return stats;
         Matcher m = GRANTS.matcher(text);
-        if (m.find()) return set(stats, m.group(2), m.group(1));
+        if (m.find()) {
+            set(stats, m.group(2), m.group(1));
+            return m.group(4) == null ? stats : set(stats, m.group(4), m.group(3));
+        }
         m = INCREASES.matcher(text);
         if (!m.find()) return stats;
         set(stats, m.group(1), m.group(2));
@@ -119,8 +122,10 @@ public final class EnchantmentType {
         return stats;
     }
 
-    /** "&7Grants &a+75 &c❤ Health&7." (or "…&7, which …"), and nothing more to it. */
-    private static final Pattern GRANTS = Pattern.compile("^&7Grants &.\\+([\\d.]+) ?(?:&.)?\\S? ?([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*)&7(?:\\.$|, which )");
+    /** One "&a+75 &c❤ Health" of "&7Grants … [&7and …]". */
+    private static final String GRANT = "&.\\+([\\d.]+) ?(?:&.)?\\S? ?([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*)";
+    /** "&7Grants &a+75 &c❤ Health&7." (or "…&7, which …", or Divine Gift's "…Magic Find."), and nothing more to it. */
+    private static final Pattern GRANTS = Pattern.compile("^&7Grants " + GRANT + "(?: &7and " + GRANT + ")?(?:&7)?(?:\\.$|, which )");
     /** One "&9☠ Crit Damage &7by &a10%&7" of "&7Increases … [and …]." */
     private static final String BY = "&.\\S+ ([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*) &7by &a\\+?([\\d.]+)%?&7";
     private static final Pattern INCREASES = Pattern.compile("^&7Increases " + BY + "(?: and " + BY + ")?\\.");
