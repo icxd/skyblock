@@ -22,6 +22,7 @@ import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.Soulbound;
 import net.icxd.dungeons.item.enums.SpecificItemType;
+import net.icxd.dungeons.item.gemstone.GemSlots;
 import net.icxd.dungeons.item.gemstone.GemstoneSlot;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -339,6 +340,7 @@ public final class ItemBuilder {
         int catacombsLevel = reforge == null || reforge.perLevel().isEmpty() ? 0 : catacombsLevel(owner != null ? owner : holder);
         Stats enchanted = new Stats();
         for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
+        Stats gems = GemSlots.stats(item, tag);
         for (Stat stat : Stat.values()) {
             if (stat == Stat.BREAKING_POWER || stat == Stat.WEAPON_ABILITY_DAMAGE) continue;
             double potatoBooks = generic == GenericItemType.WEAPON && (stat == Stat.DAMAGE || stat == Stat.STRENGTH) ? books * 2
@@ -348,8 +350,9 @@ public final class ItemBuilder {
             double reforged = reforge == null ? 0 : reforge.stat(stat, rarity, catacombsLevel);
             // Stars add 2% of the base stat each out of a dungeon; in one, the dungeon boost replaces that.
             double starBonus = starBonus(stat, base.get(stat), stars);
+            double gemstones = gems.get(stat);
             // What enchantments grant counts in the total, with no bracket of its own.
-            double shown = base.get(stat) + starBonus + potatoBooks + artOfWar + reforged + enchanted.get(stat);
+            double shown = base.get(stat) + starBonus + potatoBooks + artOfWar + reforged + enchanted.get(stat) + gemstones;
             if (shown == 0) continue;
             String unit = stat.getUnit();
             StringBuilder line = new StringBuilder("&7").append(stat.getDisplayName()).append(": &").append(stat.getLoreColor())
@@ -357,6 +360,7 @@ public final class ItemBuilder {
             if (potatoBooks != 0) line.append(" &e(").append(Text.signed(potatoBooks)).append(")");
             if (artOfWar != 0) line.append(" &6[").append(Text.signed(artOfWar)).append("]");
             if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(unit).append(")");
+            if (gemstones != 0) line.append(" &d(").append(Text.signed(gemstones)).append(unit).append(")");
             if (item.dungeonItem() && shown > 0) {
                 line.append(" &8(").append(Text.signed((shown - starBonus) * dungeonFactor(stat, stars, catacombs))).append(unit).append(")");
             }
@@ -405,18 +409,9 @@ public final class ItemBuilder {
         return user == null ? 0 : DungeonProfile.catacombsStatLevel(user);
     }
 
-    /** "&7Gemstones: &8[✎] [⚔]": locked slots all dark gray, open ones with a gray symbol. */
+    /** "&7Gemstones: &8[✎] &9[&d⚔&9]": locked slots all dark gray, open ones with a gray symbol, gems in their colours (GemSlots). */
     private static String gemstoneLine(SkyBlockItem item, NBTTagCompound tag) {
-        if (item.gemstoneSlots() == null) return null;
-        List<GemstoneSlot> kinds = item.gemstoneSlots().getSlots();
-        NBTTagList slots = tag.getList("gemstone_slots", 10);
-        StringBuilder line = new StringBuilder("&7Gemstones:");
-        for (int i = 0; i < kinds.size(); i++) {
-            boolean locked = i < slots.size() ? slots.get(i).getBoolean("locked") : !kinds.get(i).getCosts().isEmpty();
-            char icon = kinds.get(i).getType().getIcon();
-            line.append(locked ? " &8[" + icon + "]" : " &8[&7" + icon + "&8]");
-        }
-        return line.toString();
+        return GemSlots.line(item, tag);
     }
 
     /** The item's enchantments that this version knows, ultimate first, then by name. */

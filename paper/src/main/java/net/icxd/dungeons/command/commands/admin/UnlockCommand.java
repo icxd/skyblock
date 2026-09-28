@@ -6,9 +6,9 @@ import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.gemstone.GemSlots;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
-import net.icxd.dungeons.item.nbt.NBTTagList;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -32,18 +32,14 @@ public class UnlockCommand extends SCommand {
         }
         int slot = Integer.parseInt(args[0]);
         NBTTagCompound tag = nmsItem.getTag();
-        NBTTagList list = tag.getList("gemstone_slots", 10);
-        if (slot >= list.size()) {
-            send("&cThis item has " + list.size() + " gemstone slots.");
+        SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
+        int slots = sbItem == null ? 0 : GemSlots.of(sbItem, tag).size();
+        if (slot >= slots) {
+            send("&cThis item has " + slots + " gemstone slots.");
             return;
         }
-        NBTTagCompound gslot = list.get(slot);
-        gslot.setBoolean("locked", false);
-        gslot.remove("costs");
-        list.set(slot, gslot);
-        tag.set("gemstone_slots", list);
-
-        SkyBlockItem sbItem = ItemRegistry.get(tag.getString("id"));
+        // As the Gemstone Grinder unlocks one, without its cost.
+        GemSlots.unlock(tag, sbItem, slot);
         player.getInventory().setItemInMainHand(ItemBuilder.build(sbItem, tag));
 
         send("&aGemstone " + slot + " unlocked.");

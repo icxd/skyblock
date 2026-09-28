@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+# python3 tools/hex/test_build_gems.py
+#
+# Checks of build_gems.py on made-up input (no Hypixel data needed): the stat table with Citrine doubled, the
+# fees by quality, and the armour sets the Gemstone Guide shows once, named as the wiki's copy names them.
+import json
+import os
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build_gems as bg  # noqa: E402
+
+# Made-up fees and percentages (the real ones are Hypixel's: they stay in the private data).
+QUALITIES = {'ROUGH': 2, 'FLAWED': 20, 'FINE': 200, 'FLAWLESS': 2000, 'PERFECT': 20000}
+
+
+def neu_repo(folder):
+    stats = {q: {'COMMON': 1, 'UNCOMMON': 1.5, 'MYTHIC': 3} for q in QUALITIES}
+    types = {g: {'statName': 'True Defense', 'stats': stats} for g in bg.GEMS}
+    types['AMBER'] = {'statName': 'Mining Speed', 'stats': {q: {'MYTHIC': 45, 'DIVINE': 54} for q in QUALITIES}}
+    types['PERIDOT']['chiselBonus'] = '§7Gain §a+{}% §fFossil Essence'
+    os.makedirs(os.path.join(folder, 'constants'))
+    with open(os.path.join(folder, 'constants', 'gemstones.json'), 'w') as f:
+        json.dump({'gemstoneTypes': types, 'removalCosts': QUALITIES,
+                   'chiselPercentages': {'ROUGH': 1, 'FLAWED': 2, 'FINE': 3, 'FLAWLESS': 4, 'PERFECT': 5}}, f)
+
+
+def piece(item_id, category, name, sets=None, slots=True):
+    item = {'id': item_id, 'category': category, 'name': name}
+    if sets:
+        item['museum_data'] = {'armor_set_donation_xp': {s: 10 for s in sets}}
+    if slots:
+        item['gemstone_slots'] = [{'slot_type': 'COMBAT'}]
+    return item
+
+
+# Lines as the wiki's Geo/UI has them (its UI Pager of the guide).
+WIKI = '''{{UI Pager|Gemstone Guide
+|Blaze Helmet, none, %inherit%, %inherit%//&7Available Gemstone Slots/  &d❁ Jasper
+|Burning Terror Helmet, none, &6Terror Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat &8x2
+|Helmet of Divan, none, &6Divan's Armor, %inherit%//&7Available Gemstone Slots/  &6⸕ Amber &8x2
+|Hyperion, none, %inherit%, %inherit%//&7Available Gemstone Slots/  &b✎ Sapphire
+|Shimmer Hood, none, &9Shimmer Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat
+|Shimmer Tunic, none, &9Shimmer Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat
+|Test Helmet (fragged), none, &5\ue068 Test Armor, %inherit%//&7Available Gemstone Slots/  &4⚔ Combat
+}}'''
+
+
+class Build(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.neu = os.path.join(self.tmp.name, 'neu')
+        neu_repo(self.neu)
+        items = [
+            piece('DIVAN_BOOTS', 'BOOTS', 'Boots of Divan', ['DIVAN']),
+            piece('DIVAN_HELMET', 'HELMET', 'Helmet of Divan', ['DIVAN']),
+            # The Museum counts the Blaze Armor in Crimson Hunter's set too.
+            piece('BLAZE_HELMET', 'HELMET', 'Blaze Helmet', ['BLAZE', 'CRIMSON_HUNTER']),
+            piece('ARMOR_OF_YOG_HELMET', 'HELMET', 'Yog Helmet', ['ARMOR_OF_YOG']),
+            piece('PERFECT_HELMET_12', 'HELMET', 'Perfect Helmet - Tier XII', ['PERFECT_TIER_12']),
+            piece('NO_SLOTS_HELMET', 'HELMET', 'No Slots Helmet', ['NO_SLOTS'], slots=False),
+            # No Museum set: grouped by id.
+            piece('HOT_AURORA_HELMET', 'HELMET', 'Hot Aurora Helmet'),
+            piece('HOT_AURORA_BOOTS', 'BOOTS', 'Hot Aurora Boots'),
+            piece('LONE_HELMET', 'HELMET', 'Lone Helmet'),
+            piece('HYPERION', 'SWORD', 'Hyperion'),
+            # Named by the wiki's copy: a fragged set, a Kuudra tier, and a set it lists piece by piece.
+            piece('STARRED_TEST_HELMET', 'HELMET', 'Test Helmet', ['STARRED_TEST']),
+            piece('BURNING_TERROR_HELMET', 'HELMET', 'Burning Terror Helmet'),
+            piece('BURNING_TERROR_BOOTS', 'BOOTS', 'Burning Terror Boots'),
+            piece('SHIMMER_HOOD', 'HELMET', 'Shimmer Hood', ['SHIMMER']),
+            piece('SHIMMER_TUNIC', 'CHESTPLATE', 'Shimmer Tunic', ['SHIMMER']),
+        ]
+        self.api = os.path.join(self.tmp.name, 'items.json')
+        with open(self.api, 'w') as f:
+            json.dump({'lastUpdated': 5, 'items': items}, f)
+        self.data = bg.build(self.neu, self.api)
+        self.wiki = os.path.join(self.tmp.name, 'geo_ui.txt')
+        with open(self.wiki, 'w', encoding='utf-8') as f:
+            f.write(WIKI)
+        self.named = bg.build(self.neu, self.api, self.wiki)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_gems(self):
+        ruby = self.data['gems']['RUBY']
+        self.assertEqual(ruby['stat'], 'TRUE_DEFENSE')
+        self.assertEqual(ruby['values']['FINE'], {'COMMON': 1, 'UNCOMMON': 1.5, 'MYTHIC': 3})
+        self.assertEqual(self.data['gems']['AMBER']['values']['PERFECT'], {'MYTHIC': 45, 'DIVINE': 54})
+        # Citrine is doubled; Peridot, which NEU has the same, isn't.
+        self.assertEqual(self.data['gems']['CITRINE']['values']['FINE'], {'COMMON': 2, 'UNCOMMON': 3, 'MYTHIC': 6})
+        self.assertEqual(self.data['gems']['PERIDOT']['values']['FINE'], {'COMMON': 1, 'UNCOMMON': 1.5, 'MYTHIC': 3})
+
+    def test_by_quality(self):
+        self.assertEqual(self.data['removal_costs'], QUALITIES)
+        self.assertEqual(self.data['chisel_percentages']['PERFECT'], 5)
+        self.assertEqual(self.data['chisel_perks'], {'PERIDOT': '§7Gain §a+{}% §fFossil Essence'})
+
+    def test_armor_sets(self):
+        sets = self.data['armor_sets']
+        self.assertEqual(sets['DIVAN'], {'name': 'Divan Armor', 'pieces': ['DIVAN_HELMET', 'DIVAN_BOOTS']})
+        self.assertEqual(sets['BLAZE']['pieces'], ['BLAZE_HELMET'])
+        self.assertNotIn('CRIMSON_HUNTER', sets)
+        self.assertEqual(sets['ARMOR_OF_YOG']['name'], 'Armor of Yog')
+        self.assertEqual(sets['PERFECT_TIER_12']['name'], 'Perfect Armor - Tier XII')
+        self.assertNotIn('NO_SLOTS', sets)
+        self.assertEqual(sets['HOT_AURORA'], {'name': 'Hot Aurora Armor', 'pieces': ['HOT_AURORA_HELMET', 'HOT_AURORA_BOOTS']})
+        self.assertNotIn('LONE', sets)
+        self.assertEqual(self.data['source']['api_last_updated'], 5)
+
+    def test_wiki_names(self):
+        self.assertEqual(bg.wiki_names(WIKI), {'Blaze Helmet': None, 'Burning Terror Helmet': 'Terror Armor',
+                                               'Helmet of Divan': "Divan's Armor", 'Hyperion': None,
+                                               'Shimmer Hood': 'Shimmer Armor', 'Shimmer Tunic': 'Shimmer Armor',
+                                               'Test Helmet (fragged)': '⚚ Test Armor'})
+        sets = self.named['armor_sets']
+        self.assertEqual(sets['DIVAN'], {'name': "Divan's Armor", 'pieces': ['DIVAN_HELMET', 'DIVAN_BOOTS']})
+        self.assertEqual(sets['BURNING_TERROR']['name'], 'Terror Armor')
+        self.assertEqual(sets['STARRED_TEST']['name'], '⚚ Test Armor')
+        # Shown by the piece's own name there.
+        self.assertEqual(sets['BLAZE'], {'name': 'Blaze Helmet', 'pieces': ['BLAZE_HELMET']})
+        # Not in the wiki's copy: named after its id.
+        self.assertEqual(sets['ARMOR_OF_YOG']['name'], 'Armor of Yog')
+        # Listed piece by piece: a set each.
+        self.assertNotIn('SHIMMER', sets)
+        self.assertEqual(sets['SHIMMER_HOOD'], {'name': 'Shimmer Armor', 'pieces': ['SHIMMER_HOOD']})
+        self.assertEqual(sets['SHIMMER_TUNIC'], {'name': 'Shimmer Armor', 'pieces': ['SHIMMER_TUNIC']})
+        # Without the wiki, the names from the ids.
+        self.assertEqual(self.data['armor_sets']['BURNING_TERROR']['name'], 'Burning Terror Armor')
+        self.assertEqual(self.data['armor_sets']['SHIMMER']['pieces'], ['SHIMMER_HOOD', 'SHIMMER_TUNIC'])
+
+    def test_names(self):
+        self.assertEqual(bg.stat_name('Crit Damage'), 'CRIT_DAMAGE')
+        self.assertEqual(bg.set_name('FARM_ARMOR'), 'Farm Armor')
+        self.assertEqual(bg.set_name('LAVA_SEA_CREATURE'), 'Lava Sea Creature Armor')
+
+
+if __name__ == '__main__':
+    unittest.main()

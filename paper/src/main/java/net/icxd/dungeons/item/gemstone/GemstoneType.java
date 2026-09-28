@@ -51,4 +51,25 @@ public enum GemstoneType {
         this.color = color;
         this.types = null;
     }
+
+    /** A gemstone itself (Ruby, ...), not a kind of slot that takes several (Combat, ...). */
+    public boolean gem() {
+        return types == null;
+    }
+
+    /** Whether a slot of this type takes this gem: a gem's slot only that gem, a special slot the gems it lists. */
+    public boolean accepts(GemstoneType gem) {
+        return gem != null && gem.gem() && (this == gem || types != null && types.contains(gem));
+    }
+
+    /** The gems a slot of this type takes, in order. */
+    public List<GemstoneType> accepted() {
+        return types == null ? List.of(this) : types;
+    }
+
+    /** The type by its name ("JASPER"); null for none. */
+    public static GemstoneType of(String name) {
+        for (GemstoneType type : values()) if (type.name().equals(name)) return type;
+        return null;
+    }
 }
