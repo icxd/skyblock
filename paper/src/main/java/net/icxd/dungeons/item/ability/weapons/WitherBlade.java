@@ -109,7 +109,8 @@ final class WitherBlade {
             shieldDown(player, before);
         }
         double absorption = shieldAbsorption(ItemBuilder.catacombsLevel(player));
-        Absorption.give(player, SHIELD, absorption, SHIELD_MILLIS + 50);
+        // The shield's end (a task, 5 seconds of ticks) takes it off; its own time is only in case that runs late.
+        Absorption.give(player, SHIELD, absorption, SHIELD_MILLIS * 2);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.4f, 1.5f); // UNKNOWN
         ShieldUp[] up = new ShieldUp[1];
         up[0] = new ShieldUp(vitality, absorption, Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
