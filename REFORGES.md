@@ -20,7 +20,8 @@ Geometric). It's read with the Hex's tables (off the main thread, see HexData) b
 - **Rarities.** A reforge gives its numbers at the item's rarity now (recombobulated too). Special and Very Special
   give Mythic's (the wiki's Reforging/Prices), which fixes "above Mythic gives 0". Divine gives nothing, but where
   the data has Divine numbers (mining tools and a few others), as the wiki's Reforging says: "Except for mining
-  tools, reforges on Divine items provide no stat buff, only the reforge abilities".
+  tools, reforges on Divine items provide no stat buff, only the reforge abilities". Special and Very Special show
+  Mythic's bonus text too, not Divine's (Scraped's +35 Mining Fortune, not +50).
 - **Lore**, as live items show it:
   - The reforge's word before the name. On an item named like a reforge it's the wiki's other word instead ("Very
     Wise Dragon Helmet", "Extremely Heavy", "Not So Heavy", "Thicc Super Heavy"; live items agree).
@@ -31,8 +32,9 @@ Geometric). It's read with the Hex's tables (off the main thread, see HexData) b
   - "This item can be reforged!" goes once it has one.
 - **Withered and Ancient** add their stat a Catacombs level (+1 Strength, +1 Crit Damage), as live items do (a
   Mythic Withered Dark Claymore: 170 and its owner's 36). Their level is the wearer's in the stats (`ItemStats`) and
-  the item's owner's in the lore (as the dungeon boost is), capped at 50 (`catacombsStatLevel`). The Hex's preview
-  uses the viewer's (the wiki's 147 Strength at Legendary is 135 and the editor's 12).
+  the item's owner's in the lore (as the dungeon boost is), or its holder's on an item nobody owns (items with no
+  requirement), capped at 50 (`catacombsStatLevel`). The Hex's preview uses the viewer's (the wiki's 147 Strength at
+  Legendary is 135 and the editor's 12), which is what the item they reforge then shows.
 - **Which items**, by their Hypixel type (SkyHanni's ReforgeApi reads NEU's names the same way, `ReforgeStone.TYPES`):
   - Pools: sword and fishing rod (swords, longswords, gauntlets, rods), bow, armor (with Carnival Masks), equipment,
     pickaxe (pickaxes, drills, gauntlets), axe, farming tool.
@@ -105,7 +107,10 @@ How they're put together (`tools/hex/test_build_reforges.py` has made-up cases o
 4. Withered's and Ancient's live brackets include the owner's Catacombs level, so they don't count as numbers.
 5. Bonus text is what items show at that rarity, else the source that agrees with what they show (the wiki first,
    then NEU), else the wiki's or NEU's. NEU's Blood-Soaked, Buzzing, Squeaky, Undead, Spiritual and Scraped texts
-   are out of date.
+   are out of date. A source's text is then put as lore has it: the lines items show for the same words at the
+   nearest rarity (Withered's and Suspicious's Common), else in gray where the source leaves the colour out, and
+   wrapped where it's one long line (the wiki's Refined, Renowned, Heated, Royal). A stone's own Legendary text
+   gives way to live items' saying the same (its Pest glyph on Squeaky and Buzzing is out of date).
 6. Fees: NEU's, the wiki's for rarities NEU lacks (Jerry's Epic, Earthy and Overpriced Mythic).
 
 ## Approximated (UNKNOWN in the code)
@@ -122,6 +127,15 @@ How they're put together (`tools/hex/test_build_reforges.py` has made-up cases o
 - **The Boo Stone** isn't in the item data, so the Hex doesn't show it.
 - **Overbloom** (Thorny, Overpriced) isn't one of the plugin's stats: left out.
 - **Unobtainable** items get Mythic's numbers, as Very Special does, and no random reforge (no price).
+- **Special and Very Special items take no stones**: no source has a stone's fee at those rarities (NEU's and the
+  wiki's stop at Mythic or Divine). Their random reforge has the wiki's price.
+- **Divine on the pickaxe pool**: the wiki has Divine numbers for Excellent, Fortunate and Sturdy only, so Prospector's
+  and Unyielding give nothing on a Divine item.
+- **Fees by the item's rarity.** The wiki's Weapon tab shows Common's fees (Wither Blood 10,000, Dragon Claw 60,000,
+  the random reforge 250) next to stats at "(Legendary)". Either its sword was Common and the Hex shows the stone's own
+  (Legendary) lore, or the fees were typed in. The Hex charges what the Blacksmith does (the 2026-01-20 fix of David's
+  Cloak's "different amount of coins to reforge at the Blacksmith and The Hex"), at the item's rarity, and shows the
+  stats at that rarity.
 - **A gauntlet**'s random reforge: it's of both the sword-and-rod and the pickaxe pools' types. The first, sword and
   rod, is taken.
 - **A Hoe** counts as a Farming Tool (no item is one).
@@ -134,6 +148,8 @@ How they're put together (`tools/hex/test_build_reforges.py` has made-up cases o
 - **The preview's stat colours** are the ones items have now (the item data's stone lore). The wiki's older
   screenshot has red and green.
 - **Hypixel's first reforge for 10 Coal** is the Blacksmith's. The Hex shows coins (the wiki's 250 Coins button).
+- **Reforging too fast**: Hypixel says "Wait a moment before reforging again!" (SkyHanni's ReforgeHelper); its wait in
+  the Hex is unknown. Here the menus' own wait between clicks applies (GUIListener, 100 ms).
 
 ## Later, and what it waits for
 

@@ -59,7 +59,10 @@ public record ReforgeStone(String item, Reforge reforge, String type, Set<String
         return isOfType(item, type) && (item.reforgeable() || UNLABELLED.contains(type));
     }
 
-    /** Whether it goes on this item at this rarity (its current one): only at the rarities it has a fee for. */
+    /**
+     * Whether it goes on this item at this rarity (its current one): only at the rarities it has a fee for. UNKNOWN:
+     * a stone's fee on a Special or Very Special item (no source has one), so none goes on those.
+     */
     public boolean fits(SkyBlockItem item, Rarity rarity) {
         return costs.containsKey(rarity) && fits(item);
     }
