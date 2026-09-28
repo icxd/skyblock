@@ -638,11 +638,13 @@ public final class DungeonRun implements ScoreCounts {
         // Handed off (a warp, or a transfer waiting to be reclaimed): nothing given here would be saved.
         if (user != null && !user.isReleased()) {
             List<DungeonClass> teammates = here.stream().filter(p -> !p.equals(player)).map(p -> classOf(p.getUniqueId())).toList();
+            RunBoosts.Boost boost = RunBoosts.of(player, chatScore);
             outcome = failed
-                    ? RunEnd.awardFailed(user.profile(), floor, chatScore, endSecretPercent, classOf(player.getUniqueId()), teammates)
+                    ? RunEnd.awardFailed(user.profile(), floor, chatScore, endSecretPercent, classOf(player.getUniqueId()), teammates, boost)
                     : RunEnd.award(user.profile(), floor, chatScore, millis, endSecretPercent, classOf(player.getUniqueId()), teammates,
-                    RunEnd.today());
+                    RunEnd.today(), boost);
             user.save();
+            RunBoosts.rewarded(player, floor, chatScore, failed);
             // A first completion, Catacombs and class levels: SkyBlock XP.
             SkyBlockLevels.changed(player);
         }
