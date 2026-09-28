@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
@@ -24,10 +25,10 @@ import net.icxd.dungeons.utils.Text;
 /**
  * A category's XP tasks ("Tasks ➜ Core"), or a task's parts ("Core ➜ Bank Upgrades"), with what they've earned of
  * each. Never recorded: it's the wiki's copy of Hypixel's (SkyBlock Levels/UI/Leveling, older than the recorded
- * categories): the category (or task) at the top, the tasks in the middle, Go Back, Close and Sort at the bottom. The
- * tasks the plugin can't count (a Museum, Slayers...) show none earned. Skill Related's 28 are one list here; the
- * wiki's older menu split them by skill (Mining Tasks, Farming Tasks...), UNKNOWN whether Hypixel still does. Main
- * thread.
+ * categories): a border of glass in the category's colour, the category (or task) at the top, the tasks in the
+ * middle, Go Back, Close and (for a category's own tasks) Sort at the bottom. The tasks the plugin can't count (a
+ * Museum, Slayers...) show none earned. Skill Related's 28 are one list here; the wiki's older menu split them by
+ * skill (Mining Tasks, Farming Tasks...), UNKNOWN whether Hypixel still does. Main thread.
  */
 public final class TasksMenu extends GUI {
     /** How tasks can be sorted, in the Sort item's order. */
@@ -88,6 +89,8 @@ public final class TasksMenu extends GUI {
         int[] slots = slots(tasks.size());
         Map<Integer, Icon> icons = icons(view, category, task, sort);
         int size = getSize();
+        ItemStack glass = filler().withType(glass(category));
+        for (int slot : frame(size)) set(slot, glass);
         for (Map.Entry<Integer, Icon> entry : icons.entrySet()) {
             int slot = entry.getKey();
             Runnable action = null;
@@ -98,7 +101,7 @@ public final class TasksMenu extends GUI {
                 else if (shown.id().equals(SkyBlockXp.SKILLS)) action = () -> new SkillsMenu(viewer).open(viewer);
             }
             if (slot == back(size)) action = () -> back(viewer);
-            if (slot == sort(size)) action = () -> {
+            if (task == null && slot == sort(size)) action = () -> {
                 sorts.put(viewer.getUniqueId(), sort.next());
                 new TasksMenu(viewer, category, task).open(viewer);
             };
@@ -106,6 +109,37 @@ public final class TasksMenu extends GUI {
             else set(GUIClickableItem.button(slot, entry.getValue().stack(), viewer, action));
         }
         set(GUIClickableItem.close(back(size) + 1));
+    }
+
+    /**
+     * The border's slots: the top row but its middle, the sides, the bottom row but Go Back, Close and Sort's (a
+     * task's parts have glass where Sort would be), as the wiki's; the rest is the usual black glass.
+     */
+    static int[] frame(int size) {
+        List<Integer> slots = new ArrayList<>();
+        for (int slot = 0; slot < size; slot++) {
+            int row = slot / 9, column = slot % 9;
+            boolean edge = row == 0 || row == size / 9 - 1 || column == 0 || column == 8;
+            if (edge && slot != TOP && slot != back(size) && slot != back(size) + 1) slots.add(slot);
+        }
+        return slots.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    /**
+     * The border's glass: each category's in the wiki's copies (white for Core, yellow for Event and Miscellaneous,
+     * red for Dungeon, brown for Essence Shop, orange for Slaying, purple for Story). Skill Related's (the wiki's split
+     * it by skill, each its own) and Consumables' (not on the wiki) are UNKNOWN: black, as the rest of the menu.
+     */
+    static Material glass(String category) {
+        return switch (category) {
+            case "core" -> Material.WHITE_STAINED_GLASS_PANE;
+            case "event", "miscellaneous" -> Material.YELLOW_STAINED_GLASS_PANE;
+            case "dungeon" -> Material.RED_STAINED_GLASS_PANE;
+            case "essence_shop" -> Material.BROWN_STAINED_GLASS_PANE;
+            case "slaying" -> Material.ORANGE_STAINED_GLASS_PANE;
+            case "story" -> Material.PURPLE_STAINED_GLASS_PANE;
+            default -> Material.BLACK_STAINED_GLASS_PANE;
+        };
     }
 
     /** Go Back's slot: the bottom row's fourth, Close next to it and Sort after that (the wiki's). */
@@ -239,7 +273,7 @@ public final class TasksMenu extends GUI {
 
     // What each slot shows
 
-    /** Every slot but the glass and Close, by slot: the top, the tasks, Go Back and Sort. */
+    /** Every slot but the glass and Close, by slot: the top, the tasks, Go Back and (for a category's tasks) Sort. */
     static Map<Integer, Icon> icons(LevelingView view, String category, String task, Sort sort) {
         LevelingData data = view.data();
         Map<Integer, Icon> icons = new LinkedHashMap<>();
@@ -249,12 +283,15 @@ public final class TasksMenu extends GUI {
         icons.put(TOP, t == null ? WaysMenu.category(c, view, false) : task(t, view));
         List<Task> tasks = sorted(view, tasks(data, category, task), sort);
         int[] slots = slots(tasks.size());
-        for (int i = 0; i < slots.length; i++) icons.put(slots[i], task(tasks.get(i), view));
+        for (int i = 0; i < slots.length; i++) {
+            Task shown = tasks.get(i);
+            icons.put(slots[i], t != null && once(shown) ? once(shown, view) : task(shown, view));
+        }
         int size = rows(tasks.size()) * 9;
         Task parent = t == null ? null : parent(data, category, task);
         String back = t == null ? "&7To Ways to Level Up" : "&7To " + title(data, category, parent == null ? null : parent.id());
         icons.put(back(size), new Icon(Material.ARROW, "&aGo Back", back));
-        icons.put(sort(size), sortIcon(sort));
+        if (t == null) icons.put(sort(size), sortIcon(sort));
         return icons;
     }
 
@@ -280,7 +317,7 @@ public final class TasksMenu extends GUI {
      * A task's item, as the wiki's: a task with parts lists them ("&c✖ &eGold Bank Upgrade", with how many of a
      * part's own parts are done) and opens them; one without has its XP lines. Both say what they've earned of it
      * and what share of their SkyBlock XP that is. What a done part's line looks like is UNKNOWN (the wiki's are all
-     * undone): a green tick.
+     * undone): a green tick. A part done once ({@link #once}) is as the wiki's are instead.
      */
     static Icon task(Task task, LevelingView view) {
         List<String> lore = new ArrayList<>();
@@ -304,7 +341,6 @@ public final class TasksMenu extends GUI {
             if (task.description() != null) lore.addAll(LevelingText.wrap("&7" + task.description()));
             for (Step step : task.steps()) {
                 if (step.xp() <= 0) continue;
-                // A part's one XP line has no text of its own: UNKNOWN how it's shown, as the XP alone.
                 lore.add(step.text().isEmpty() ? "&b+" + step.xp() + " XP" : "&7" + step.text() + ": &b+" + step.xp() + " XP");
                 if (step.note() != null) lore.add("&8&o" + LevelingText.plain(step.note()));
             }
@@ -322,6 +358,30 @@ public final class TasksMenu extends GUI {
         lore.addAll(List.of("&8This task is worth &3" + LevelingText.percent(share) + "%&8 of", "&8your Total SkyBlock XP!"));
         if (!task.tasks().isEmpty()) lore.addAll(List.of("", "&eClick to view tasks!"));
         else if (task.id().equals(SkyBlockXp.SKILLS)) lore.addAll(List.of("", "&eClick to see Your Skills!"));
+        return task.look().icon("&a" + task.name(), lore);
+    }
+
+    /**
+     * Whether a part is done once for all it's worth (a bank upgrade, a floor's first completion): one XP line with
+     * no text, worth the part's most (a Chocolate Factory prestige, one of five, isn't).
+     */
+    static boolean once(Task task) {
+        if (!task.tasks().isEmpty() || task.steps().size() != 1) return false;
+        Step step = task.steps().getFirst();
+        return step.text().isEmpty() && step.xp() > 0 && step.xp() == task.max();
+    }
+
+    /**
+     * A part done once, as the wiki's copies have them (Gold Bank Upgrade, Slay Superior Dragon, White Belt...): what it
+     * gives, and that it can only be done once; no progress. The wiki's say what to do in their own words ("Upgrade
+     * your Bank Account to this level to gain +20 XP."), which the data doesn't have: UNKNOWN, the XP alone. How a
+     * done one shows is UNKNOWN too (the wiki's are all undone): COMPLETED under it.
+     */
+    private static Icon once(Task task, LevelingView view) {
+        List<String> lore = new ArrayList<>(List.of("&8XP Task", ""));
+        if (task.description() != null) lore.addAll(LevelingText.wrap("&7" + task.description()));
+        lore.addAll(List.of("&b+" + task.steps().getFirst().xp() + " XP", "", "&eThis task can only be", "&ecompleted once!"));
+        if (done(view, task)) lore.addAll(List.of("", "&a&lCOMPLETED"));
         return task.look().icon("&a" + task.name(), lore);
     }
 

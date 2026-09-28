@@ -137,10 +137,27 @@ class TasksMenusTest {
         // Its parts, and theirs: the Entrance done.
         Map<Integer, Icon> parts = TasksMenu.icons(view, "dungeon", "complete_dungeons.complete_the_catacombs", TasksMenu.Sort.UNLOCKED);
         assertEquals(new Icon(Material.ARROW, "&aGo Back", "&7To Dungeon ➜ Complete Dungeons"), parts.get(TasksMenu.back(54)));
+        // A part's list has no Sort (the wiki's Complete Dungeons, Bank Upgrades...).
+        assertEquals(null, parts.get(TasksMenu.sort(54)));
+        // Done once, as the wiki's one-off parts: no progress; COMPLETED is UNKNOWN.
         Icon entrance = parts.get(20);
         assertEquals("&aComplete Catacombs Entrance", entrance.name());
-        assertEquals(List.of("&8XP Task", "", "&b+20 XP", "", "&7Total Progress: &3100%", "&3&l&m                         &r &b20&3/&b20 XP", "",
-                "&8This task is worth &312.7%&8 of", "&8your Total SkyBlock XP!"), entrance.lore());
+        assertEquals(List.of("&8XP Task", "", "&b+20 XP", "", "&eThis task can only be", "&ecompleted once!", "", "&a&lCOMPLETED"),
+                entrance.lore());
+        assertEquals(List.of("&8XP Task", "", "&b+20 XP", "", "&eThis task can only be", "&ecompleted once!"), parts.get(21).lore());
+        // A task's own list keeps its progress (Taming Cap Increases, 10 XP each up to 100, isn't done once).
+        assertEquals(false, TasksMenu.once(data.task("taming_cap_increases")));
+        assertEquals(true, TasksMenu.once(data.task("bank_upgrades.gold_bank_upgrade")));
+    }
+
+    /** The wiki's borders: Tasks ➜ Dungeon's red glass round the edge, Go Back, Close and Sort in the bottom row. */
+    @Test
+    void frames() {
+        assertEquals(List.of(0, 1, 2, 3, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 37, 38, 41, 42, 43, 44), box(TasksMenu.frame(45)));
+        assertEquals(Material.RED_STAINED_GLASS_PANE, TasksMenu.glass("dungeon"));
+        assertEquals(Material.WHITE_STAINED_GLASS_PANE, TasksMenu.glass("core"));
+        assertEquals(Material.BROWN_STAINED_GLASS_PANE, TasksMenu.glass("essence_shop"));
+        assertEquals(Material.BLACK_STAINED_GLASS_PANE, TasksMenu.glass("consumables"));
     }
 
     @Test
