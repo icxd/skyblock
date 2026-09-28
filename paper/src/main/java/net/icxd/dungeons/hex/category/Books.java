@@ -17,7 +17,8 @@ import net.icxd.dungeons.item.upgrade.Book;
  * "The Hex ➜ Books" ({@link BooksPage}; the wiki's Weapon and Armor tabs). Carpentry 20. For any item a book goes
  * on; its summary is a line for each of those books, as the official screenshot and the wiki's tabs have them:
  * "  &5Hot Potato Book &e0&7/&a10" (the count green once it's full: the screenshot's 10/10), "  &6The Art of War
- * &c✖" (&a✔ once it's on).
+ * &c✖" (&a✔ once it's on). UNKNOWN: the newer books' lines (Farming for Dummies, Bookworm's, Polarvoid, the Wet
+ * Book), which no screen shows: the potato books' form.
  */
 public final class Books extends HexCategory {
     public static final List<String> DESCRIPTION = List.of("&7Knowledge is &6power&7! Apply", "&7special books to your item to", "&7upgrade it!");

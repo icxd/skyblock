@@ -23,10 +23,11 @@ import net.icxd.dungeons.menu.Icon;
  * Art of War in 21, 22, 24 and 25; armor's potato books and The Art of Peace in 21, 23 and 25). Each is its book's
  * item: its name, its own text, then what applying one costs (the book itself; free on a Sandbox profile, see
  * HexCosts). A click applies one. A book that's on as many times as it goes stays, saying so; the Fuming Potato Book
- * waits for 10 Hot Potato Books (NEU's Hex: it's applicable from 10 to 15). UNKNOWN (U4, U5): the lines for a book
- * that can be applied ("Click to apply!"), a full one ("Item Maxed Out!", after the name NEU's Hex skips) and the
- * Fuming Potato Book too early: our own words. The books' item text is the item data's (the wiki's copies are
- * older: "Stop quoting my brother", now "cousin"). Main thread.
+ * waits for 10 Hot Potato Books (the 20 January 2026 patch; NEU's Hex: it's applicable from 10 to 15; the wiki's
+ * older screens still show its Cost block at none). UNKNOWN (U4, U5): the lines for a book that can be applied
+ * ("Click to apply!"), a full one ("Item Maxed Out!", after the name NEU's Hex skips) and the Fuming Potato Book too
+ * early: our own words. The books' item text is the item data's (the wiki's copies are older: "Stop quoting my
+ * brother", now "cousin"). Main thread.
  */
 public final class BooksPage extends HexPage {
     public static final String TITLE = "The Hex ➜ Books";

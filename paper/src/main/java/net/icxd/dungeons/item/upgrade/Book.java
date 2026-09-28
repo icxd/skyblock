@@ -44,6 +44,7 @@ import java.util.Set;
  * both the item's stats (ItemStats) and its lore (ItemBuilder#statLines).
  */
 public enum Book {
+    // UNKNOWN: the order past the wiki's four and armor's three (the newer books after them); no screen shows them.
     HOT_POTATO("HOT_POTATO_BOOK", "&5Hot Potato Book", "hot_potato_books", 10, "&e(", ")"),
     FUMING_POTATO("FUMING_POTATO_BOOK", "&5Fuming Potato Book", "hot_potato_books", 5, null, null),
     STATS("BOOK_OF_STATS", "&5Book of Stats", "stats_book", 1, null, null),
@@ -56,7 +57,10 @@ public enum Book {
 
     /** Hot Potato Books an item takes before Fuming ones. */
     public static final int HOT_POTATO_BOOKS = 10;
-    /** The weapons that take potato books, The Art of War and the Book of Stats (live items). */
+    /**
+     * The weapons that take potato books, The Art of War and the Book of Stats (live items). UNKNOWN: whether every
+     * axe and rod does; live items have them on 6 kinds of axe and 3 of rod, so all of those types here.
+     */
     private static final Set<SpecificItemType> WEAPONS = EnumSet.of(SpecificItemType.SWORD, SpecificItemType.LONGSWORD,
             SpecificItemType.BOW, SpecificItemType.AXE, SpecificItemType.GAUNTLET, SpecificItemType.FISHING_ROD);
 
@@ -121,7 +125,10 @@ public enum Book {
         return count(tag) >= max;
     }
 
-    /** Whether one more can go on now: it fits and isn't maxed, and a Fuming Potato Book only after 10 Hot. */
+    /**
+     * Whether one more can go on now: it fits and isn't maxed, and a Fuming Potato Book only after 10 Hot (the 20
+     * January 2026 patch: "All 10 Hot Potato Books now must be applied before applying any Fuming Potato Books").
+     */
     public boolean applicable(SkyBlockItem item, NBTTagCompound tag) {
         if (!fits(item) || maxed(tag)) return false;
         return this != FUMING_POTATO || tag.getInt(key) >= HOT_POTATO_BOOKS;
@@ -152,6 +159,7 @@ public enum Book {
                 if (tag.getBoolean(key)) stats.add(Stat.HEALTH, 40);
             }
             case FARMING_FOR_DUMMIES -> stats.add(Stat.FARMING_FORTUNE, n);
+            // UNKNOWN which is current: its own text says +10; the wiki and live vacuums, +20 (followed).
             case BOOKWORM -> stats.add(Stat.DAMAGE, n * 20);
             case POLARVOID -> {
                 if (n > 0) stats.add(Stat.MINING_SPEED, n * 10).add(Stat.MINING_FORTUNE, 5);

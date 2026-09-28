@@ -22,7 +22,7 @@ public final class ItemStats {
     }
 
     /**
-     * The item's own stats, its reforge, hot potato books, the stats its enchantments grant (Growth,
+     * The item's own stats, its reforge, its books, its stars, the stats its enchantments grant (Growth,
      * Critical, ...) and its attributes, which count for whoever wears or holds it if they meet the attribute's
      * requirement. In a dungeon run a dungeon item's come to what its lore's dark gray brackets say (see
      * {@link #of(SkyBlockItem, NBTTagCompound, Double)}). Not a SkyBlock item: nothing.
