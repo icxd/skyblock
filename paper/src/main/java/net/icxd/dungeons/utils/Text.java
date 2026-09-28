@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.ToIntFunction;
 
 /**
  * Text as it's written in this plugin, with {@code &} colour codes ({@code §} works too), into
@@ -88,13 +89,18 @@ public final class Text {
      * isn't written out line by line already (Hypixel's own lines are used as they are).
      */
     public static List<String> wrap(String text, int maxWidth) {
+        return wrap(text, maxWidth, Text::width);
+    }
+
+    /** {@link #wrap(String, int)}, measuring with {@code width} (for text with letters {@link #width} doesn't know). */
+    public static List<String> wrap(String text, int maxWidth, ToIntFunction<String> width) {
         List<String> lines = new ArrayList<>();
         for (String paragraph : text.split("\n", -1)) {
             StringBuilder line = new StringBuilder();
             String carry = "";
             for (String word : paragraph.split(" ")) {
                 String candidate = line.isEmpty() ? carry + word : line + " " + word;
-                if (!line.isEmpty() && width(candidate) > maxWidth) {
+                if (!line.isEmpty() && width.applyAsInt(candidate) > maxWidth) {
                     lines.add(line.toString());
                     carry = formatAtEnd(carry + line);
                     // A word that sets its own colour doesn't need the one carried over.
