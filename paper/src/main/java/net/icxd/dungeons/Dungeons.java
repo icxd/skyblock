@@ -74,6 +74,7 @@ import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
 import net.icxd.dungeons.item.bonus.SetBonuses;
+import net.icxd.dungeons.item.enchanting.armor.ArmorEnchants;
 import net.icxd.dungeons.item.upgrade.BookOfStats;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.npc.Npcs;
@@ -200,6 +201,12 @@ public class Dungeons extends JavaPlugin {
             SetBonuses.enable(this);
         } catch (RuntimeException e) {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable set bonuses", e);
+        }
+        // After the set bonuses: armor enchantments' stats (Legion's share more) come after theirs.
+        try {
+            ArmorEnchants.enable(this);
+        } catch (RuntimeException e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable armor enchantments", e);
         }
         listen(StorageListener.class, StorageListener::new);
         listen(CollectionGains.class, CollectionGains::new);
