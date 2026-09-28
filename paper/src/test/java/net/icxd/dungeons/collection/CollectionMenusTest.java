@@ -275,6 +275,26 @@ class CollectionMenusTest {
                 CollectionMenus.rewards(profile, Collections.data().collection("CATACOMBS_1"), 1).get(22).extra());
     }
 
+    /**
+     * Bonzo III's rewards (not recorded: the wiki's Collection UI): the head and the Gold Essence, x250 as the
+     * recorded tier says, with its own head; claimable once the tier is reached, claimed after.
+     */
+    @Test
+    void bonzoIIIRewards() {
+        Map<Integer, MenuSlot> slots = CollectionMenus.rewards(banana(), Collections.data().collection("CATACOMBS_1"), 3);
+        assertEquals(MenuSlot.item("GOLD_BONZO_HEAD", 1, List.of("", "&cYou don't qualify for this reward!")), slots.get(21));
+        assertEquals(new Icon(Material.PLAYER_HEAD, "&dGold Essence&8 x250", List.of("&7Essence can be used to convert",
+                "&7some items into Dungeon items", "&7and to repair Dungeon items!", "", "&cYou don't qualify for this reward!"),
+                "8816606260779b23ed15f87c56c932240db745f86f683d1f4deb83a4a125fa7b"), icon(slots, 23));
+        Document profile = banana();
+        Collections.set(profile, "CATACOMBS_1", 100);
+        assertEquals("&eClick to claim!", icon(CollectionMenus.rewards(profile, Collections.data().collection("CATACOMBS_1"), 3), 23)
+                .lore().getLast());
+        RewardsMenu.claim(profile, Collections.data().collection("CATACOMBS_1"), 3);
+        assertEquals("&aYou have claimed this reward!",
+                icon(CollectionMenus.rewards(profile, Collections.data().collection("CATACOMBS_1"), 3), 23).lore().getLast());
+    }
+
     /** Banana's Collections: each category's found collections of all (00:40.3), from any found ones. */
     @Test
     void collectionsMenu() {

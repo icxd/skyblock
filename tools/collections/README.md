@@ -59,7 +59,7 @@ A tier is `{"amount": N, "rewards": [...]}` (the amount is the total). A reward 
 that type needs: `SKYBLOCK_XP` and `SLOTS` an `amount` (and `name`), `SKILL_XP` a `skill` and `amount`,
 `EXP_DISCOUNT` a `name` and `percent`, `MINION_RECIPES` a `name` and the tier I minion's `item`,
 `PET_RECIPE` a `name` and `texture`, `RECIPE`, `TRADE`, `FORGE_RECIPE` and `ITEM` a `name` and `item`
-(left out when there's no such item) and maybe an `amount`, `ESSENCE` an `essence` and `amount`, `STAT`
+(left out when there's no such item) and maybe an `amount`, `ESSENCE` an `essence`, `amount` and its head's `texture`, `STAT`
 the plugin's stat `name` (MINING_FORTUNE), `amount` and `text`, and `UNLOCK` its `text`.
 
 `recipes.json`: `{"format":1,"source":{...},"recipes":{...},"book":[...]}`.

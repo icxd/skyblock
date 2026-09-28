@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonParser;
 
 import net.icxd.dungeons.common.DungeonFloor;
+import net.icxd.dungeons.item.cost.essence.EssenceType;
+import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.profile.ProfileMode;
 import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.stats.Stat;
@@ -41,7 +43,8 @@ class CollectionsTest {
              "bosses": [
                {"id": "CATACOMBS_1", "name": "Bonzo", "floor": 1, "texture": "12716ecbf5b8da00b05f316ec6af61e8bd02805b21eb8e440151468dc656549c", "tiers": [
                  {"amount": 25, "rewards": [{"type": "ITEM", "name": "Red Nose", "item": "RED_NOSE"}, {"type": "SKYBLOCK_XP", "amount": 15}]},
-                 {"amount": 50, "rewards": [{"type": "ITEM", "name": "Bonzo's Mask", "item": "BONZO_MASK"}, {"type": "SKYBLOCK_XP", "amount": 15}]}]},
+                 {"amount": 50, "rewards": [{"type": "ITEM", "name": "Bonzo's Mask", "item": "BONZO_MASK"}, {"type": "ESSENCE", "essence": "GOLD", "amount": 250},
+                                            {"type": "SKYBLOCK_XP", "amount": 15}]}]},
                {"id": "KUUDRA", "name": "Kuudra", "floor": 0, "tiers": [{"amount": 10, "rewards": [{"type": "SKYBLOCK_XP", "amount": 10}]}]}],
              "items": {"BLAZE_ROD": ["BLAZE_ROD", 1], "ENCHANTED_BLAZE_POWDER": ["BLAZE_ROD", 160], "ROTTEN_FLESH": ["ROTTEN_FLESH", 1],
                        "ENCHANTED_ROTTEN_FLESH": ["ROTTEN_FLESH", 160], "MITHRIL_ORE": ["MITHRIL_ORE", 1], "NOT_A_COLLECTION": ["NONE", 5]}}
@@ -171,6 +174,24 @@ class CollectionsTest {
         Collections.claim(profile, "CATACOMBS_1", 1);
         Collections.claim(profile, "CATACOMBS_1", 2);
         assertEquals(List.of(1, 2), Collections.claimed(profile, "CATACOMBS_1"));
+    }
+
+    /** A reached boss tier is claimed once: its items to hand over, its essence onto the profile. */
+    @Test
+    void claimingABossTier() {
+        Document profile = profile(ProfileMode.NORMAL);
+        CollectionData.Collection bonzo = Collections.data().collection("CATACOMBS_1");
+        Collections.add(profile, "CATACOMBS_1", 30);
+        assertNull(RewardsMenu.claim(profile, bonzo, 2));
+        Collections.add(profile, "CATACOMBS_1", 20);
+        List<CollectionData.Reward> items = RewardsMenu.claim(profile, bonzo, 2);
+        assertEquals(List.of("BONZO_MASK"), items.stream().map(CollectionData.Reward::item).toList());
+        assertEquals(250, Essences.essence(profile, EssenceType.GOLD));
+        assertEquals(List.of(2), Collections.claimed(profile, "CATACOMBS_1"));
+        // Once.
+        assertNull(RewardsMenu.claim(profile, bonzo, 2));
+        assertEquals(250, Essences.essence(profile, EssenceType.GOLD));
+        assertEquals(List.of("RED_NOSE"), RewardsMenu.claim(profile, bonzo, 1).stream().map(CollectionData.Reward::item).toList());
     }
 
     @Test

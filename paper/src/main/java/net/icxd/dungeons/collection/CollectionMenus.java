@@ -368,6 +368,16 @@ public final class CollectionMenus {
         return slots;
     }
 
+    /** Under a boss's reward: whether it can be claimed (UNKNOWN but the recorded "don't qualify"). */
+    static String claimLine(Claim claim) {
+        return switch (claim) {
+            case NOT_YET -> "&cYou don't qualify for this reward!";
+            // UNKNOWN: what it says once it can be claimed, and after.
+            case CLAIMABLE -> "&eClick to claim!";
+            case CLAIMED -> "&aYou have claimed this reward!";
+        };
+    }
+
     /** One reward's item in a Rewards menu, as the recording and the wiki's Collection UI show them. */
     static MenuSlot reward(Reward reward, Claim claim) {
         return switch (reward.type()) {
@@ -381,20 +391,14 @@ public final class CollectionMenus {
                     : MenuSlot.of(new Icon(Material.PAPER, "&f" + reward.name(), "", "&eClick to view trades!"));
             case FORGE_RECIPE -> MenuSlot.of(new Icon(Material.PAPER, "&f" + reward.name(), List.of()));
             case ITEM -> {
-                List<String> extra = new ArrayList<>(List.of(""));
-                extra.add(switch (claim) {
-                    case NOT_YET -> "&cYou don't qualify for this reward!";
-                    // UNKNOWN: what the item says once it can be claimed, and after.
-                    case CLAIMABLE -> "&eClick to claim!";
-                    case CLAIMED -> "&aYou have claimed this reward!";
-                });
+                List<String> extra = List.of("", claimLine(claim));
                 yield reward.item() != null ? MenuSlot.item(reward.item(), (int) Math.max(1, reward.amount()), extra)
                         : MenuSlot.of(new Icon(Material.PAPER, "&f" + reward.name(), extra));
             }
-            // The wiki's Collection UI (there are no essences yet).
-            case ESSENCE -> MenuSlot.of(new Icon(Material.PLAYER_HEAD, "&d" + CollectionText.capitalized(reward.essence()) + " Essence",
-                    "&7Essence can be used to convert", "&7some items into Dungeon items", "&7and to repair Dungeon items!", "",
-                    "&cYou don't qualify for this reward!"));
+            // The wiki's Collection UI: the essence's head, "&dGold Essence&8 x250", and whether it can be claimed as an item's is.
+            case ESSENCE -> MenuSlot.of(new Icon(Material.PLAYER_HEAD, "&d" + CollectionText.capitalized(reward.essence()) + " Essence"
+                    + (reward.amount() > 0 ? "&8 x" + reward.amount() : ""), List.of("&7Essence can be used to convert",
+                    "&7some items into Dungeon items", "&7and to repair Dungeon items!", "", claimLine(claim)), reward.texture()));
             default -> MenuSlot.FILLER;
         };
     }

@@ -98,7 +98,7 @@ public final class CollectionData {
             UNLOCK,
             /** A boss collection's item, claimed from its Rewards menu. */
             ITEM,
-            /** A boss collection's essence (no essence yet): shown only. */
+            /** A boss collection's essence ({@code essence} "GOLD", {@code amount}, its head's {@code texture}): claimed with the tier's items. */
             ESSENCE
         }
 
