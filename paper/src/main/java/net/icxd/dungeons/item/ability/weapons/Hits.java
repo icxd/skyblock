@@ -123,9 +123,12 @@ final class Hits {
 
     /**
      * What the caster's spell does to this mob (see {@link Magic#damage}): with the enchantments of the item
-     * it was cast with ({@code tag}, even if a skull lands after they've switched), and their stats now.
+     * it was cast with ({@code tag}, even if a skull lands after they've switched), and their stats now
+     * (UNKNOWN whether Hypixel's are the cast's). 0 for one that can't be hurt (any more: the loops that
+     * call this hurt one mob after another, and a hit can end more than its own mob).
      */
     static double magic(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, LivingEntity entity) {
+        if (!hittable(entity)) return 0;
         Stats stats = PlayerSession.of(caster).stats();
         Damage.Target target = target(entity);
         double additive = Magic.additive(Skills.combatLevel(caster), PlayerHealth.get(caster), Combat.enchantments(tag), target);
