@@ -21,7 +21,7 @@ ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.join(ROOT, 'tools', 'collections'))
 sys.path.insert(0, os.path.join(ROOT, 'tools', 'items'))
 from build_collections import Lua, Wiki, default_data, git, glyph_symbols  # noqa: E402
-from build_items import wrap  # noqa: E402
+from build_items import LORE_WIDTH, format_at_end, width, wrap  # noqa: E402
 
 STAT_JAVA = os.path.join(ROOT, 'paper/src/main/java/net/icxd/dungeons/stats/Stat.java')
 PUA = re.compile('[\ue000-\uf8ff]')
@@ -334,14 +334,17 @@ class Builder:
 
     def seen_bonus(self, modifier, stone_id):
         """The bonus sections items show, by rarity (heading, then lines): live items', and the stone's own
-        Legendary one where no live Legendary item shows it."""
+        Legendary one where no live Legendary item shows it, unless live items show its words at other rarities
+        (then theirs are taken for Legendary too: the dump's glyphs can be out of date, Squeaky's Pest one)."""
         seen = {}
         for rarity, observed in (self.src.live.get(modifier) or {}).items():
             if observed.get('bonus') and rarity in RARITIES and rarity not in SAME_AS_MYTHIC:
                 seen[rarity] = [self.glyph(line) for line in observed['bonus'][0]['lines']]
         own = self.src.stone_bonus(stone_id) if stone_id else None
         if own and 'LEGENDARY' not in seen:
-            seen['LEGENDARY'] = [self.glyph(line) for line in own]
+            own = [self.glyph(line) for line in own]
+            if not any(plain(' '.join(lines[1:])) == plain(' '.join(own[1:])) for lines in seen.values()):
+                seen['LEGENDARY'] = own
         return seen
 
     def bonus(self, name, seen, rarities, ability, entry):
@@ -380,8 +383,28 @@ class Builder:
                 if chosen:
                     break
                 chosen = text(rarity)
+                if chosen:
+                    chosen = self.as_shown(chosen, live, rarity)
             if chosen:
                 out[rarity] = chosen
+        return out
+
+    @staticmethod
+    def as_shown(lines, live, rarity):
+        """A source's bonus lines for a rarity no item shows, as item lore has them: where items show the same words
+        at another rarity, their lines (the nearest rarity's: its line breaks and colours); else each line in the
+        colour the one before ends in, gray at first (the wiki and NEU leave a line's gray out, which lore would show
+        purple), and wrapped as item lore is where it's wider (the wiki writes some on one line)."""
+        words = plain(' '.join(lines))
+        same = [r for r in RARITIES if r in live and plain(' '.join(live[r])) == words]
+        if same:
+            here = RARITIES.index(rarity)
+            return live[min(same, key=lambda r: abs(RARITIES.index(r) - here))]
+        out = []
+        for line in lines:
+            if not re.match(r'[&§][0-9a-fk-or]', line, re.I):
+                line = ((format_at_end(out[-1]) if out else '') or '&7') + line
+            out += wrap(line) if width(line) > LORE_WIDTH else [line]
         return out
 
     def per_level(self, bonus):

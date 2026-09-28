@@ -150,7 +150,8 @@ class Bonus(unittest.TestCase):
 
     def test_neu_text_wrapped(self):
         grim, stone, b = self.build()
-        self.assertEqual(['Grants +1 ❁ Strength per Catacombs', 'level.'], grim['bonus']['RARE'])
+        # In gray: NEU leaves it out, and lore would show the line purple.
+        self.assertEqual(['&7Grants +1 ❁ Strength per Catacombs', '&7level.'], grim['bonus']['RARE'])
         self.assertEqual({'STRENGTH': 1}, grim['per_catacombs_level'])
         self.assertEqual({'item': 'TEST_STONE', 'reforge': 'grim', 'type': 'SWORD', 'costs': {'RARE': 10, 'EPIC': 20, 'LEGENDARY': 30}},
                          stone)
@@ -161,8 +162,9 @@ class Bonus(unittest.TestCase):
                                              'count': 2}]}}}
         grim, stone, b = self.build(live)
         self.assertEqual(['&7Grants &a+1 &c❁ Strength &7per', '&cCatacombs &7level.'], grim['bonus']['EPIC'])
-        # NEU says the same words, so NEU's for the rest; and the bracket's Catacombs level isn't the stat.
-        self.assertEqual(['Grants +1 ❁ Strength per Catacombs', 'level.'], grim['bonus']['RARE'])
+        # NEU says the same words, so NEU's for the rest, as the items show those words (their lines and colours);
+        # and the bracket's Catacombs level isn't the stat.
+        self.assertEqual(['&7Grants &a+1 &c❁ Strength &7per', '&cCatacombs &7level.'], grim['bonus']['RARE'])
         self.assertEqual(7, grim['stats']['EPIC']['STRENGTH'])
 
     def test_the_stones_own_lore_and_heading(self):
@@ -172,6 +174,24 @@ class Bonus(unittest.TestCase):
         self.assertEqual(['&7Something else entirely.'], grim['bonus']['LEGENDARY'])
         # No source says so: the text items show, which is the same at every rarity seen.
         self.assertEqual(['&7Something else entirely.'], grim['bonus']['RARE'])
+
+    def test_live_items_over_the_stones_own_lore(self):
+        # The stone's dump says what live items do, with a glyph out of date: the items' lines at Legendary too.
+        own = ['§9Grim Bonus', '§7Grants §a+1 §c\ue099 Strength §7per', '§cCatacombs §7level.']
+        live = {'grim': {'EPIC': {'items': 2, 'stats': {'Strength': {'+30': 2}},
+                                  'bonus': [{'lines': ['§9Grim Bonus', '§7Grants §a+1 §c\ue00d Strength §7per', '§cCatacombs §7level.'],
+                                             'count': 2}]}}}
+        grim, stone, b = self.build(live, stone_lore={'TEST_STONE': own})
+        self.assertEqual(['&7Grants &a+1 &c❁ Strength &7per', '&cCatacombs &7level.'], grim['bonus']['LEGENDARY'])
+
+    def test_a_sources_text_as_lore_has_it(self):
+        # The wiki's one long line wrapped, and its line with no colour in the one the line before ends in.
+        self.assertEqual(['&7Grants a &a0.1% &7chance to drop an', '&7enchanted item when mining &6Ores&7.', '&7Only on tests.'],
+                         br.Builder.as_shown(['&7Grants a &a0.1% &7chance to drop an enchanted item when mining &6Ores&7.',
+                                              'Only on tests.'], {}, 'COMMON'))
+        # The same words items show at other rarities: the nearest one's lines.
+        self.assertEqual(['&7Grants a', '&7test.'], br.Builder.as_shown(['&7Grants a test.'], {
+            'EPIC': ['&7Grants', '&7a &atest&7.'], 'RARE': ['&7Grants a', '&7test.']}, 'COMMON'))
 
 
 if __name__ == '__main__':
