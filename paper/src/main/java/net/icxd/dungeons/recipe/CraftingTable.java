@@ -237,15 +237,15 @@ public final class CraftingTable extends GUI {
         return space / one.getAmount();
     }
 
-    /** Takes {@code times} crafts' ingredients from the grid. */
+    /** Takes {@code times} crafts' ingredients from the grid: what {@link Crafting#consume} leaves in each slot. */
     private void take(Match match, int times) {
         int[] taken = match.taken();
+        Cell[] left = Crafting.consume(cells(), match, times);
         for (int i = 0; i < 9; i++) {
             if (taken[i] == 0) continue;
             ItemStack stack = inventory.getItem(GRID[i]);
             if (stack == null) continue;
-            int amount = stack.getAmount() - taken[i] * times;
-            inventory.setItem(GRID[i], amount > 0 ? stack.asQuantity(amount) : null);
+            inventory.setItem(GRID[i], left[i] == null ? null : stack.asQuantity(left[i].amount()));
         }
     }
 

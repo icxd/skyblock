@@ -99,6 +99,11 @@ class CraftingTest {
         // 160 in the wrong places.
         assertNull(Crafting.match(ENCHANTED_FLESH, grid("ROTTEN_FLESH:32", "", "ROTTEN_FLESH:32", "", "ROTTEN_FLESH:32", "",
                 "ROTTEN_FLESH:32", "", "ROTTEN_FLESH:32")));
+        // An item with no SkyBlock id (a vanilla one) in a corner is in the way too, whatever looks up the recipe.
+        Cell[] vanilla = grid("", "ROTTEN_FLESH:32", "", "ROTTEN_FLESH:32", "ROTTEN_FLESH:32", "ROTTEN_FLESH:32", "", "ROTTEN_FLESH:32", "");
+        vanilla[0] = new Cell(null, 1);
+        assertNull(Crafting.match(ENCHANTED_FLESH, vanilla));
+        assertNull(new Crafting.Index(List.of(ENCHANTED_FLESH)).find(vanilla, r -> true));
     }
 
     /** A shape smaller than the grid fits anywhere it can be moved to: the boots in the bottom two rows too. */

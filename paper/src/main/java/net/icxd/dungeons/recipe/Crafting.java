@@ -19,13 +19,14 @@ import net.icxd.dungeons.recipe.RecipeData.Shape;
  * and nothing else; one smaller than the grid fits anywhere it can be moved to, as vanilla's do (UNKNOWN
  * for Hypixel's: the wiki says only "the amounts and positions of ingredients must align"), not mirrored.
  * A shapeless one ("crafted with no fixed configurations", the wiki's Crafting) fits when each of its items
- * has a slot of its own. Items count by their SkyBlock id. No server needed.
+ * has a slot of its own. Items count by their SkyBlock id; an item with none (a vanilla one) is in the way of
+ * every recipe. No server needed.
  */
 public final class Crafting {
     private Crafting() {
     }
 
-    /** A grid slot's items: a SkyBlock id and how many; null for an empty slot. */
+    /** A grid slot's items: a SkyBlock id (null for an item that has none) and how many; null for an empty slot. */
     public record Cell(String item, int amount) {
     }
 
@@ -58,8 +59,9 @@ public final class Crafting {
         return null;
     }
 
+    /** Nothing there: an item with no SkyBlock id isn't nothing, it's something no recipe takes. */
     private static boolean empty(Cell cell) {
-        return cell == null || cell.item() == null || cell.amount() <= 0;
+        return cell == null || cell.amount() <= 0;
     }
 
     private static Cell cell(Cell[] grid, int slot) {
