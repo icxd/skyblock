@@ -49,7 +49,8 @@ The network lives in `./network` unless you pass `--dir FOLDER` or set `SKYBLOCK
   `tools/items/build_items.py`), its collections and recipes (`plugins/dungeons/collections` →
   `collections/`, made by `tools/collections/build_collections.py`), its SkyBlock Leveling data
   (`plugins/dungeons/leveling` → `leveling/`, made by `tools/leveling/build_leveling.py`) and, once the
-  checkout has it, its storage tables (`plugins/dungeons/storage` → `storage/`, see `tools/storage`), and
+  checkout has them, its storage tables (`plugins/dungeons/storage` → `storage/`, see `tools/storage`)
+  and the Hex's tables (`plugins/dungeons/hex` → `hex/`, see HEX.md), and
   dungeon servers its captured rooms
   (`plugins/dungeons/dungeon-rooms/rooms` → `rooms/`). They come from Hypixel, so they stay in that
   private repository rather than in this one or the plugin. `deploy` adds links that are missing, so
