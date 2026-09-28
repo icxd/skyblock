@@ -283,7 +283,7 @@ public final class ItemBuilder {
         for (String category : item.categories()) header.add("&8" + category);
         sections.add(header);
 
-        List<String> stats = new ArrayList<>(statLines(item, tag, rarity, owner));
+        List<String> stats = new ArrayList<>(statLines(item, tag, rarity, owner, holder));
         String gemstones = gemstoneLine(item, tag);
         if (gemstones != null) stats.add(gemstones);
         sections.add(stats);
@@ -321,6 +321,11 @@ public final class ItemBuilder {
      * then what the upgrades and reforge add, then (on dungeon items) what it comes to in a dungeon.
      */
     static List<String> statLines(SkyBlockItem item, NBTTagCompound tag, Rarity rarity, Player owner) {
+        return statLines(item, tag, rarity, owner, null);
+    }
+
+    /** {@link #statLines(SkyBlockItem, NBTTagCompound, Rarity, Player)} in {@code holder}'s inventory (null: nobody's). */
+    static List<String> statLines(SkyBlockItem item, NBTTagCompound tag, Rarity rarity, Player owner, Player holder) {
         List<String> lines = new ArrayList<>();
         if (item.gearScore() > 0) lines.add("&7Gear Score: &d" + item.gearScore());
         Stats base = item.stats();
@@ -329,8 +334,9 @@ public final class ItemBuilder {
         int books = tag.getInt("hot_potato_books");
         int stars = item.dungeonItem() ? Math.min(starCount(tag), 5) : 0;
         double catacombs = item.dungeonItem() ? catacombsBoost(owner) : 0;
-        // Withered's and Ancient's stat a Catacombs level is the owner's, as the dungeon boost is.
-        int catacombsLevel = reforge == null || reforge.perLevel().isEmpty() ? 0 : catacombsLevel(owner);
+        // Withered's and Ancient's stat a Catacombs level is the owner's, as the dungeon boost is; on an item nobody
+        // owns, its holder's (whose stats count it, ItemStats).
+        int catacombsLevel = reforge == null || reforge.perLevel().isEmpty() ? 0 : catacombsLevel(owner != null ? owner : holder);
         Stats enchanted = new Stats();
         for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
         for (Stat stat : Stat.values()) {
