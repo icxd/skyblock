@@ -94,10 +94,10 @@ so until then the level isn't in the lore.
 books' and the Art of War's: `&7Foraging Fortune: &6+91 &6(+25) &9(+12)` (a live Moonglade Treecapitator's).
 
 **Mana Disintegrators.** An ability's mana cost is 1% less for each (`Abilities.manaCost`, and the Staff of
-the Rising Sun's in `Bolts`). A cost that's a
-share of max mana is 2% less for each: the power orbs' in their data, and the Lanterns' and the
-Umberella's in their text ("Costs 50% of max mana", which Deployables reads). The lore marks the mana cost
-as live items do, `&8Mana Cost: &b300✎&8 (&910&9ᛃ&8)`, and shows a share less: "40% of max" with 10.
+the Rising Sun's in `Bolts`). A cost that's a share of max mana is 2% less for each: the power orbs' in
+their data, and the Lanterns' and the Umberella's in their text ("Costs 50% of max mana", which
+Deployables reads). The lore marks the mana cost as live items do, `&8Mana Cost: &b300✎&8 (&910&9ᛃ&8)`,
+and shows a share less: "40% of max" with 10.
 
 **Jalapeno Book.** The buff of the deployable it's on gets +5 Crit Damage and +1 Crit Chance
 (`Deployables`), and its lore gets two lines at the end of the buff, in its bullets' colour:
@@ -170,9 +170,9 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
 
 - **Tool Exp Capsule** (added to the Hex in December 2025): farming tools' levels, which aren't here.
 - **Divan's Powder Coating**: not in the Hex's sources.
-- **The Wither Scrolls' lore**: the "&aScroll Abilities:" line above them, and Wither Impact's newer text
-  (result_items.md §6.14). The first needs a line in an ability's lore before its header, which the lore's
-  blocks don't have.
+- **The Wither Scrolls' lore**: the "&aScroll Abilities:" line above them (result_items.md §6.14). It needs
+  a line in an ability's lore before its header, which the lore's blocks don't have. (Wither Impact's text
+  is the live wording now, in NecronsBlade.)
 - **Efficiency** in the lore and its effect: the enchantments part.
 - **The `dungeon_item` tag everywhere else** (a converted item's stars, stats and lore): the books and
   item upgrades part. Master stars already go on a converted item.

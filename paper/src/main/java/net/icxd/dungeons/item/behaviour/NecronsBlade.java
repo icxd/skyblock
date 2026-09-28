@@ -19,15 +19,17 @@ final class NecronsBlade implements ItemBehaviour {
     private static final List<Scroll> SCROLLS = List.of(new Scroll("implosion", "IMPLOSION_SCROLL"),
             new Scroll("wither_shield", "WITHER_SHIELD_SCROLL"), new Scroll("shadow_warp", "SHADOW_WARP_SCROLL"));
     private static final List<String> CLASS_ABILITY = List.of("", "&eRight-click to use your class ability!");
-    /** No item shows it on its own, so it's written here: the plugin's text from before items were data. */
+    /**
+     * No item shows it on its own, so it's written here: as live blades word it (auction items, September 2026),
+     * with the damage the plugin's text had from before items were data.
+     */
     private static final ItemBlock WITHER_IMPACT = new ItemBlock("ABILITY", "Wither Impact", "&6Ability: Wither Impact  &e&lRIGHT CLICK",
             "RIGHT_CLICK", List.of(
-                    "&7Teleport &a10 blocks&7 ahead of you.",
-                    "&7Then implode dealing &c13,961.2 &7damage",
-                    "&7to nearby enemies. Also applies the",
-                    "&7wither shield scroll ability reducing",
-                    "&7damage taken and granting an",
-                    "&7absorption shield for &e5 &7seconds."), 300, 0, 0, 0, 0, 0, 0);
+                    "&7Teleport &a10 blocks&7 ahead of you",
+                    "&7dealing &c13,961.2 &7damage to nearby",
+                    "&7enemies. Also reduces your damage",
+                    "&7taken and grants an absorption",
+                    "&7shield for &e5 seconds&7."), 300, 0, 0, 0, 0, 0, 0);
 
     /** A scroll: its flag in the blade's data, and its item. */
     private record Scroll(String flag, String itemId) {
