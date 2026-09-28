@@ -30,6 +30,23 @@ class HitBuffTest {
         assertEquals(1000, Damage.exact(Damage.buffed(attacker, UNDEAD, 25, 2), UNDEAD, true), 1e-9);
     }
 
+    /**
+     * "Add Damage" (Soul Eater): added after the additive and multiplicative buffs, and only the crit multiplies
+     * it: (100 x 2 + 50) x 2 on a crit with 100 Crit Damage, then Defense.
+     */
+    @Test
+    void addedDamage() {
+        Damage.Attacker attacker = new Damage.Attacker(95, 0, 0, 100, 25, 1000, Map.of(), false, 0, 2);
+        Damage.Target none = new Damage.Target(1000, 1000, 0, 0, Set.of(), 0);
+        assertEquals(100 * 2 * 2, Damage.exact(attacker, none, false), 1e-9);
+        assertEquals(100 * 2 * 2 + 50, Damage.exact(attacker, none, false, 50), 1e-9);
+        assertEquals((100 * 2 * 2 + 50) * 2, Damage.exact(attacker, none, true, 50), 1e-9);
+        Damage.Target defended = new Damage.Target(1000, 1000, 100, 0, Set.of(), 0);
+        assertEquals((100 * 2 * 2 + 50) * 2 / 2.0, Damage.exact(attacker, defended, true, 50), 1e-9);
+        assertEquals(Damage.exact(attacker, none, true), Damage.exact(attacker, none, true, 0), 1e-9);
+        assertEquals(0, new Combat.HitBuff(10, 2).added(), 1e-9);
+    }
+
     @Test
     void nothingMore() {
         Damage.Attacker attacker = new Damage.Attacker(95, 0, 0, 0, 0, 1000, Map.of(), true, 0, 1);

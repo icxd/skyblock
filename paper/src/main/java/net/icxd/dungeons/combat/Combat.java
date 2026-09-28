@@ -59,11 +59,17 @@ public final class Combat {
 
     /**
      * A buff on one hit that has landed, which may depend on what it hit (armor bonuses: Reaper Armor
-     * deals "+100% damage to Undead mobs"): what it adds to the hit's additive buffs, in percent, and a
-     * multiplicative factor, 1 for none (see {@link Damage#buffed}).
+     * deals "+100% damage to Undead mobs"): what it adds to the hit's additive buffs, in percent, a
+     * multiplicative factor, 1 for none (see {@link Damage#buffed}), and damage {@code added} to it that only
+     * a crit multiplies (the wiki's "Add Damage" mechanics: Soul Eater, Extreme Focus; see {@link
+     * Damage#exact(Damage.Attacker, Damage.Target, boolean, double)}).
      */
-    public record HitBuff(double additive, double multiplier) {
+    public record HitBuff(double additive, double multiplier, double added) {
         public static final HitBuff NONE = new HitBuff(0, 1);
+
+        public HitBuff(double additive, double multiplier) {
+            this(additive, multiplier, 0);
+        }
     }
 
     /** What gives a player's hits a {@link HitBuff}: asked once for each hit of theirs that lands on a mob. */
@@ -144,23 +150,26 @@ public final class Combat {
         PLAYER_HIT_LISTENERS.add(listener);
     }
 
-    /** The attacker with the {@link HitBuff}s on this hit of theirs on this target. */
-    static Damage.Attacker buffed(Player player, Damage.Attacker attacker, Damage.Target target, Landing landing) {
+    /** The {@link HitBuff}s on this hit of theirs on this target, as one: additives and added damage summed, factors multiplied. */
+    static HitBuff buffs(Player player, Damage.Attacker attacker, Damage.Target target, Landing landing) {
         double additive = 0;
         double multiplier = 1;
+        double added = 0;
         for (HitBuffs buffs : HIT_BUFFS) {
             HitBuff buff = buffs.on(player, attacker, target);
             if (buff == null) continue;
             additive += buff.additive();
             multiplier *= buff.multiplier();
+            added += buff.added();
         }
         for (LandingBuffs buffs : LANDING_BUFFS) {
             HitBuff buff = buffs.on(player, attacker, target, landing);
             if (buff == null) continue;
             additive += buff.additive();
             multiplier *= buff.multiplier();
+            added += buff.added();
         }
-        return Damage.buffed(attacker, target, additive, multiplier);
+        return new HitBuff(additive, multiplier, added);
     }
 
     /**
@@ -258,8 +267,10 @@ public final class Combat {
             look = DamageIndicators.Look.of(critical, false);
         }
         Landing landing = new Landing(target, projectile != null ? HitKind.ARROW : HitKind.MELEE, critical, weapon, projectile);
+        HitBuff buff = buffs(player, attacker, on, landing);
+        Damage.Attacker buffed = Damage.buffed(attacker, on, buff.additive(), buff.multiplier());
         // What its debuffs make it take ("Frozen mobs take 10% increased damage"), on the whole hit.
-        double damage = Math.floor(Damage.exact(buffed(player, attacker, on, landing), on, critical) * MobDebuffs.takenFactor(target));
+        double damage = Math.floor(Damage.exact(buffed, on, critical, buff.added()) * MobDebuffs.takenFactor(target));
 
         boolean invulnerable = dungeonMob != null ? dungeonMob.invulnerable() : mob.type().isInvulnerable();
         if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED), attackSpeedCap(player));

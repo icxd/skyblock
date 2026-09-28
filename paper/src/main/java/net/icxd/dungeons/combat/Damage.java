@@ -190,10 +190,21 @@ public final class Damage {
 
     /** What the hit does to the target, before rounding. */
     public static double exact(Attacker attacker, Target target, boolean critical) {
+        return exact(attacker, target, critical, 0);
+    }
+
+    /**
+     * The same with {@code added} damage that only the crit multiplier counts for, not the additive or
+     * multiplicative buffs (the wiki's "Add Damage" mechanics: "(Weapon Damage Multiplier x Strength Multiplier
+     * x multipliers + mult_SoulEater x Damage_MobSoul) x Crit Damage Multiplier"), before the caps and Defense.
+     */
+    public static double exact(Attacker attacker, Target target, boolean critical, double added) {
         double damage = initial(attacker.damage(), attacker.strength());
         if (critical) damage *= critMultiplier(attacker.critDamage());
         damage *= 1 + additive(attacker, target) / 100;
         damage *= attacker.multiplier();
+        // (hit + added) x crit is hit x crit + added x crit.
+        if (added > 0) damage += critical ? added * critMultiplier(attacker.critDamage()) : added;
         damage = cap(damage, target.caps());
         return damage * defenseMultiplier(target.defense());
     }

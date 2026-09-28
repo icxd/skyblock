@@ -113,13 +113,15 @@ public final class SetBonuses implements Listener {
         Combat.addHitBuffs((player, attacker, target) -> {
             double additive = 0;
             double multiplier = 1;
+            double added = 0;
             for (Bonus.Active a : active(player)) {
                 Combat.HitBuff buff = a.bonus().hit(player, a, attacker, target);
                 if (buff == null) continue;
                 additive += buff.additive();
                 multiplier *= buff.multiplier();
+                added += buff.added();
             }
-            return new Combat.HitBuff(additive, multiplier);
+            return new Combat.HitBuff(additive, multiplier, added);
         });
         PlayerDamage.addDefenseAgainst((player, by) -> {
             double defense = 0;
