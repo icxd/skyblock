@@ -521,10 +521,11 @@ func (n *Network) installProxyPlugin(progress func(string)) {
 var optionalData = []string{"storage"}
 
 // linkData links the private data checkout into servers: the item definitions (items/), the
-// collections and recipes (collections/) and the SkyBlock Leveling data (leveling/) into every server, the captured rooms (rooms/) into
-// dungeon servers, and the optionalData folders. Hypixel's data stays in that checkout, out of the
-// plugin and this repository. Links that are already there are left alone, so it runs on every
-// deploy. What the checkout lacks is the same for every server, so it's said once.
+// collections and recipes (collections/) and the SkyBlock Leveling data (leveling/) into every
+// server, the captured rooms (rooms/) into dungeon servers, and the optionalData folders. Hypixel's
+// data stays in that checkout, out of the plugin and this repository. Links that are already there
+// are left alone, so it runs on every deploy. What the checkout lacks is the same for every server,
+// so it's said once.
 func (n *Network) linkData(servers []*Server, progress func(string)) {
 	if len(servers) == 0 {
 		return

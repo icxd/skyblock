@@ -46,6 +46,7 @@ import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.command.commands.user.ViewStashCommand;
 import net.icxd.dungeons.economy.KillCoins;
 import net.icxd.dungeons.gui.GUIListener;
+import net.icxd.dungeons.leveling.LevelingSources;
 import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.listeners.CombatListener;
 import net.icxd.dungeons.listeners.HealthListener;
@@ -86,12 +87,14 @@ import net.icxd.dungeons.tablist.TabList;
 import net.icxd.dungeons.user.ItemStash;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
+import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Map;
 
 
 public class Dungeons extends JavaPlugin {
@@ -127,6 +130,23 @@ public class Dungeons extends JavaPlugin {
         SetBonuses.setCollections((player, item) -> {
             User user = User.ifLoaded(player.getUniqueId());
             return user == null ? 0 : Collections.count(user.profile(), item);
+        });
+        // SkyBlock Leveling's Collections task and the guide's collection tasks. Whether boss collections'
+        // tiers count as collection milestones there is UNKNOWN: they don't.
+        SkyBlockLevels.sources(new LevelingSources() {
+            @Override
+            public int collectionTiers(Document profile) {
+                int tiers = 0;
+                for (Map.Entry<String, Integer> e : Collections.unlockedTiers(profile).entrySet()) {
+                    if (!Collections.data().collection(e.getKey()).boss()) tiers += e.getValue();
+                }
+                return tiers;
+            }
+
+            @Override
+            public int collectionTier(Document profile, String collection) {
+                return Collections.tier(profile, collection);
+            }
         });
         // SkyBlock Leveling's tasks and rewards, from the same data (leveling/leveling.json), read off the main thread.
         SkyBlockLevels.start(this);
