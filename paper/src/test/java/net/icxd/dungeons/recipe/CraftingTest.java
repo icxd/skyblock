@@ -152,6 +152,15 @@ class CraftingTest {
         assertNull(Crafting.match(cookie, grid("ENCHANTED_COCOA:32", "ENCHANTED_COCOA:32", "WHEAT:1", "BONE:1", "", "", "", "", "")));
     }
 
+    /** A shift-click's results in stacks: full ones and the rest; one to a stack for an unstackable item (a sack, a talisman). */
+    @Test
+    void shiftCraftedStacks() {
+        assertEquals(List.of(64, 64, 2), CraftingTable.stacks(130, 64));
+        assertEquals(List.of(16, 4), CraftingTable.stacks(20, 16));
+        assertEquals(List.of(1, 1, 1), CraftingTable.stacks(3, 1));
+        assertEquals(List.of(), CraftingTable.stacks(0, 64));
+    }
+
     /** The index finds a recipe by the grid's items, and skips the ones that aren't allowed (not unlocked). */
     @Test
     void index() {

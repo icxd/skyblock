@@ -198,15 +198,12 @@ public final class CraftingTable extends GUI {
         if (one.getType() == Material.BARRIER) return;
         int times;
         if (click.isShiftClick()) {
-            times = Math.min(match.times(), room(one));
+            int perStack = perStack(match, one);
+            times = Math.min(match.times(), room(one, perStack));
             if (times <= 0) return;
             List<ItemStack> results = new ArrayList<>();
-            int left = one.getAmount() * times;
-            while (left > 0) {
-                int amount = Math.min(left, one.getMaxStackSize());
-                results.add(made(match, 1).asQuantity(amount));
-                left -= amount;
-            }
+            // Each stack made anew: an unstackable item's uuid is its own.
+            for (int amount : stacks(one.getAmount() * times, perStack)) results.add(made(match, 1).asQuantity(amount));
             take(match, times);
             ItemStash.give(viewer, results.toArray(new ItemStack[0]));
         } else {
@@ -226,13 +223,26 @@ public final class CraftingTable extends GUI {
         refresh();
     }
 
+    /** How many of the result a stack holds: one of an unstackable item (each has its own uuid), else what its material does. */
+    private static int perStack(Match match, ItemStack one) {
+        SkyBlockItem item = ItemRegistry.get(match.recipe().result());
+        return item != null && item.unstackable() ? 1 : one.getMaxStackSize();
+    }
+
+    /** The stacks {@code total} crafted items go in, {@code perStack} to a stack. */
+    static List<Integer> stacks(int total, int perStack) {
+        List<Integer> stacks = new ArrayList<>();
+        for (int left = total; left > 0; left -= perStack) stacks.add(Math.min(left, perStack));
+        return stacks;
+    }
+
     /** How many crafts of this result fit in the player's inventory (their storage slots, not armor). */
-    private int room(ItemStack one) {
+    private int room(ItemStack one, int perStack) {
         int space = 0;
         ItemStack[] contents = viewer.getInventory().getStorageContents();
         for (ItemStack stack : contents) {
-            if (stack == null || stack.isEmpty()) space += one.getMaxStackSize();
-            else if (stack.isSimilar(one)) space += Math.max(0, stack.getMaxStackSize() - stack.getAmount());
+            if (stack == null || stack.isEmpty()) space += perStack;
+            else if (perStack > 1 && stack.isSimilar(one)) space += Math.max(0, perStack - stack.getAmount());
         }
         return space / one.getAmount();
     }
