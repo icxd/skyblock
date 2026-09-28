@@ -22,7 +22,9 @@ Skyblocker mods filter. Where they say nothing, the code says UNKNOWN and takes 
   abilities (not Sharpness, First Strike, Triple-Strike, One For All); Dragon Rage and Burning Souls have
   none ("Not affected by the Additive Multiplier"). Multiplicative buffs: none (UNKNOWN which count for
   magic). Never a crit, no Ferocity; hits aren't rounded except Giant's Slam's (its recorded totals are
-  whole, Implosion's aren't).
+  whole, Implosion's aren't). A spell that lands later (a skull, a bat, a wave) takes its base and
+  enchantments from the item it was cast with, and Intelligence and Ability Damage as they are when it
+  lands (UNKNOWN which Hypixel's are).
 - **Hits worked out as the weapon's** (`Hits.weaponHit`): the held weapon's melee hit or arrow, times the
   ability's share, crits as Crit Chance rolls (Salvation always), no Ferocity strikes (UNKNOWN). The
   roses leave out the enchantments that don't count for abilities; Flay keeps them all ("Melee-only
@@ -132,6 +134,7 @@ the 26.2 server's `AbstractArrow.setOwner`).
 | Homing Missiles, Ground Pound | Aurora armor (20), Fervor armor (20) | a sneak dispatch for worn armor (PlayerListener only dispatches the held item's clicks), and the armor part's stacks (it keeps Fervor's for Ground Pound) |
 | Detonate | Creeper Pants, Miniature Nuke (2) | the pants': a hook for dropping below 20% health, on worn armor; the Nuke: an admin item (SPECIAL) |
 | Shoot | Horsezooka (1) | Farming (it clears hay) |
+| The halberd's and Sinrecall's growing mana on the action bar | 2 | one line for the whole cost: the extra is taken and shown in the use, then PlayerListener's line for the block's own cost ("-20 Mana (Throw)") replaces it |
 | Salvation's T1/T2/T3!, Wither Shield's absorption, Midas' Greed | - | a place on the action bar; absorption (the utility part adds `PlayerDamage.addShield`, which it can use once merged); the Dark Auction |
 
 Not this part's (utility abilities, or armor): Enrage (the Enrager's taunt and its 10% less damage from
