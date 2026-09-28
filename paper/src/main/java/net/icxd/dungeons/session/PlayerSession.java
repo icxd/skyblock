@@ -12,6 +12,7 @@ import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -41,8 +42,9 @@ public final class PlayerSession {
     private Replacement defenseReplacement;
     private Replacement manaReplacement;
     private final Map<String, Long> cooldownEnds = new HashMap<>();
-    /** Stats they have for a while, by what gave them (see {@link #buff}). */
+    /** Stats they have for a while, by what gave them (see {@link #buff}), and shares more of stats (see {@link #buffPercent}). */
     private final Map<String, Buff> buffs = new HashMap<>();
+    private final Map<String, PercentBuff> percentBuffs = new HashMap<>();
     /** Null until they've moved. */
     @Getter @Setter private RegionType region;
     /** When their next mining break animation may start (see MiningManager). */
@@ -73,7 +75,10 @@ public final class PlayerSession {
         sessions.remove(player);
     }
 
-    /** Their stats now: the base, their armor and held item and what they have for a while, worked out once per tick. */
+    /**
+     * Their stats now: the base, their armor and held item and what they have for a while (flat buffs, then
+     * the percent ones on what that comes to), worked out once per tick.
+     */
     public Stats stats() {
         int tick = Bukkit.getCurrentTick();
         if (stats == null || statsTick != tick) {
@@ -81,9 +86,33 @@ public final class PlayerSession {
             long now = System.currentTimeMillis();
             buffs.values().removeIf(buff -> buff.endMillis <= now);
             for (Buff buff : buffs.values()) stats.add(buff.stats);
+            if (!percentBuffs.isEmpty()) {
+                percentBuffs.values().removeIf(buff -> buff.endMillis <= now);
+                Map<Stat, Double> percents = new EnumMap<>(Stat.class);
+                for (PercentBuff buff : percentBuffs.values()) percents.merge(buff.stat, buff.percent, Double::sum);
+                for (Map.Entry<Stat, Double> e : percents.entrySet()) stats.set(e.getKey(), percentBuffed(stats.get(e.getKey()), e.getValue()));
+            }
             statsTick = tick;
         }
         return stats;
+    }
+
+    /**
+     * Gives them {@code percent} more of a stat for this long (Last Stand's "+12.5% Defense for 10s"), in place of
+     * what the same source gave them before; on the stat as their other stats and flat buffs make it. Percent
+     * buffs on the same stat add up (UNKNOWN whether Hypixel's do).
+     */
+    public void buffPercent(String source, Stat stat, double percent, long millis) {
+        percentBuffs.put(source, new PercentBuff(stat, percent, System.currentTimeMillis() + millis));
+        this.stats = null;
+    }
+
+    /** A stat with this many percent more (never below none). */
+    static double percentBuffed(double value, double percent) {
+        return value * Math.max(0, 1 + percent / 100);
+    }
+
+    private record PercentBuff(Stat stat, double percent, long endMillis) {
     }
 
     /**
