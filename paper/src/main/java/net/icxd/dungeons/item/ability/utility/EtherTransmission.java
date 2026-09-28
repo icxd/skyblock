@@ -11,6 +11,7 @@ import org.bukkit.util.RayTraceResult;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.bonus.SetBonuses;
 
@@ -19,20 +20,21 @@ import net.icxd.dungeons.item.bonus.SetBonuses;
  * block is the first one the line from their eyes meets (things with nothing to bump into let it through),
  * and it needs air in the two blocks over it for them to stand there: the Skyblocker mod's copy of it. They
  * land on it, in its middle, facing as they did. Without such a block nothing happens and nothing is spent
- * (UNKNOWN what Hypixel says then). Not built: the Tuned Transmission's extra blocks, and the ethermerged
- * Aspect of the Void's sneak click (an item behaviour's block, when there is one).
+ * (UNKNOWN what Hypixel says then). Its Transmission Tuners add a block each ("to 61 blocks away" on a live
+ * Conduit with 4). Not built: the ethermerged Aspect of the Void's sneak click (an item behaviour's block, when
+ * there is one).
  */
 final class EtherTransmission implements AbilityHandler {
     private static final double RANGE = 57;
 
     @Override
     public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        return target(player, range(block)) != null;
+        return target(player, range(block, tag)) != null;
     }
 
     @Override
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        Block target = target(player, range(block));
+        Block target = target(player, range(block, tag));
         if (target == null) return;
         Location from = player.getLocation();
         Location to = target.getLocation().add(0.5, 1, 0.5);
@@ -44,8 +46,8 @@ final class EtherTransmission implements AbilityHandler {
         player.getWorld().playSound(to, Sound.ENTITY_ENDER_DRAGON_HURT, 1, 0.5f);
     }
 
-    private static double range(ItemBlock block) {
-        return AbilityText.after(AbilityText.plain(block.text()), "up to").orElse(RANGE);
+    private static double range(ItemBlock block, NBTTagCompound tag) {
+        return AbilityText.after(AbilityText.plain(block.text()), "up to").orElse(RANGE) + ItemModifiers.tuners(tag);
     }
 
     /** The block they'd land on, within {@code range}; null if there's none with room over it. */

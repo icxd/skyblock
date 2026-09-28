@@ -9,6 +9,8 @@ import java.util.List;
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
+import net.icxd.dungeons.item.enums.Rarity;
+import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.utils.Utils;
 
 /** The seven categories: their order, requirements and buttons as the wiki has them. */
@@ -43,13 +45,10 @@ class HexCategoriesTest {
     }
 
     @Test
-    void noneAppliesUntilItsPartIsBuilt() {
-        HexItem sword = HexFakes.sword();
-        for (HexCategory category : HexCategories.all()) {
-            // Built: see ReforgesCategoryTest, and books go on swords (see hex/book/BooksPageTest).
-            if (category == HexCategories.REFORGES || category == HexCategories.BOOKS) continue;
-            assertFalse(category.applies(sword), category.name());
-        }
+    void noneIsForAnItemWithNoType() {
+        // No type, no abilities, no stars or slots: nothing to modify (a sword takes a Recombobulator 3000, say).
+        HexItem thing = HexFakes.hexItem(HexFakes.item("TEST_THING", "Test Thing", Rarity.COMMON, SpecificItemType.NONE));
+        for (HexCategory category : HexCategories.all()) assertFalse(category.applies(thing), category.name());
     }
 
     @Test

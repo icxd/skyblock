@@ -6,6 +6,7 @@ import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.bonus.SetBonuses;
 import net.icxd.dungeons.item.bonus.StrongBlood;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.PlayerAttributes;
@@ -55,14 +56,14 @@ public class InstantTransmission implements AbilityHandler {
 
     @Override
     public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        if (landing(player) != null) return true;
+        if (landing(player, tag) != null) return true;
         player.sendMessage(BLOCKED);
         return false;
     }
 
     @Override
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        Landing landing = landing(player);
+        Landing landing = landing(player, tag);
         if (landing == null) {
             player.sendMessage(BLOCKED);
             return;
@@ -93,9 +94,10 @@ public class InstantTransmission implements AbilityHandler {
         }, millis / 50 + 1);
     }
 
-    private static Landing landing(Player player) {
-        // Strong Blood reaches further with this one only, not with the teleports that reuse the path.
-        return landing(player, DISTANCE + StrongBlood.range(player));
+    private static Landing landing(Player player, NBTTagCompound tag) {
+        // Strong Blood reaches further with this one only, not with the teleports that reuse the path; so do the
+        // item's Transmission Tuners, a block each.
+        return landing(player, DISTANCE + StrongBlood.range(player) + ItemModifiers.tuners(tag));
     }
 
     /** Where a teleport up to {@code distance} blocks the way they look takes them, as this one's does (Wither Impact's 10). */

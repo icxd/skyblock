@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.data.ItemData;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 
 /** What's registered, against the item data; and the numbers the last abilities take from their text. */
 class WeaponAbilitiesTest {
@@ -61,6 +63,17 @@ class WeaponAbilitiesTest {
         assertEquals(0, Bows.mobsOnImpact(List.of("&7Shoots &b3 &7arrows at once.")));
         assertEquals(100_000, Bolts.number(List.of("&7Coin Cost: &6100,000"), Pattern.compile("Coin Cost: (\\d+)")), 1e-9);
         assertEquals(-1, Bolts.number(List.of("&7nothing"), Pattern.compile("Coin Cost: (\\d+)")), 1e-9);
+    }
+
+    /** The Staff of the Rising Sun's share of their max mana, less 1% a Mana Disintegrator (it's a wand: 0.20.5). */
+    @Test
+    void rayOfHopesCost() {
+        ItemBlock ray = new ItemBlock("ABILITY", "Ray of Hope", null, "RIGHT_CLICK", List.of("&7Costs &b10% &7of your total mana to use."),
+                0, 0, 0, 0, 0, 0, 0);
+        assertEquals(100, Bolts.RayOfHope.cost(ray, new NBTTagCompound(), 1_000));
+        NBTTagCompound ten = new NBTTagCompound();
+        ten.setInt(ItemModifiers.MANA_DISINTEGRATORS, 10);
+        assertEquals(90, Bolts.RayOfHope.cost(ray, ten, 1_000));
     }
 
     /** 10% of their health, at most 500. */

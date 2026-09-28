@@ -24,6 +24,7 @@ import net.icxd.dungeons.item.enums.Soulbound;
 import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.item.gemstone.GemSlots;
 import net.icxd.dungeons.item.gemstone.GemstoneSlot;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -57,8 +58,8 @@ import java.util.UUID;
  *   <li>name: rarity colour, reforge, name, stars ({@code ✪}, master stars {@code ➊}-{@code ➎})</li>
  *   <li>dark gray lines: breaking power, categories ("Collection Item")</li>
  *   <li>gear score, then stats in Hypixel's order, each with its bonuses: {@code &e(hot potato books)
- *       &6[Art of War]} and the other books' (see {@link Book}), {@code &9(reforge) &8(in a dungeon)}, the last
- *       on dungeon items (see {@link DungeonItems})</li>
+ *       &6[Art of War]} and the other books' (see {@link Book}), {@code &6(Wood Singularity) &9(reforge) &d(gems)
+ *       &8(in a dungeon)}, the last on dungeon items (see {@link DungeonItems})</li>
  *   <li>gemstone slots</li>
  *   <li>enchantments: with descriptions when there are up to 5 (and it isn't a dungeon item), one
  *       a line up to 9, else three a line</li>
@@ -279,6 +280,7 @@ public final class ItemBuilder {
         Player owner = owner(tag);
         Reforge reforge = reforge(tag);
         List<List<String>> sections = new ArrayList<>();
+        sections.add(ItemModifiers.enrichmentLines(tag));
 
         List<String> header = new ArrayList<>();
         // With the reforge's (live Scraped Gemstone Gauntlets: 9, their own 8 and Scraped's 1).
@@ -295,9 +297,11 @@ public final class ItemBuilder {
         sections.add(enchantmentLines(item, tag));
         sections.add(attributeLines(tag, owner));
         ItemBehaviour behaviour = ItemBehaviours.of(item);
-        sections.add(behaviour.lore(item, tag, item.lore()));
+        sections.add(ItemModifiers.lore(tag, behaviour.lore(item, tag, item.lore())));
         sections.add(runeLines(tag));
-        for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(SetBonusLore.shown(block, holder), rarity));
+        for (ItemBlock block : ItemModifiers.blocks(tag, behaviour.blocks(item, tag, item.blocks()))) {
+            sections.add(ItemModifiers.blockLore(tag, blockLore(SetBonusLore.shown(block, holder), rarity)));
+        }
         sections.add(Book.statsLines(item, tag));
         // Last, as on live items: "&9Withered Bonus" and its text (after the Book of Stats' count).
         if (reforge != null) sections.add(reforge.bonusSection(rarity));
@@ -345,6 +349,7 @@ public final class ItemBuilder {
         Stats enchanted = new Stats();
         for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
         Stats gems = GemSlots.stats(item, tag);
+        Stats modified = ItemModifiers.stats(tag);
         for (Stat stat : Stat.values()) {
             if (stat == Stat.BREAKING_POWER || stat == Stat.WEAPON_ABILITY_DAMAGE) continue;
             // Each book's in its own bracket, in the live order: potato books, then The Art of War or Peace, ...
@@ -360,13 +365,15 @@ public final class ItemBuilder {
             // Stars add 2% of the base stat each out of a dungeon (with no bracket); in one, the dungeon boost replaces that.
             double starBonus = starBonus(stat, base.get(stat), stars);
             double gemstones = gems.get(stat);
-            // What enchantments grant counts in the total, with no bracket of its own.
-            double shown = base.get(stat) + starBonus + fromBooks + reforged + enchanted.get(stat) + gemstones;
+            // What enchantments and an Enrichment grant counts in the total, with no bracket of its own.
+            double shown = base.get(stat) + starBonus + fromBooks + reforged + enchanted.get(stat) + gemstones + modified.get(stat);
             if (shown == 0) continue;
+            double singularity = ItemModifiers.woodSingularity(tag, stat);
             String unit = stat.getUnit();
             StringBuilder line = new StringBuilder("&7").append(stat.getDisplayName()).append(": &").append(stat.getLoreColor())
                     .append(Text.signed(shown)).append(unit);
             line.append(bookBrackets);
+            if (singularity != 0) line.append(" &6(").append(Text.signed(singularity)).append(")");
             if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(unit).append(")");
             if (gemstones != 0) line.append(" &d(").append(Text.signed(gemstones)).append(unit).append(")");
             if (dungeon && shown > 0) {
@@ -393,8 +400,16 @@ public final class ItemBuilder {
      * Speed and the like only get the stars'; health regen, vitality, mending and swing range nothing.
      */
     public static double dungeonFactor(Stat stat, int stars, double catacombsBoost) {
+        return dungeonFactor(stat, stars, 0, catacombsBoost);
+    }
+
+    /**
+     * {@link #dungeonFactor(Stat, int, double)} in Master Mode, where each master star adds 5% (its item: "increasing
+     * all stats by an additional +5% in Master Mode"). UNKNOWN how Hypixel adds it up: here to the stars' 10% each.
+     */
+    public static double dungeonFactor(Stat stat, int stars, int masterStars, double catacombsBoost) {
         if (NOT_SCALED.contains(stat)) return 1;
-        return 1 + 0.1 * stars + (CATACOMBS_SCALED.contains(stat) ? catacombsBoost : 0);
+        return 1 + 0.1 * stars + 0.05 * masterStars + (CATACOMBS_SCALED.contains(stat) ? catacombsBoost : 0);
     }
 
     /**

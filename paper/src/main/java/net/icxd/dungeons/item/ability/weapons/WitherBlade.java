@@ -131,8 +131,8 @@ final class WitherBlade {
     }
 
     /**
-     * "Teleport 10 blocks ahead of you. Then implode dealing ... damage to nearby enemies. Also applies the
-     * wither shield scroll ability ...": the shield only with its 50 Vitality ("not having enough Vitality
+     * "Teleport 10 blocks ahead of you dealing ... damage to nearby enemies. Also reduces your damage taken and
+     * grants an absorption shield for 5 seconds": the shield only with its 50 Vitality ("not having enough Vitality
      * simply doesn't activate the shield"), which isn't in its lore. Every 0.15 s at most; a click sooner
      * does nothing and costs nothing.
      */

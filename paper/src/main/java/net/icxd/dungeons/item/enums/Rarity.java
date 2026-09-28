@@ -22,8 +22,13 @@ public enum Rarity {
         this.code = code;
     }
 
+    /**
+     * One up, as a Recombobulator 3000 makes it (the wiki's Recombobulator 3000): Mythic to Divine, Divine to
+     * Special, Special to Very Special, and Very Special stays Very Special. Unobtainable (the API's, on admin
+     * items) stays as it is. UNKNOWN whether it's the wiki's cosmetics' rarity that goes to Very Special.
+     */
     public Rarity upgrade() {
-        return values()[Math.min(this.ordinal() + 1, values().length - 1)];
+        return this == VERY_SPECIAL || this == UNOBTAINABLE ? this : values()[this.ordinal() + 1];
     }
 
     public Rarity downgrade() {

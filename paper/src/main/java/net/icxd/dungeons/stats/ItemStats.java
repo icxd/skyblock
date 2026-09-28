@@ -1,6 +1,7 @@
 package net.icxd.dungeons.stats;
 
 import net.icxd.dungeons.attributes.Attribute;
+import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.DungeonItems;
 import net.icxd.dungeons.item.ItemBuilder;
@@ -9,6 +10,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.Enchantment;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.gemstone.GemSlots;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -38,7 +40,8 @@ public final class ItemStats {
         Double catacombs = wearer != null && DungeonItems.is(item, tag) && RunManager.inRun(wearer) ? ItemBuilder.catacombsBoost(wearer) : null;
         Reforge reforge = Reforge.of(tag);
         int level = wearer == null || reforge == null || reforge.perLevel().isEmpty() ? 0 : ItemBuilder.catacombsLevel(wearer);
-        Stats stats = of(item, tag, catacombs, level);
+        DungeonRun run = catacombs == null ? null : RunManager.of(wearer);
+        Stats stats = of(item, tag, catacombs, level, run != null && run.masterMode() ? ItemModifiers.masterStars(tag) : 0);
         if (wearer != null && tag.hasKey("attribute_1") && tag.hasKey("attribute_2")) {
             addAttribute(stats, Attribute.of(tag.getString("attribute_1")), tag.getInt("attribute_1_level"), wearer);
             addAttribute(stats, Attribute.of(tag.getString("attribute_2")), tag.getInt("attribute_2_level"), wearer);
@@ -56,14 +59,16 @@ public final class ItemStats {
      * recorded Giant's Sword's 265 Strength was 922.2 in a dungeon.
      */
     public static Stats of(SkyBlockItem item, NBTTagCompound tag, Double catacombs) {
-        return of(item, tag, catacombs, 0);
+        return of(item, tag, catacombs, 0, 0);
     }
 
     /**
      * {@link #of(SkyBlockItem, NBTTagCompound, Double)} for a wearer of this Catacombs level, for what a reforge
-     * adds a level (Withered's Strength, Ancient's Crit Damage).
+     * adds a level (Withered's Strength, Ancient's Crit Damage), with its modifiers' stats (a Wood Singularity's,
+     * an Enrichment's: see ItemModifiers), and in a Master Mode dungeon its {@code masterStars} too (0 elsewhere;
+     * see {@link ItemBuilder#dungeonFactor(Stat, int, int, double)}).
      */
-    public static Stats of(SkyBlockItem item, NBTTagCompound tag, Double catacombs, int catacombsLevel) {
+    public static Stats of(SkyBlockItem item, NBTTagCompound tag, Double catacombs, int catacombsLevel, int masterStars) {
         Stats stats = new Stats();
         Stats base = item.stats();
         stats.add(base);
@@ -80,6 +85,7 @@ public final class ItemStats {
         }
         // Its gemstones', which a dungeon scales with the rest (the recorded Shadow Assassin Helmet's).
         stats.add(GemSlots.stats(item, tag));
+        stats.add(ItemModifiers.stats(tag));
 
         boolean dungeon = DungeonItems.is(item, tag);
         int stars = dungeon ? Math.min(ItemBuilder.starCount(tag), 5) : ItemBuilder.starCount(tag);
@@ -87,7 +93,7 @@ public final class ItemStats {
             // In a dungeon only what the lore gives a bracket grows: stats above 0, not breaking power or
             // a weapon's own ability damage.
             boolean boosted = dungeon && catacombs != null && stats.get(stat) > 0 && stat != Stat.BREAKING_POWER && stat != Stat.WEAPON_ABILITY_DAMAGE;
-            if (boosted) stats.set(stat, stats.get(stat) * ItemBuilder.dungeonFactor(stat, stars, catacombs));
+            if (boosted) stats.set(stat, stats.get(stat) * ItemBuilder.dungeonFactor(stat, stars, masterStars, catacombs));
             else stats.add(stat, ItemBuilder.starBonus(stat, base.get(stat), stars));
         }
         return stats;

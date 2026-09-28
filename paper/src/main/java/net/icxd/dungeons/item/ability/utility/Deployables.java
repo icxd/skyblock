@@ -29,6 +29,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enums.Rarity;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.PlayerStats;
@@ -57,9 +58,10 @@ import net.icxd.dungeons.utils.Utils;
  * SkyHanni's "§6§lWill-o'-wisp"); a Flare's name, where it hangs and when it goes are UNKNOWN but for its
  * owner going 80 blocks away (the wiki's Warning Flare): it hangs 8 blocks over where it was shot, and its
  * range is from there on the ground. An orb floats and turns where it was placed (its height and speed are
- * UNKNOWN). Not built: the Glacite Mineshaft ("Affects all players inside a Glacite Mineshaft"), Umberella's
- * rain, Kuudra's heal, the Mana Disintegrator, and the Totem of Corruption and Black Holes (fishing and hunting
- * aren't here): a deployable with nothing here to do isn't put down.
+ * UNKNOWN). A Jalapeno Book adds its stats to the buff of the one it's on, and Mana Disintegrators take 2% each
+ * off a cost that's a share of max mana (see ItemModifiers). Not built: the Glacite Mineshaft ("Affects all
+ * players inside a Glacite Mineshaft"), Umberella's rain, Kuudra's heal, and the Totem of Corruption and Black
+ * Holes (fishing and hunting aren't here): a deployable with nothing here to do isn't put down.
  */
 final class Deployables implements AbilityHandler {
     /** "Grants +50% base mana regen". */
@@ -79,6 +81,12 @@ final class Deployables implements AbilityHandler {
         /** Whether it does anything this server has. */
         boolean doesSomething() {
             return healOwner > 0 || healOthers > 0 || islandHeal > 0 || manaRegen > 0 || !stats.equals(new Stats());
+        }
+
+        /** The same, with more stats in its buff: a Jalapeno Book's on the one deployed (see ItemModifiers#jalapeno). */
+        Kind with(Stats more) {
+            return new Kind(itemId, itemName, rarity, label, flare, millis, radius, players, healOwner, healOthers, islandHeal, manaRegen,
+                    stats.copy().add(more));
         }
     }
 
@@ -201,8 +209,9 @@ final class Deployables implements AbilityHandler {
         return m.find() ? Double.parseDouble(m.group(1)) / 100 : 0;
     }
 
-    private static int textManaCost(Player player, ItemBlock block) {
-        return (int) Math.round(textManaShare(block) * PlayerSession.of(player).maxMana());
+    /** That share of their max mana, less the item's Mana Disintegrators' (2% each, as a power orb's share: ItemModifiers). */
+    private static int textManaCost(Player player, ItemBlock block, NBTTagCompound tag) {
+        return (int) Math.round(textManaShare(block) * ItemModifiers.shareFactor(tag) * PlayerSession.of(player).maxMana());
     }
 
     /** Whether it does anything here, and they have the mana its text asks for (else "NOT ENOUGH MANA", as for the data's). */
@@ -211,7 +220,7 @@ final class Deployables implements AbilityHandler {
         Kind kind = kind(item, block);
         if (kind == null || !kind.doesSomething()) return false;
         PlayerSession session = PlayerSession.of(player);
-        if (textManaCost(player, block) <= Math.max(0, session.getMana())) return true;
+        if (textManaCost(player, block, tag) <= Math.max(0, session.getMana())) return true;
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, -4f);
         session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
         return false;
@@ -219,9 +228,10 @@ final class Deployables implements AbilityHandler {
 
     @Override
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        Kind kind = kind(item, block);
-        if (kind == null) return;
-        int cost = textManaCost(player, block);
+        Kind known = kind(item, block);
+        if (known == null) return;
+        Kind kind = known.with(ItemModifiers.jalapeno(tag));
+        int cost = textManaCost(player, block, tag);
         if (cost > 0) {
             PlayerSession session = PlayerSession.of(player);
             session.setMana(Math.max(0, Math.max(0, session.getMana()) - cost));

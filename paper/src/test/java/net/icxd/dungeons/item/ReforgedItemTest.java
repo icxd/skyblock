@@ -137,7 +137,7 @@ class ReforgedItemTest {
         NBTTagCompound tag = reforged(SWORD, "keen");
         assertEquals(30, ItemStats.of(SWORD, tag, null).get(Stat.STRENGTH));
         assertEquals(5, ItemStats.of(SWORD, tag, null).get(Stat.CRIT_DAMAGE));
-        assertEquals(42, ItemStats.of(SWORD, tag, null, 12).get(Stat.STRENGTH));
+        assertEquals(42, ItemStats.of(SWORD, tag, null, 12, 0).get(Stat.STRENGTH));
         // Very Special gives Mythic's.
         assertEquals(17, ReforgeTable.get().reforge("keen").stat(Stat.STRENGTH, Rarity.VERY_SPECIAL, 0));
     }
