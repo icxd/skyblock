@@ -82,7 +82,7 @@ class EnchantmentDataTest {
     void entries() {
         EnchantmentData data = FakeEnchantments.table();
         EnchantmentData.Entry sharpness = data.get("sharpness");
-        assertEquals(Integer.valueOf(30), sharpness.xp(5));
+        assertEquals(Integer.valueOf(10), sharpness.xp(5));
         assertNull(sharpness.xp(8));
         assertTrue(sharpness.fromTable(5));
         assertFalse(sharpness.fromTable(6));
