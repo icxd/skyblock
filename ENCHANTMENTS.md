@@ -144,6 +144,7 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
 - **Anvil combining and the Enchantment Table block** (the Hex's Enchant Item is the only way to enchant).
 - **Tiers that grow with use** (Champion's Combat XP, Compact's blocks...): the tier is only what's set.
 - **Effects** of the enchantments that are text only here, and the system each waits for:
+  - Armor and equipment enchantments and their ultimates (Hecatomb's tiers and Small Brain's and Reflection's stats too): built or LATER in ENCHANTS_ARMOR.md, which replaces their rows below.
   - Combat hooks (damage against a mob type, on-hit, on-kill, projectiles): Impaling (Aquatic), Pyroclasm
     (Magmatic), Woodsplitter (Woodland), Knockback, Punch, Flame, Piercing, Dragon Tracer, Thorns, Reflection, Tidal,
     Toxophilite (and its Crit Chance, which the text parsing doesn't read after "Gain ..."), Duplex, Rend, Inferno,
