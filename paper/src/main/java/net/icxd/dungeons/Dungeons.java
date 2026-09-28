@@ -30,6 +30,7 @@ import net.icxd.dungeons.command.commands.admin.UpgradeCommand;
 import net.icxd.dungeons.command.commands.user.BackpackCommand;
 import net.icxd.dungeons.command.commands.user.BagsCommand;
 import net.icxd.dungeons.command.commands.user.EnderChestCommand;
+import net.icxd.dungeons.command.commands.user.HexCommand;
 import net.icxd.dungeons.command.commands.user.HotmCommand;
 import net.icxd.dungeons.command.commands.user.LevelsCommand;
 import net.icxd.dungeons.command.commands.user.LoadoutsCommand;
@@ -80,6 +81,8 @@ import net.icxd.dungeons.rune.RuneRunnable;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.StatsRunnable;
+import net.icxd.dungeons.hex.Hex;
+import net.icxd.dungeons.hex.HexListener;
 import net.icxd.dungeons.storage.Bag;
 import net.icxd.dungeons.storage.Storage;
 import net.icxd.dungeons.storage.StorageListener;
@@ -125,6 +128,8 @@ public class Dungeons extends JavaPlugin {
         Storage.start(this);
         // Collections and recipes, the same way (collections/), read off the main thread.
         CollectionFiles.load(this);
+        // The Hex: its item is saved with the inventory, its tables (hex/) are read off the main thread.
+        Hex.start(this);
         // What counts collections: the bags' sizes and unlocks, and the set bonuses that count collected items.
         Bag.setCollections(Collections::tier);
         SetBonuses.setCollections((player, item) -> {
@@ -193,6 +198,7 @@ public class Dungeons extends JavaPlugin {
         listen(StorageListener.class, StorageListener::new);
         listen(CollectionGains.class, CollectionGains::new);
         listen(CraftingTable.Drags.class, CraftingTable.Drags::new);
+        listen(HexListener.class, HexListener::new);
         listen(SkyBlockLevels.class, SkyBlockLevels::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
@@ -209,7 +215,8 @@ public class Dungeons extends JavaPlugin {
                 new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand(), new StorageCommand(),
                 new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
-                new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand());
+                new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand(),
+                new HexCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {
