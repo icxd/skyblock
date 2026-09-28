@@ -80,19 +80,27 @@ public final class SetBonusLore {
 
     /**
      * Their items with a set bonus built again for what they wear now, where that changes their lore
-     * (the rest are left alone). One kept out of their stored inventory stays so.
+     * (the rest are left alone), the one on their cursor too (a piece just taken off). One kept out of
+     * their stored inventory stays so.
      */
     static void refresh(Player player) {
         PlayerInventory inventory = player.getInventory();
         ItemStack[] contents = inventory.getContents();
         for (int i = 0; i < contents.length; i++) {
-            ItemStack stack = contents[i];
-            if (!hasSetBonus(stack)) continue;
-            ItemStack rebuilt = ItemBuilder.refresh(stack, player);
-            if (lines(stack).equals(lines(rebuilt))) continue;
-            if (StoredInventory.isNotSaved(stack)) StoredInventory.markNotSaved(rebuilt);
-            inventory.setItem(i, rebuilt);
+            ItemStack rebuilt = rebuilt(contents[i], player);
+            if (rebuilt != null) inventory.setItem(i, rebuilt);
         }
+        ItemStack cursor = rebuilt(player.getItemOnCursor(), player);
+        if (cursor != null) player.setItemOnCursor(cursor);
+    }
+
+    /** The item built again for what they wear now; null if it has no set bonus, or its lore stays the same. */
+    private static ItemStack rebuilt(ItemStack stack, Player player) {
+        if (!hasSetBonus(stack)) return null;
+        ItemStack rebuilt = ItemBuilder.refresh(stack, player);
+        if (lines(stack).equals(lines(rebuilt))) return null;
+        if (StoredInventory.isNotSaved(stack)) StoredInventory.markNotSaved(rebuilt);
+        return rebuilt;
     }
 
     private static List<?> lines(ItemStack stack) {
