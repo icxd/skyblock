@@ -22,7 +22,9 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
  * damage to them based on your currently held item" (the wiki). Nearest first; behind each (facing it) they
  * hit it with what they hold, as a melee hit of their own. How rapid is UNKNOWN (every 5 ticks), so is how
  * long the rooting lasts (until the last jump, and a second more), and they stay where the last jump took
- * them (UNKNOWN). A spot behind a mob with no room for them is its other side.
+ * them (UNKNOWN). A spot behind a mob with no room for them is its other side. Only mobs they can see are
+ * jumped to (UNKNOWN: the wiki doesn't say), so it can't take them through a wall into a room they haven't
+ * opened, as no other teleport here can.
  */
 final class ShadowFury implements AbilityHandler {
     static final int MOST = 5;
@@ -32,7 +34,7 @@ final class ShadowFury implements AbilityHandler {
 
     @Override
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        List<LivingEntity> near = Hits.near(player.getLocation(), RADIUS);
+        List<LivingEntity> near = Hits.near(player.getLocation(), RADIUS).stream().filter(player::hasLineOfSight).toList();
         List<LivingEntity> targets = near.subList(0, Math.min(MOST, near.size()));
         int rooted = targets.size() * EVERY + 20;
         for (LivingEntity mob : targets) Hits.root(mob, rooted);
