@@ -38,4 +38,16 @@ class SkillGainsTest {
         assertEquals("51.1", SkillText.number(SkillGains.combatXp(36, 41.85, 0)));
         assertEquals("66.6", SkillText.number(SkillGains.combatXp(40, 56.85, 5)));
     }
+
+    /** Every skill has its Wisdom, and it multiplies the XP gained: "+10 Combat XP" with 10 Combat Wisdom is 11 (the wiki's Wisdom). */
+    @Test
+    void wisdom() {
+        for (Skill skill : Skill.values()) {
+            assertEquals(skill.name() + "_WISDOM", SkillGains.wisdom(skill).name());
+        }
+        assertEquals(11, SkillGains.withWisdom(10, 10), 1e-9);
+        assertEquals(10, SkillGains.withWisdom(10, 0), 1e-9);
+        // A kill's: Champion on the base, then Wisdom on that, as combatXp has it.
+        assertEquals(SkillGains.combatXp(40, 41.85, 5), SkillGains.withWisdom(40 * (1 + SkillGains.champion(5) / 100), 41.85), 1e-9);
+    }
 }

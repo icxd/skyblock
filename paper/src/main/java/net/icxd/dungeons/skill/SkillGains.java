@@ -40,14 +40,14 @@ public final class SkillGains implements Listener {
         if (killer == null || !killer.isOnline()) return;
         double base = event.variant().combatXp();
         if (base <= 0) return;
-        double wisdom = PlayerSession.of(killer).stats().get(Stat.COMBAT_WISDOM);
         int champion = Combat.heldEnchantments(killer).getOrDefault("champion", 0);
-        give(killer, Skill.COMBAT, combatXp(base, wisdom, champion));
+        // Combat Wisdom is give's, as every skill's Wisdom is: combatXp(base, wisdom, champion) in all.
+        give(killer, Skill.COMBAT, base * (1 + champion(champion) / 100));
     }
 
     /** A kill's Combat XP: base x (1 + Combat Wisdom / 100) x (1 + Champion's percent / 100). */
     public static double combatXp(double base, double wisdom, int champion) {
-        return base * (1 + wisdom / 100) * (1 + champion(champion) / 100);
+        return withWisdom(base, wisdom) * (1 + champion(champion) / 100);
     }
 
     /** Champion's extra Combat XP at this level, in percent (0 without it). */
@@ -55,11 +55,44 @@ public final class SkillGains implements Listener {
         return level < 1 ? 0 : CHAMPION[Math.min(level, CHAMPION.length) - 1];
     }
 
+    /** Each skill's Wisdom stat: Combat Wisdom for Combat, Enchanting Wisdom for Enchanting, and so on. */
+    public static Stat wisdom(Skill skill) {
+        return switch (skill) {
+            case COMBAT -> Stat.COMBAT_WISDOM;
+            case FARMING -> Stat.FARMING_WISDOM;
+            case FISHING -> Stat.FISHING_WISDOM;
+            case MINING -> Stat.MINING_WISDOM;
+            case FORAGING -> Stat.FORAGING_WISDOM;
+            case ENCHANTING -> Stat.ENCHANTING_WISDOM;
+            case ALCHEMY -> Stat.ALCHEMY_WISDOM;
+            case CARPENTRY -> Stat.CARPENTRY_WISDOM;
+            case RUNECRAFTING -> Stat.RUNECRAFTING_WISDOM;
+            case TAMING -> Stat.TAMING_WISDOM;
+            case SOCIAL -> Stat.SOCIAL_WISDOM;
+            case HUNTING -> Stat.HUNTING_WISDOM;
+        };
+    }
+
+    /** XP with this much Wisdom: "the amount gained is multiplied by 1 + Wisdom / 100" (the wiki's Wisdom). */
+    public static double withWisdom(double xp, double wisdom) {
+        return xp * (1 + wisdom / 100);
+    }
+
     /**
-     * Gives a player skill XP on the profile they play on, with what it shows and what its levels
-     * give. Null (and nothing) while their data isn't here to keep it.
+     * Gives a player skill XP they gained (a kill's, an enchant's, a craft's) on the profile they play on,
+     * with their Wisdom for that skill ({@link #wisdom}), what it shows and what its levels give. Null (and
+     * nothing) while their data isn't here to keep it.
      */
     public static Skills.Gain give(Player player, Skill skill, double amount) {
+        if (!(amount > 0)) return null;
+        return giveFlat(player, skill, withWisdom(amount, PlayerSession.of(player).stats().get(wisdom(skill))));
+    }
+
+    /**
+     * Gives a player skill XP as it is, with no Wisdom: a reward's fixed XP (a collection tier's "+X Skill
+     * XP": UNKNOWN whether Wisdom counts for those; it doesn't here, as before).
+     */
+    public static Skills.Gain giveFlat(Player player, Skill skill, double amount) {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased() || !(amount > 0)) return null;
         Skills.Gain gain = Skills.add(user.profile(), skill, amount);

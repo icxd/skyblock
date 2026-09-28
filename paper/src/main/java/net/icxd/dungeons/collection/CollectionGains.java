@@ -119,7 +119,8 @@ public final class CollectionGains implements Listener {
         for (Reward reward : collection.tier(tier).rewards()) {
             if (reward.type() != Reward.Type.SKILL_XP) continue;
             try {
-                SkillGains.give(player, Skill.valueOf(reward.skill()), reward.amount());
+                // A reward's fixed XP: no Wisdom on it (UNKNOWN whether Hypixel's has it).
+                SkillGains.giveFlat(player, Skill.valueOf(reward.skill()), reward.amount());
             } catch (IllegalArgumentException | NullPointerException e) {
                 // A skill the plugin doesn't have.
             }
