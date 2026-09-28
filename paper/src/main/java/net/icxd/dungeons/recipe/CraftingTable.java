@@ -88,7 +88,10 @@ public final class CraftingTable extends GUI {
         return new Icon(Material.BARRIER, "&cRecipe Required", "&7Add the items for a valid recipe in", "&7the crafting grid to the left!");
     }
 
-    /** The recorded empty slot (a VIP+ player's); without a rank, the wiki's red one that says what it needs. */
+    /**
+     * The recorded empty slot (a VIP+ player's); without a rank, the wiki's red one that says what it needs. UNKNOWN
+     * what a ranked player below Carpentry III sees: the recorded one.
+     */
     static Icon quickCraftingSlot(Rank rank) {
         if (rank == Rank.DEFAULT) {
             return new Icon(Material.RED_STAINED_GLASS_PANE, "&cQuick Crafting Slot", "&7Quick crafting allows you to craft",

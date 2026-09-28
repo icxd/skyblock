@@ -38,9 +38,9 @@ recorded-menu checks without it.
   dungeon mobs' essence is: `mob/Essences`) are claimed from its Rewards menu, once.
 - **Menus**, as recorded, with the profile's numbers: Collections (the five categories, Boss
   Collections, Crafted Minions, the rankings sign), a category's collections (found or the gray dye),
-  a collection's tiers (lime, yellow, red panes with the tier as the count), a tier's Rewards (recipes
-  with a crafting recipe open it, boss items and essence are claimed). `/collection` (and the wiki's other names),
-  `/viewcollection <item id>`, `/viewbosscollection <boss id>`.
+  a collection's tiers (lime, yellow, red panes with the tier as the count), a tier's Rewards (a
+  recipe with a crafting recipe opens it, boss items and essence are claimed). `/collection` (and the
+  wiki's other names), `/viewcollection <item id>`, `/viewbosscollection <boss id>`.
 - **Recipe Book**: its eleven categories, pages of 28 (unlocked first, then locked, each by name),
   "???" with what unlocks a locked one, a recipe's view (the wiki's Crafting UI: none was opened in the
   recording). `/recipes` (and the wiki's names), `/viewrecipe <item id>` (locked ones too, as on
@@ -50,10 +50,10 @@ recorded-menu checks without it.
   (and vanilla items NEU has a recipe for, like a Block of Iron), matched by SkyBlock id and amount, a
   shaped recipe anywhere it fits in the grid, and an item with no SkyBlock id in the grid in the way of
   any; a click takes one onto the cursor, a shift-click as many as the grid and the inventory allow (an
-  unstackable result one to a slot, each its own item); the inputs are consumed; the result is built with ItemBuilder;
-  Carpentry XP (3% of the inputs' NPC sell price, the wiki's Carpentry). Items go in by click, drag,
-  number key or shift-click, and whatever is left comes back when it closes. On a Sandbox profile it
-  works the same, and its items stay in the profile (SandboxStorage).
+  unstackable result one to a slot, each its own item); the inputs are consumed; the result is built
+  with ItemBuilder; Carpentry XP (3% of the inputs' NPC sell price, the wiki's Carpentry). Items go in
+  by click, drag, number key or shift-click, and whatever is left comes back when it closes. On a
+  Sandbox profile it works the same, and its items stay in the profile (SandboxStorage).
 - `/setcollection <id> <amount|+amount> [player]` (staff) for testing.
 
 ## Approximated (UNKNOWN)
@@ -69,7 +69,8 @@ recorded-menu checks without it.
 - Crafting: a shaped recipe smaller than the grid fits anywhere it can be moved (vanilla's way), not
   mirrored; the bottom glass turns lime while there's a result (not recorded); a locked recipe shows as
   none ("Recipe Required"); an ingredient's enchantments, reforge and upgrades go with it, none to the
-  result; vanilla recipes give Carpentry XP too (the wiki: "most vanilla recipes do not", not which).
+  result; vanilla recipes give Carpentry XP too (the wiki: "most vanilla recipes do not", not which);
+  a ranked player's Quick Crafting slots are the recorded empty ones below Carpentry III too.
 - Boss essence: only Bonzo's amounts are known (the recording's III and VI); the other bosses' essence
   rewards show no amount and add none. How a tier is claimed (a click on any of its items, all at once).
 - A recipe's Go Back from the Recipe Book says the page it came from ("To (1/4) Combat Recipes").
