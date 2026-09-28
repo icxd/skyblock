@@ -75,6 +75,7 @@ id, keys sorted, and every default left out, so a changed item is a one-line dif
 | `soulbound`, `gear_score`, `npc_sell_price`, `shot_cooldown` | `COOP`/`SOLO`; the Gear Score shown; coins; seconds |
 | `stats` | `{STAT: number}` in the plugin's `Stat` names (a name it doesn't have is kept) |
 | `gemstone_slots`, `upgrade_costs`, `requirements` | `[{type, costs}]`; a list of costs per star; the API's requirement objects |
+| `can_recombobulate`, `can_have_power_scroll`, `dungeon_conversion_cost` | only when false; only when true; the costs of making it a dungeon item |
 | `abilities` | the blocks in order: `kind` (ABILITY, FULL_SET, PIECE, TIERED, EXTRA, SHORTBOW), `name`, `header` (the line as Hypixel shows it), `activation`, `text`, and `mana`, `mana_percent`, `cooldown` (seconds), `soulflow`, `health_cost`, `vitality`, `pieces` |
 
 A cost is `{"coins":N}`, `{"item":"ID","amount":N}` or `{"essence":"WITHER","amount":N}`. Text uses `&`

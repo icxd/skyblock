@@ -1,6 +1,7 @@
 package net.icxd.dungeons.item.data;
 
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.UpgradeCosts;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.enums.Soulbound;
@@ -21,13 +22,15 @@ import java.util.List;
  * @param typeKey its Hypixel type ("SWORD", "SACK"), "OTHER" if it has none
  * @param typeLabel what its rarity line says after the rarity; null for its type's name
  * @param reforgeableData whether "This item can be reforged!" shows; null for the usual rule
+ * @param dungeonConversionCost what making it a dungeon item costs; null if it can't be made one
  */
 public record DataItem(String id, String name, Material material, Rarity rarity, SpecificItemType specificItemType,
                        String typeKey, String typeLabel, List<String> categories, String skin, Color color, boolean glowing,
                        boolean unstackable, boolean dungeonItem, boolean canHaveAttributes, Boolean reforgeableData,
                        Soulbound soulbound, int gearScore, double npcSellPrice, Stats stats, double shotCooldown,
                        GemstoneSlots gemstoneSlots, UpgradeCosts upgradeCosts, Requirements requirements, List<String> lore,
-                       List<ItemBlock> blocks) implements SkyBlockItem {
+                       List<ItemBlock> blocks, boolean canRecombobulate, boolean canHavePowerScroll,
+                       UpgradeCost dungeonConversionCost) implements SkyBlockItem {
     public DataItem {
         categories = List.copyOf(categories);
         stats = stats.copy();

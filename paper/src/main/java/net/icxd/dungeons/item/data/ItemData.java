@@ -93,7 +93,8 @@ public final class ItemData {
                             Boolean unstackable, Boolean dungeonItem, Boolean canHaveAttributes, Boolean reforgeable,
                             String soulbound, Integer gearScore, Double npcSellPrice, Map<String, Double> stats,
                             Double shotCooldown, List<SlotJson> gemstoneSlots, List<List<CostJson>> upgradeCosts,
-                            List<RequirementJson> requirements, List<String> lore, List<BlockJson> abilities) {
+                            List<RequirementJson> requirements, List<String> lore, List<BlockJson> abilities,
+                            Boolean canRecombobulate, Boolean canHavePowerScroll, List<CostJson> dungeonConversionCost) {
     }
 
     private record SlotJson(String type, List<CostJson> costs) {
@@ -255,6 +256,13 @@ public final class ItemData {
             if (!known.isEmpty()) requirements = new Requirements(known.toArray(Requirement[]::new));
         }
 
+        // Like a star, a conversion missing a cost it can't charge would come cheaper, so then there's none.
+        UpgradeCost dungeonConversion = null;
+        if (json.dungeonConversionCost() != null) {
+            Cost[] costs = costs(json.dungeonConversionCost(), warnings);
+            if (costs.length > 0 && costs.length == json.dungeonConversionCost().size()) dungeonConversion = new UpgradeCost(costs);
+        }
+
         List<ItemBlock> blocks = new ArrayList<>();
         if (json.abilities() != null) {
             for (BlockJson block : json.abilities()) {
@@ -272,7 +280,8 @@ public final class ItemData {
         return new DataItem(id, json.name(), material, rarity, type, typeKey, typeLabel, list(json.categories()), skin, color,
                 flag(json.glowing()), flag(json.unstackable()), flag(json.dungeonItem()), flag(json.canHaveAttributes()),
                 json.reforgeable(), soulbound, json.gearScore() == null ? 0 : json.gearScore(), number(json.npcSellPrice()), stats,
-                number(json.shotCooldown()), gemstoneSlots, upgradeCosts, requirements, list(json.lore()), blocks);
+                number(json.shotCooldown()), gemstoneSlots, upgradeCosts, requirements, list(json.lore()), blocks,
+                json.canRecombobulate() == null || json.canRecombobulate(), flag(json.canHavePowerScroll()), dungeonConversion);
     }
 
     /** The costs this plugin has: coins, an item or an essence (fewer than given if it lacks one). */

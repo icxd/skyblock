@@ -625,7 +625,8 @@ STAT_BLOCK_OTHER = {'Gear Score', 'Shot Cooldown', 'Accessory Power', 'Breaking 
 API_FIELDS = {  # the API fields format 1 has a place for, or which only feed the report
     'id', 'name', 'material', 'durability', 'tier', 'rarity', 'category', 'category_display', 'skin', 'color',
     'glowing', 'unstackable', 'dungeon_item', 'can_have_attributes', 'soulbound', 'gear_score', 'npc_sell_price',
-    'stats', 'tiered_stats', 'gemstone_slots', 'upgrade_costs', 'requirements', 'description', 'cannot_reforge', 'item_model'}
+    'stats', 'tiered_stats', 'gemstone_slots', 'upgrade_costs', 'requirements', 'description', 'cannot_reforge', 'item_model',
+    'can_recombobulate', 'can_have_power_scroll', 'dungeon_item_conversion_cost'}
 
 
 def lore_stat_name(key):
@@ -803,6 +804,14 @@ class Builder:
             rec['gemstone_slots'] = slots
         if it.get('upgrade_costs'):
             rec['upgrade_costs'] = [self.cost_list(i, star) for star in it['upgrade_costs']]
+        # What the Hex may do to it: the API says which items can't take a Recombobulator 3000 and which can take
+        # a Power Scroll without a right-click ability, and what making one a dungeon item costs.
+        if it.get('can_recombobulate') is False:
+            rec['can_recombobulate'] = False
+        if it.get('can_have_power_scroll') is True:
+            rec['can_have_power_scroll'] = True
+        if it.get('dungeon_item_conversion_cost'):
+            rec['dungeon_conversion_cost'] = self.cost_list(i, [dict(it['dungeon_item_conversion_cost'], type='ESSENCE')])
         if it.get('requirements'):
             rec['requirements'] = [dict(r) for r in it['requirements']]
             for r in it['requirements']:

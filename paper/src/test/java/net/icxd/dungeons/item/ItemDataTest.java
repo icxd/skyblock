@@ -62,7 +62,8 @@ class ItemDataTest {
             "TEST_SWORD":{"abilities":[{"activation":"RIGHT_CLICK","cooldown":0.5,"header":"&6Ability: Test Strike  &e&lRIGHT CLICK",\
             "kind":"ABILITY","mana":45,"name":"Test Strike","text":["&7Hits a test dummy."]},{"header":"&6Full Set Bonus: Testing &7(0/4)",\
             "kind":"FULL_SET","name":"Testing","pieces":4,"text":["&7Tests things."]}],"can_have_attributes":true,\
-            "categories":["Test Category"],"dungeon_item":true,"gear_score":100,"gemstone_slots":[{"type":"SAPPHIRE"},\
+            "can_have_power_scroll":true,"can_recombobulate":false,"categories":["Test Category"],"dungeon_conversion_cost":\
+            [{"amount":150,"essence":"DRAGON"}],"dungeon_item":true,"gear_score":100,"gemstone_slots":[{"type":"SAPPHIRE"},\
             {"costs":[{"coins":250000},{"amount":4,"item":"TEST_GEM"},{"amount":10,"essence":"WITHER"}],"type":"COMBAT"}],\
             "glowing":true,"lore":["&7A sword for tests.","","&7More about it."],"material":"IRON_SWORD","name":"Test Sword",\
             "npc_sell_price":12.5,"rarity":"EPIC","reforgeable":false,"requirements":[{"level":22,"skill":"COMBAT","type":"SKILL"},\
@@ -143,6 +144,12 @@ class ItemDataTest {
         assertEquals(20, second.getAmount());
         assertEquals("TEST_GEM", assertInstanceOf(ItemCost.class, stars.get(1).getCosts().get(1)).getItemId());
 
+        assertFalse(item.canRecombobulate());
+        assertTrue(item.canHavePowerScroll());
+        EssenceCost conversion = assertInstanceOf(EssenceCost.class, item.dungeonConversionCost().getCosts().get(0));
+        assertEquals(EssenceType.DRAGON, conversion.getEssenceType());
+        assertEquals(150, conversion.getAmount());
+
         List<Requirement> requirements = item.requirements().getRequirements();
         assertEquals(6, requirements.size());
         SkillRequirement skill = assertInstanceOf(SkillRequirement.class, requirements.get(0));
@@ -184,6 +191,9 @@ class ItemDataTest {
         assertEquals(Soulbound.NONE, item.soulbound());
         assertFalse(item.reforgeable());
         assertFalse(item.glowing() || item.unstackable() || item.dungeonItem() || item.canHaveAttributes());
+        assertTrue(item.canRecombobulate());
+        assertFalse(item.canHavePowerScroll());
+        assertNull(item.dungeonConversionCost());
         assertEquals(0, item.gearScore());
         assertEquals(0, item.npcSellPrice());
         assertEquals(0, item.shotCooldown());

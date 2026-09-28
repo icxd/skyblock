@@ -17,7 +17,7 @@ import build_items  # noqa: E402  (the materials come from the same jar reader)
 
 BLOCK_KINDS = {'ABILITY', 'FULL_SET', 'PIECE', 'TIERED', 'EXTRA', 'SHORTBOW'}
 BLOCK_NUMBERS = {'mana', 'mana_percent', 'cooldown', 'soulflow', 'health_cost', 'vitality'}
-FLAGS = {'glowing', 'unstackable', 'dungeon_item', 'can_have_attributes'}
+FLAGS = {'glowing', 'unstackable', 'dungeon_item', 'can_have_attributes', 'can_have_power_scroll'}
 
 
 def is_number(v):
@@ -73,7 +73,7 @@ def check_item(item_id, item, materials, problem):
 
     known = {'name', 'material', 'rarity', 'type', 'type_label', 'categories', 'texture', 'skin', 'color', 'reforgeable',
              'soulbound', 'gear_score', 'npc_sell_price', 'stats', 'shot_cooldown', 'gemstone_slots', 'upgrade_costs',
-             'requirements', 'lore', 'abilities'} | FLAGS
+             'requirements', 'lore', 'abilities', 'can_recombobulate', 'dungeon_conversion_cost'} | FLAGS
     if set(item) - known:
         p(f'unknown fields {sorted(set(item) - known)}')
     if not isinstance(item.get('name'), str) or not item['name']:
@@ -96,6 +96,14 @@ def check_item(item_id, item, materials, problem):
     for field in FLAGS & set(item):
         if item[field] is not True:
             p(f'{field} {item[field]!r} (false is left out)')
+    if 'can_recombobulate' in item and item['can_recombobulate'] is not False:
+        p(f'can_recombobulate {item["can_recombobulate"]!r} (true is left out)')
+    if 'dungeon_conversion_cost' in item:
+        costs = item['dungeon_conversion_cost']
+        if not isinstance(costs, list) or not costs:
+            p('dungeon_conversion_cost is not a list')
+        for k, cost in enumerate(costs if isinstance(costs, list) else []):
+            check_cost(cost, f'{item_id}: dungeon_conversion_cost[{k}]', problem)
     if 'reforgeable' in item and not isinstance(item['reforgeable'], bool):
         p(f'reforgeable {item["reforgeable"]!r}')
     if 'soulbound' in item and item['soulbound'] not in ('COOP', 'SOLO'):

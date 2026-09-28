@@ -1,5 +1,6 @@
 package net.icxd.dungeons.item;
 
+import net.icxd.dungeons.item.cost.UpgradeCost;
 import net.icxd.dungeons.item.cost.UpgradeCosts;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enums.GenericItemType;
@@ -84,6 +85,12 @@ public interface SkyBlockItem {
     default UpgradeCosts upgradeCosts() { return null; }
 
     default boolean canHaveAttributes() { return false; }
+    /** False for the items Hypixel's API says a Recombobulator 3000 can't go on. */
+    default boolean canRecombobulate() { return true; }
+    /** A Power Scroll can go on it although it has no right-click ability (the API's flag). */
+    default boolean canHavePowerScroll() { return false; }
+    /** What making it a dungeon item costs; null if it can't be made one. */
+    default UpgradeCost dungeonConversionCost() { return null; }
     default boolean dungeonItem() { return false; }
     default boolean unstackable() { return false; }
     default double npcSellPrice() { return 0; }
