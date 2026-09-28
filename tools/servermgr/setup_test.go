@@ -10,7 +10,7 @@ import (
 func TestLinkData(t *testing.T) {
 	root := t.TempDir()
 	data := filepath.Join(root, "data")
-	for _, d := range []string{"items", "collections", "rooms"} {
+	for _, d := range []string{"items", "collections", "leveling", "rooms"} {
 		if err := os.MkdirAll(filepath.Join(data, d), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -34,6 +34,9 @@ func TestLinkData(t *testing.T) {
 		}
 		if !samePath(filepath.Join(plugin(s), "collections"), filepath.Join(data, "collections")) {
 			t.Errorf("%s: collections not linked", s.Name)
+		}
+		if !samePath(filepath.Join(plugin(s), "leveling"), filepath.Join(data, "leveling")) {
+			t.Errorf("%s: leveling not linked", s.Name)
 		}
 	}
 	if !samePath(filepath.Join(plugin(dungeon), "dungeon-rooms", "rooms"), filepath.Join(data, "rooms")) {
@@ -71,13 +74,14 @@ func TestLinkData(t *testing.T) {
 		t.Errorf("want one warning about hub02's own items folder, got %v", messages)
 	}
 
-	// No items/ or collections/ in the data checkout yet: each said once, nothing made.
+	// No items/, collections/ or leveling/ in the data checkout yet: each said once, nothing made.
 	n.DungeonData = filepath.Join(root, "empty")
 	messages = nil
 	fresh := &Server{Name: "hub03", Type: "LOBBY"}
 	n.linkData([]*Server{fresh}, progress)
-	if len(messages) != 2 || !strings.Contains(messages[0], "no items/") || !strings.Contains(messages[1], "no collections/") {
-		t.Errorf("want a message about the missing items/ and one about collections/, got %v", messages)
+	if len(messages) != 3 || !strings.Contains(messages[0], "no items/") || !strings.Contains(messages[1], "no collections/") ||
+		!strings.Contains(messages[2], "no leveling/") {
+		t.Errorf("want a message each about the missing items/, collections/ and leveling/, got %v", messages)
 	}
 	if _, err := os.Lstat(filepath.Join(plugin(fresh), "items")); err == nil {
 		t.Error("hub03 got a link to nothing")
@@ -128,8 +132,12 @@ func TestDeploySaysOnceWhatDataIsMissing(t *testing.T) {
 		t.Errorf("with no rooms/ in the data folder, want that said once per deploy, got it %d times", got)
 	}
 
+	if got := count(empty, "no leveling/"); got != 1 {
+		t.Errorf("with no leveling/ in the data folder, want that said once per deploy, got it %d times", got)
+	}
+
 	// Once the checkout has them, the same deploy links them into every server.
-	for _, d := range []string{"items", "collections", "rooms"} {
+	for _, d := range []string{"items", "collections", "leveling", "rooms"} {
 		if err := os.MkdirAll(filepath.Join(empty, d), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -149,7 +157,7 @@ func TestLinkDataJunction(t *testing.T) {
 	root := t.TempDir()
 	data := filepath.Join(root, "data")
 	moved := filepath.Join(root, "moved", "items")
-	for _, d := range []string{filepath.Join(data, "items"), moved} {
+	for _, d := range []string{filepath.Join(data, "items"), filepath.Join(data, "leveling"), moved} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -193,7 +201,7 @@ func TestLinkDataRelativePath(t *testing.T) {
 	root := t.TempDir()
 	repo := filepath.Join(root, "skyblock")
 	data := filepath.Join(root, "skyblock-dungeon-data")
-	for _, d := range []string{"items", "collections"} {
+	for _, d := range []string{"items", "collections", "leveling"} {
 		if err := os.MkdirAll(filepath.Join(data, d), 0o755); err != nil {
 			t.Fatal(err)
 		}

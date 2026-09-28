@@ -47,8 +47,10 @@ The network lives in `./network` unless you pass `--dir FOLDER` or set `SKYBLOCK
 - **Private data** (`--data`, the skyblock-dungeon-data checkout): every server gets its item
   definitions linked in (`plugins/dungeons/items` → the data repository's `items/`, made by
   `tools/items/build_items.py`), its collections and recipes (`plugins/dungeons/collections` →
-  `collections/`, made by `tools/collections/build_collections.py`) and, once the checkout has it, its
-  storage tables (`plugins/dungeons/storage` → `storage/`, see `tools/storage`), and dungeon servers its captured rooms
+  `collections/`, made by `tools/collections/build_collections.py`), its SkyBlock Leveling data
+  (`plugins/dungeons/leveling` → `leveling/`, made by `tools/leveling/build_leveling.py`) and, once the
+  checkout has it, its storage tables (`plugins/dungeons/storage` → `storage/`, see `tools/storage`), and
+  dungeon servers its captured rooms
   (`plugins/dungeons/dungeon-rooms/rooms` → `rooms/`). They come from Hypixel, so they stay in that
   private repository rather than in this one or the plugin. `deploy` adds links that are missing, so
   older servers get them too, and replaces ones that lead nowhere (say the data checkout moved); a
