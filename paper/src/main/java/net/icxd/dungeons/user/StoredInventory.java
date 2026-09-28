@@ -45,8 +45,11 @@ public final class StoredInventory {
     static final String ARMOR = "armor";
     static final String OFFHAND = "offhand";
     static final String HELD_SLOT = "heldSlot";
-    /** Items that didn't fit when they were rescued (see {@link #rescueLooseItems}); given back on the next join. */
-    static final String OVERFLOW = "overflow";
+    /**
+     * Items that didn't fit when they were rescued (see {@link #rescueLooseItems}); given back on the next join. The
+     * Hex saves the item in it into this too, while it's there (hex/HexSession#save).
+     */
+    public static final String OVERFLOW = "overflow";
     static final String UNREADABLE = "unreadable";
     static final String DATA_VERSION = "dataVersion";
 
