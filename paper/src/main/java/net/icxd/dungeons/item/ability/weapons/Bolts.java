@@ -23,6 +23,7 @@ import net.icxd.dungeons.economy.Purse;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.user.User;
@@ -199,16 +200,23 @@ final class Bolts {
     /**
      * The Staff of the Rising Sun's Ray of Hope: "Channels your energy towards the target location, exploding
      * on impact for ... damage. Costs 10% of your total mana to use" (the share read off its text; its block
-     * has no mana cost). The blast's size and the scaling are UNKNOWN (3 blocks, 0.3). The Staff of the Rising
-     * Moon's (only for Wizardman, an event's) does nothing.
+     * has no mana cost), 1% less for each of its Mana Disintegrators, as a wand's (0.20.5: "Fixed Mana
+     * Disintegrators not working on the Staff Of The Rising Sun despite it being a wand"; UNKNOWN whether this
+     * share goes down 1% or 2% a disintegrator, as a power orb's does). The blast's size and the scaling are
+     * UNKNOWN (3 blocks, 0.3). The Staff of the Rising Moon's (only for Wizardman, an event's) does nothing.
      */
     static final class RayOfHope implements AbilityHandler {
         static final Magic.Spell RAY = new Magic.Spell(500, 0.3);
         private static final Pattern SHARE = Pattern.compile("Costs (\\d+)% of your total mana");
 
-        private static int cost(Player player, ItemBlock block) {
+        static int cost(Player player, ItemBlock block, NBTTagCompound tag) {
+            return cost(block, tag, PlayerSession.of(player).maxMana());
+        }
+
+        /** Its share of {@code maxMana}, less its Mana Disintegrators' (see ItemModifiers#manaFactor). */
+        static int cost(ItemBlock block, NBTTagCompound tag, int maxMana) {
             double share = Math.max(0, number(block.text(), SHARE));
-            return (int) Math.round(share / 100 * PlayerSession.of(player).maxMana());
+            return (int) Math.round(share / 100 * ItemModifiers.manaFactor(tag) * maxMana);
         }
 
         @Override
@@ -218,12 +226,12 @@ final class Bolts {
 
         @Override
         public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            return Hits.enoughMana(player, cost(player, block));
+            return Hits.enoughMana(player, cost(player, block, tag));
         }
 
         @Override
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            Hits.takeMana(player, cost(player, block), block.name());
+            Hits.takeMana(player, cost(player, block, tag), block.name());
             Magic.Spell spell = Hits.spellOf(item, RAY);
             Location eye = player.getEyeLocation();
             Vector to = Hits.aimed(player, 40).toVector().subtract(eye.toVector());

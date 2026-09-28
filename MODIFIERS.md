@@ -93,7 +93,8 @@ so until then the level isn't in the lore.
 **Wood Singularity.** +25 Foraging Fortune in the stats and the lore, with its own bracket after the potato
 books' and the Art of War's: `&7Foraging Fortune: &6+91 &6(+25) &9(+12)` (a live Moonglade Treecapitator's).
 
-**Mana Disintegrators.** An ability's mana cost is 1% less for each (`Abilities.manaCost`). A cost that's a
+**Mana Disintegrators.** An ability's mana cost is 1% less for each (`Abilities.manaCost`, and the Staff of
+the Rising Sun's in `Bolts`). A cost that's a
 share of max mana is 2% less for each: the power orbs' in their data, and the Lanterns' and the
 Umberella's in their text ("Costs 50% of max mana", which Deployables reads). The lore marks the mana cost
 as live items do, `&8Mana Cost: &b300✎&8 (&910&9ᛃ&8)`, and shows a share less: "40% of max" with 10.
@@ -146,8 +147,9 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
 - **Mana Disintegrators.** Rounding: to the nearest. The lore keeps the cost's number (live Alert Flares
   and Gyrokinetic Wands with 10 show their full cost; a live Fire Veil Wand's is lower, by a rule not
   found). A text cost's 2% is from live Umberellas and Will-o'-wisps, which show "40% of max" with 10.
-  The Ray of Hope staves' cost, which is only in their text ("Costs 10% of your total mana", Bolts), is
-  paid in full: whether a wand's share goes down 1% or 2% a disintegrator is unknown.
+  The Staff of the Rising Sun's cost is only in its text ("Costs 10% of your total mana", Bolts): it's 1%
+  less a disintegrator, as a wand's (0.20.5 fixed them "not working on the Staff Of The Rising Sun despite
+  it being a wand"); whether it's 2%, as a power orb's share, is unknown. Its text isn't changed.
 - **Power Scrolls.** A new one takes the old one's place, and the old one is gone (whether Hypixel gives
   it back is unknown). A Ruby's or Sapphire's 5s cooldown is the player's, one a scroll, whichever item
   it's on. Each RIGHT CLICK ability's header gets the "⦾" (no live item with two has a
