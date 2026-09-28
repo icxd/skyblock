@@ -31,6 +31,7 @@ import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.session.Mana;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stats;
@@ -233,9 +234,8 @@ final class Deployables implements AbilityHandler {
         Kind kind = known.with(ItemModifiers.jalapeno(tag));
         int cost = textManaCost(player, block, tag);
         if (cost > 0) {
-            PlayerSession session = PlayerSession.of(player);
-            session.setMana(Math.max(0, Math.max(0, session.getMana()) - cost));
-            session.setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + block.name() + "§b)", 400));
+            Mana.spend(player, cost, block.name());
+            PlayerSession.of(player).setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + block.name() + "§b)", 400));
         }
         Out previous = OUT.remove(player.getUniqueId());
         if (previous != null) {

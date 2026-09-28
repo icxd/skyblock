@@ -15,6 +15,7 @@ import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.session.Mana;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.utils.Replacement;
 
@@ -61,7 +62,7 @@ final class SpiritGlide {
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
             return;
         }
-        session.setMana(mana - cost);
+        Mana.spend(player, cost, NAME);
         if (cost > 0) session.setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + NAME + "§b)", 400));
         if (block.cooldown() > 0) session.startCooldown(cooldown, (long) (block.cooldown() * 1000));
         GLIDING.put(player.getUniqueId(), System.currentTimeMillis() + MILLIS);

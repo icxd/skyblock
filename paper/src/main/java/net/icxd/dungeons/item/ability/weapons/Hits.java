@@ -38,6 +38,7 @@ import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.Mobs;
+import net.icxd.dungeons.session.Mana;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.skill.Skills;
@@ -237,12 +238,11 @@ public final class Hits {
         return enoughMana(player, Abilities.manaCost(block, PlayerSession.of(player).maxMana()) + extra);
     }
 
-    /** Takes that mana, shown as a block's cost is ("-60 Mana (Rapid-fire)"). */
+    /** Takes that mana (see {@link Mana#spend}), shown as a block's cost is ("-60 Mana (Rapid-fire)"). */
     public static void takeMana(Player player, int cost, String ability) {
         if (cost <= 0) return;
-        PlayerSession session = PlayerSession.of(player);
-        session.setMana(Math.max(0, mana(session) - cost));
-        session.setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + ability + "§b)", 400));
+        Mana.spend(player, cost, ability);
+        PlayerSession.of(player).setDefenseReplacement(Replacement.forMillis("§b-" + cost + " Mana (§6" + ability + "§b)", 400));
     }
 
     /**

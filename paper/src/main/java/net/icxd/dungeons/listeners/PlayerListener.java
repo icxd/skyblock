@@ -7,6 +7,7 @@ import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.profile.ProfileActions;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
+import net.icxd.dungeons.session.Mana;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.session.Vitality;
 import net.icxd.dungeons.stats.PlayerAttributes;
@@ -284,7 +285,7 @@ public class PlayerListener implements Listener {
         if (!handler.usable(player, sbItem, tag, ability)) return;
 
         if (ability.cooldown() > 0) session.startCooldown(cooldown, (long) (ability.cooldown() * 1000));
-        session.setMana(mana - cost);
+        Mana.spend(player, cost, ability.name());
         if (vitalityPaid) Vitality.spend(player, ability.vitality());
         handler.use(player, sbItem, tag, ability, vitalityPaid);
         PowerScroll.used(player, tag, ability);

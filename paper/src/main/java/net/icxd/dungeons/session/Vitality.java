@@ -35,8 +35,23 @@ public final class Vitality {
             "", RULE);
     /** What stops Vitality regenerating (see {@link #addRegenPause}). */
     private static final List<Predicate<Player>> PAUSES = new ArrayList<>();
+    private static final List<Spent> SPENT = new ArrayList<>();
+
+    /** Something that happens when a player spends Vitality (see {@link #addSpentListener}). */
+    @FunctionalInterface
+    public interface Spent {
+        void spent(Player player, double amount);
+    }
 
     private Vitality() {
+    }
+
+    /**
+     * Adds something that happens whenever a player spends Vitality (the "... Vitality" enchantments: "4% of
+     * Vitality used becomes Defense"). Every Vitality cost goes through {@link #spend}.
+     */
+    public static void addSpentListener(Spent listener) {
+        SPENT.add(listener);
     }
 
     /** The pool's size: the Vitality stat. */
@@ -68,6 +83,7 @@ public final class Vitality {
             user.save();
             for (String line : DISCOVERED) player.sendMessage(Utils.color(line));
         }
+        for (Spent listener : SPENT) listener.spent(player, cost);
         return true;
     }
 

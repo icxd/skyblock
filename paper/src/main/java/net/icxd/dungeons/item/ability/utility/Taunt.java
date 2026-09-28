@@ -10,6 +10,7 @@ import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.Mobs;
+import net.icxd.dungeons.session.Mana;
 import net.icxd.dungeons.session.PlayerSession;
 
 /**
@@ -46,11 +47,7 @@ final class Taunt implements AbilityHandler {
         double factor = factor(plain);
         long millis = (long) AbilityText.millis(plain).orElse(0);
         double manaShare = manaShare(plain);
-        if (manaShare > 0) {
-            PlayerSession session = PlayerSession.of(player);
-            int mana = session.getMana() < 0 ? session.maxMana() : session.getMana();
-            session.setMana((int) Math.max(0, mana - Math.round(manaShare * session.maxMana())));
-        }
+        if (manaShare > 0) Mana.spend(player, (int) Math.round(manaShare * PlayerSession.of(player).maxMana()), block.name());
         for (Entity entity : player.getNearbyEntities(radius, radius, radius)) {
             if (!(entity instanceof Mob mob) || entity.getLocation().distanceSquared(player.getLocation()) > radius * radius) continue;
             if (Mobs.of(mob) == null && DungeonMobs.of(mob) == null) continue;
