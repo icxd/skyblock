@@ -45,7 +45,11 @@ class HexCategoriesTest {
     @Test
     void noneAppliesUntilItsPartIsBuilt() {
         HexItem sword = HexFakes.sword();
-        for (HexCategory category : HexCategories.all()) assertFalse(category.applies(sword), category.name());
+        for (HexCategory category : HexCategories.all()) {
+            // Built: see ReforgesCategoryTest.
+            if (category == HexCategories.REFORGES) continue;
+            assertFalse(category.applies(sword), category.name());
+        }
     }
 
     @Test
