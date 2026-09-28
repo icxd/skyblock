@@ -51,7 +51,7 @@ Skyblocker mods filter. Where they say nothing, the code says UNKNOWN and takes 
 | Ability | Items | Status | What, and what's UNKNOWN | Sources |
 |---|---|---|---|---|
 | Implosion | Implosion scroll; the 5 Necron's Blades with it | DONE | 10,000 base, scaling 0.3, 6 blocks around them. Look/sound UNKNOWN (explosions). | [Scrolls](https://hypixelskyblock.minecraft.wiki/w/Implosion), mods' "Your Implosion hit" |
-| Wither Shield | scroll; blades | APPROX | 10% less damage taken for 5 s. Absorption shield "(12 + Cata x 0.32) x 50" LATER (players have no absorption); the unused Vitality (all 50) comes back after 5 s. | [Scrolls](https://hypixelskyblock.minecraft.wiki/w/Implosion) |
+| Wither Shield | scroll; blades | APPROX | 10% less damage taken for 5 s, and an absorption shield "(12 + Cata x 0.32) x 50" for as long (`Absorption`, EFFECTS.md); the Vitality comes back by the share of the absorption left when the shield ends (after 5 s, or a new cast): how Hypixel works the refund out is UNKNOWN. | [Scrolls](https://hypixelskyblock.minecraft.wiki/w/Implosion), [Absorption](https://hypixelskyblock.minecraft.wiki/w/Absorption) |
 | Shadow Warp | scroll; blades | APPROX | Teleports 10 ahead, pulls enemies within 6 into the warp, a second use within 5 s detonates it (Implosion's damage and size). That it teleports (from the wiki's trivia), the second use's mana and when the 10 s cooldown starts are UNKNOWN. | [Scrolls](https://hypixelskyblock.minecraft.wiki/w/Implosion) |
 | Wither Impact | the 5 Necron's Blades with all 3 scrolls | DONE | Teleport 10 (Instant Transmission's path), Implosion, Wither Shield only with 50 Vitality; 0.15 s between casts, silent. | [Scrolls](https://hypixelskyblock.minecraft.wiki/w/Implosion), 0.26.1 notes |
 | Giant's Slam | Giant's Sword (1) | DONE | Recorded: 5 blocks ahead of the feet, the giant sword display (5x, 3 up, 135°, 5.8 s), anvil + thunder at 0.492, whole hits and the chat line; wiki: radius 8, 100,000 / 0.05. | recordings; [Giant's Sword](https://hypixelskyblock.minecraft.wiki/w/Giant%27s_Sword) |
@@ -127,15 +127,15 @@ the 26.2 server's `AbstractArrow.setOwner`).
 | Spooktacular | 1 | the Spooky Festival |
 | A bit of Impalement | 2 | the Rift's vampires |
 | Throw (lassos), Swhooomp, Phwomp | 4, 1, 1 | the Forest, the Carnival |
-| Hollow Spirit | 1 | LEFT_RIGHT_CLICK activations (not loaded) |
+| Hollow Spirit | 1 | its spells and the Hollow armor's resource (the LEFT_RIGHT_CLICK activation loads and is used now, with which click it was: EFFECTS.md) |
 | Gorilla Tactics | 1 | not done: the burn is a share of all damage dealt in 3 s |
 | Raise Souls | 3 | necromancy (summons) |
 | Cells Alignment | Gyrokinetic Wand (1) | damage taken spread over 3 s (PlayerDamage has only factors), and a run's nearby teammates |
-| Homing Missiles, Ground Pound | Aurora armor (20), Fervor armor (20) | a sneak dispatch for worn armor (PlayerListener only dispatches the held item's clicks), and the armor part's stacks (it keeps Fervor's for Ground Pound) |
+| Homing Missiles, Ground Pound | Aurora armor (20), Fervor armor (20) | the abilities themselves, and the armor part's stacks (it keeps Fervor's for Ground Pound); worn armor's SNEAK abilities are used now (`Activations`, EFFECTS.md) |
 | Detonate | Creeper Pants, Miniature Nuke (2) | the pants': a hook for dropping below 20% health, on worn armor; the Nuke: an admin item (SPECIAL) |
 | Shoot | Horsezooka (1) | Farming (it clears hay) |
 | The halberd's and Sinrecall's growing mana on the action bar | 2 | one line for the whole cost: the extra is taken and shown in the use, then PlayerListener's line for the block's own cost ("-20 Mana (Throw)") replaces it |
-| Salvation's T1/T2/T3!, Wither Shield's absorption, Midas' Greed | - | a place on the action bar; absorption (the utility part adds `PlayerDamage.addShield`, which it can use once merged); the Dark Auction |
+| Salvation's T1/T2/T3!, Midas' Greed | - | a place on the action bar; the Dark Auction |
 
 Not this part's (utility abilities, or armor): Enrage (the Enrager's taunt and its 10% less damage from
 the taunted mobs: the utility part's), Instant Heal, Speed Boost, Weird Transmission, Shadowstep,

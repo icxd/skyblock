@@ -25,6 +25,7 @@ import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
+import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
 
 /**
@@ -68,7 +69,7 @@ public final class UtilityListener implements Listener {
         if (cause == EntityDamageEvent.DamageCause.VOID || cause == EntityDamageEvent.DamageCause.KILL) return;
         if (Protection.immune(player)) {
             event.setCancelled(true);
-        } else if (event.getFinalDamage() >= PlayerHealth.get(player) && LastStand.saved(player)) {
+        } else if (event.getFinalDamage() >= PlayerHealth.get(player) + Absorption.get(player) && LastStand.saved(player)) {
             event.setCancelled(true);
         }
     }

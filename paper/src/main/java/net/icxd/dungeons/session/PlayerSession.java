@@ -18,8 +18,9 @@ import java.util.UUID;
 
 /**
  * What this server keeps about an online player while they're on it: their stats (worked out at
- * most once a tick), health, mana, vitality, ability cooldowns, the region they're in, what the action bar
- * shows in place of defense or mana and the skill that last gained XP. It ends when they leave (see
+ * most once a tick), health, mana, vitality, absorption, when they were last in combat, ability
+ * cooldowns, the region they're in, what the action bar shows in place of defense or mana and the
+ * skill that last gained XP. It ends when they leave (see
  * PlayerListener), so nothing of theirs stays behind, and a rejoin starts from full health and mana.
  * Main thread.
  */
@@ -35,6 +36,8 @@ public final class PlayerSession {
     @Getter @Setter private int mana = -1;
     /** What's left of their Vitality pool; -1 for full (see {@link Vitality}). */
     @Getter @Setter private double vitality = -1;
+    /** Their absorption, source by source (see {@link Absorption}). */
+    @Getter private final Absorption absorption = new Absorption();
     private Replacement defenseReplacement;
     private Replacement manaReplacement;
     private final Map<String, Long> cooldownEnds = new HashMap<>();

@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.user.User;
@@ -34,9 +35,9 @@ final class LastStand {
     private LastStand() {
     }
 
-    /** A shield: what's left of a hit once their helmet has saved them from it (nothing), or all of it. */
+    /** A shield: what's left of a hit once their helmet has saved them from it (nothing), or all of it (their absorption takes a hit first). */
     static double left(Player player, double taken, Entity by) {
-        if (taken < PlayerHealth.get(player)) return taken;
+        if (taken < PlayerHealth.get(player) + Absorption.get(player)) return taken;
         return saved(player) ? 0 : taken;
     }
 

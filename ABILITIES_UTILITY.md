@@ -48,8 +48,8 @@ recordings have none of these abilities used. Where the sources are silent the c
 | Creeper Veil | Wither Cloak Sword (1) | APPROX | 0.26.1's rework: layers of 1,000 × (1 + Catacombs boost in a run), 30 Vitality each, no attacking and no Vitality regen (`Vitality.addRegenPause`) while up, right click takes it down, cooldown from when it's down (halved when taken down: the reading that makes halving mean something). Out of Vitality: all of it goes, slight knockback, veil down, rest of the hit through (UNKNOWN). 6 invisible charged creepers on them (MCW). The cast's own 30 Vitality: UNKNOWN whether Hypixel charges it (it's charged). Messages MCW, SkyHanni; the out-of-Vitality one UNKNOWN. Down too when they die or become a ghost (its cooldown starts). Not built: off when switching armor sets (2021, MCW). MCW Wither Cloak Sword |
 | Shadowstep | Silent Death (1) | APPROX | Behind the SkyBlock mob looked at within 20 blocks (its far side, facing it: UNKNOWN), +25 Strength 10 s, cooldown back to 0 on any kill. No target: nothing, free (UNKNOWN). MCW Silent Death |
 | Speed Boost | Rogue Sword (1) | DONE | +100 Speed 30 s. MCW Rogue Sword |
-| Life Blood | Wand of Strength (1) | APPROX | Takes 10% of max health (the text; the data's health cost is ignored), +30 Strength 10 s to them and everyone near (the wiki's solo Bingo use has it on the caster); radius UNKNOWN (20). MCW Wand of Strength |
-| Enrage | Enrager (1) | DONE | Mobs within 10 go for them; those mobs' hits on them 10% less for 10 s. The data's health cost isn't charged (the framework doesn't charge health costs). MCW/Fandom Enrager |
+| Life Blood | Wand of Strength (1) | APPROX | Costs 10% of max health (the text; the data's 15.6 isn't that), charged with its other costs (EFFECTS.md), +30 Strength 10 s to them and everyone near (the wiki's solo Bingo use has it on the caster); radius UNKNOWN (20). MCW Wand of Strength |
+| Enrage | Enrager (1) | DONE | Mobs within 10 go for them; those mobs' hits on them 10% less for 10 s. Costs 10% of max health ("item_ability_health_cost = 10% of HP", MCW; the data's 15.6 isn't health), charged with its other costs (EFFECTS.md). MCW/Fandom Enrager |
 | Jingle Bells | Jingle Bells (1) | APPROX | Mobs within 10 go for them; takes 50% of max mana (the data has no cost; with less, it takes what there is: UNKNOWN). Fandom Jingle Bells |
 | Soulward | Soul Esoward (1) | APPROX | Invulnerable and no attacking 5 s, then damage halved 2 s (`Combat.addMultiplier`). Its 10 Soulflow isn't charged: Soulflow doesn't exist (LATER). MCW Soul Esoward |
 | Extreme Measures | Gloomlock Grimoire (1) | DONE | Heal for 1,000❤ for 45 Vitality. (Life Tap: LATER, Soulflow/Overflow.) MCW Gloomlock Grimoire |
@@ -61,7 +61,7 @@ recordings have none of these abilities used. Where the sources are silent the c
 
 | Ability | Items (count) | Waits for |
 |---|---|---|
-| Stun Potion, Absorption Potion, Haunt | The Tank's ability items (2) and a ghost's (1) | Class and ghost ability items: nothing gives them out (the run's class abilities are keys; ghosts get no items and can't use any); a stun for mobs and absorption health (a `PlayerDamage.addShield` could hold it) |
+| Stun Potion, Absorption Potion, Haunt | The Tank's ability items (2) and a ghost's (1) | Class and ghost ability items: nothing gives them out (the run's class abilities are keys; ghosts get no items and can't use any); a stun for mobs (absorption health is `Absorption` now, EFFECTS.md) |
 | Echolocation | Secret Tracker (1) | A way to ask the run for its nearest unfound secret, and how Hypixel shows it (UNKNOWN) |
 | Dungeon Breaker | Dungeonbreaker (1, DIG) | Room geometry for its rules (not in puzzle rooms, on doors or through room walls, not crypts) and block restoring |
 | Raise Souls | Necromancer Sword, Reaper Scythe, Summoning Ring (3) | Summons: souls, summoned mobs that fight |
@@ -75,18 +75,18 @@ recordings have none of these abilities used. Where the sources are silent the c
 | Copycat, Spook, Spooker, Sparkle, Lazer, Swhooomp, Phwomp, Bounce Bonanza (EX), Puzzle | Ditto items (2), Great Spook Staff, Sunflower Head, Emmett's pointer, blowgun, dart tube, beach balls (2), Puzzle Cube | Cosmetics, events (Carnival, Spooky Festival, fishing festival), what they show (UNKNOWN) |
 | Life Tap | Gloomlock Grimoire | Soulflow and Overflow mana |
 | (a Healer's own heals with Mending) | every heal above | The run's classes telling a Healer apart ("Mending now affects Healer's self healing", 0.26.1) |
-| (Efficient Spells on item cooldowns) | every cooldown above | The Mage's class passive on item abilities ("All abilities have a ...% shorter cooldown") |
+| (Efficient Spells on item cooldowns) | every cooldown above | The Mage's class passive on item abilities ("All abilities have a ...% shorter cooldown"); the hook is `Abilities.addCooldownFactor` (EFFECTS.md) |
 | (Set bonuses on these abilities) | wand heals, Spirit Leap, Shadowstep, Ether Transmission, Spirit Glide | The armor bonuses part's `SetBonuses`, wired at the merge: Trolling The Reaper's +50% on wand heals (`WandHeal`), `SetBonuses.teleported` after a teleport, and its mana cost factors (Wise Dragon) on Spirit Glide's and the Lanterns' own mana costs |
 
 ## Not this part's
 
 These hit, or boost only what the holder's own hits do, so they're the weapon-abilities part's:
 Homing Missiles, Ground Pound, Water Burst, Eye Beam, Splash (Crimson/fishing armor and helmets'
-sneak abilities, which also need a sneak dispatch for worn pieces), Throwing Axe, Soulcry, Attunement,
+sneak abilities: worn pieces' SNEAK abilities are used now, EFFECTS.md), Throwing Axe, Soulcry, Attunement,
 Absorptio, Arrow Infusion, Leap, Ender Warp, Sinrecall Transmission, Gorilla Tactics (its burn hits),
 Parley, Extreme Focus, Bad Health, Burning Souls, Nasty Bite, Detonate, Shoot, and every staff, wand
 and sword ability that deals damage; the Necron's Blade scrolls (Implosion, Shadow Warp, Wither
-Shield). `PlayerDamage.addShield` is where an absorption shield (Wither Shield's) can go.
+Shield, whose absorption is `Absorption`'s now).
 
 On a weapon, so theirs too though they don't hit: Ragnarock (Ragnarock Axe) and the Gyrokinetic
 Wand's Cells Alignment ("Splits incoming damage and applies it over 3s", in their LATER table: a

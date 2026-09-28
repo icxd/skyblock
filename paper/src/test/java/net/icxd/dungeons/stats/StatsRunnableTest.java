@@ -21,4 +21,12 @@ class StatsRunnableTest {
         assertEquals("&4104/104♨", StatsRunnable.vitality(104, 104));
         assertEquals("&479/104♨", StatsRunnable.vitality(79.2, 104));
     }
+
+    /** Health in red; with absorption, health and absorption together over the max, in gold ("§66,171/4,422❤"). */
+    @Test
+    void health() {
+        assertEquals("&c5,238/5,238❤", StatsRunnable.health(5238.67, 0, 5238.67));
+        assertEquals("&66,171/4,422❤", StatsRunnable.health(4422, 1749.5, 4422));
+        assertEquals("&61,500/4,422❤", StatsRunnable.health(900, 600, 4422));
+    }
 }

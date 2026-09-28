@@ -3,6 +3,7 @@ package net.icxd.dungeons.stats;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.session.Vitality;
@@ -53,8 +54,9 @@ public class StatsRunnable implements Runnable {
     }
 
     /**
-     * Health, Defense (or what's shown in its place for a moment, like a skill's XP gain) and mana, and
-     * after it Vitality once they've used an item that spends it (see {@link Vitality#shown}; where
+     * Health (gold with absorption, see {@link #health}), Defense (or what's shown in its place for a moment,
+     * like a skill's XP gain) and mana, and after it Vitality once they've used an item that spends it (see
+     * {@link Vitality#shown}; where
      * Hypixel puts it among the others isn't recorded, so it's after mana), and in a dungeon room with
      * secrets how many of them the team has found. Sent every second, and at once when what's in
      * Defense's place changes (or a secret is found). Numbers are rounded down and grouped in thousands, as
@@ -67,11 +69,20 @@ public class StatsRunnable implements Runnable {
         Replacement defense = session.getDefenseReplacement();
         Replacement manaText = session.getManaReplacement();
         DungeonRun run = RunManager.of(player);
-        Utils.sendActionText(player, "&c" + ofMax(PlayerHealth.get(player), PlayerHealth.max(player)) + "❤     &a" +
+        Utils.sendActionText(player, health(PlayerHealth.get(player), Absorption.get(player), PlayerHealth.max(player)) + "     &a" +
                 (defense == null ? (stats.has(Stat.DEFENSE) ? number(stats.get(Stat.DEFENSE)) + "❈ Defense     " : "") : defense.text() + "     ") +
                 (manaText != null ? manaText.text() : "&b" + ofMax(session.getMana(), session.maxMana()) + "✎ Mana") +
                 (Vitality.shown(player) ? "     " + vitality(Vitality.get(player), Vitality.max(player)) : "") +
                 (run == null ? "" : run.secretsActionBar(player)));
+    }
+
+    /**
+     * "&c5,238/5,238❤", or with absorption their health and it together, in gold: "§66,171/4,422❤" (the SkyHanni
+     * mod's action bar patterns, ArmorStackDisplay and ItemAbilityCooldown; the Skyblocker mod reads absorption
+     * as what the first number has over the max).
+     */
+    static String health(double health, double absorption, double max) {
+        return absorption > 0 ? "&6" + ofMax(health + absorption, max) + "❤" : "&c" + ofMax(health, max) + "❤";
     }
 
     /**
