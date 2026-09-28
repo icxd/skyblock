@@ -68,6 +68,9 @@ on-hit effects is UNKNOWN; here they can't.
   - `damage` is what the hit did, after the debuffs' "takes more".
   - `killed` is true if the hit killed the mob.
 - **It doesn't fire for** invulnerable mobs (the Watcher) or `DOT` and `OTHER` damage.
+- **Knockback:** a melee hit or arrow's listeners run inside its damage event, before vanilla knocks the mob
+  back, so vanilla's knockback changes a velocity set there. Knockback and Punch set it a tick later (or in
+  Paper's `EntityKnockbackByEntityEvent`).
 - **Rule for listeners:** a listener that deals damage should use `MobHits.deal` (see "An effect's own damage"),
   not `Hits.hurt`, which is an ability's hit. A hit dealt from inside a listener never tells the listeners
   again either way (`Combat.landed` doesn't nest), so no effect can set itself off over and over.
@@ -139,7 +142,10 @@ itself is unchanged: a SkyBlock item's hit on a player is still called off, and 
 - `Shots.addShotListener((player, projectile, bow, fullyDrawn, shortbow) -> ...)`:
   - It fires when a player shoots a drawn bow (vanilla's `EntityShootBowEvent`), and for each arrow of a
     shortbow's shot (`shortbow` true; a Terminator's three), after the arrow is recorded, so a listener can
-    `scale` or `pierce` it (Duplex, Piercing, Infinite Quiver's arrow saving is the event's own).
+    `scale` or `pierce` it (Duplex, Piercing).
+  - Saving the arrow (Infinite Quiver) is `EntityShootBowEvent.setConsumeArrow`'s, in a listener of the
+    event's own, as the Skeleton Master Chestplate's bonus does (`Bonus.shot`): the shot listeners run once
+    the shot is decided (MONITOR).
   - Arrows that abilities fire (Rapid-fire, Nasty Bite) don't fire it.
   - The ON_SHOOT abilities come through it, from drawn bows only.
 
