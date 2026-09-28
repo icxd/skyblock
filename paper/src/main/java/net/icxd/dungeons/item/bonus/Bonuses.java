@@ -63,7 +63,7 @@ final class Bonuses {
 
     /**
      * Their share of their max health now, from stats being worked out ({@code stats}' Health is the max
-     * so far): a bonus's stats can't ask for their finished stats.
+     * so far): a bonus's stats can't ask for their finished stats (UNKNOWN which max Hypixel's use).
      */
     static double healthShare(Player player, Stats stats) {
         double max = stats.get(Stat.HEALTH);

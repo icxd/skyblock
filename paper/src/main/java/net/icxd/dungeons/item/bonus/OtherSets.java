@@ -466,7 +466,7 @@ final class OtherSets {
     /**
      * Each Bat Person piece: "All Combat Stats on this armor piece are multiplied by 2x at night, or by 3x
      * during the Spooky Festival!": at SkyBlock's night (7pm to 6am, when the sidebar shows the moon) the
-     * piece's Combat Stats count twice. There's no Spooky Festival yet.
+     * piece's Combat Stats ({@link DragonSets#COMBAT}) count twice. There's no Spooky Festival yet.
      */
     static final class BatPerson implements Bonus {
         @Override

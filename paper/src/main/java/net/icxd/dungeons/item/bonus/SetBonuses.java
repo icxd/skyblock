@@ -155,7 +155,10 @@ public final class SetBonuses implements Listener {
         Bukkit.getScheduler().runTaskTimer(plugin, SetBonuses::second, 20, 20);
     }
 
-    /** Their bonuses' stats: each one's own, then what's worked out from the rest, then what nearby wearers' auras give. */
+    /**
+     * Their bonuses' stats: each one's own, then what's worked out from the rest, then what nearby wearers'
+     * auras give; with the other modifiers, before a run's blessings (UNKNOWN, as PlayerStats has it).
+     */
     private static void stats(Player player, Stats stats) {
         List<Bonus.Active> active = active(player);
         for (Bonus.Active a : active) a.bonus().stats(player, a, stats);

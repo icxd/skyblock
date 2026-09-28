@@ -18,7 +18,7 @@ import java.util.UUID;
  * Blood's Feather Falling (fall damage isn't SkyBlock's yet).
  */
 final class DragonSets {
-    /** The Stats & Equipment menu's Combat Stats (as recorded), which Superior Blood raises with Magic Find. */
+    /** The Stats & Equipment menu's Combat Stats (as recorded), taken as the bonuses' "Combat stats" (UNKNOWN). */
     static final List<Stat> COMBAT = List.of(Stat.HEALTH, Stat.DEFENSE, Stat.TRUE_DEFENSE, Stat.STRENGTH, Stat.CRIT_CHANCE, Stat.CRIT_DAMAGE,
             Stat.ATTACK_SPEED, Stat.FEROCITY, Stat.SWING_RANGE, Stat.INTELLIGENCE, Stat.ABILITY_DAMAGE, Stat.HEALTH_REGEN, Stat.VITALITY,
             Stat.MENDING);

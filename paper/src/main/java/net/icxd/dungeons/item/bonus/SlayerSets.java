@@ -110,7 +110,7 @@ final class SlayerSets {
      * Revenant and Reaper Armor's Trolling The Reaper: "Gain +100 Defense against Undead mobs", and the
      * Reaper's "Deal +100% damage to Undead mobs but 1% to all other mobs": +100 in the additive buffs
      * against the Undead, a multiplicative 0.01 against the rest (the wiki's Additive Sources), when the
-     * set is all Reaper pieces.
+     * set is all Reaper pieces (UNKNOWN with Revenant pieces among them: it's only the Reaper's text).
      */
     static final class TrollingTheReaper implements Bonus {
         @Override

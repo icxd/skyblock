@@ -244,7 +244,7 @@ final class TieredSets {
             stats.add(Stat.SWING_RANGE, SWING_RANGE[tier] * n).add(Stat.FEROCITY, FEROCITY[tier] * n);
         }
 
-        /** The stacks it had before the hit count for it; the hit may gain one. */
+        /** The stacks it had before the hit count for it; the hit may gain one (UNKNOWN which Hypixel counts). */
         @Override
         public Combat.HitBuff hit(Player player, Active active, boolean ranged, Damage.Target target) {
             if (ranged) return null;
@@ -365,6 +365,7 @@ final class TieredSets {
             long now = System.currentTimeMillis();
             double lasts = STACK_LASTS.at(active.count());
             Stacks s = stacks.computeIfAbsent(player.getUniqueId(), id -> new Stacks());
+            // As Dominus: the stacks before the hit count (UNKNOWN).
             int before = s.at(now, lasts);
             s.hit(now, 0.2, lasts);
             double damage = perStack(lowestTier(active.pieces()), active.count()) * before;
