@@ -126,8 +126,9 @@ itself is unchanged: a SkyBlock item's hit on a player is still called off, and 
   - `hasDot(mob, source)` tells whether it's still running.
 - **Lifecycle:** `MobDebuffs.tick()` runs every tick from `Mobs.tick`. Mobs that die or go are forgotten
   (`Mobs.remove` and `DungeonMobs.remove`).
-- **Vanilla effects:** vanilla fire and poison on mobs stay cancelled (`Mobs.onHurt`). These debuffs are
-  SkyBlock's version.
+- **Vanilla effects:** vanilla fire and poison on mobs stay cancelled (`Mobs.onHurt`, and the run's listener
+  for the Blood Room's). These debuffs are SkyBlock's version. A burning look (`setFireTicks`) is safe to
+  give with a fire damage over time: its vanilla damage never lands.
 
 ### Arrows: `combat/Shots` (F5)
 
