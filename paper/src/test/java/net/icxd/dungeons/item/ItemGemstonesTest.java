@@ -9,15 +9,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import net.icxd.dungeons.hex.HexData;
-import net.icxd.dungeons.hex.PrivateHex;
 import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.data.ItemData;
 import net.icxd.dungeons.item.enums.Rarity;
@@ -27,6 +24,7 @@ import net.icxd.dungeons.item.gemstone.GemstoneQuality;
 import net.icxd.dungeons.item.gemstone.GemstoneTable;
 import net.icxd.dungeons.item.gemstone.GemstoneTable.Stone;
 import net.icxd.dungeons.item.gemstone.GemstoneType;
+import net.icxd.dungeons.item.gemstone.PrivateGemstones;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.stats.ItemStats;
 import net.icxd.dungeons.stats.Stat;
@@ -114,10 +112,7 @@ class ItemGemstonesTest {
     void recordedItems() throws IOException {
         Path items = GoldenItemsTest.itemsFile();
         assumeTrue(Files.exists(items), "no " + items);
-        List<String> problems = new ArrayList<>();
-        GemstoneTable table = GemstoneTable.read(HexData.json(PrivateHex.folder(), GemstoneTable.FILE, problems), problems);
-        assertEquals(List.of(), problems);
-        GemstoneTable.use(table);
+        GemstoneTable.use(PrivateGemstones.table());
         Map<String, DataItem> all;
         try (Reader reader = Files.newBufferedReader(items)) {
             all = ItemData.load(reader).items();

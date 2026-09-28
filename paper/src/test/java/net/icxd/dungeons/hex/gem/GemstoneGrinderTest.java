@@ -23,9 +23,7 @@ import net.icxd.dungeons.hex.HexCosts;
 import net.icxd.dungeons.hex.HexCosts.Check;
 import net.icxd.dungeons.hex.HexCosts.Coins;
 import net.icxd.dungeons.hex.HexCosts.Items;
-import net.icxd.dungeons.hex.HexData;
 import net.icxd.dungeons.hex.HexItem;
-import net.icxd.dungeons.hex.PrivateHex;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.data.ItemData;
@@ -36,6 +34,7 @@ import net.icxd.dungeons.item.gemstone.GemstoneQuality;
 import net.icxd.dungeons.item.gemstone.GemstoneTable;
 import net.icxd.dungeons.item.gemstone.GemstoneTable.ArmorSet;
 import net.icxd.dungeons.item.gemstone.GemstoneType;
+import net.icxd.dungeons.item.gemstone.PrivateGemstones;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.menu.Icon;
 
@@ -207,8 +206,7 @@ class GemstoneGrinderTest {
                 : Path.of(System.getProperty("basedir", ".")).toAbsolutePath().normalize().getParent()
                 .resolveSibling("skyblock-dungeon-data/items/items.json");
         assumeTrue(Files.exists(file), "no " + file);
-        List<String> problems = new ArrayList<>();
-        GemstoneTable table = GemstoneTable.read(HexData.json(PrivateHex.folder(), GemstoneTable.FILE, problems), problems);
+        GemstoneTable table = PrivateGemstones.table();
         List<SkyBlockItem> all;
         try (Reader reader = Files.newBufferedReader(file)) {
             all = new ArrayList<>(ItemData.load(reader).items().values());

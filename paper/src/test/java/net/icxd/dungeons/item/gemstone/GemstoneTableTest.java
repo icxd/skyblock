@@ -12,8 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonParser;
 
-import net.icxd.dungeons.hex.HexData;
-import net.icxd.dungeons.hex.PrivateHex;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.stats.Stat;
 
@@ -46,10 +44,7 @@ class GemstoneTableTest {
 
     @Test
     void thePrivateTable() {
-        List<String> problems = new ArrayList<>();
-        GemstoneTable table = GemstoneTable.read(HexData.json(PrivateHex.folder(), GemstoneTable.FILE, problems), problems);
-        assertNotNull(table, problems.toString());
-        assertEquals(List.of(), problems);
+        GemstoneTable table = PrivateGemstones.table();
         assertEquals(12, table.gems().size());
         // The recordings (grinder report 7): Fine Jasper M 7, Flawless Jasper M 12, Fine Sapphire E 10, Fine Peridot M 6.
         assertEquals(7, value(table, "FINE_JASPER_GEM", Rarity.MYTHIC));
