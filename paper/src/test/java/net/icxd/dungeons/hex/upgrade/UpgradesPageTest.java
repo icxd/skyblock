@@ -65,15 +65,18 @@ class UpgradesPageTest {
         return HexCategories.ITEM_UPGRADES.summary(new HexItem(item, tag, null));
     }
 
-    /** The official screenshot's Fabled Livid Dagger: "Dungeon Item ✔", "Upgrade Level ✪✪✪✪✪". */
+    /**
+     * The official screenshot's Fabled Livid Dagger: "Dungeon Item ✔", "Upgrade Level  ✪✪✪✪✪" (measured: two spaces
+     * before the stars, where there's one before the ✔).
+     */
     @Test
     void summaries() {
-        assertEquals(List.of("  &7Dungeon Item &a✔", "  &7Upgrade Level &6✪✪✪✪✪"), summary(DUNGEON_SWORD, tag(DUNGEON_SWORD, 5)));
+        assertEquals(List.of("  &7Dungeon Item &a✔", "  &7Upgrade Level  &6✪✪✪✪✪"), summary(DUNGEON_SWORD, tag(DUNGEON_SWORD, 5)));
         assertEquals(List.of("  &7Dungeon Item &c✖", "  &7Upgrade Level &c✖"), summary(SWORD, tag(SWORD, 0)));
         // Can't be made one: no Dungeon Item line.
-        assertEquals(List.of("  &7Upgrade Level &d✪✪&6✪✪✪"), summary(ROD, tag(ROD, 7)));
+        assertEquals(List.of("  &7Upgrade Level  &d✪✪&6✪✪✪"), summary(ROD, tag(ROD, 7)));
         // Master stars show as they do on the item.
-        assertEquals(List.of("  &7Dungeon Item &a✔", "  &7Upgrade Level &6✪✪✪✪✪&c➋"), summary(DUNGEON_SWORD, tag(DUNGEON_SWORD, 7)));
+        assertEquals(List.of("  &7Dungeon Item &a✔", "  &7Upgrade Level  &6✪✪✪✪✪&c➋"), summary(DUNGEON_SWORD, tag(DUNGEON_SWORD, 7)));
         assertTrue(HexCategories.ITEM_UPGRADES.applies(new HexItem(ROD, tag(ROD, 0), null)));
         assertFalse(HexCategories.ITEM_UPGRADES.applies(new HexItem(PLAIN, tag(PLAIN, 0), null)));
     }
@@ -107,7 +110,7 @@ class UpgradesPageTest {
         assertEquals("<cost [Essence[type=DRAGON, amount=150]]>", icon.lore().getLast());
         DungeonItems.convert(tag);
         assertEquals(List.of("&aThis item is already a Dungeon", "&aItem!"), UpgradesPage.convert(SWORD, tag, COST).lore().subList(5, 7));
-        assertEquals(List.of("  &7Dungeon Item &a✔", "  &7Upgrade Level &6✪✪✪"), summary(SWORD, tag));
+        assertEquals(List.of("  &7Dungeon Item &a✔", "  &7Upgrade Level  &6✪✪✪"), summary(SWORD, tag));
         assertTrue(String.join("", UpgradesPage.convert(DUNGEON_SWORD, tag(DUNGEON_SWORD, 0), COST).lore()).contains("This item is already a Dungeon"));
         // Neither one nor can be made one: no button.
         assertNull(UpgradesPage.convert(ROD, tag(ROD, 0), COST));
