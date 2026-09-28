@@ -66,7 +66,7 @@ Which items take which, and what each does:
 | Wood Singularity | axes | once | `wood_singularity_count` | +25 Foraging Fortune |
 | Mana Disintegrator | wands and deployables | 10 | `mana_disintegrator_count` | -1% mana cost each |
 | Jalapeno Book | deployables | once | `jalapeno_count` | +5 Crit Damage, +1 Crit Chance in its buff |
-| Power Scrolls (Ruby, Sapphire, Jasper, Amethyst, Amber, Opal) | items with a RIGHT CLICK ability, or the API's `can_have_power_scroll` | one at a time | `power_ability_scroll` = the scroll's id | on each use of a RIGHT CLICK ability |
+| Power Scrolls (Ruby, Sapphire, Jasper, Amethyst, Amber, Opal) | items with a RIGHT CLICK ability, or the API's `can_have_power_scroll`; not the Egglocator or a Wither Scroll itself | one at a time | `power_ability_scroll` = the scroll's id | on each use of a RIGHT CLICK ability |
 | Enrichments (the eleven) | accessories that are Legendary or better now | one at a time | `talisman_enrichment` = the stat's key | its stat |
 
 The data keys are Hypixel's (as live items carry them), but for the plugin's own older ones:
@@ -152,10 +152,14 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
   it being a wand"); whether it's 2%, as a power orb's share, is unknown. Its text isn't changed.
 - **Power Scrolls.** A new one takes the old one's place, and the old one is gone (whether Hypixel gives
   it back is unknown). A Ruby's or Sapphire's 5s cooldown is the player's, one a scroll, whichever item
-  it's on. Each RIGHT CLICK ability's header gets the "⦾" (no live item with two has a
-  scroll). Eligibility is the wiki's "RIGHT CLICK ability" in the item data (with a Necron's blade's
-  scroll abilities) or the API's flag: live items also have them on drills and the Jungle Pickaxe, whose
-  HOTM ability isn't in the data.
+  it's on. Each RIGHT CLICK ability's header gets the "⦾" (no live item with two has a scroll).
+  Eligibility is the wiki's "RIGHT CLICK ability" in the item data (with a Necron's blade's scroll
+  abilities) or the API's flag, but not the Egglocator (0.20.5: "Fixed Power Scrolls being applicable on
+  Eggolocators") or a Wither Scroll itself (its RIGHT CLICK is the one it gives). Live items also have
+  them on drills and the Jungle Pickaxe, whose HOTM ability isn't in the data. Live, only swords,
+  longswords, a spade and mining tools carry one (none of 197 wands, 259 deployables, 182 axes or 54 bows
+  with a RIGHT CLICK ability does), and 0.20.4 took them off Abiphones too, so the real rule may be
+  narrower (see Questions).
 - **Enrichments.** A new one takes the old one's place, the old one gone. Offered only on accessories
   that are Legendary or better now (their text: "a Legendary or Mythic accessory"). The "Enriched with"
   line goes first, above anything else.
@@ -179,5 +183,8 @@ lore's total, with no bracket. The lore's first line is `&7&8Enriched with Magic
   lassos, masks, watering cans, mementos, shears, nets, traps, portals, ores, chisels. The wiki says "any
   item with a named category". Should the Recombobulator be left off those too? (Pet items already are.)
 - A Power Scroll or an Enrichment put over another: should the old one come back to them?
+- Power Scrolls go on anything with a RIGHT CLICK ability (the wiki's rule), so wands, deployables, axes,
+  bows and gadgets take them. Live, none of those has one (only swords, longswords, a spade and mining
+  tools do). Should they be for weapons and tools only?
 - A master star costs the star alone in the Hex here. An anvil also takes 300 to 500 Exp levels for one
   (the wiki's Master Star). Should the Hex take them too, on a Normal profile?

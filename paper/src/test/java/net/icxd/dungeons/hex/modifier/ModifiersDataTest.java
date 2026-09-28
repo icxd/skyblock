@@ -75,6 +75,11 @@ class ModifiersDataTest {
         }
         assertTrue(ids("HYPERION").containsAll(List.of("IMPLOSION_SCROLL", "SHADOW_WARP_SCROLL", "WITHER_SHIELD_SCROLL")));
         assertFalse(ids("LIVID_DAGGER").contains("IMPLOSION_SCROLL"));
+        // Power Scrolls on a RIGHT CLICK ability, but not the Egglocator's (0.20.5) or a Wither Scroll's own.
+        assertTrue(ids("ASPECT_OF_THE_END").contains("RUBY_POWER_SCROLL"));
+        for (String id : List.of("EGGLOCATOR", "IMPLOSION_SCROLL", "SHADOW_WARP_SCROLL", "WITHER_SHIELD_SCROLL")) {
+            assertFalse(ids(id).contains("RUBY_POWER_SCROLL"), id);
+        }
         // The official screenshot's five-star Livid Dagger: Recombobulator 3000, Master Star, Power Scroll.
         assertEquals(List.of("  &6Recombobulator 3000 &c✖", "  &cMaster Star &c✖", "  &7Power Scroll &c✖"),
                 HexModifiers.summary(hex("LIVID_DAGGER", 5)));

@@ -35,8 +35,9 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
  *   <li>Mana Disintegrator: up to 10 on a wand or deployable.</li>
  *   <li>Jalapeno Book: once, on a deployable.</li>
  *   <li>Power Scrolls: one of the six, on an item with a RIGHT CLICK ability (with what its data gives it: a
- *       Hyperion's scrolls) or that the item data says takes one. A new one takes the old one's place; UNKNOWN
- *       whether Hypixel gives the old one back: it's gone here.</li>
+ *       Hyperion's scrolls) or that the item data says takes one; not on the Egglocator (0.20.5) or a Wither
+ *       Scroll itself. A new one takes the old one's place; UNKNOWN whether Hypixel gives the old one back: it's
+ *       gone here.</li>
  *   <li>Enrichments: one of the eleven, on an accessory that's Legendary or better now (recombobulated too, as
  *       live Epic accessories are). A new one takes the old one's place, gone as a Power Scroll is (UNKNOWN).</li>
  * </ol>
@@ -52,6 +53,13 @@ public final class HexModifiers {
     private static final List<String> MASTER_STARS = List.of("FIRST_MASTER_STAR", "SECOND_MASTER_STAR", "THIRD_MASTER_STAR",
             "FOURTH_MASTER_STAR", "FIFTH_MASTER_STAR");
     private static final String STONK = "STONK_PICKAXE";
+    /** 0.20.5: "Fixed Power Scrolls being applicable on Eggolocators" (its RIGHT CLICK finds eggs). */
+    private static final String EGGLOCATOR = "EGGLOCATOR";
+    /**
+     * The category of what's put on an item in an anvil: a Wither Scroll's own RIGHT CLICK is the one it gives a
+     * Necron's Blade, so a Power Scroll doesn't go on the scroll.
+     */
+    private static final String COMBINABLE = "Combinable in Anvil";
 
     /**
      * One thing the page offers: the item it takes (one of it), the colour its name is in on the page when it isn't
@@ -201,7 +209,8 @@ public final class HexModifiers {
 
     private static Modifier powerScrolls(SkyBlockItem item, List<ItemBlock> blocks, NBTTagCompound tag) {
         PowerScroll on = PowerScroll.of(tag.getString(ItemModifiers.POWER_SCROLL));
-        boolean rightClick = blocks.stream().anyMatch(b -> b.isAbility() && "RIGHT_CLICK".equals(b.activation()));
+        boolean own = !EGGLOCATOR.equalsIgnoreCase(item.id()) && !item.categories().contains(COMBINABLE);
+        boolean rightClick = own && blocks.stream().anyMatch(b -> b.isAbility() && "RIGHT_CLICK".equals(b.activation()));
         if (!rightClick && !item.canHavePowerScroll() && on == null) return null;
         List<Offer> offers = new ArrayList<>();
         for (PowerScroll scroll : PowerScroll.values()) {

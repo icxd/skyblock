@@ -180,6 +180,16 @@ class HexModifiersTest {
     }
 
     @Test
+    void noPowerScrollOnTheEgglocatorOrAWitherScroll() {
+        String rightClick = "\"abilities\":[" + BLINK.replace("Instant Transmission", "Test Ability") + "]";
+        assertEquals(SCROLLS, ids(hex(item("TEST_TRACKER", rightClick))));
+        // 0.20.5: "Fixed Power Scrolls being applicable on Eggolocators".
+        assertEquals(List.of(), HexModifiers.of(hex(item("EGGLOCATOR", rightClick))));
+        // What's put on an item in an anvil (a Wither Scroll: its RIGHT CLICK is the one it gives).
+        assertEquals(List.of(), HexModifiers.of(hex(item("TEST_WITHER_SCROLL", rightClick + ",\"categories\":[\"Combinable in Anvil\"]"))));
+    }
+
+    @Test
     void silexOnAPickaxeWithEfficiencyFive() {
         DataItem pickaxe = item("TEST_PICKAXE", "\"type\":\"PICKAXE\"");
         // Without Efficiency V, no Silex.
