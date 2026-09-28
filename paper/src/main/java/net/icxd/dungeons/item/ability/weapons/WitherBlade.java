@@ -21,6 +21,7 @@ import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.session.Vitality;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /**
  * The Wither scrolls' abilities on Necron's Blade and the swords made from it (the wiki's Necron's Blade
@@ -108,6 +109,7 @@ final class WitherBlade {
         Location from = player.getLocation();
         Location to = new Location(from.getWorld(), landing.x() + 0.5, landing.y(), landing.z() + 0.5, from.getYaw(), from.getPitch());
         player.teleport(to);
+        SetBonuses.teleported(player);
         player.setFallDistance(0);
         player.playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
         if (landing.blocked()) player.sendMessage(InstantTransmission.BLOCKED);

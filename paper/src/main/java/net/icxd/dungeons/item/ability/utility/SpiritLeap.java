@@ -28,6 +28,7 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /**
  * Spirit Leap and the Infinileap's: "Allows you to teleport to any teammate! Grants 1 second of immunity after
@@ -101,6 +102,7 @@ final class SpiritLeap implements AbilityHandler {
         if (USED_UP.equals(itemId.toUpperCase(Locale.ROOT)) && !useOne(player)) return;
         if (cooldownMillis > 0) session.startCooldown(cooldownKey(), cooldownMillis);
         player.teleport(to.getLocation());
+        SetBonuses.teleported(player);
         player.setFallDistance(0);
         Protection.immunity(player, NAME, IMMUNITY_MILLIS);
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);

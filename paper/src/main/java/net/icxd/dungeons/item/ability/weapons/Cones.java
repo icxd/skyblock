@@ -14,6 +14,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /** Abilities that hit everything in a cone in front of them, through walls. */
 final class Cones {
@@ -67,11 +68,15 @@ final class Cones {
         static final double LENGTH = 7.5;
         static final double DEGREES = 60;
         private static final double KNOCKBACK = 2;
+        static final double SUPERIOR_BLOOD = 1.5;
 
         @Override
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             List<LivingEntity> caught = Hits.inCone(player, LENGTH, DEGREES);
-            Hits.report(player, "Dragon Rage", Hits.spell(player, item, tag, Hits.spellOf(item, RAGE), caught));
+            Magic.Spell rage = Hits.spellOf(item, RAGE);
+            // Superior Dragon Armor: "Aspect of the Dragons ability deals 50% more damage".
+            if (SetBonuses.active(player, "Superior Blood")) rage = rage.withBase(rage.base() * SUPERIOR_BLOOD);
+            Hits.report(player, "Dragon Rage", Hits.spell(player, item, tag, rage, caught));
             Vector away = player.getLocation().getDirection().setY(0);
             if (away.lengthSquared() > 0) away.normalize().multiply(KNOCKBACK);
             for (LivingEntity mob : caught) {

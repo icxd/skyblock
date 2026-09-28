@@ -17,6 +17,7 @@ import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /**
  * The Silent Death's Shadowstep: "Teleport behind the enemy you are looking at, gaining +25❁ Strength for 10
@@ -43,6 +44,7 @@ final class Shadowstep implements AbilityHandler {
         LivingEntity target = target(player, range(block));
         if (target == null) return;
         player.teleport(behind(player, target));
+        SetBonuses.teleported(player);
         player.setFallDistance(0);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 0.8f);
         String plain = AbilityText.plain(block.text());

@@ -21,6 +21,7 @@ import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.ability.abilities.InstantTransmission;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /** Abilities that hit with what they hold, going somewhere: a spear thrown and back, a zap forward and back. */
 final class Strikes {
@@ -119,6 +120,7 @@ final class Strikes {
                     Location to = home.clone();
                     to.setDirection(player.getLocation().getDirection());
                     player.teleport(to);
+                    SetBonuses.teleported(player);
                     player.playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 0.7f);
                 }
             }.runTaskLater(Dungeons.getInstance(), RECAST_TICKS);
@@ -132,6 +134,7 @@ final class Strikes {
             if (landing != null) {
                 Location to = new Location(from.getWorld(), landing.x() + 0.5, landing.y(), landing.z() + 0.5, from.getYaw(), from.getPitch());
                 player.teleport(to);
+                SetBonuses.teleported(player);
                 player.setFallDistance(0);
             }
             Location now = player.getLocation().add(0, 1, 0);

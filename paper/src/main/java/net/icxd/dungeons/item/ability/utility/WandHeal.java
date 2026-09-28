@@ -10,6 +10,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /**
  * The Healing Wands' Small, Medium, Big and Huge Heal: "Heal 60❤ per second for 5s. Wand heals don't
@@ -18,6 +19,7 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
  * hearts.
  */
 final class WandHeal implements AbilityHandler {
+    static final double TROLLING_THE_REAPER = 1.5;
     /** One heal over time from any wand at a time. */
     static final String KIND = "wand";
 
@@ -33,7 +35,9 @@ final class WandHeal implements AbilityHandler {
     public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
         double[] heal = perSecondFor(AbilityText.plain(block.text()));
         if (heal == null) return;
-        Heals.overTime(player, player, KIND, heal[0], (int) heal[1], true);
+        // Reaper Armor: "Healing Wands heal +50%".
+        double amount = SetBonuses.active(player, "Trolling The Reaper") ? heal[0] * TROLLING_THE_REAPER : heal[0];
+        Heals.overTime(player, player, KIND, amount, (int) heal[1], true);
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1.6f);
         player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0, 2, 0), 3, 0.4, 0.2, 0.4);
     }

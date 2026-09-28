@@ -56,7 +56,7 @@ final class SpiritGlide {
         String cooldown = "ability:" + NAME;
         if (session.cooldownLeft(cooldown) > 0) return;
         int mana = session.getMana() < 0 ? session.maxMana() : session.getMana();
-        int cost = Abilities.manaCost(block, session.maxMana());
+        int cost = Abilities.manaCost(block, session.maxMana(), player);
         if (mana < cost) {
             session.setManaReplacement(Replacement.forMillis("§c§lNOT ENOUGH MANA", 2000));
             return;

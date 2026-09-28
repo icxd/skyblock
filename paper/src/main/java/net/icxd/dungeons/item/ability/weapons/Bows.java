@@ -27,6 +27,7 @@ import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.session.Vitality;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /** Bows' own abilities, and what their arrows do when they land. Main thread. */
 final class Bows {
@@ -150,6 +151,7 @@ final class Bows {
                         Location to = at.clone().subtract(missile.velocity().normalize().multiply(0.5));
                         to.setDirection(caster.getLocation().getDirection());
                         caster.teleport(to);
+                        SetBonuses.teleported(caster);
                         caster.setFallDistance(0);
                         caster.getWorld().playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
                         for (LivingEntity mob : Hits.near(to, RADIUS)) {

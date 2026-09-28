@@ -12,6 +12,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /**
  * The Etherwarp Conduit's Ether Transmission: "Teleport to your targeted block up to 57 blocks away." The
@@ -38,6 +39,7 @@ final class EtherTransmission implements AbilityHandler {
         to.setYaw(from.getYaw());
         to.setPitch(from.getPitch());
         player.teleport(to);
+        SetBonuses.teleported(player);
         player.setFallDistance(0);
         player.getWorld().playSound(to, Sound.ENTITY_ENDER_DRAGON_HURT, 1, 0.5f);
     }

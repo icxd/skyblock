@@ -15,6 +15,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 
 /**
  * Shadow Fury: "Rapidly teleports you to up to 5 enemies within 12 blocks, rooting each of them and allowing
@@ -50,6 +51,7 @@ final class ShadowFury implements AbilityHandler {
                 LivingEntity mob = targets.get(next++);
                 if (!Hits.hittable(mob) || !mob.getWorld().equals(player.getWorld())) return;
                 player.teleport(behind(player, mob));
+                SetBonuses.teleported(player);
                 player.setFallDistance(0);
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1.3f);
                 player.attack(mob);
