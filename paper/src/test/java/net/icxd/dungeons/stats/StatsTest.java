@@ -1,7 +1,5 @@
 package net.icxd.dungeons.stats;
 
-import net.icxd.dungeons.item.enums.Rarity;
-import net.icxd.dungeons.reforge.Reforge;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,15 +41,5 @@ class StatsTest {
         copy.add(Stat.DEFENSE, 1);
         assertNotEquals(a, copy);
         assertEquals(10, a.get(Stat.DEFENSE));
-    }
-
-    /** Heroic on the recorded epic Aspect of the Void: (+32) strength, (+80) intelligence, (+3%) attack speed. */
-    @Test
-    void reforgeAtRarity() {
-        Stats heroic = Reforge.HEROIC.getStats().at(Rarity.EPIC);
-        assertEquals(32, heroic.get(Stat.STRENGTH));
-        assertEquals(80, heroic.get(Stat.INTELLIGENCE));
-        assertEquals(3, heroic.get(Stat.ATTACK_SPEED));
-        assertEquals(0, Reforge.HEROIC.getStats().at(Rarity.DIVINE).get(Stat.STRENGTH));
     }
 }

@@ -61,8 +61,8 @@ class HexMenuTest {
         Map<Integer, Icon> icons = HexMenu.icons(new HexMenu.View(true, null, categories(7), level -> true));
         for (int slot : PANES) assertEquals(red, icons.get(slot));
         assertEquals(PANES.length, icons.size());
-        // A SkyBlock item no category is for (every item, until the categories are built).
-        icons = HexMenu.icons(new HexMenu.View(true, HexFakes.sword(), HexCategories.all(), level -> true));
+        // A SkyBlock item no category is for.
+        icons = HexMenu.icons(new HexMenu.View(true, HexFakes.sword(), categories(0), level -> true));
         for (int slot : PANES) assertEquals(red, icons.get(slot));
         assertEquals(PANES.length, icons.size());
     }

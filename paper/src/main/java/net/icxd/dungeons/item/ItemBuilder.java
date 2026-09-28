@@ -60,7 +60,7 @@ import java.util.UUID;
  *       a line up to 9, else three a line</li>
  *   <li>attributes, the item's own text, rune, then its abilities and bonuses (text and abilities as its
  *       {@link ItemBehaviour} has them with the item's data; set bonuses count what the item's holder
- *       wears, see {@link SetBonusLore})</li>
+ *       wears, see {@link SetBonusLore}), then its reforge's bonus ("&9Withered Bonus")</li>
  *   <li>"This item can be reforged!", requirements the owner doesn't meet, soulbound, rarity line</li>
  * </ol>
  * Every line is one {@code &}-coded string turned into a component (see {@link Text#line}).
@@ -238,7 +238,7 @@ public final class ItemBuilder {
     /** "&6Fabled Hyperion &6✪✪✪✪✪": rarity colour, reforge, name and stars, as the item's name shows it. */
     public static String name(SkyBlockItem item, NBTTagCompound tag) {
         Reforge reforge = reforge(tag);
-        return rarity(item, tag).getColor() + (reforge == null ? "" : reforge.getName() + " ") + item.name() + stars(item, tag);
+        return rarity(item, tag).getColor() + (reforge == null ? "" : reforge.prefix(item.name()) + " ") + item.name() + stars(item, tag);
     }
 
     /** How many stars it has: its upgrades (older items kept dungeon stars separately). */
@@ -273,14 +273,17 @@ public final class ItemBuilder {
     static List<String> lore(SkyBlockItem item, NBTTagCompound tag, Player holder) {
         Rarity rarity = rarity(item, tag);
         Player owner = owner(tag);
+        Reforge reforge = reforge(tag);
         List<List<String>> sections = new ArrayList<>();
 
         List<String> header = new ArrayList<>();
-        if (item.stats().has(Stat.BREAKING_POWER)) header.add("&8Breaking Power " + (int) item.stats().get(Stat.BREAKING_POWER));
+        // With the reforge's (live Scraped Gemstone Gauntlets: 9, their own 8 and Scraped's 1).
+        double breakingPower = item.stats().get(Stat.BREAKING_POWER) + (reforge == null ? 0 : reforge.stat(Stat.BREAKING_POWER, rarity, 0));
+        if (breakingPower != 0) header.add("&8Breaking Power " + (int) breakingPower);
         for (String category : item.categories()) header.add("&8" + category);
         sections.add(header);
 
-        List<String> stats = new ArrayList<>(statLines(item, tag, rarity, owner));
+        List<String> stats = new ArrayList<>(statLines(item, tag, rarity, owner, holder));
         String gemstones = gemstoneLine(item, tag);
         if (gemstones != null) stats.add(gemstones);
         sections.add(stats);
@@ -291,6 +294,8 @@ public final class ItemBuilder {
         sections.add(behaviour.lore(item, tag, item.lore()));
         sections.add(runeLines(tag));
         for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(SetBonusLore.shown(block, holder), rarity));
+        // Last, as on live items: "&9Withered Bonus" and its text.
+        if (reforge != null) sections.add(reforge.bonusSection(rarity));
 
         List<String> lore = new ArrayList<>();
         for (List<String> section : sections) {
@@ -300,7 +305,7 @@ public final class ItemBuilder {
         }
 
         List<String> footer = new ArrayList<>();
-        if (item.reforgeable() && reforge(tag) == null) footer.add("&8This item can be reforged!");
+        if (item.reforgeable() && reforge == null) footer.add("&8This item can be reforged!");
         footer.addAll(requirementLines(item, owner));
         if (item.soulbound() != Soulbound.NONE) {
             footer.add("&8&l* &8" + (item.soulbound() == Soulbound.COOP ? "Co-op " : "") + "Soulbound &8&l*");
@@ -316,6 +321,11 @@ public final class ItemBuilder {
      * then what the upgrades and reforge add, then (on dungeon items) what it comes to in a dungeon.
      */
     static List<String> statLines(SkyBlockItem item, NBTTagCompound tag, Rarity rarity, Player owner) {
+        return statLines(item, tag, rarity, owner, null);
+    }
+
+    /** {@link #statLines(SkyBlockItem, NBTTagCompound, Rarity, Player)} in {@code holder}'s inventory (null: nobody's). */
+    static List<String> statLines(SkyBlockItem item, NBTTagCompound tag, Rarity rarity, Player owner, Player holder) {
         List<String> lines = new ArrayList<>();
         if (item.gearScore() > 0) lines.add("&7Gear Score: &d" + item.gearScore());
         Stats base = item.stats();
@@ -324,6 +334,9 @@ public final class ItemBuilder {
         int books = tag.getInt("hot_potato_books");
         int stars = item.dungeonItem() ? Math.min(starCount(tag), 5) : 0;
         double catacombs = item.dungeonItem() ? catacombsBoost(owner) : 0;
+        // Withered's and Ancient's stat a Catacombs level is the owner's, as the dungeon boost is; on an item nobody
+        // owns, its holder's (whose stats count it, ItemStats).
+        int catacombsLevel = reforge == null || reforge.perLevel().isEmpty() ? 0 : catacombsLevel(owner != null ? owner : holder);
         Stats enchanted = new Stats();
         for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
         for (Stat stat : Stat.values()) {
@@ -332,7 +345,7 @@ public final class ItemBuilder {
                     : generic == GenericItemType.ARMOR && stat == Stat.HEALTH ? books * 4
                     : generic == GenericItemType.ARMOR && stat == Stat.DEFENSE ? books * 2 : 0;
             double artOfWar = stat == Stat.STRENGTH && tag.getBoolean("art_of_war") ? 5 : 0;
-            double reforged = reforge == null || reforge.getStats().get(stat) == null ? 0 : reforge.getStats().get(stat).at(rarity);
+            double reforged = reforge == null ? 0 : reforge.stat(stat, rarity, catacombsLevel);
             // Stars add 2% of the base stat each out of a dungeon; in one, the dungeon boost replaces that.
             double starBonus = starBonus(stat, base.get(stat), stars);
             // What enchantments grant counts in the total, with no bracket of its own.
@@ -383,8 +396,13 @@ public final class ItemBuilder {
 
     /** The owner's; level 0's while there's no owner to go by. */
     public static double catacombsBoost(Player owner) {
+        return catacombsBoost(catacombsLevel(owner));
+    }
+
+    /** Their Catacombs level for stats (at most 50); 0 for nobody, or while their data isn't loaded. */
+    public static int catacombsLevel(Player owner) {
         User user = owner == null ? null : User.ifLoaded(owner.getUniqueId());
-        return catacombsBoost(user == null ? 0 : DungeonProfile.catacombsStatLevel(user));
+        return user == null ? 0 : DungeonProfile.catacombsStatLevel(user);
     }
 
     /** "&7Gemstones: &8[✎] [⚔]": locked slots all dark gray, open ones with a gray symbol. */
@@ -532,9 +550,9 @@ public final class ItemBuilder {
         return tag.getBoolean("recombobulated") ? item.rarity().upgrade() : item.rarity();
     }
 
+    /** Its reforge; null for none (one the reforge table doesn't know keeps its name, see Reforge#of). */
     private static Reforge reforge(NBTTagCompound tag) {
-        String reforge = tag.getString("reforge");
-        return reforge.isEmpty() ? null : Reforge.valueOf(reforge);
+        return Reforge.of(tag);
     }
 
     /** The online player who owns it; null if it has no owner or they aren't here. */

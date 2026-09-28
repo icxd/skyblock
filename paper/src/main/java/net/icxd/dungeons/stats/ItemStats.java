@@ -34,7 +34,9 @@ public final class ItemStats {
         if (item == null) return new Stats();
 
         Double catacombs = wearer != null && item.dungeonItem() && RunManager.inRun(wearer) ? ItemBuilder.catacombsBoost(wearer) : null;
-        Stats stats = of(item, tag, catacombs);
+        Reforge reforge = Reforge.of(tag);
+        int level = wearer == null || reforge == null || reforge.perLevel().isEmpty() ? 0 : ItemBuilder.catacombsLevel(wearer);
+        Stats stats = of(item, tag, catacombs, level);
         if (wearer != null && tag.hasKey("attribute_1") && tag.hasKey("attribute_2")) {
             addAttribute(stats, Attribute.of(tag.getString("attribute_1")), tag.getInt("attribute_1_level"), wearer);
             addAttribute(stats, Attribute.of(tag.getString("attribute_2")), tag.getInt("attribute_2_level"), wearer);
@@ -51,12 +53,21 @@ public final class ItemStats {
      * recorded Giant's Sword's 265 Strength was 922.2 in a dungeon.
      */
     public static Stats of(SkyBlockItem item, NBTTagCompound tag, Double catacombs) {
+        return of(item, tag, catacombs, 0);
+    }
+
+    /**
+     * {@link #of(SkyBlockItem, NBTTagCompound, Double)} for a wearer of this Catacombs level, for what a reforge
+     * adds a level (Withered's Strength, Ancient's Crit Damage).
+     */
+    public static Stats of(SkyBlockItem item, NBTTagCompound tag, Double catacombs, int catacombsLevel) {
         Stats stats = new Stats();
         Stats base = item.stats();
         stats.add(base);
         if (tag.getBoolean("art_of_war")) stats.add(Stat.STRENGTH, 5);
         Rarity rarity = ItemBuilder.rarity(item, tag);
-        if (!tag.getString("reforge").isEmpty()) stats.add(Reforge.valueOf(tag.getString("reforge")).getStats().at(rarity));
+        Reforge reforge = Reforge.of(tag);
+        if (reforge != null) stats.add(reforge.statsAt(rarity, catacombsLevel));
 
         int books = tag.getInt("hot_potato_books");
         if (item.genericItemType() == GenericItemType.WEAPON) stats.add(Stat.DAMAGE, books * 2).add(Stat.STRENGTH, books * 2);
