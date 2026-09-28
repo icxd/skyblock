@@ -2,6 +2,7 @@ package net.icxd.dungeons.stats;
 
 import net.icxd.dungeons.attributes.Attribute;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.item.DungeonItems;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -33,7 +34,7 @@ public final class ItemStats {
         SkyBlockItem item = ItemRegistry.get(tag.getString("id"));
         if (item == null) return new Stats();
 
-        Double catacombs = wearer != null && item.dungeonItem() && RunManager.inRun(wearer) ? ItemBuilder.catacombsBoost(wearer) : null;
+        Double catacombs = wearer != null && DungeonItems.is(item, tag) && RunManager.inRun(wearer) ? ItemBuilder.catacombsBoost(wearer) : null;
         Stats stats = of(item, tag, catacombs);
         if (wearer != null && tag.hasKey("attribute_1") && tag.hasKey("attribute_2")) {
             addAttribute(stats, Attribute.of(tag.getString("attribute_1")), tag.getInt("attribute_1_level"), wearer);
@@ -44,7 +45,8 @@ public final class ItemStats {
 
     /**
      * The stats its lore lists: its own, its reforge's, its hot potato books', Art of War's and its
-     * enchantments'. On a dungeon item each star adds 2% of its own stats ({@link ItemBuilder#starBonus});
+     * enchantments'. On a dungeon item (see {@link DungeonItems}) each star adds 2% of its own stats
+     * ({@link ItemBuilder#starBonus});
      * in a dungeon ({@code catacombs} is the wearer's Catacombs boost there, null elsewhere) the whole
      * line is multiplied instead by
      * {@link ItemBuilder#dungeonFactor} (+10% a star and the Catacombs boost), as Hypixel does: the
@@ -68,7 +70,7 @@ public final class ItemStats {
             if (enchant.getType() != null) stats.add(enchant.getType().getStats(enchant.getLevel()));
         }
 
-        if (!item.dungeonItem()) return stats;
+        if (!DungeonItems.is(item, tag)) return stats;
         int stars = Math.min(ItemBuilder.starCount(tag), 5);
         for (Stat stat : Stat.values()) {
             // In a dungeon only what the lore gives a bracket grows: stats above 0, not breaking power or

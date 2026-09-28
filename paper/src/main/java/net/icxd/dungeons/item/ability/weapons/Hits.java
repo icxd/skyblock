@@ -30,6 +30,7 @@ import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.item.DungeonItems;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
@@ -117,7 +118,7 @@ final class Hits {
      * {@link ItemBuilder#dungeonFactor}); 1 anywhere else, or for any other item.
      */
     static double dungeonFactor(Player caster, SkyBlockItem item, NBTTagCompound tag) {
-        if (!item.dungeonItem() || !RunManager.inRun(caster)) return 1;
+        if (!DungeonItems.is(item, tag) || !RunManager.inRun(caster)) return 1;
         return ItemBuilder.dungeonFactor(Stat.DAMAGE, Math.min(ItemBuilder.starCount(tag), 5), ItemBuilder.catacombsBoost(caster));
     }
 

@@ -54,7 +54,7 @@ import java.util.UUID;
  *   <li>name: rarity colour, reforge, name, stars ({@code ✪}, master stars {@code ➊}-{@code ➎})</li>
  *   <li>dark gray lines: breaking power, categories ("Collection Item")</li>
  *   <li>gear score, then stats in Hypixel's order, each with its bonuses: {@code &e(hot potato books)
- *       &6[Art of War] &9(reforge) &8(in a dungeon)}, the last on dungeon items</li>
+ *       &6[Art of War] &9(reforge) &8(in a dungeon)}, the last on dungeon items (see {@link DungeonItems})</li>
  *   <li>gemstone slots</li>
  *   <li>enchantments: with descriptions when there are up to 5 (and it isn't a dungeon item), one
  *       a line up to 9, else three a line</li>
@@ -255,7 +255,7 @@ public final class ItemBuilder {
     static String stars(SkyBlockItem item, NBTTagCompound tag) {
         int stars = starCount(tag);
         if (stars <= 0) return "";
-        if (item.dungeonItem()) {
+        if (DungeonItems.is(item, tag)) {
             return " &6" + "✪".repeat(Math.min(stars, 5)) + (stars > 5 ? "&c" + MASTER_STARS.charAt(Math.min(stars, 10) - 6) : "");
         }
         if (stars <= 5) return " &6" + "✪".repeat(stars);
@@ -322,8 +322,9 @@ public final class ItemBuilder {
         Reforge reforge = reforge(tag);
         GenericItemType generic = item.genericItemType();
         int books = tag.getInt("hot_potato_books");
-        int stars = item.dungeonItem() ? Math.min(starCount(tag), 5) : 0;
-        double catacombs = item.dungeonItem() ? catacombsBoost(owner) : 0;
+        boolean dungeon = DungeonItems.is(item, tag);
+        int stars = dungeon ? Math.min(starCount(tag), 5) : 0;
+        double catacombs = dungeon ? catacombsBoost(owner) : 0;
         Stats enchanted = new Stats();
         for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
         for (Stat stat : Stat.values()) {
@@ -344,7 +345,7 @@ public final class ItemBuilder {
             if (potatoBooks != 0) line.append(" &e(").append(Text.signed(potatoBooks)).append(")");
             if (artOfWar != 0) line.append(" &6[").append(Text.signed(artOfWar)).append("]");
             if (reforged != 0) line.append(" &9(").append(Text.signed(reforged)).append(unit).append(")");
-            if (item.dungeonItem() && shown > 0) {
+            if (dungeon && shown > 0) {
                 line.append(" &8(").append(Text.signed((shown - starBonus) * dungeonFactor(stat, stars, catacombs))).append(unit).append(")");
             }
             lines.add(line.toString());
@@ -422,12 +423,13 @@ public final class ItemBuilder {
         List<String> lines = new ArrayList<>();
         int count = enchantments.size();
         if (count == 0) return lines;
-        if (!item.dungeonItem() && count <= 5) {
+        boolean dungeon = DungeonItems.is(item, tag);
+        if (!dungeon && count <= 5) {
             for (Enchantment enchantment : enchantments) {
                 lines.add(enchantment.getDisplayName());
                 lines.addAll(enchantment.getDescription());
             }
-        } else if ((!item.dungeonItem() && count <= 9) || count == 1) {
+        } else if ((!dungeon && count <= 9) || count == 1) {
             for (Enchantment enchantment : enchantments) lines.add(enchantment.getDisplayName());
         } else {
             for (int i = 0; i < count; i += 3) {
@@ -518,8 +520,9 @@ public final class ItemBuilder {
         SpecificItemType type = item.specificItemType();
         String words = item.typeLabel() != null ? item.typeLabel() : type == SpecificItemType.NONE ? null : type.name().replace('_', ' ');
         // An empty label means just the rarity, as on Hypixel's consumables and sacks.
-        String kind = words == null ? (item.dungeonItem() ? " DUNGEON ITEM" : "")
-                : words.isEmpty() ? "" : (item.dungeonItem() ? " DUNGEON" : "") + " " + words;
+        boolean dungeon = DungeonItems.is(item, tag);
+        String kind = words == null ? (dungeon ? " DUNGEON ITEM" : "")
+                : words.isEmpty() ? "" : (dungeon ? " DUNGEON" : "") + " " + words;
         String line = bold + rarity.name().replace('_', ' ') + kind;
         return tag.getBoolean("recombobulated") ? bold + "&ka&r " + line + " " + bold + "&ka" : line;
     }
