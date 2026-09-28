@@ -12,6 +12,7 @@ import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.economy.ExpOrbs;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -59,7 +60,7 @@ import java.util.UUID;
 
 /**
  * SkyBlock's mobs: the ones alive now, and how they fight. Every kind ({@link MobKinds}) is spawned
- * here, as a {@link DataMob}, and shares this one path: hits, damage numbers, drops, death (a
+ * here, as a {@link DataMob}, and shares this one path: hits, damage numbers, drops and experience, death (a
  * {@link SkyBlockMobDeathEvent} after the drops) and removal. A mob's health is SkyBlock health,
  * kept here; hits on it do no vanilla damage (it still flinches and takes knockback), and its hits on
  * players do SkyBlock damage less their defense. Its name tag is a text display riding it. Mobs
@@ -278,7 +279,11 @@ public final class Mobs implements Listener {
         if (run != null) run.killed(killer.getUniqueId());
         live.type.onDeath(live.entity, killer);
         Location at = live.entity.getLocation();
-        if (killer != null && !live.type.isBoss()) drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer);
+        if (killer != null && !live.type.isBoss()) {
+            drop(live.type.getDrops(), live.type.dropsToInventory(), at, killer);
+            // Its experience goes the way its drops do: straight to them from a dungeon mob, else as orbs where it died.
+            ExpOrbs.grant(killer, live.type.getOrbs(), ExpOrbs.Source.MOB, at, live.type.dropsToInventory());
+        }
         remove(live);
         died(live, killer, at, blow);
     }
@@ -297,7 +302,10 @@ public final class Mobs implements Listener {
     public static void kindDied(MobKind kind, DungeonFloor floor, Location at, Player killer) {
         MobKind.Variant variant = kind.variant(floor, null);
         if (variant == null) return;
-        if (killer != null) drop(variant.drops(), kind.dungeon(), at, killer);
+        if (killer != null) {
+            drop(variant.drops(), kind.dungeon(), at, killer);
+            ExpOrbs.grant(killer, variant.orbs(), ExpOrbs.Source.MOB, at, kind.dungeon());
+        }
         Bukkit.getPluginManager().callEvent(new SkyBlockMobDeathEvent(killer, kind, variant, false, null, at, KillingBlow.dealing()));
     }
 

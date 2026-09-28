@@ -59,11 +59,16 @@ public record MobKind(String id, String name, EntityType entityType, List<MobTyp
     /**
      * Its stats at one level where it spawns: on a floor, or outside the dungeons ({@code floor} null).
      * {@code gear} is what it wears at this level if that differs from the kind's; null otherwise.
+     * {@code orbs} is the vanilla experience a kill gives (its wiki page's "orbs"; 0 where it has none).
      */
     public record Variant(DungeonFloor floor, int level, double health, double damage, double defense, double combatXp, double coins,
-                          List<MobDrop> drops, Gear gear) {
+                          List<MobDrop> drops, Gear gear, int orbs) {
         public Variant {
             drops = List.copyOf(drops);
+        }
+
+        Variant withOrbs(int orbs) {
+            return new Variant(floor, level, health, damage, defense, combatXp, coins, drops, gear, orbs);
         }
     }
 
@@ -213,7 +218,14 @@ public record MobKind(String id, String name, EntityType entityType, List<MobTyp
 
         public Builder variant(DungeonFloor floor, int level, double health, double damage, double defense, double combatXp, double coins,
                                Gear gear, MobDrop... drops) {
-            variants.add(new Variant(floor, level, health, damage, defense, combatXp, coins, List.of(drops), gear));
+            variants.add(new Variant(floor, level, health, damage, defense, combatXp, coins, List.of(drops), gear, 0));
+            return this;
+        }
+
+        /** The experience orbs a kill of the variant just given gives (its wiki page's "orbs"). */
+        public Builder orbs(int orbs) {
+            if (variants.isEmpty()) throw new IllegalStateException(id + ": orbs before any variant");
+            variants.set(variants.size() - 1, variants.get(variants.size() - 1).withOrbs(orbs));
             return this;
         }
 
