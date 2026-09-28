@@ -55,7 +55,8 @@ public final class FakeEnchantments {
                 entry("champion", "champion", "Champion", false, 1, 10, 0, "10,25,25,25,25,25,25,25,25,25", 0, SWORDS, "",
                         "\"1\":{\"text\":\"&7Gain &a3% &7extra Combat XP.\",\"lines\":[\"&7Gain &a3% &7extra\",\"&7Combat XP.\"],"
                                 + "\"rarity\":\"COMMON\",\"tier_up\":\"&850k Combat XP to tier up!\"}"),
-                entry("telekinesis", "telekinesis", "Telekinesis", false, 1, 1, 1, "5", 0, SWORDS, "", level(1, "&7Drops go to you.", "COMMON")),
+                entry("telekinesis", "telekinesis", "Telekinesis", false, 1, 1, 1, "5", 0, SWORDS, "", level(1, "&7Drops go to you.", "COMMON"))
+                        .replace("\"ultimate\":false", "\"ultimate\":false,\"removed\":true"),
                 entry("overload", "overload", "Overload", false, 1, 5, 0, "50,100,150,200,250", 0, "\"Bow\"", "",
                         level(5, "&7Increases &9☠ Crit Damage &7by &a5%&7 and &9☣ Crit Chance &7by &a5%&7. Having more is good.", "UNCOMMON")),
                 entry("growth", "growth", "Growth", false, 1, 7, 5, "10,20,30,40,50,95,199", 0, "\"Armor\"", "",
