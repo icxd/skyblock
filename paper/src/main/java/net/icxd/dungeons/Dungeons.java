@@ -7,6 +7,7 @@ import lombok.Getter;
 import net.icxd.dungeons.anticheat.check.CheckListener;
 import net.icxd.dungeons.collection.CollectionFiles;
 import net.icxd.dungeons.collection.CollectionGains;
+import net.icxd.dungeons.collection.Collections;
 import net.icxd.dungeons.command.commands.admin.SetCollectionCommand;
 import net.icxd.dungeons.command.commands.user.CollectionCommand;
 import net.icxd.dungeons.command.commands.user.CraftCommand;
@@ -75,10 +76,12 @@ import net.icxd.dungeons.rune.RuneRunnable;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.StatsRunnable;
+import net.icxd.dungeons.storage.Bag;
 import net.icxd.dungeons.storage.Storage;
 import net.icxd.dungeons.storage.StorageListener;
 import net.icxd.dungeons.tablist.TabList;
 import net.icxd.dungeons.user.ItemStash;
+import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -116,6 +119,12 @@ public class Dungeons extends JavaPlugin {
         Storage.start(this);
         // Collections and recipes, the same way (collections/), read off the main thread.
         CollectionFiles.load(this);
+        // What counts collections: the bags' sizes and unlocks, and the set bonuses that count collected items.
+        Bag.setCollections(Collections::tier);
+        SetBonuses.setCollections((player, item) -> {
+            User user = User.ifLoaded(player.getUniqueId());
+            return user == null ? 0 : Collections.count(user.profile(), item);
+        });
 
         skyBlockServer = new SkyBlockServer(getConfig());
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
