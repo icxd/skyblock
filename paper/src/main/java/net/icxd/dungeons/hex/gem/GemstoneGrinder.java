@@ -123,8 +123,9 @@ public final class GemstoneGrinder extends HexScreen {
     private void put(int place, Slot slot) {
         int index = slot.index();
         if (slot.locked()) {
-            set(button(place, locked(slot, costBlock("&7Cost", unlockCost(slot).check(session), session.sandbox(), "&eClick to unlock!")).stack(),
-                    () -> clicked(index)));
+            HexCosts cost = unlockCost(slot);
+            List<String> block = costBlock("&7Cost", cost.check(session), session.sandbox() || cost.parts().isEmpty(), "&eClick to unlock!");
+            set(button(place, locked(slot, block).stack(), () -> clicked(index)));
         } else if (slot.gem() == null) {
             Icon icon = empty(slot, session.sandbox());
             if (session.sandbox()) set(button(place, icon.stack(), () -> clicked(index)));

@@ -94,6 +94,8 @@ Normal profile (the core's gate), the Perfect Ruby Gemstone button, the summary 
 - **Above Mythic.** Divine has values for Amber, Topaz and Jade only; the other gems take Mythic's there,
   and every gem takes Mythic's at Special and Very Special. No source has these.
 - **A gem its slot no longer takes** (the item's slots changed) shows, gives no stat, and comes out free.
+  A gem in a slot the item no longer has at all stays in its data, unseen. A locked slot whose cost the
+  data no longer has unlocks for nothing ("&aFree").
 - **Halving** keeps halves (a Fine Jasper on a Mythic Ring of Power, 3.5). The Shimmersparkle Chestplate is
   matched by name: it isn't in the item data yet, so its id is unknown.
 - **Slot places for 8 to 11 slots** (no item has them): the fourth row full, the rest centred in the fifth.
