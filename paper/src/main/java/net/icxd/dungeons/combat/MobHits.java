@@ -54,7 +54,7 @@ public final class MobHits {
      * Ferocity. False if it can't be hurt.
      */
     public static boolean deal(Player by, LivingEntity entity, double damage, DamageIndicators.Look look, HitKind kind, NBTTagCompound weapon) {
-        if (!hittable(entity) || damage <= 0) return false;
+        if (!hittable(entity) || damage < 0) return false;
         RunManager.abilityHit(entity);
         if (DungeonMobs.of(entity) != null) DungeonMobs.damage(entity, by, damage, look, kind, weapon);
         else Mobs.damage(Mobs.of(entity), by, damage, look, kind, weapon);
