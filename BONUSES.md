@@ -209,7 +209,7 @@ What armor pieces' own lines (not a bonus block) say they do while worn.
 | "Arthropod mobs deal -30% damage" | SPIDER_HAT (1) | **DONE** | [Spider Hat](https://hypixelskyblock.minecraft.wiki/w/Spider_Hat) |
 | "Grants +100 Speed Cap" | RACING_HELMET (1) | **DONE** the cap (its +400 Speed isn't a stat in the data, see the wiring above) | [Racing Helmet](https://hypixelskyblock.minecraft.wiki/w/Racing_Helmet) |
 | "Restores +5 Health every second while worn" | GHAST_HEAD (1) | **DONE** (0.26.1's; it was 1% of max health) | [Ghast Head](https://hypixelskyblock.minecraft.wiki/w/Ghast_Head) |
-| Stats doubled on the End Island | ENDER (4) | **LATER** the End | [Ender Armor](https://hypixelskyblock.minecraft.wiki/w/Ender_Armor) |
+| Stats doubled on the End Island | END (Ender Armor, 4) | **LATER** the End | [Ender Armor](https://hypixelskyblock.minecraft.wiki/w/Ender_Armor) |
 | Seismic Wave 1 s shorter a piece | SUPER_HEAVY (4) | **LATER** the Tank's ability asking for it | [Super Heavy Armor](https://hypixelskyblock.minecraft.wiki/w/Super_Heavy_Armor) |
 | +10 Defense for each Zombie within 8 blocks | ZOMBIE_HAT (1) | **LATER** which mobs are Zombies (a question for the owner) | [Zombie Hat](https://hypixelskyblock.minecraft.wiki/w/Zombie_Hat) |
 | Less from and more to Magmatic mobs | FLAMING_CHESTPLATE, MOOGMA_LEGGINGS, TAURUS_HELMET (3) | **LATER** Magmatic mobs (none here yet; the hooks would do it) |  |
