@@ -129,10 +129,14 @@ the 26.2 server's `AbstractArrow.setOwner`).
 | Gorilla Tactics | 1 | not done: the burn is a share of all damage dealt in 3 s |
 | Raise Souls | 3 | necromancy (summons) |
 | Cells Alignment | Gyrokinetic Wand (1) | damage taken spread over 3 s (PlayerDamage has only factors), and a run's nearby teammates |
-| Salvation's T1/T2/T3!, Wither Shield's absorption, Midas' Greed | - | a place on the action bar; absorption; the Dark Auction |
+| Homing Missiles, Ground Pound | Aurora armor (20), Fervor armor (20) | a sneak dispatch for worn armor (PlayerListener only dispatches the held item's clicks), and the armor part's stacks (it keeps Fervor's for Ground Pound) |
+| Detonate | Creeper Pants, Miniature Nuke (2) | the pants': a hook for dropping below 20% health, on worn armor; the Nuke: an admin item (SPECIAL) |
+| Shoot | Horsezooka (1) | Farming (it clears hay) |
+| Salvation's T1/T2/T3!, Wither Shield's absorption, Midas' Greed | - | a place on the action bar; absorption (the utility part adds `PlayerDamage.addShield`, which it can use once merged); the Dark Auction |
 
 Not this part's (utility abilities, or armor): Enrage (the Enrager's taunt and its 10% less damage from
 the taunted mobs: the utility part's), Instant Heal, Speed Boost, Weird Transmission, Shadowstep,
-Creeper Veil, Soulward, Spirit Leap, the wands of healing, Deploy, Homing
-Missiles, Ground Pound. Parley (Aspect of the Jerry: a sound) and Time Warp! (Wizard Wand: "a work in
-progress") are left to whoever does them.
+Creeper Veil, Soulward, Spirit Leap, the wands of healing, Deploy; Water Burst (Salmon armor: movement
+only) and Splash (the fish hats: nothing to hit), which the utility part's list gives back to this one,
+aren't weapons' either. Parley (Aspect of the Jerry: "Channel your inner Jerry", nothing the wiki
+describes) and Time Warp! (Wizard Wand: "a work in progress") are left to whoever does them.
