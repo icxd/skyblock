@@ -41,7 +41,8 @@ class ReforgedItemTest {
                                                      "MYTHIC": {"STRENGTH": 17}},
                            "bonus": {"EPIC": ["&7Grants &a+1 &c❁ Strength &7per", "&cTest &7level."]},
                            "per_catacombs_level": {"STRENGTH": 1}},
-                  "wise": {"name": "Wise", "stats": {"LEGENDARY": {"HEALTH": 3}}}},
+                  "wise": {"name": "Wise", "stats": {"LEGENDARY": {"HEALTH": 3}}},
+                  "digger": {"name": "Digger", "stats": {"EPIC": {"BREAKING_POWER": 1, "MINING_SPEED": 4}}}},
                  "prefixes": [{"reforge": "wise", "name": "Wise Test", "prefix": "Very"}]}"""), problems));
         assertEquals(List.of(), problems);
     }
@@ -111,6 +112,17 @@ class ReforgedItemTest {
         assertEquals("&7Strength: &c+20", lore.get(1));
         assertFalse(lore.contains("&8This item can be reforged!"));
         assertEquals(20, ItemStats.of(SWORD, tag, null).get(Stat.STRENGTH));
+    }
+
+    /** Its Breaking Power is in the line under the name (live Scraped Gemstone Gauntlets: 8 and 1 show as 9), with no bracket. */
+    @Test
+    void breakingPower() {
+        DataItem pickaxe = item("""
+                "TEST_PICKAXE":{"material":"IRON_PICKAXE","name":"Test Pickaxe","rarity":"EPIC","reforgeable":true,\
+                "stats":{"BREAKING_POWER":8,"MINING_SPEED":100},"type":"PICKAXE"}""");
+        List<String> lore = ItemBuilder.lore(pickaxe, reforged(pickaxe, "digger"));
+        assertEquals(List.of("&8Breaking Power 9", "", "&7Mining Speed: &6+104 &9(+4)"), lore.subList(0, 3));
+        assertEquals("&8Breaking Power 8", ItemBuilder.lore(pickaxe, ItemBuilder.newData(pickaxe)).getFirst());
     }
 
     /** The reforge's word isn't doubled on an item named with it ("Very Wise Dragon"). */

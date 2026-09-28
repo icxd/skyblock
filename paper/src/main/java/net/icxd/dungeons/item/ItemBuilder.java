@@ -273,10 +273,13 @@ public final class ItemBuilder {
     static List<String> lore(SkyBlockItem item, NBTTagCompound tag, Player holder) {
         Rarity rarity = rarity(item, tag);
         Player owner = owner(tag);
+        Reforge reforge = reforge(tag);
         List<List<String>> sections = new ArrayList<>();
 
         List<String> header = new ArrayList<>();
-        if (item.stats().has(Stat.BREAKING_POWER)) header.add("&8Breaking Power " + (int) item.stats().get(Stat.BREAKING_POWER));
+        // With the reforge's (live Scraped Gemstone Gauntlets: 9, their own 8 and Scraped's 1).
+        double breakingPower = item.stats().get(Stat.BREAKING_POWER) + (reforge == null ? 0 : reforge.stat(Stat.BREAKING_POWER, rarity, 0));
+        if (breakingPower != 0) header.add("&8Breaking Power " + (int) breakingPower);
         for (String category : item.categories()) header.add("&8" + category);
         sections.add(header);
 
@@ -292,7 +295,6 @@ public final class ItemBuilder {
         sections.add(runeLines(tag));
         for (ItemBlock block : behaviour.blocks(item, tag, item.blocks())) sections.add(blockLore(SetBonusLore.shown(block, holder), rarity));
         // Last, as on live items: "&9Withered Bonus" and its text.
-        Reforge reforge = reforge(tag);
         if (reforge != null) sections.add(reforge.bonusSection(rarity));
 
         List<String> lore = new ArrayList<>();
