@@ -21,6 +21,9 @@ import net.icxd.dungeons.utils.Utils;
  * ultimate goes on an item, and One For All "removes all other enchants").
  */
 public final class EnchantRules {
+    /** One For All's id: it goes with no other enchantment (see {@link #choose}). */
+    static final String ONE_FOR_ALL = "one_for_all";
+
     private EnchantRules() {
     }
 
@@ -116,9 +119,9 @@ public final class EnchantRules {
     /**
      * What choosing {@code level} of {@code entry} does to an item with these enchantments. Going on (or up): what it
      * conflicts with comes off (the wiki's Enchantments: "the old enchantment" is "replaced"), and an ultimate takes
-     * the other ultimate's place. One For All takes every other enchantment off (its text: "Removes all other
-     * enchants"; UNKNOWN whether Hypixel keeps any, NEU's pools spare Champion, Tabasco and Divine Gift); another
-     * enchantment only takes One For All off if they conflict.
+     * the other ultimate's place. One For All goes with no other enchantment (its text: "Removes all other
+     * enchants"; of 119 live items with it, none has another but the retired Telekinesis, where a third of swords
+     * have Champion): it takes every other off, and any other takes it off.
      */
     public static Change choose(EnchantmentData data, Map<String, Integer> on, Entry entry, int level) {
         Integer current = on.get(entry.id());
@@ -132,7 +135,7 @@ public final class EnchantRules {
         for (String id : on.keySet()) {
             if (id.equals(entry.id())) continue;
             Entry other = data.get(id);
-            boolean off = "one_for_all".equals(entry.id()) || data.conflict(entry.id(), id)
+            boolean off = ONE_FOR_ALL.equals(entry.id()) || ONE_FOR_ALL.equals(id) || data.conflict(entry.id(), id)
                     || entry.ultimate() && other != null && other.ultimate();
             if (off) replaced.add(id);
         }

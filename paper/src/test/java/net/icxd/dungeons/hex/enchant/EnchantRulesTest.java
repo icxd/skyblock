@@ -113,13 +113,17 @@ class EnchantRulesTest {
         // One ultimate: Ultimate Wise takes One For All's place.
         Change wise = EnchantRules.choose(data, on("one_for_all", 1, "champion", 1), data.get("wise"), 2);
         assertEquals(on("champion", 1, "wise", 2), wise.after());
-        // One For All takes every other off, those it doesn't conflict with too.
+        // One For All goes with nothing: it takes every other off, and any other takes it off (Champion too, which
+        // NEU's pools spare; no live item has the two).
         Change ofa = EnchantRules.choose(data, on("sharpness", 5, "champion", 1, "wise", 1), data.get("one_for_all"), 1);
         assertEquals(on("one_for_all", 1), ofa.after());
         assertEquals(List.of("sharpness", "champion", "wise"), ofa.replaced());
-        // Another takes One For All off only if they conflict.
         assertEquals(on("sharpness", 5), EnchantRules.choose(data, on("one_for_all", 1), data.get("sharpness"), 5).after());
-        assertEquals(on("one_for_all", 1, "champion", 1), EnchantRules.choose(data, on("one_for_all", 1), data.get("champion"), 1).after());
+        Change champion = EnchantRules.choose(data, on("one_for_all", 1), data.get("champion"), 1);
+        assertEquals(on("champion", 1), champion.after());
+        assertEquals(List.of("one_for_all"), champion.replaced());
+        // Stored under Hypixel's id, it's still One For All.
+        assertEquals(on("growth", 5), EnchantRules.choose(data, EnchantRules.on(tag("ultimate_one_for_all", "1")), data.get("growth"), 5).after());
     }
 
     private static NBTTagCompound tag(String... enchantments) {
