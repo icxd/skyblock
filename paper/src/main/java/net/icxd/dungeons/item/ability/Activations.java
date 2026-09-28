@@ -99,8 +99,8 @@ public final class Activations implements Listener {
 
     /**
      * They started sneaking: the SNEAK abilities of what they hold, then of what they wear (helmet first, then
-     * the equipment), each one once. Not the dead's or dungeon ghosts' (who are invulnerable), as their worn
-     * bonuses do nothing either.
+     * the equipment), each one once. What's only worn doesn't use them from the hand (see {@link #fromHand}).
+     * Not the dead's or dungeon ghosts' (who are invulnerable), as their worn bonuses do nothing either.
      */
     @EventHandler(ignoreCancelled = true)
     public void onSneak(PlayerToggleSneakEvent event) {
@@ -110,8 +110,17 @@ public final class Activations implements Listener {
         ItemStack held = player.getInventory().getItemInMainHand();
         NBTTagCompound heldTag = held.isEmpty() ? null : ItemNBT.read(held);
         SkyBlockItem heldItem = heldTag == null ? null : ItemRegistry.get(heldTag.getString("id"));
-        if (heldItem != null) sneak(player, heldItem, heldTag, ItemBehaviours.of(heldItem).blocks(heldItem, heldTag, heldItem.blocks()), used);
+        if (fromHand(heldItem)) sneak(player, heldItem, heldTag, ItemBehaviours.of(heldItem).blocks(heldItem, heldTag, heldItem.blocks()), used);
         for (Worn.Piece piece : SetBonuses.worn(player).pieces()) sneak(player, piece.item(), piece.tag(), piece.blocks(), used);
+    }
+
+    /**
+     * Whether a held item's SNEAK abilities are used from the hand: not armor's, equipment's or an accessory's
+     * (every SNEAK ability in the data is on armor: the Aurora Armor's Homing Missiles needs the piece on, not in
+     * the hand), as their stats don't count there either ({@link SkyBlockItem#statsWhenHeld}).
+     */
+    static boolean fromHand(SkyBlockItem held) {
+        return held != null && held.statsWhenHeld();
     }
 
     private static void sneak(Player player, SkyBlockItem item, NBTTagCompound tag, List<ItemBlock> blocks, Set<String> used) {

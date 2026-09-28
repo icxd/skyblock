@@ -84,6 +84,23 @@ class ActivationsTest {
         assertNull(AbilityActivation.of(null));
     }
 
+    /** A held item's SNEAK abilities are used from the hand; armor's, equipment's and accessories' only worn. */
+    @Test
+    void sneakFromHand() throws IOException {
+        var items = ItemData.load(new StringReader("""
+                {"format":1,"items":{"TEST_HELMET":{"material":"STONE","name":"Test Helmet","type":"HELMET"},\
+                "TEST_BELT":{"material":"STONE","name":"Test Belt","type":"BELT"},\
+                "TEST_RING":{"material":"STONE","name":"Test Ring","type":"ACCESSORY"},\
+                "TEST_WAND":{"material":"STONE","name":"Test Wand","type":"WAND"},\
+                "TEST_THING":{"material":"STONE","name":"Test Thing"}}}""")).items();
+        assertFalse(Activations.fromHand(items.get("TEST_HELMET")));
+        assertFalse(Activations.fromHand(items.get("TEST_BELT")));
+        assertFalse(Activations.fromHand(items.get("TEST_RING")));
+        assertTrue(Activations.fromHand(items.get("TEST_WAND")));
+        assertTrue(Activations.fromHand(items.get("TEST_THING")));
+        assertFalse(Activations.fromHand(null));
+    }
+
     /** LEFT_RIGHT_CLICK and CLICK are either click's, HOLD_RIGHT_CLICK a right click's; SNEAK, ON_SHOOT and DIG no click's. */
     @Test
     void clicks() {

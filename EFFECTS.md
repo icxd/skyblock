@@ -267,6 +267,8 @@ checks them all. None is dropped when items load any more.
   `SetBonuses.worn`: armor helmet first, then the equipment. Each ability name is used once per sneak, so a
   full set's four "Homing Missiles" blocks make one use. The handler gets the item and data of the piece
   that carries the ability.
+  - Armor, equipment and accessories held in the hand don't use theirs (`Activations.fromHand`: the items
+    whose stats don't count in the hand either). Every SNEAK ability in the data is on armor, so it's worn.
   - It checks a full-set requirement itself ("When wearing the full set": `SetBonuses.worn`).
   - Letting go of sneak is its own to watch, if it needs that (To the Moon!'s charge): use
     `PlayerToggleSneakEvent` or `Bonus.sneaked`.
