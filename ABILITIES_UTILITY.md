@@ -8,7 +8,7 @@ besides a click). Abilities that hit are the weapon-abilities part's (`ABILITIES
 What an ability does comes from its item's text wherever the text says it (`AbilityText` reads the
 numbers: "+30❁ Strength", "for 20 seconds", "within 18 blocks", "up to 5 players", "Heal for 1,000❤"),
 so an item whose numbers differ (the Weirder Tuba's 30 seconds, a Plasmaflux's 20 blocks) does what
-it says. Mana, mana %, Vitality and cooldowns are the framework's (`PlayerListener`), from the data.
+it says. Mana, mana %, Vitality, health costs and cooldowns are the framework's (`Activations.use`), from the data.
 Sources: the item data (items.json, 0.26.1's numbers); the wiki (hypixelskyblock.minecraft.wiki, "MCW",
 pages named after the item); 0.26.1's release notes ("Healing Revamp", MCW Changelog/2026/July 22);
 the SkyHanni, Skytils, Skyblocker and Odin mods, which read Hypixel's menus, names and messages. The

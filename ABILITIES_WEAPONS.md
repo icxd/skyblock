@@ -4,7 +4,7 @@ What weapons' click abilities do, as on Hypixel: the ones that hit (swords, bows
 few on weapons that don't. The code is in `paper/src/main/java/net/icxd/dungeons/item/ability/weapons`;
 `WeaponAbilities.register` hands each handler to `Abilities` by the exact name the item data's ABILITY
 block carries (`WeaponAbilitiesTest` checks every name against the data). Costs, cooldowns and the
-"usable" checks are PlayerListener's, as for every ability.
+"usable" checks are `Activations.use`'s, as for every ability (health costs too: EFFECTS.md).
 
 Sources: the item data (`items.json`: names, activations, mana, cooldowns, text, each item's own
 Weapon Ability Damage), the wiki (hypixelskyblock.minecraft.wiki, the item pages and Damage
@@ -134,7 +134,7 @@ the 26.2 server's `AbstractArrow.setOwner`).
 | Homing Missiles, Ground Pound | Aurora armor (20), Fervor armor (20) | the abilities themselves, and the armor part's stacks (it keeps Fervor's for Ground Pound); worn armor's SNEAK abilities are used now (`Activations`, EFFECTS.md) |
 | Detonate | Creeper Pants, Miniature Nuke (2) | the pants': a hook for dropping below 20% health, on worn armor; the Nuke: an admin item (SPECIAL) |
 | Shoot | Horsezooka (1) | Farming (it clears hay) |
-| The halberd's and Sinrecall's growing mana on the action bar | 2 | one line for the whole cost: the extra is taken and shown in the use, then PlayerListener's line for the block's own cost ("-20 Mana (Throw)") replaces it |
+| The halberd's and Sinrecall's growing mana on the action bar | 2 | one line for the whole cost: the extra is taken and shown in the use, then `Activations.use`'s line for the block's own cost ("-20 Mana (Throw)") replaces it |
 | Salvation's T1/T2/T3!, Midas' Greed | - | a place on the action bar; the Dark Auction |
 
 Not this part's (utility abilities, or armor): Enrage (the Enrager's taunt and its 10% less damage from
