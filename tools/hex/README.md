@@ -23,14 +23,15 @@ the plugin shows every one's text on items (ENCHANTMENTS.md), and the Hex offers
   description at each level (the book's lines, and as one paragraph for item lore, as items wrap it), what the
   next tier takes ("50k Combat XP to tier up!"), the book's rarity, the Enchantment Table's levels (its sources'
   "I-V: Enchantment Table"), what it goes on ("Applied To") and what it can't be with ("Conflicts"). NEU's
-  `constants/enchants.json`: the Exp levels each level costs (`enchants_xp_cost`), the table's levels where the
-  books don't say, and the conflicts (`enchant_pools`). The wiki's `Module:Enchantment/Data`: each level's values
+  `constants/enchants.json`: the Exp levels each level costs (`enchants_xp_cost`) and the table's levels where the
+  books don't say. Its conflict pools (`enchant_pools`) are older than the books and only reported: they have the
+  Turbos conflicting with each other and Fortune with Smelting Touch, which live items carry together. The wiki's `Module:Enchantment/Data`: each level's values
   (for the levels with no book: the nearest book's text with that level's numbers), the Enchanting level each
   needs, the highest tier of those that grow with use, their tiers, and the Exp levels NEU doesn't have. The
   wiki's `The Hex/UI/Weapon` and `The Hex/UI/Armor`: the order the Hex lists them in, as far as they show it.
   `--wiki-cache DIR` keeps the pages fetched and reads them back, so a run can be repeated offline.
 - **Where sources disagree** the books win over NEU's constants, and NEU's constants over the wiki; the report
-  lists every disagreement (Exp levels, the table's levels, highest levels), the levels with no text, the
+  lists every disagreement (Exp levels, the table's levels, highest levels, conflicts), the levels with no text, the
   levels no source gives the Exp levels of, and the glyphs with no classic symbol (see tools/items).
 - **Taken out.** Telekinesis is kept (old items have it) but marked `removed`: Hypixel replaced it with
   auto-pickup in 2022, and the Hex doesn't offer it.
@@ -55,5 +56,5 @@ One JSON object, `{"format":1,"source":{...},"order":[...],"enchantments":{` the
 | `xp` | the Exp levels by level from 1; null where no source says |
 | `enchanting` | the Enchanting level it needs (0 for none) |
 | `applies` | the books' "Applied To" words ("Sword", "Armor", "Farming Tool", "Precursor Eye") |
-| `conflicts` | the ids it can't be on an item with (both ways) |
+| `conflicts` | the ids it can't be on an item with (both ways; the books' Conflicts) |
 | `levels` | by level: `text` (one paragraph, `&` codes), `lines` (the book's lines), `rarity` (the book's), `tier_up` (the line on the next tier) |

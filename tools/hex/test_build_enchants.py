@@ -105,10 +105,11 @@ class Entries(unittest.TestCase):
         self.assertEqual(entries['syphon']['enchanting'], 15)
         # The wiki's Exp levels where NEU has none.
         self.assertEqual(entries['syphon']['xp'], [20])
-        # Both ways, from the books and the pools.
+        # Both ways, from the books; NEU's pools only reported (live items carry what they forbid).
         self.assertEqual(entries['life_steal']['conflicts'], ['syphon'])
         self.assertEqual(entries['syphon']['conflicts'], ['life_steal'])
-        self.assertEqual(entries['sharpness']['conflicts'], ['one_for_all'])
+        self.assertEqual(entries['sharpness']['conflicts'], [])
+        self.assertEqual(b.problems["a conflict NEU's pools have and the books don't (not used)"], ['sharpness: ultimate_one_for_all'])
         # The wiki's order first, then by name.
         self.assertEqual(order, ['one_for_all', 'sharpness', 'syphon', 'life_steal'])
         self.assertIn('Nothing Like It', b.problems["a name in the wiki's Hex screens that no book has"])

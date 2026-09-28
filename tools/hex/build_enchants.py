@@ -4,7 +4,7 @@
 # Builds the Hex's enchantment table, enchantments.json (format 1, see README.md), and enchantments_report.md next
 # to it: every enchantment there is, with its name, what it goes on, its levels and what each says, what the Hex
 # charges for it and what it can't be on with. From NotEnoughUpdates-REPO (the in-game enchanted books,
-# items/<ID>;<level>.json, and constants/enchants.json: Exp costs, the Enchantment Table's levels, conflicts) and
+# items/<ID>;<level>.json, and constants/enchants.json: Exp costs, the Enchantment Table's levels) and
 # the Hypixel SkyBlock wiki (Module:Enchantment/Data: each level's values, the Enchanting level needed, tiers; The
 # Hex/UI/Weapon and /Armor: the order the Hex lists them in). The plugin reads it for the enchantments' text on
 # items too. All of it is Hypixel's, so the output goes to the private data repository (hex/ in it), never into
@@ -354,16 +354,11 @@ class Builder:
         return entry
 
     def conflicts(self, entries):
-        """NEU's pools (all but the one of every ultimate: only one goes on an item anyway) and the books' Conflicts."""
+        """The books' Conflicts, both ways. NEU's pools are older: where they have more (the Turbos with each other,
+        Fortune with Smelting Touch, One For All with the sword enchantments) they're only reported, since live items
+        carry those together (and One For All's rule is the plugin's: it goes with nothing). The pool of every
+        ultimate isn't a conflict either: only one goes on an item anyway."""
         pairs = set()
-        for pool in self.constants['enchant_pools']:
-            ids = [p.lower() for p in pool]
-            if sum(1 for i in ids if i.startswith('ultimate_')) > 2:
-                continue
-            for a in ids:
-                for b in ids:
-                    if a != b:
-                        pairs.add((a, b))
         for hypixel, books in self.books.items():
             for book in books.values():
                 for name in book.sections['Conflicts']:
@@ -371,10 +366,16 @@ class Builder:
                     if other is None:
                         self.note('a conflict with no such enchantment', f'{hypixel}: {name}')
                         continue
-                    if (hypixel, other) not in pairs:
-                        self.note('a conflict the books have and NEU\'s pools don\'t', f'{hypixel}: {other}')
                     pairs.add((hypixel, other))
                     pairs.add((other, hypixel))
+        for pool in self.constants['enchant_pools']:
+            ids = [p.lower() for p in pool]
+            if sum(1 for i in ids if i.startswith('ultimate_')) > 2:
+                continue
+            for a in ids:
+                for b in ids:
+                    if a < b and (a, b) not in pairs:
+                        self.note('a conflict NEU\'s pools have and the books don\'t (not used)', f'{a}: {b}')
         for a, b in sorted(pairs):
             if a not in self.books or b not in self.books:
                 self.note('a conflict with an enchantment there\'s no book of', f'{a}: {b}')
