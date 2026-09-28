@@ -8,6 +8,8 @@ import org.bukkit.Material;
 
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.SpecificItemType;
+import net.icxd.dungeons.profile.ProfileMode;
+import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.utils.Utils;
 
 /**
@@ -31,6 +33,12 @@ public enum Bag {
 
     /** The Accessory Bag's slots without the table (the wiki's Accessory Bag: "9 Accessory Bag slots are unlocked for everyone"). */
     static final int ACCESSORY_BAG_BASE = 9;
+    /**
+     * Every Accessory Bag slot there is, which a Sandbox profile has (the wiki's Accessory Bag: the 9, 48
+     * from the Redstone Collection, 4 from the Redstone Miner, 12 Account Upgrades, 198 from Jacobus and 10
+     * from the Accessory Size attribute).
+     */
+    static final int ACCESSORY_BAG_MOST = 281;
     /** Most slots a page shows; the rest go on more pages (the recorded Accessory Bag had two). */
     public static final int PAGE = 45;
     private static final Set<Material> POTIONS = Set.of(Material.POTION, Material.SPLASH_POTION, Material.LINGERING_POTION);
@@ -81,8 +89,9 @@ public enum Bag {
         return description;
     }
 
-    /** How many slots it has for this profile; 0 while it's locked. */
+    /** How many slots it has for this profile; 0 while it's locked. A Sandbox profile's Accessory Bag has them all. */
     public int capacity(Document profile, StorageTables tables) {
+        if (this == ACCESSORY_BAG && Profiles.mode(profile) == ProfileMode.SANDBOX) return ACCESSORY_BAG_MOST;
         StorageTables.BagSize size = tables.bag(name());
         if (size == null) return this == ACCESSORY_BAG ? ACCESSORY_BAG_BASE : 0;
         return size.at(size.collection() == null ? 0 : collections.tier(profile, size.collection()));

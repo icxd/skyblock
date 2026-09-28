@@ -12,6 +12,8 @@ import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
 import net.icxd.dungeons.menu.Icon;
+import net.icxd.dungeons.profile.ProfileMode;
+import net.icxd.dungeons.profile.Profiles;
 
 /** Your Bags and the bags against the recorded ones (the SkyBlock Menu tour, 06:01.3 to 06:18.6), and their sizes. */
 class BagMenusTest {
@@ -69,6 +71,11 @@ class BagMenusTest {
         assertEquals(0, Bag.POTION_BAG.capacity(new Document(), none));
         assertNull(Bag.POTION_BAG.requirement(none));
         assertNull(Bag.ACCESSORY_BAG.requirement(none));
+        // A Sandbox profile's Accessory Bag has every slot there is; its other bags still go by collections.
+        Document sandbox = new Document(Profiles.MODE, ProfileMode.SANDBOX.name());
+        assertEquals(281, Bag.ACCESSORY_BAG.capacity(sandbox, none));
+        assertEquals(7, Bag.pages(281));
+        assertEquals(0, Bag.POTION_BAG.capacity(sandbox, none));
     }
 
     @Test
