@@ -11,7 +11,6 @@ import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
@@ -53,7 +52,7 @@ final class WitherBlade {
 
     /** Whose Wither Shield is up, until when. */
     private static final Map<UUID, Long> SHIELDED = new HashMap<>();
-    /** Each player's shield that's up: what its Vitality and absorption were, and its end. */
+    /** Each player's shield that's up (the latest cast's; see {@link ShieldUp}). */
     private static final Map<UUID, ShieldUp> SHIELDS = new HashMap<>();
     /** Each player's Shadow Warp waiting to go off. */
     private static final Map<UUID, Warp> WARPS = new HashMap<>();
@@ -61,7 +60,19 @@ final class WitherBlade {
     private record Warp(Location at, BukkitRunnable pull) {
     }
 
-    private record ShieldUp(double vitality, double absorption, BukkitTask end) {
+    /**
+     * A cast's shield: the Vitality it cost and the absorption it gave, and, once it isn't the one up any more (a
+     * new cast took its place, or they left), the absorption it had left then (negative while it's up).
+     */
+    private static final class ShieldUp {
+        final double vitality;
+        final double absorption;
+        double leftWhenDown = -1;
+
+        ShieldUp(double vitality, double absorption) {
+            this.vitality = vitality;
+            this.absorption = absorption;
+        }
     }
 
     private WitherBlade() {
@@ -70,8 +81,9 @@ final class WitherBlade {
     /** They left: their shield is down, and a warp waiting to go off is gone. */
     static void forget(UUID player) {
         SHIELDED.remove(player);
+        // Its end still comes, and gives nothing back.
         ShieldUp shield = SHIELDS.remove(player);
-        if (shield != null) shield.end().cancel();
+        if (shield != null) shield.leftWhenDown = 0;
         Warp warp = WARPS.remove(player);
         if (warp != null) warp.pull().cancel();
     }
@@ -96,33 +108,38 @@ final class WitherBlade {
     /**
      * Wither Shield: 10% less damage taken for 5 seconds (see {@link #takenFactor}), and its absorption shield
      * for as long, "(12 + CatacombsLevel * 0.32) * 50" (the wiki's Absorption has it at 984 to 1,400: levels 24
-     * to 50); since 0.26.1 "Vitality is refunded based on how much of it wasn't used": the share of its
-     * absorption that's left when it ends, after the 5 seconds or when a new shield takes its place (UNKNOWN
-     * whether that's how it's worked out).
+     * to 50); since 0.26.1 "After 5 seconds of having the Absorption shield active, Vitality is refunded based
+     * on how much of it wasn't used" (the wiki's Necron's Blade Scrolls): 5 seconds after each cast, by the share
+     * of its absorption left when it ended, then or when a new cast's took its place. So a cast's Vitality comes
+     * back no sooner than it did before absorption, however fast they cast (UNKNOWN whether Hypixel's refund
+     * is worked out so).
      */
     static void shield(Player player, double vitality) {
         UUID id = player.getUniqueId();
         SHIELDED.put(id, System.currentTimeMillis() + SHIELD_MILLIS);
-        ShieldUp before = SHIELDS.remove(id);
-        if (before != null) {
-            before.end().cancel();
-            shieldDown(player, before);
-        }
-        double absorption = shieldAbsorption(ItemBuilder.catacombsLevel(player));
+        ShieldUp before = SHIELDS.get(id);
+        if (before != null) before.leftWhenDown = Absorption.left(player, SHIELD);
+        ShieldUp up = new ShieldUp(vitality, shieldAbsorption(ItemBuilder.catacombsLevel(player)));
+        SHIELDS.put(id, up);
         // The shield's end (a task, 5 seconds of ticks) takes it off; its own time is only in case that runs late.
-        Absorption.give(player, SHIELD, absorption, SHIELD_MILLIS * 2);
+        Absorption.give(player, SHIELD, up.absorption, SHIELD_MILLIS * 2);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.4f, 1.5f); // UNKNOWN
-        ShieldUp[] up = new ShieldUp[1];
-        up[0] = new ShieldUp(vitality, absorption, Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
-            if (SHIELDS.remove(id, up[0]) && player.isOnline()) shieldDown(player, up[0]);
-        }, SHIELD_MILLIS / 50));
-        SHIELDS.put(id, up[0]);
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> shieldEnd(id, up), SHIELD_MILLIS / 50);
     }
 
-    /** A shield has ended: its absorption goes, and the Vitality its unused share paid for comes back. */
-    private static void shieldDown(Player player, ShieldUp shield) {
-        double refund = refund(shield.vitality(), Absorption.left(player, SHIELD), shield.absorption());
-        Absorption.remove(player, SHIELD);
+    /**
+     * A cast's 5 seconds are up: if its shield is still the one up, its absorption goes; either way the Vitality
+     * its unused share paid for comes back.
+     */
+    private static void shieldEnd(UUID id, ShieldUp shield) {
+        Player player = Bukkit.getPlayer(id);
+        if (player == null) return;
+        double left = shield.leftWhenDown;
+        if (SHIELDS.remove(id, shield)) {
+            left = Absorption.left(player, SHIELD);
+            Absorption.remove(player, SHIELD);
+        }
+        double refund = refund(shield.vitality, Math.max(0, left), shield.absorption);
         if (refund > 0) PlayerSession.of(player).setVitality(Math.min(Vitality.max(player), Vitality.get(player) + refund));
     }
 

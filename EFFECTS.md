@@ -351,7 +351,7 @@ Each example is the test that its hook works. The owning part marks the row done
 | Example | Hook | Owner's doc |
 |---|---|---|
 | Ice Spray's Frozen: "take 10% more damage from all sources" (the wiki), now for melee hits and arrows too, as a `TAKEN` debuff | mob debuffs | ABILITIES_WEAPONS.md |
-| Wither Shield's absorption, "(12 + Cata × 0.32) × 50". Its Vitality comes back by the share of the absorption left when the shield ends: after 5 s, or when a new cast takes its place (UNKNOWN how Hypixel works it out) | absorption | ABILITIES_WEAPONS.md |
+| Wither Shield's absorption, "(12 + Cata × 0.32) × 50". Its Vitality comes back 5 s after each cast, by the share of its absorption left when it ended: then, or when a new cast took its place (UNKNOWN how Hypixel works it out) | absorption | ABILITIES_WEAPONS.md |
 | Enrage's health cost, 10% of max health (the wiki's Enrager; the data's 15.6 isn't health, and Life Blood's is also 15.6 though its text says 10%). Life Blood's 10% is charged the same way | health-cost charging | ABILITIES_UTILITY.md |
 | Enchanting and Carpentry Wisdom (and Mining Wisdom, once Mithril gives Mining XP) | per-skill Wisdom | STATS_EFFECTS.md |
 | Experience orbs from kills | XP orbs | STATS_EFFECTS.md (Experience, Champion's orbs build on it) |
@@ -431,6 +431,7 @@ What each part owns in full:
 - SkyBlock's fall damage: vanilla's amount stays.
 - DIG: a left click on a block, not per block broken.
 - Whether a collection reward's XP gets Wisdom: it doesn't.
-- How Wither Shield's Vitality refund is worked out: by the share of absorption left.
+- How Wither Shield's Vitality refund is worked out: 5 s after each cast, by the share of its absorption left
+  when it ended (a new cast ends the one before).
 - Class dungeon abilities (Seismic Wave and others) deal `OTHER` damage, not `ABILITY`: UNKNOWN whether
   Hypixel counts them as ability hits.
