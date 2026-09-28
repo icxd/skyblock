@@ -4,6 +4,7 @@ import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.OnlyOn;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -94,6 +95,8 @@ public class BlockListener implements Listener {
                 if (drop.first() == null) continue;
                 ItemStack stack = ItemBuilder.build(drop.first());
                 stack.setAmount(withFortune(drop.second(), fortune));
+                // Collected as it's mined (what doesn't fit lands at their feet, collected already).
+                CollectionGains.collect(player, stack);
                 for (ItemStack left : player.getInventory().addItem(stack).values()) {
                     player.getWorld().dropItemNaturally(player.getLocation(), left);
                 }

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.bson.Document;
 
+import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.dungeons.DungeonProfile;
@@ -67,6 +68,8 @@ final class RunEnd {
         for (Map.Entry<DungeonClass, Double> e : reward.classes().entrySet()) DungeonProfile.addClassXp(profile, e.getKey(), e.getValue());
         int bits = profile.get("bits") instanceof Number n ? n.intValue() : 0;
         profile.put("bits", bits + reward.bits());
+        // The floor's boss collection: a kill for every completion.
+        CollectionGains.bossDefeated(profile, floor);
         return new Outcome(reward, completion);
     }
 

@@ -5,6 +5,9 @@ import com.mongodb.client.MongoClients;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
 import net.icxd.dungeons.anticheat.check.CheckListener;
+import net.icxd.dungeons.collection.CollectionFiles;
+import net.icxd.dungeons.collection.CollectionGains;
+import net.icxd.dungeons.command.commands.admin.SetCollectionCommand;
 import net.icxd.dungeons.command.commands.admin.AddEnchantmentCommand;
 import net.icxd.dungeons.command.commands.admin.DataCommand;
 import net.icxd.dungeons.command.commands.admin.DungeonCommand;
@@ -104,6 +107,8 @@ public class Dungeons extends JavaPlugin {
         ItemRegistry.loadData(getDataFolder().toPath().resolve("items/items.json"));
         // Storage, bags and Loadouts; their tables are data kept out of it too (storage/), read off the main thread.
         Storage.start(this);
+        // Collections and recipes, the same way (collections/), read off the main thread.
+        CollectionFiles.load(this);
 
         skyBlockServer = new SkyBlockServer(getConfig());
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
@@ -145,6 +150,7 @@ public class Dungeons extends JavaPlugin {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable set bonuses", e);
         }
         listen(StorageListener.class, StorageListener::new);
+        listen(CollectionGains.class, CollectionGains::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));
@@ -158,7 +164,8 @@ public class Dungeons extends JavaPlugin {
                 new SpawnRewardChestCommand(), new UnlockCommand(), new UpgradeCommand(), new HotmCommand(),
                 new ShowExtraStatsCommand(), new ToggleReadyUpCommand(), new ProfilesCommand(), new SkillsCommand(),
                 new PickupStashCommand(), new ViewStashCommand(), new SbMenuCommand(), new StatsCommand(), new StorageCommand(),
-                new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand());
+                new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
+                new SetCollectionCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {

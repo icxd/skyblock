@@ -1,6 +1,7 @@
 package net.icxd.dungeons.mob;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
@@ -298,10 +299,12 @@ public final class Mobs implements Listener {
             SkyBlockItem item = drop.item();
             if (item == null || Math.random() >= MobDrop.withMagicFind(drop.chance(), magicFind, petLuck, false) / 100) continue;
             ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
+            // Collected as it comes from the world: now if it goes straight to them, else when it's picked up.
             if (toInventory) {
+                CollectionGains.collect(killer, stack);
                 ItemStash.give(killer, stack);
             } else {
-                at.getWorld().dropItemNaturally(at, stack);
+                CollectionGains.fromWorld(at.getWorld().dropItemNaturally(at, stack));
             }
             if (announced(dungeon, drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
         }
