@@ -60,8 +60,8 @@ on-hit effects is UNKNOWN; here they can't.
   ability hit on one of SkyBlock's mobs that can be hurt.
   - Melee hits and arrows fire it before their Ferocity strikes are scheduled.
   - Each strike fires it again with `FEROCITY` and the same weapon and crit.
-  - Each mob an ability hits fires it with `ABILITY`. The weapon is the item it was cast with where the code
-    knows it (spells, heals over time, bolts), otherwise what they hold.
+  - Each mob an ability hits fires it with `ABILITY`. The weapon is the item it was cast with (a thrown
+    weapon's and a Juju arrow's impact hits: what they hold).
 - **What it receives:**
   - `target` is the mob as the hit was worked out against: its health before the hit, and its Defense with
     its debuffs.

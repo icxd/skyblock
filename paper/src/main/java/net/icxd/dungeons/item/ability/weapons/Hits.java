@@ -184,9 +184,9 @@ public final class Hits {
                 a.health(), Magic.forAbilities(a.enchantments()), a.ranged(), 0, a.multiplier()) : a;
     }
 
-    /** {@link #weaponHit(Player, Damage.Attacker, LivingEntity, Strike)} with what they strike with now. */
+    /** {@link #weaponHit(Player, Damage.Attacker, LivingEntity, Strike)} with what they strike with now: that weapon's hit. */
     public static double weaponHit(Player player, NBTTagCompound weapon, LivingEntity entity, Strike strike) {
-        return weaponHit(player, striker(player, weapon, strike), entity, strike);
+        return weaponHit(player, weapon, striker(player, weapon, strike), entity, strike);
     }
 
     /**
@@ -196,12 +196,17 @@ public final class Hits {
      * didn't hit.
      */
     public static double weaponHit(Player player, Damage.Attacker with, LivingEntity entity, Strike strike) {
+        return weaponHit(player, Combat.skyBlockData(player.getInventory().getItemInMainHand()), with, entity, strike);
+    }
+
+    /** The same, dealt with {@code weapon} (its data; what the hit listeners and the killing blow are told of). */
+    public static double weaponHit(Player player, NBTTagCompound weapon, Damage.Attacker with, LivingEntity entity, Strike strike) {
         if (!hittable(entity)) return 0;
         Damage.Attacker attacker = new Damage.Attacker(with.damage(), with.strength(), with.critChance(), with.critDamage(), with.combatLevel(),
                 with.health(), with.enchantments(), strike.ranged(), strike.travelled(), with.multiplier() * strike.factor());
         boolean critical = strike.alwaysCrits() || Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
         double damage = Math.floor(Damage.exact(attacker, target(entity), critical) * takenFactor(entity));
-        return hurt(player, entity, damage, DamageIndicators.Look.of(critical, false)) ? damage : 0;
+        return hurt(player, entity, damage, DamageIndicators.Look.of(critical, false), weapon) ? damage : 0;
     }
 
     /** The item's own ability damage ("Weapon Ability Damage" in its data: 2,000 on a Spirit Sceptre), else {@code otherwise}. */
