@@ -171,16 +171,32 @@ final class Hits {
     }
 
     /**
-     * An ability's hit worked out as a melee hit or an arrow with what they hold (its enchantments, their
-     * Strength and Crit Damage): see {@link Strike}. Its damage number shows a crit. Ferocity doesn't strike
-     * again for it (UNKNOWN whether Hypixel's do). Returns the damage, 0 if it didn't hit.
+     * What they strike with now: their stats (with what they hold) and the weapon's enchantments, only those
+     * that count for abilities if the strike says so. Taken when a thrown weapon or a rose leaves them, so
+     * its hits are the throw's, not whatever they hold when it lands (as an arrow's are the bow's it left:
+     * see Shots).
      */
+    static Damage.Attacker striker(Player player, NBTTagCompound weapon, Strike strike) {
+        Damage.Attacker a = Combat.attacker(player, weapon, strike.ranged(), 0);
+        return strike.forAbility() ? new Damage.Attacker(a.damage(), a.strength(), a.critChance(), a.critDamage(), a.combatLevel(),
+                a.health(), Magic.forAbilities(a.enchantments()), a.ranged(), 0, a.multiplier()) : a;
+    }
+
+    /** {@link #weaponHit(Player, Damage.Attacker, LivingEntity, Strike)} with what they strike with now. */
     static double weaponHit(Player player, NBTTagCompound weapon, LivingEntity entity, Strike strike) {
+        return weaponHit(player, striker(player, weapon, strike), entity, strike);
+    }
+
+    /**
+     * An ability's hit worked out as a melee hit or an arrow with what they struck with ({@link #striker}: the
+     * weapon's enchantments, their Strength and Crit Damage), see {@link Strike}. Its damage number shows a
+     * crit. Ferocity doesn't strike again for it (UNKNOWN whether Hypixel's do). Returns the damage, 0 if it
+     * didn't hit.
+     */
+    static double weaponHit(Player player, Damage.Attacker with, LivingEntity entity, Strike strike) {
         if (!hittable(entity)) return 0;
-        Damage.Attacker a = Combat.attacker(player, weapon, strike.ranged(), strike.travelled());
-        Damage.Attacker attacker = new Damage.Attacker(a.damage(), a.strength(), a.critChance(), a.critDamage(), a.combatLevel(),
-                a.health(), strike.forAbility() ? Magic.forAbilities(a.enchantments()) : a.enchantments(), a.ranged(), a.travelled(),
-                a.multiplier() * strike.factor());
+        Damage.Attacker attacker = new Damage.Attacker(with.damage(), with.strength(), with.critChance(), with.critDamage(), with.combatLevel(),
+                with.health(), with.enchantments(), strike.ranged(), strike.travelled(), with.multiplier() * strike.factor());
         boolean critical = strike.alwaysCrits() || Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
         double damage = Math.floor(Damage.exact(attacker, target(entity), critical) * takenFactor(entity));
         return hurt(player, entity, damage, DamageIndicators.Look.of(critical, false)) ? damage : 0;

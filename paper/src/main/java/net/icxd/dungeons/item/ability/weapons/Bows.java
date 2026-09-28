@@ -17,6 +17,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -36,8 +37,8 @@ final class Bows {
     /** The Juju's "3-block radius" (the wiki). */
     static final double IMPACT_RADIUS = 3;
 
-    /** A Juju arrow in flight: the bow's data, and how many mobs its impact hits. */
-    private record ImpactArrow(NBTTagCompound bow, int mobs) {
+    /** A Juju arrow in flight: what its impact's hits are worked out with (the shot's, as the arrow's own), and how many mobs it hits. */
+    private record ImpactArrow(Damage.Attacker shot, int mobs) {
     }
 
     private static final Map<UUID, ImpactArrow> IMPACT_ARROWS = new HashMap<>();
@@ -55,7 +56,8 @@ final class Bows {
     /** A shortbow shot this arrow (see InstantlyShoots): its impact, if the bow's lore gives it one. */
     static void shot(AbstractArrow arrow, SkyBlockItem bow, NBTTagCompound tag) {
         int mobs = mobsOnImpact(bow.lore());
-        if (mobs > 0) IMPACT_ARROWS.put(arrow.getUniqueId(), new ImpactArrow(tag, mobs));
+        if (mobs <= 0 || !(arrow.getShooter() instanceof Player shooter)) return;
+        IMPACT_ARROWS.put(arrow.getUniqueId(), new ImpactArrow(Hits.striker(shooter, tag, Hits.Strike.arrow(0, 1)), mobs));
     }
 
     /**
@@ -76,7 +78,7 @@ final class Bows {
             if (left <= 0) break;
             if (mob.equals(hit)) continue;
             double travelled = mob.getBoundingBox().getCenter().distance(shooter.getEyeLocation().toVector());
-            if (Hits.weaponHit(shooter, impact.bow(), mob, Hits.Strike.arrow(travelled, 1)) > 0) left--;
+            if (Hits.weaponHit(shooter, impact.shot(), mob, Hits.Strike.arrow(travelled, 1)) > 0) left--;
         }
     }
 

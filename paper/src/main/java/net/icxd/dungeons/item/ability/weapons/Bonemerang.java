@@ -9,6 +9,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
@@ -50,6 +51,8 @@ final class Bonemerang implements AbilityHandler {
         Location eye = player.getEyeLocation();
         boolean[] back = {false};
         int[] struck = {0};
+        // Its hits are the throw's, whatever they hold when it comes by.
+        Damage.Attacker thrown = Hits.striker(player, tag, Hits.Strike.arrow(0, 1));
         Missile bone = new Missile(player, eye, eye.getDirection().multiply(SPEED))
                 .range(APEX * 2 + 8)
                 .width(0.4)
@@ -70,7 +73,7 @@ final class Bonemerang implements AbilityHandler {
                         return false;
                     }
                     double travelled = mob.getBoundingBox().getCenter().distance(missile.caster().getEyeLocation().toVector());
-                    Hits.weaponHit(missile.caster(), tag, mob, Hits.Strike.arrow(travelled, back[0] ? 2 : 1));
+                    Hits.weaponHit(missile.caster(), thrown, mob, Hits.Strike.arrow(travelled, back[0] ? 2 : 1));
                     return true;
                 })
                 .onEnd((missile, at, impact) -> {

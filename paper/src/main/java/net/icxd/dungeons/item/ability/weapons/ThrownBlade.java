@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
@@ -78,14 +79,16 @@ final class ThrownBlade implements AbilityHandler {
             STREAKS.put(player.getUniqueId(), new Streak(before + 1, now));
             share = HALBERD_SHARE * multiplier(before);
         }
-        double factor = share;
+        Hits.Strike strike = Hits.Strike.melee(share);
+        // Its hits are the throw's, whatever they hold when it lands.
+        Damage.Attacker thrown = Hits.striker(player, tag, strike);
         Location eye = player.getEyeLocation();
         new Missile(player, eye, eye.getDirection().multiply(SPEED))
                 .range(RANGE)
                 .width(0.4)
                 .look(Missile.display(eye, player.getInventory().getItemInMainHand().clone(), 1, 90))
                 .onHit((missile, mob) -> {
-                    Hits.weaponHit(missile.caster(), tag, mob, Hits.Strike.melee(factor));
+                    Hits.weaponHit(missile.caster(), thrown, mob, strike);
                     return true;
                 })
                 .launch();

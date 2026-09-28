@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.data.ItemBlock;
@@ -68,6 +69,8 @@ final class Roses implements AbilityHandler {
         // The barrage's bonus is for the health missing when it's fired, after its cost.
         Hits.payHealth(player, block.healthCost());
         double bonus = multiplies ? 1 : missingHealthFactor(PlayerHealth.get(player), PlayerHealth.max(player));
+        // The roses hit as they were fired, whatever they hold when one lands.
+        Damage.Attacker fired = Hits.striker(player, tag, new Hits.Strike(false, 0, 1, false, true));
         Location eye = player.getEyeLocation();
         for (int i = 0; i < roses; i++) {
             Location from = eye.clone();
@@ -79,7 +82,7 @@ final class Roses implements AbilityHandler {
                     .steer(missile -> missile.travelled() < HOMES_AFTER ? null : homing(missile))
                     .onHit((missile, mob) -> {
                         double factor = (multiplies ? bounceFactor(hits[0]) : 1) * bonus;
-                        Hits.weaponHit(missile.caster(), tag, mob, new Hits.Strike(false, 0, factor, false, true));
+                        Hits.weaponHit(missile.caster(), fired, mob, new Hits.Strike(false, 0, factor, false, true));
                         return ++hits[0] < mostHit;
                     })
                     .launch();

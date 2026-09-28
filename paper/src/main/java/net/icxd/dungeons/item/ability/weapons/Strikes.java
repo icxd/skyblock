@@ -15,6 +15,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
 import net.icxd.dungeons.item.ability.abilities.InstantTransmission;
@@ -39,6 +40,8 @@ final class Strikes {
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             Location eye = player.getEyeLocation();
             boolean[] back = {false};
+            // Its hits are the throw's, whatever they hold when it lands.
+            Damage.Attacker thrown = Hits.striker(player, tag, Hits.Strike.arrow(0, 1));
             new Missile(player, eye, eye.getDirection().multiply(1.5))
                     .range(RANGE * 3)
                     .width(0.4)
@@ -53,7 +56,7 @@ final class Strikes {
                     .onHit((missile, mob) -> {
                         if (!back[0]) {
                             double travelled = mob.getBoundingBox().getCenter().distance(missile.caster().getEyeLocation().toVector());
-                            Hits.weaponHit(missile.caster(), tag, mob, Hits.Strike.arrow(travelled, 1));
+                            Hits.weaponHit(missile.caster(), thrown, mob, Hits.Strike.arrow(travelled, 1));
                         }
                         return true;
                     })

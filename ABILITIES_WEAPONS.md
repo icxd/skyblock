@@ -26,7 +26,10 @@ Skyblocker mods filter. Where they say nothing, the code says UNKNOWN and takes 
 - **Hits worked out as the weapon's** (`Hits.weaponHit`): the held weapon's melee hit or arrow, times the
   ability's share, crits as Crit Chance rolls (Salvation always), no Ferocity strikes (UNKNOWN). The
   roses leave out the enchantments that don't count for abilities; Flay keeps them all ("Melee-only
-  enchantments ... work on the beam"). Shadow Fury makes a real melee hit.
+  enchantments ... work on the beam"). Shadow Fury makes a real melee hit. What's thrown (the Throw
+  blades, the roses, the Bonemerang, the Tribal Spear) and a Juju arrow's impact hit with the stats and
+  weapon they had when it left them (`Hits.striker`), as an arrow does with its bow, not with whatever
+  they hold when it lands.
 - **Dealing it**: through `Mobs.damage` / `DungeonMobs.damage`, as melee's damage is: the mob's health,
   its gray (or crit) number, kills, drops and a run's damage dealt. Only SkyBlock's mobs that can be hurt
   are hit; never players.
