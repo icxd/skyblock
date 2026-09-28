@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.leveling.LevelingData.Emblem;
 import net.icxd.dungeons.leveling.LevelingData.EmblemCategory;
+import net.icxd.dungeons.leveling.LevelingData.Stage;
 import net.icxd.dungeons.menu.Icon;
 import net.icxd.dungeons.skill.Skill;
 
@@ -33,7 +34,7 @@ class GuideAndEmblemsTest {
         LevelingData data = Fixtures.recorded();
         LevelingView view = Fixtures.view(data, new Document(), Fixtures.NONE);
         assertEquals(0, GuideMenu.current(view));
-        Map<Integer, Icon> icons = GuideMenu.icons(view, 0);
+        Map<Integer, Icon> icons = GuideMenu.icons(view, 0, 0);
         assertEquals(new Icon(Material.FILLED_MAP, "&aStarter", "&8New Player", "", "&7You are starting on your journey",
                 "&7through SkyBlock. Complete these", "&7tasks to get acquainted with the game.", "", "&7Total Progress: &a0%",
                 "&f&l&m                         &r &a0&8/&a128", "", "&a&lSELECTED"), icons.get(1));
@@ -57,7 +58,7 @@ class GuideAndEmblemsTest {
     void starterSkillsDone() {
         LevelingData data = Fixtures.recorded();
         LevelingView view = Fixtures.view(data, skills(4), Fixtures.NONE);
-        Map<Integer, Icon> icons = GuideMenu.icons(view, 0);
+        Map<Integer, Icon> icons = GuideMenu.icons(view, 0, 0);
         Icon skills = icons.get(28);
         assertEquals("&a✔ &aSkills", skills.name());
         assertEquals(List.of("&810 tasks", "", "&7Level up your Skills.", "", "&a ✔ &8Farming Skill IV", "&a ✔ &8Mining Skill IV",
@@ -77,11 +78,48 @@ class GuideAndEmblemsTest {
     void amateur() {
         LevelingData data = Fixtures.recorded();
         LevelingView view = Fixtures.view(data, skills(12), Fixtures.NONE);
-        Map<Integer, Icon> icons = GuideMenu.icons(view, 1);
+        Map<Integer, Icon> icons = GuideMenu.icons(view, 1, 0);
         assertEquals("&c✖ &8[&7Lv300&8] &cArachne", icons.get(25).name());
         assertEquals(List.of("&7Kill &8[&7Lv300&8] &cArachne &7in the &cSpider's", "&cDen&7.", "", "&7Total Worth: &b+20 XP"), icons.get(25).lore());
         List<String> mobs = icons.get(24).lore();
         assertEquals("&c ✖ &f&5⊙ Ender", mobs.get(4));
+    }
+
+    /** The recorded frames: lime glass round Starter's tasks, light blue round Amateur's; the corners and the rest empty. */
+    @Test
+    void frames() {
+        LevelingData data = Fixtures.recorded();
+        assertEquals(Material.LIME_STAINED_GLASS_PANE, GuideMenu.glass(data.stages().get(0)));
+        assertEquals(Material.LIGHT_BLUE_STAINED_GLASS_PANE, GuideMenu.glass(data.stages().get(1)));
+        assertEquals(List.of(9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 27, 35, 36, 44, 45, 46, 47, 51, 52, 53),
+                java.util.Arrays.stream(GuideMenu.FRAME).boxed().toList());
+        // Starter's eight: the first row of seven and one under it; nothing else inside.
+        Map<Integer, Icon> icons = GuideMenu.icons(Fixtures.view(data, new Document(), Fixtures.NONE), 0, 0);
+        assertEquals(java.util.Set.of(1, 2, 3, 4, 5, 6, 7, 19, 20, 21, 22, 23, 24, 25, 28, 48, 50), icons.keySet());
+    }
+
+    /** More than 21 tasks take pages, as Hypixel's paged menus are (UNKNOWN for the guide): Skilled's 35 take two. */
+    @Test
+    void pages() {
+        LevelingData data = Fixtures.recorded();
+        Stage skilled = data.stages().get(3);
+        assertEquals(35, skilled.tasks().size());
+        assertEquals(2, GuideMenu.pages(skilled));
+        assertEquals("(1/2) Guide ➜ Skilled", GuideMenu.title(skilled, 0));
+        assertEquals("(2/2) Guide ➜ Skilled", GuideMenu.title(skilled, 1));
+        assertEquals("Guide ➜ Amateur", GuideMenu.title(data.stages().get(1), 0));
+        LevelingView view = Fixtures.view(data, new Document(), Fixtures.NONE);
+        Map<Integer, Icon> first = GuideMenu.icons(view, 3, 0);
+        assertEquals(new Icon(Material.ARROW, "&aNext Page", "&ePage 2"), first.get(GuideMenu.NEXT));
+        assertNull(first.get(GuideMenu.PREVIOUS));
+        assertTrue(first.containsKey(43));
+        Map<Integer, Icon> second = GuideMenu.icons(view, 3, 1);
+        assertEquals(new Icon(Material.ARROW, "&aPrevious Page", "&ePage 1"), second.get(GuideMenu.PREVIOUS));
+        assertNull(second.get(GuideMenu.NEXT));
+        // The other 14: two rows.
+        assertTrue(second.containsKey(34));
+        assertFalse(second.containsKey(37));
+        assertEquals(skilled.tasks().get(21).name(), second.get(19).name().substring("&c✖ ".length()));
     }
 
     @Test
@@ -97,7 +135,7 @@ class GuideAndEmblemsTest {
         // The Entrance done counts its one task; the made-up Museum can't be told.
         LevelingView entrance = Fixtures.view(data, Fixtures.profile(Map.of(Skill.FARMING, 2), 0, Map.of(), DungeonFloor.ENTRANCE), Fixtures.NONE);
         assertEquals(2, GuideMenu.done(entrance, data.stages().getFirst()));
-        Map<Integer, Icon> icons = GuideMenu.icons(entrance, 0);
+        Map<Integer, Icon> icons = GuideMenu.icons(entrance, 0, 0);
         // Undone first: Skills (one of two), Museum; then the Entrance.
         assertEquals("&c✖ &aSkills", icons.get(19).name());
         assertEquals("&c✖ &aMuseum", icons.get(20).name());

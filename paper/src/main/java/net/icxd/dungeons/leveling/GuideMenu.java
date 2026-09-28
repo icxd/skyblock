@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
@@ -19,28 +20,40 @@ import net.icxd.dungeons.user.User;
 /**
  * The SkyBlock XP Guide ("Guide ➜ Amateur", {@code /skyblockxp}), as recorded (Starter at 01:51.3, Amateur at
  * 01:49.8): the seven stages across the top (a stage unlocks at half of the one before it done), and the chosen
- * stage's tasks, the undone ones first, each with its parts done and undone. A task is done when all its parts are;
- * the plugin can tell only skill, Catacombs and class levels, floors completed and collection tiers, so the rest stay
- * undone. What "Click to view more!" opens is UNKNOWN (never recorded), so it opens nothing yet. Main thread.
+ * stage's tasks inside a frame of glass in its colour, the undone ones first, each with its parts done and undone.
+ * A task is done when all its parts are; the plugin can tell only skill, Catacombs and class levels, floors completed
+ * and collection tiers, so the rest stay undone. What "Click to view more!" opens is UNKNOWN (never recorded), so it
+ * opens nothing yet. Main thread.
  */
 public final class GuideMenu extends GUI {
     static final int[] STAGES = {1, 2, 3, 4, 5, 6, 7};
-    /** The tasks go in rows of seven from the third row. */
+    /** The tasks go in rows of seven from the third row, three rows of them. */
     static final int FIRST_TASK = 19;
+    static final int PER_PAGE = 21;
+    static final int PREVIOUS = 45;
     static final int BACK = 48;
     static final int CLOSE = 49;
     static final int INFO = 50;
+    static final int NEXT = 53;
+    /** The stage's glass: the second row and the sides below it, as recorded (the top corners and the tasks' slots are empty). */
+    static final int[] FRAME = {9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 27, 35, 36, 44, 45, 46, 47, 51, 52, 53};
     /** A stage unlocks at this share of the one before it done. */
     static final double UNLOCK = 0.5;
 
     private final Player viewer;
     /** The stage shown; -1 for the last one they've unlocked. */
     private final int stage;
+    private final int page;
 
     public GuideMenu(Player viewer, int stage) {
-        super(title(SkyBlockLevels.data(), viewer, stage), Size.SIX);
+        this(viewer, stage, 0);
+    }
+
+    GuideMenu(Player viewer, int stage, int page) {
+        super(title(SkyBlockLevels.data(), viewer, stage, page), Size.SIX);
         this.viewer = viewer;
         this.stage = stage;
+        this.page = page;
     }
 
     /** Opens their current stage: the last one they've unlocked. */
@@ -48,25 +61,37 @@ public final class GuideMenu extends GUI {
         new GuideMenu(viewer, -1).open(viewer);
     }
 
-    private static String title(LevelingData data, Player viewer, int stage) {
+    private static String title(LevelingData data, Player viewer, int stage, int page) {
         User user = User.ifLoaded(viewer.getUniqueId());
         if (data.stages().isEmpty() || user == null) return "SkyBlock Guide";
         LevelingView view = LevelingView.of(viewer, user);
-        int shown = stage < 0 ? current(view) : Math.min(stage, data.stages().size() - 1);
-        return "Guide ➜ " + LevelingText.plain(data.stages().get(shown).name());
+        return title(data.stages().get(stage < 0 ? current(view) : Math.min(stage, data.stages().size() - 1)), page);
+    }
+
+    /**
+     * "Guide ➜ Starter"; a stage with more tasks than one page holds, "(1/2) Guide ➜ Skilled", as Hypixel's paged
+     * menus are titled (the recipe book's "(2/4) Combat Recipes"; UNKNOWN for the guide, never recorded past 21).
+     */
+    static String title(Stage stage, int page) {
+        int pages = pages(stage);
+        return (pages > 1 ? "(" + (Math.min(page, pages - 1) + 1) + "/" + pages + ") " : "") + "Guide ➜ " + LevelingText.plain(stage.name());
     }
 
     @Override
     public void beforeOpen(Player player) {
         getItems().clear();
-        fill(filler());
         User user = User.ifLoaded(viewer.getUniqueId());
-        if (user == null) return;
+        List<Stage> stages = SkyBlockLevels.data().stages();
+        if (user == null || stages.isEmpty()) {
+            fill(filler());
+            return;
+        }
         LevelingView view = LevelingView.of(viewer, user);
-        List<Stage> stages = view.data().stages();
-        if (stages.isEmpty()) return;
         int shown = stage < 0 ? current(view) : Math.min(stage, stages.size() - 1);
-        for (Map.Entry<Integer, Icon> entry : icons(view, shown).entrySet()) {
+        ItemStack glass = filler().withType(glass(stages.get(shown)));
+        for (int slot : FRAME) set(slot, glass);
+        int page = Math.min(this.page, pages(stages.get(shown)) - 1);
+        for (Map.Entry<Integer, Icon> entry : icons(view, shown, page).entrySet()) {
             int slot = entry.getKey();
             Runnable action = null;
             for (int i = 0; i < STAGES.length && i < stages.size(); i++) {
@@ -74,10 +99,31 @@ public final class GuideMenu extends GUI {
                 if (STAGES[i] == slot && i != shown && unlocked(view, i)) action = () -> new GuideMenu(viewer, index).open(viewer);
             }
             if (slot == BACK) action = () -> new LevelingMenu(viewer).open(viewer);
+            if (slot == PREVIOUS) action = () -> new GuideMenu(viewer, shown, page - 1).open(viewer);
+            if (slot == NEXT) action = () -> new GuideMenu(viewer, shown, page + 1).open(viewer);
             if (action == null) set(slot, entry.getValue().stack());
             else set(GUIClickableItem.button(slot, entry.getValue().stack(), viewer, action));
         }
         set(GUIClickableItem.close(CLOSE));
+    }
+
+    /** The glass in a stage's colour: lime for Starter and light blue for Amateur (recorded), the rest likewise (UNKNOWN). */
+    static Material glass(Stage stage) {
+        return switch (color(stage).charAt(1)) {
+            case 'a' -> Material.LIME_STAINED_GLASS_PANE;
+            case 'b' -> Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+            case '3' -> Material.CYAN_STAINED_GLASS_PANE;
+            case '9' -> Material.BLUE_STAINED_GLASS_PANE;
+            case '5' -> Material.PURPLE_STAINED_GLASS_PANE;
+            case '6' -> Material.ORANGE_STAINED_GLASS_PANE;
+            case 'd' -> Material.MAGENTA_STAINED_GLASS_PANE;
+            default -> Material.BLACK_STAINED_GLASS_PANE;
+        };
+    }
+
+    /** How many pages a stage's tasks take. */
+    static int pages(Stage stage) {
+        return Math.max(1, (stage.tasks().size() + PER_PAGE - 1) / PER_PAGE);
     }
 
     // Progress
@@ -122,18 +168,25 @@ public final class GuideMenu extends GUI {
 
     // What each slot shows
 
-    /** Every slot but the glass and Close, by slot, with this stage shown. */
-    static Map<Integer, Icon> icons(LevelingView view, int shown) {
+    /**
+     * Every slot but the glass and Close, by slot, with this stage and page of its tasks shown. The undone tasks
+     * first, each lot in the data's order: the recorded menus' (UNKNOWN whether Hypixel orders them otherwise for
+     * someone else). A stage with more than 21 has pages, with Hypixel's usual arrows (UNKNOWN for the guide).
+     */
+    static Map<Integer, Icon> icons(LevelingView view, int shown, int page) {
         Map<Integer, Icon> icons = new LinkedHashMap<>();
         List<Stage> stages = view.data().stages();
         for (int i = 0; i < STAGES.length && i < stages.size(); i++) icons.put(STAGES[i], stage(view, i, i == shown));
         Stage stage = stages.get(shown);
-        // The undone ones first, each lot in the data's order: the recorded menus' (UNKNOWN whether Hypixel orders
-        // them otherwise for someone else).
         List<GuideTask> tasks = new ArrayList<>();
         for (GuideTask task : stage.tasks()) if (!complete(view, task)) tasks.add(task);
         for (GuideTask task : stage.tasks()) if (complete(view, task)) tasks.add(task);
-        for (int i = 0; i < tasks.size() && i < 21; i++) icons.put(FIRST_TASK + i / 7 * 9 + i % 7, task(view, color(stage), tasks.get(i)));
+        int from = page * PER_PAGE;
+        for (int i = 0; from + i < tasks.size() && i < PER_PAGE; i++) {
+            icons.put(FIRST_TASK + i / 7 * 9 + i % 7, task(view, color(stage), tasks.get(from + i)));
+        }
+        if (page > 0) icons.put(PREVIOUS, new Icon(Material.ARROW, "&aPrevious Page", "&ePage " + page));
+        if (page + 1 < pages(stage)) icons.put(NEXT, new Icon(Material.ARROW, "&aNext Page", "&ePage " + (page + 2)));
         icons.put(BACK, new Icon(Material.ARROW, "&aGo Back", "&7To SkyBlock Leveling"));
         icons.put(INFO, new Icon(Material.PAPER, "&a⚑ SkyBlock XP Guide", "&7Your &6SkyBlock XP Guide &7tracks the",
                 "&7progress you have made through", "&7SkyBlock.", "", "&7Complete tasks within your current", "&7game stage to increase your",
