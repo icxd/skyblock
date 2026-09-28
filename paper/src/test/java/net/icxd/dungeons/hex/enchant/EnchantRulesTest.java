@@ -70,9 +70,15 @@ class EnchantRulesTest {
                 List.of("thunderlord", "thunderbolt"));
         BiPredicate<String, String> conflict = (a, b) -> then.stream().anyMatch(pool -> pool.contains(a) && pool.contains(b));
         assertEquals(34, sword.size());
-        assertEquals(26, EnchantRules.groups(sword, conflict));
-        assertEquals(28, EnchantRules.groups(sword, (a, b) -> conflict.test(a, b) && !then.getFirst().contains(a)));
-        assertEquals(0, EnchantRules.groups(List.of(), conflict));
+        assertEquals(26, EnchantRules.atOnce(sword, conflict));
+        assertEquals(28, EnchantRules.atOnce(sword, (a, b) -> conflict.test(a, b) && !then.getFirst().contains(a)));
+        assertEquals(0, EnchantRules.atOnce(List.of(), conflict));
+        // Silk Touch conflicts with Fortune and with Smelting Touch, which go together: two at once.
+        BiPredicate<String, String> silk = (a, b) -> a.equals("silk_touch") != b.equals("silk_touch");
+        assertEquals(2, EnchantRules.atOnce(List.of("silk_touch", "fortune", "smelting_touch"), silk));
+        assertEquals(3, EnchantRules.atOnce(List.of("silk_touch", "fortune", "smelting_touch", "efficiency"), silk));
+        // Told one way round, a conflict is a conflict.
+        assertEquals(1, EnchantRules.atOnce(List.of("thunderlord", "thunderbolt"), (a, b) -> a.equals("thunderbolt")));
     }
 
     @Test

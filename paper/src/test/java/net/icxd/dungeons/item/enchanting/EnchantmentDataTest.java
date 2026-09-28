@@ -209,7 +209,7 @@ class EnchantmentDataTest {
         assertEquals(List.of("sharpness", "champion", "tabasco", "smite", "bane_of_arthropods", "divine_gift", "knockback", "fire_aspect",
                 "experience", "looting", "scavenger", "smoldering", "luck", "cubism", "cleave"), offered.subList(0, 15));
         assertEquals("magmarizer", offered.getLast());
-        assertEquals(29, EnchantRules.groups(offered, data::conflict));
+        assertEquals(29, EnchantRules.atOnce(offered, data::conflict));
         assertEquals(List.of("one_for_all", "wise", "combo", "chimera", "fatal_tempo", "inferno", "soul_eater", "swarm"),
                 EnchantRules.offered(data, sword, true).stream().map(EnchantmentData.Entry::id).toList());
     }

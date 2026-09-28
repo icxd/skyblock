@@ -69,22 +69,50 @@ public final class EnchantRules {
     }
 
     /**
-     * How many of these can be on one item at once: the groups they make when every two that conflict are in one
-     * group. The Hex's "Enchantments 0/26" for a sword (the wiki's Weapon tab): its 34 enchantments then, less the
-     * 8 that conflict with another (Sharpness, Smite and Bane of Arthropods; Life Steal, Drain and Mana Steal; Giant
-     * and Titan Killer; Execute and Prosecute; First Strike and Triple-Strike; Thunderlord and Thunderbolt).
+     * How many of these can be on one item at once: in each group of ones that conflict with one another, the most of
+     * it that don't (one of each group where every two conflict, as nearly all do; two of Silk Touch, Fortune and
+     * Smelting Touch, since only Silk Touch conflicts with the others). The Hex's "Enchantments 0/26" for a sword (the
+     * wiki's Weapon tab): its 34 enchantments then, less the 8 that conflict with another (Sharpness, Smite and Bane of
+     * Arthropods; Life Steal, Drain and Mana Steal; Giant and Titan Killer; Execute and Prosecute; First Strike and
+     * Triple-Strike; Thunderlord and Thunderbolt).
      */
-    public static int groups(List<String> ids, BiPredicate<String, String> conflict) {
+    public static int atOnce(List<String> ids, BiPredicate<String, String> conflict) {
+        BiPredicate<String, String> either = (a, b) -> conflict.test(a, b) || conflict.test(b, a);
         Map<String, String> parent = new HashMap<>();
         for (String id : ids) parent.put(id, id);
         for (int i = 0; i < ids.size(); i++) {
             for (int j = i + 1; j < ids.size(); j++) {
-                if (conflict.test(ids.get(i), ids.get(j))) parent.put(root(parent, ids.get(i)), root(parent, ids.get(j)));
+                if (either.test(ids.get(i), ids.get(j))) parent.put(root(parent, ids.get(i)), root(parent, ids.get(j)));
             }
         }
-        int groups = 0;
-        for (String id : ids) if (root(parent, id).equals(id)) groups++;
-        return groups;
+        Map<String, List<String>> groups = new LinkedHashMap<>();
+        for (String id : ids) groups.computeIfAbsent(root(parent, id), k -> new ArrayList<>()).add(id);
+        int most = 0;
+        for (List<String> group : groups.values()) most += most(group, either);
+        return most;
+    }
+
+    /** The most of a group with no two conflicting, every choice of it tried (a group is a few; past 12, taken as one). */
+    private static int most(List<String> group, BiPredicate<String, String> conflict) {
+        int n = group.size();
+        if (n > 12) return 1;
+        int best = 0;
+        for (int mask = 1; mask < 1 << n; mask++) {
+            int count = Integer.bitCount(mask);
+            if (count <= best || !apart(group, mask, conflict)) continue;
+            best = count;
+        }
+        return best;
+    }
+
+    private static boolean apart(List<String> group, int mask, BiPredicate<String, String> conflict) {
+        for (int i = 0; i < group.size(); i++) {
+            if ((mask & 1 << i) == 0) continue;
+            for (int j = i + 1; j < group.size(); j++) {
+                if ((mask & 1 << j) != 0 && conflict.test(group.get(i), group.get(j))) return false;
+            }
+        }
+        return true;
     }
 
     private static String root(Map<String, String> parent, String id) {
@@ -95,14 +123,14 @@ public final class EnchantRules {
 
     /**
      * The main menu's line for the normal enchantments: "  &7Enchantments &e<on it>&7/&a<at most>", how many of those
-     * the Hex lists are on it, of how many can be at once ({@link #groups}); the count green once it's all of them
+     * the Hex lists are on it, of how many can be at once ({@link #atOnce}); the count green once it's all of them
      * (the official screenshot's "10/10"; UNKNOWN: its colour before that, the wiki's &e for none).
      */
     public static String summary(EnchantmentData data, SkyBlockItem item, Map<String, Integer> on) {
         List<Entry> offered = offered(data, item, false);
         List<String> ids = offered.stream().map(Entry::id).toList();
         int have = (int) ids.stream().filter(on::containsKey).count();
-        int max = groups(ids, data::conflict);
+        int max = atOnce(ids, data::conflict);
         return "  &7Enchantments " + count(have, max);
     }
 

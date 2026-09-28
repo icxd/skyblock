@@ -53,7 +53,8 @@ types (`EnchantmentData.is`: "Armor" is the four pieces, "Tools" pickaxes, drill
 and farming tools, "Hoe" and "Farming Tool" the farming tools, "Vacuum" vacuums, a name like "Precursor Eye" that
 item). So weapons, armor, equipment, tools, fishing rods, and wands for Ultimate Wise.
 - Summary: `  &7Enchantments &e<n>&7/&a<max>`: n is how many of the listed ones are on the item, max how many can be
-  at once: the groups the listed ones make when every two that conflict are in one group (`EnchantRules.groups`).
+  at once (`EnchantRules.atOnce`): one of each group of listed ones that all conflict with each other, which is
+  every group but one; of Silk Touch, Fortune and Smelting Touch two, since only Silk Touch conflicts with the others.
   The wiki's 26 for a sword is that rule on its 34 enchantments of 2022 with Sharpness, Smite and Bane of Arthropods
   conflicting (tested). They don't conflict now (the books; 933 live items have all three), and a sword
   lists 35 today (Pyroclasm is new), so a sword shows 29 now. The count turns green once it's full (the official
@@ -126,7 +127,7 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
 - **The Experience Bottles button and the bottles' header** without their Bazaar lines; the bottles' action "Click to
   consume!" (Hypixel's is the Bazaar's).
 - **Orbs** rounded down (the wiki's table); the screen's example (19 for 8) is some other multiplier.
-- **Conflicts**: the books' Conflicts lists (every pair they name is on no live item). NEU's pools are older and
+- **Conflicts**: the books' Conflicts lists (no pair they name is on more than one live item). NEU's pools are older and
   have more, which live items carry together (Fortune and Smelting Touch on 131, the Turbos with each other on
   dozens), so they're only in the generator's report.
 - **Highest levels**: the books' where the wiki says more (Efficiency X is Silex's; Drain VI, Life Steal VI,
