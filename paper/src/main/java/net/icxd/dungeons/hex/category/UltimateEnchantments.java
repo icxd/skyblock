@@ -7,11 +7,14 @@ import org.bukkit.Material;
 import net.icxd.dungeons.hex.HexCategory;
 import net.icxd.dungeons.hex.HexItem;
 import net.icxd.dungeons.hex.HexSession;
+import net.icxd.dungeons.hex.enchant.EnchantItemPage;
+import net.icxd.dungeons.hex.enchant.EnchantRules;
+import net.icxd.dungeons.item.enchanting.EnchantmentData;
 
 /**
  * Ultimate Enchantments: the same "The Hex ➜ Enchant Item" page, listing the ultimate enchantments (the wiki's
- * Weapon tab). No requirement. Stage 1: the button as the wiki has it; LATER (the enchantments part): which
- * items, the summary ("  &7Ultimate Enchantments &e0&7/&a1"), the page.
+ * Weapon tab), for every item an ultimate goes on (weapons, wands, armor, equipment, tools). No requirement. Its
+ * summary is "  &7Ultimate Enchantments &e0&7/&a1": only one goes on an item.
  */
 public final class UltimateEnchantments extends HexCategory {
     public UltimateEnchantments() {
@@ -26,16 +29,16 @@ public final class UltimateEnchantments extends HexCategory {
 
     @Override
     public boolean applies(HexItem item) {
-        return false;
+        return !EnchantRules.offered(EnchantmentData.current(), item.item(), true).isEmpty();
     }
 
     @Override
     public List<String> summary(HexItem item) {
-        return List.of();
+        return List.of(EnchantRules.ultimateSummary(EnchantmentData.current(), EnchantRules.on(item.tag())));
     }
 
     @Override
     public void open(HexSession session) {
-        session.open(new Placeholder(session, Enchantments.TITLE, Enchantments.header()));
+        session.open(new EnchantItemPage(session, true));
     }
 }

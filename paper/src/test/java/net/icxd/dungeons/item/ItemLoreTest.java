@@ -2,10 +2,12 @@ package net.icxd.dungeons.item;
 
 import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.data.ItemData;
+import net.icxd.dungeons.item.enchanting.FakeEnchantments;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -20,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * How item names and lore are laid out, as Hypixel lays them out, on made-up items (Hypixel's text stays
- * out of this repository). Items have no owner here, so no requirement lines.
+ * How item names and lore are laid out, as Hypixel lays them out, on made-up items and a made-up enchantment
+ * table (Hypixel's text stays out of this repository). Items have no owner here, so no requirement lines.
  */
 class ItemLoreTest {
     private static final String STAR = "[{\"amount\":10,\"essence\":\"WITHER\"}]";
@@ -48,9 +50,15 @@ class ItemLoreTest {
             "NECRON_BLADE":{"dungeon_item":true,"lore":["&7A blade for tests.","","&eRight-click to use your class ability!"],\
             "material":"IRON_SWORD","name":"Test Blade","rarity":"LEGENDARY","reforgeable":true,"stats":{"DAMAGE":100},"type":"SWORD"}""";
 
+    @BeforeEach
+    void enchantments() {
+        FakeEnchantments.use();
+    }
+
     @AfterEach
     void noItems() {
         ItemRegistry.clearData();
+        FakeEnchantments.reset();
     }
 
     private static DataItem item(String json) {

@@ -6,6 +6,7 @@ import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.enchanting.EnchantmentData;
 import net.icxd.dungeons.item.enchanting.EnchantmentType;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -56,7 +57,7 @@ public class AddEnchantmentCommand extends SCommand {
         // An item has each enchantment once: this replaces its level if it's already there.
         NBTTagList enchantments = tag.getList("enchantments", 10);
         for (int i = enchantments.size() - 1; i >= 0; i--) {
-            if (type.getNamespace().equals(enchantments.get(i).getString("name"))) enchantments.remove(i);
+            if (type.getNamespace().equals(EnchantmentData.id(enchantments.get(i).getString("name")))) enchantments.remove(i);
         }
         NBTTagCompound enchantment = new NBTTagCompound();
         enchantment.setString("name", type.getNamespace());

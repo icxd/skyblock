@@ -3,6 +3,7 @@ package net.icxd.dungeons.item;
 import net.icxd.dungeons.item.data.DataItem;
 import net.icxd.dungeons.item.data.ItemData;
 import net.icxd.dungeons.item.enchanting.EnchantmentType;
+import net.icxd.dungeons.item.enchanting.FakeEnchantments;
 import net.icxd.dungeons.item.enums.Rarity;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
@@ -10,6 +11,8 @@ import net.icxd.dungeons.stats.ItemStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Text;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -21,9 +24,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The stats combat uses from an item: what its lore says, and in a dungeon what the lore's dark gray
- * brackets say (research damage.md 1.8), on made-up items.
+ * brackets say (research damage.md 1.8), on made-up items (and a made-up enchantment table).
  */
 class ItemStatsTest {
+    @BeforeEach
+    void enchantments() {
+        FakeEnchantments.use();
+    }
+
+    @AfterEach
+    void noEnchantments() {
+        FakeEnchantments.reset();
+    }
+
     private static final String STAR = "[{\"amount\":10,\"essence\":\"WITHER\"}]";
     /**
      * Like the recorded Giant's Sword: 500 Damage and 1 Swing Range, with Crit Chance to show it only gets
@@ -64,14 +77,15 @@ class ItemStatsTest {
 
     @Test
     void criticalAndOverloadGrantStats() {
-        assertEquals(70, EnchantmentType.CRITICAL.getStats(6).get(Stat.CRIT_DAMAGE), 1e-9);
-        assertEquals(100, EnchantmentType.CRITICAL.getStats(7).get(Stat.CRIT_DAMAGE), 1e-9);
-        Stats overload = EnchantmentType.OVERLOAD.getStats(5);
+        EnchantmentType critical = EnchantmentType.getByNamespace("critical");
+        assertEquals(70, critical.getStats(6).get(Stat.CRIT_DAMAGE), 1e-9);
+        assertEquals(100, critical.getStats(7).get(Stat.CRIT_DAMAGE), 1e-9);
+        Stats overload = EnchantmentType.getByNamespace("overload").getStats(5);
         assertEquals(5, overload.get(Stat.CRIT_DAMAGE), 1e-9);
         assertEquals(5, overload.get(Stat.CRIT_CHANCE), 1e-9);
         // "Increases melee damage dealt by 30%" is a damage buff, not a stat.
-        assertEquals(new Stats(), EnchantmentType.SHARPNESS.getStats(5));
-        assertEquals(75, EnchantmentType.GROWTH.getStats(5).get(Stat.HEALTH), 1e-9);
+        assertEquals(new Stats(), EnchantmentType.getByNamespace("sharpness").getStats(5));
+        assertEquals(75, EnchantmentType.getByNamespace("growth").getStats(5).get(Stat.HEALTH), 1e-9);
     }
 
     /** Out of a dungeon: each star adds 2% of the item's own stats. */
