@@ -14,11 +14,10 @@ The code is in `paper/src/main/java/net/icxd/dungeons/hex`. `Hex` is where the r
 and opens it.
 
 Task 70 builds the Hex in stages:
-1. The core, on this branch: `/hex`, the main menu, the item's life in the Hex, the page frame, costs,
-   requirements and the private data plumbing. It has all seven categories as stubs: each has its button,
-   but none applies to any item yet.
-2. The four parts, built at the same time on top of the core: each one fills in its own categories (see
-   the table below).
+1. The core: `/hex`, the main menu, the item's life in the Hex, the page frame, costs, requirements and
+   the private data plumbing, with the seven categories' buttons.
+2. Five parts, built at the same time on top of the core, each filling in its own categories (see the
+   table below): enchantments, reforges, gemstones and the grinder, books and item upgrades, modifiers.
 
 ## Done (stage 1)
 
@@ -122,18 +121,17 @@ the name, the Carpentry level and, where the wiki has it, the button) and puts i
 files of its own, preferably in its own package (say `hex/enchant`, `hex/reforge`, `hex/gem`,
 `hex/upgrade`), so the parts don't collide.
 
-| # | Category | Carpentry | Button | File (owner) | Page | Stage 1 |
+| # | Category | Carpentry | Button | File (owner) | Page | Status |
 |---|---|---|---|---|---|---|
-| 1 | Enchantments | none | Enchantment Table (wiki) | `hex/category/Enchantments.java` (enchantments part) | "The Hex ➜ Enchant Item" | stub |
-| 2 | Ultimate Enchantments | none | Book and Quill (wiki) | `hex/category/UltimateEnchantments.java` (enchantments part) | same title, the ultimates | stub |
-| 3 | Books | 20 | Book (wiki) | `hex/category/Books.java` (books, modifiers and item upgrades part) | "The Hex ➜ Books" | stub |
-| 4 | Modifiers | 20 | Recombobulator 3000 head (wiki; texture from items.json) | `hex/category/Modifiers.java` (books, modifiers and item upgrades part) | "The Hex ➜ Modifiers" | stub |
-| 5 | Reforges | none | Luxurious Spool head (wiki; texture from items.json) | `hex/category/Reforges.java` (reforges part) | "The Hex ➜ Reforges" | stub |
-| 6 | Item Upgrades | 25 | Dragon Essence head (inferred; items.json, else NEU's head) | `hex/category/ItemUpgrades.java` (books, modifiers and item upgrades part) | "The Hex ➜ Item Upgrades" | stub |
-| 7 | Gemstones | 25 | Perfect Ruby Gemstone (inferred; as items.json has it) | `hex/category/Gemstones.java` (gemstones and grinder part) | Geo's Gemstone Grinder | stub |
+| 1 | Enchantments | none | Enchantment Table (wiki) | `hex/category/Enchantments.java` (enchantments part) | "The Hex ➜ Enchant Item" | built, see ENCHANTMENTS.md |
+| 2 | Ultimate Enchantments | none | Book and Quill (wiki) | `hex/category/UltimateEnchantments.java` (enchantments part) | same title, the ultimates | built, see ENCHANTMENTS.md |
+| 3 | Books | 20 | Book (wiki) | `hex/category/Books.java` (books and item upgrades part) | "The Hex ➜ Books" | built, see BOOKS.md |
+| 4 | Modifiers | 20 | Recombobulator 3000 head (wiki; texture from items.json) | `hex/category/Modifiers.java` (modifiers part) | "The Hex ➜ Modifiers" | built, see MODIFIERS.md |
+| 5 | Reforges | none | Luxurious Spool head (wiki; texture from items.json) | `hex/category/Reforges.java` (reforges part) | "The Hex ➜ Reforges" | built, see REFORGES.md |
+| 6 | Item Upgrades | 25 | Dragon Essence head (inferred; items.json, else NEU's head) | `hex/category/ItemUpgrades.java` (books and item upgrades part) | "The Hex ➜ Item Upgrades" | built, see BOOKS.md |
+| 7 | Gemstones | 25 | Perfect Ruby Gemstone (inferred; as items.json has it) | `hex/category/Gemstones.java` (gemstones and grinder part) | Geo's Gemstone Grinder | built, see GEMSTONES.md |
 
-Until its part is built, a stub opens `Placeholder`, a page with only its title and header. Delete
-`hex/category/Placeholder.java` once no category uses it.
+Every category is built; each part's status document says what it does and what's UNKNOWN or LATER.
 
 ## How a part plugs in
 
