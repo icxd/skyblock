@@ -12,8 +12,9 @@ import net.icxd.dungeons.menu.SkyBlockMenu;
 /**
  * An item's recipe ("Enchanted Bone Recipe"), laid out as the wiki's Crafting UI has it (the recording
  * opened none): the grid, the crafting table that makes it, the result. {@code /viewrecipe} shows it
- * whether it's unlocked or not, as on Hypixel (the wiki's Commands). Go Back goes where it was opened from.
- * Main thread.
+ * whether it's unlocked or not, as on Hypixel (the wiki's Commands). Go Back goes where it was opened from, and
+ * says so with that menu's title ("To (1/4) Combat Recipes"; UNKNOWN from the Recipe Book, where none was
+ * opened: the wiki's Collection UI names the Rewards menu it came from). Main thread.
  */
 public final class RecipeView extends CollectionGUI {
     private final String item;
