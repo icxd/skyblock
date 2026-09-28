@@ -10,6 +10,7 @@ import net.icxd.dungeons.crimsonisle.factions.FactionType;
 import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
 import net.icxd.dungeons.economy.Purse;
+import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.profile.ProfileMode;
 import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.skill.Skills;
@@ -186,10 +187,11 @@ public class User {
     }
 
     /**
-     * SkyBlock XP on the profile they play on: for now only what its skill levels give (see
-     * {@link Skills#skyBlockXp}); 0 until their data is loaded.
+     * SkyBlock XP on the profile they play on, worked out from what it has done (see {@link SkyBlockLevels});
+     * 0 until their data is loaded. It was only what its skill levels give ({@link Skills#skyBlockXp}), which
+     * is now one of its tasks; it was never saved, so there's nothing old to read.
      */
     public int getSkyBlockXp() {
-        return isLoaded() ? Skills.skyBlockXp(profile()) : 0;
+        return isLoaded() ? SkyBlockLevels.xp(this) : 0;
     }
 }

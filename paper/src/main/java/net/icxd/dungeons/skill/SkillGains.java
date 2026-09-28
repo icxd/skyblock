@@ -3,6 +3,7 @@ package net.icxd.dungeons.skill;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.economy.Purse;
+import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
@@ -76,6 +77,7 @@ public final class SkillGains implements Listener {
             }
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
             user.save();
+            SkyBlockLevels.changed(player);
         }
         return gain;
     }

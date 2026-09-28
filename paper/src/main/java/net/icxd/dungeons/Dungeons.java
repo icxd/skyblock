@@ -44,6 +44,7 @@ import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.command.commands.user.ViewStashCommand;
 import net.icxd.dungeons.economy.KillCoins;
 import net.icxd.dungeons.gui.GUIListener;
+import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.listeners.CombatListener;
 import net.icxd.dungeons.listeners.HealthListener;
 import net.icxd.dungeons.listeners.HubProtection;
@@ -125,6 +126,8 @@ public class Dungeons extends JavaPlugin {
             User user = User.ifLoaded(player.getUniqueId());
             return user == null ? 0 : Collections.count(user.profile(), item);
         });
+        // SkyBlock Leveling's tasks and rewards, from the same data (leveling/leveling.json), read off the main thread.
+        SkyBlockLevels.start(this);
 
         skyBlockServer = new SkyBlockServer(getConfig());
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
@@ -168,6 +171,7 @@ public class Dungeons extends JavaPlugin {
         listen(StorageListener.class, StorageListener::new);
         listen(CollectionGains.class, CollectionGains::new);
         listen(CraftingTable.Drags.class, CraftingTable.Drags::new);
+        listen(SkyBlockLevels.class, SkyBlockLevels::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));

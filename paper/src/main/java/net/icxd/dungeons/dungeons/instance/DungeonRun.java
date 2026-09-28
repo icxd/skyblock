@@ -34,6 +34,8 @@ import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.instance.puzzle.RunPuzzles;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
+import net.icxd.dungeons.leveling.SkyBlockLevels;
+import net.icxd.dungeons.leveling.SkyBlockXp;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.skill.Skill;
@@ -636,6 +638,8 @@ public final class DungeonRun implements ScoreCounts {
                     : RunEnd.award(user.profile(), floor, chatScore, millis, endSecretPercent, classOf(player.getUniqueId()), teammates,
                     RunEnd.today());
             user.save();
+            // A first completion, Catacombs and class levels: SkyBlock XP.
+            SkyBlockLevels.changed(player);
         }
         for (String line : RunEnd.summary(floor, chatScore, millis, outcome, failed)) {
             if (!line.equals(RunEnd.EXTRA_STATS)) player.sendMessage(Utils.color(line));
@@ -990,13 +994,10 @@ public final class DungeonRun implements ScoreCounts {
         for (int i = 0; i < 19; i++) out.add(i < lines.size() ? lines.get(i) : new TabEntry("", null));
     }
 
-    /** SkyBlock levels are coloured by the 40 they're in (as in Hypixel's tab list). */
-    private static final String[] LEVEL_COLORS = {"&7", "&f", "&e", "&a", "&2", "&b", "&3", "&9", "&d", "&5", "&6", "&c", "&4"};
-
-    /** "&e88": the SkyBlock level in its colour. */
+    /** "&e88": the SkyBlock level in its colour (see {@link SkyBlockXp}). */
     private static String skyBlockLevel(UUID id) {
         User user = User.cached(id);
-        int level = user == null ? 0 : user.getSkyBlockXp() / 100;
-        return LEVEL_COLORS[Math.min(level / 40, LEVEL_COLORS.length - 1)] + level;
+        int level = user == null ? 0 : SkyBlockXp.level(user.getSkyBlockXp());
+        return SkyBlockXp.color(level) + level;
     }
 }

@@ -17,6 +17,7 @@ import net.icxd.dungeons.collection.Collections;
 import net.icxd.dungeons.collection.CollectionsMenu;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
+import net.icxd.dungeons.leveling.SkyBlockXp;
 import net.icxd.dungeons.profile.ProfileManagementMenu;
 import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.recipe.CraftingTable;
@@ -68,9 +69,7 @@ public final class SkyBlockMenu extends GUI {
     static final int SETTINGS = 50;
 
     /** SkyBlock levels are 100 XP each. */
-    static final int XP_PER_LEVEL = 100;
-    /** The level's colour in "[88]", from 0, 40, 80 and on every 40 levels (the fandom wiki's SkyBlock Levels, Prefix Color). */
-    private static final String[] LEVEL_COLORS = {"&7", "&f", "&e", "&a", "&2", "&b", "&3", "&9", "&d", "&5", "&6", "&c", "&4"};
+    static final int XP_PER_LEVEL = SkyBlockXp.PER_LEVEL;
     /** The seven stats Stats & Equipment lists, in the recorded order. */
     private static final List<Stat> SUMMARY = List.of(Stat.SPEED, Stat.STRENGTH, Stat.DEFENSE, Stat.CRIT_DAMAGE, Stat.CRIT_CHANCE,
             Stat.HEALTH, Stat.INTELLIGENCE);
@@ -193,11 +192,11 @@ public final class SkyBlockMenu extends GUI {
     }
 
     static int level(int skyBlockXp) {
-        return skyBlockXp / XP_PER_LEVEL;
+        return SkyBlockXp.level(skyBlockXp);
     }
 
     static String levelColor(int level) {
-        return LEVEL_COLORS[Math.min(level / 40, LEVEL_COLORS.length - 1)];
+        return SkyBlockXp.color(level);
     }
 
     /** Their level and the next one's progress, on a dark aqua bar: "&b34&3/&b100 XP". */
