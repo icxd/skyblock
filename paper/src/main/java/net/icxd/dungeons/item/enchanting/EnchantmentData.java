@@ -154,10 +154,11 @@ public final class EnchantmentData {
     /**
      * Whether an item is one of the kinds an "Applied To" line names. The books' words mapped onto the plugin's item
      * types: "Armor" is the four pieces (and a Carnival Mask, which NEU gives a chestplate's enchantments), "Tools"
-     * pickaxes, drills, axes, shovels and shears (the wiki's Enchantments), "Hoe" and "Farming Tool" both the
-     * farming tools (no item is typed HOE; NEU puts Harvesting, the books' only "Hoe" one, on farming tools); a
-     * name that isn't a kind is an item's own ("Precursor Eye"). UNKNOWN: which items are "Fishing Weapon"s (none
-     * has that type here), and whether "Tools" takes more.
+     * pickaxes, drills, axes, shovels and shears (the wiki's Enchantments) and also gauntlets and farming tools (live
+     * items: Efficiency, "Tools" only, is on 66 Gemstone Gauntlets and 59 farming tools, Silk Touch on 35 farming
+     * tools), "Hoe" and "Farming Tool" both the farming tools (no item is typed HOE; NEU puts Harvesting, the books'
+     * only "Hoe" one, on farming tools); a name that isn't a kind is an item's own ("Precursor Eye"). UNKNOWN: which
+     * items are "Fishing Weapon"s (none has that type here).
      */
     public static boolean is(SkyBlockItem item, String label) {
         SpecificItemType type = item.specificItemType();
@@ -189,7 +190,8 @@ public final class EnchantmentData {
             case "Shears" -> type == SpecificItemType.SHEARS;
             case "Hoe", "Farming Tool" -> type == SpecificItemType.HOE || "FARMING_TOOL".equals(key);
             case "Tools" -> type == SpecificItemType.PICKAXE || type == SpecificItemType.DRILL || type == SpecificItemType.AXE
-                    || type == SpecificItemType.SPADE || type == SpecificItemType.SHEARS;
+                    || type == SpecificItemType.SPADE || type == SpecificItemType.SHEARS || type == SpecificItemType.GAUNTLET
+                    || type == SpecificItemType.HOE || "FARMING_TOOL".equals(key);
             case "Vacuum" -> "VACUUM".equals(key);
             default -> label.equals(item.name());
         };

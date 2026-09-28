@@ -105,7 +105,10 @@ class EnchantmentDataTest {
         assertTrue(EnchantmentData.is(item("Test", SpecificItemType.NONE, "VACUUM"), "Vacuum"));
         assertTrue(EnchantmentData.is(item("Test", SpecificItemType.SPADE, null), "Shovel"));
         assertTrue(EnchantmentData.is(item("Test", SpecificItemType.DRILL, null), "Tools"));
+        assertTrue(EnchantmentData.is(item("Test", SpecificItemType.GAUNTLET, null), "Tools"));
+        assertTrue(EnchantmentData.is(item("Test", SpecificItemType.NONE, "FARMING_TOOL"), "Tools"));
         assertFalse(EnchantmentData.is(item("Test", SpecificItemType.SWORD, null), "Tools"));
+        assertFalse(EnchantmentData.is(item("Test", SpecificItemType.NONE, "VACUUM"), "Tools"));
         assertTrue(EnchantmentData.is(item("Precursor Eye", SpecificItemType.NONE, null), "Precursor Eye"));
         assertFalse(EnchantmentData.is(item("Test", SpecificItemType.NONE, null), "Precursor Eye"));
     }
