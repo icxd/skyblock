@@ -242,6 +242,8 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   shows grey); Hydra Strike's numbers round to one decimal, halves to even (matches the data's 2.8
   and 4.2).
 - Strong Blood's +5 Strength lasts as long as the cast's speed; the Aspect of the Void doesn't get it.
+- Armor of the Pack's +5 True Defense a piece counts always, as its text reads (the wiki has it
+  against Animal mobs only).
 
 ## LATER, by what they wait for
 
