@@ -85,7 +85,7 @@ public final class TasksMenu extends GUI {
         LevelingView view = LevelingView.of(viewer, user);
         Sort sort = sort(viewer.getUniqueId());
         WaysMenu.viewed(viewer.getUniqueId(), task == null ? category : task);
-        List<Task> tasks = sorted(view, tasks(view.data(), category, task), sort);
+        List<Task> tasks = shown(view, category, task, sort);
         int[] slots = slots(tasks.size());
         Map<Integer, Icon> icons = icons(view, category, task, sort);
         int size = getSize();
@@ -217,6 +217,12 @@ public final class TasksMenu extends GUI {
         return false;
     }
 
+    /** What the list shows, in order: a category's tasks as sorted, a task's parts as they come (the wiki's have no Sort). */
+    static List<Task> shown(LevelingView view, String category, String task, Sort sort) {
+        List<Task> tasks = tasks(view.data(), category, task);
+        return task == null ? sorted(view, tasks, sort) : tasks;
+    }
+
     static List<Task> sorted(LevelingView view, List<Task> tasks, Sort sort) {
         List<Task> out = new ArrayList<>(tasks);
         Comparator<Task> byName = Comparator.comparing(t -> LevelingText.plain(t.name()));
@@ -281,7 +287,7 @@ public final class TasksMenu extends GUI {
         if (c == null) return icons;
         Task t = task == null ? null : data.task(task);
         icons.put(TOP, t == null ? WaysMenu.category(c, view, false) : task(t, view));
-        List<Task> tasks = sorted(view, tasks(data, category, task), sort);
+        List<Task> tasks = shown(view, category, task, sort);
         int[] slots = slots(tasks.size());
         for (int i = 0; i < slots.length; i++) {
             Task shown = tasks.get(i);

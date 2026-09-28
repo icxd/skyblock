@@ -137,8 +137,9 @@ class TasksMenusTest {
         // Its parts, and theirs: the Entrance done.
         Map<Integer, Icon> parts = TasksMenu.icons(view, "dungeon", "complete_dungeons.complete_the_catacombs", TasksMenu.Sort.UNLOCKED);
         assertEquals(new Icon(Material.ARROW, "&aGo Back", "&7To Dungeon ➜ Complete Dungeons"), parts.get(TasksMenu.back(54)));
-        // A part's list has no Sort (the wiki's Complete Dungeons, Bank Upgrades...).
+        // A part's list has no Sort (the wiki's Complete Dungeons, Bank Upgrades...), so a category's sort doesn't reorder it.
         assertEquals(null, parts.get(TasksMenu.sort(54)));
+        assertEquals(parts, TasksMenu.icons(view, "dungeon", "complete_dungeons.complete_the_catacombs", TasksMenu.Sort.Z_TO_A));
         // Done once, as the wiki's one-off parts: no progress; COMPLETED is UNKNOWN.
         Icon entrance = parts.get(20);
         assertEquals("&aComplete Catacombs Entrance", entrance.name());
