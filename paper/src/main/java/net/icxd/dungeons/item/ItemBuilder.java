@@ -17,6 +17,7 @@ import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enchanting.Enchantment;
+import net.icxd.dungeons.item.enchanting.weapon.WeaponStats;
 import net.icxd.dungeons.item.enums.DungeonStar;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
@@ -299,7 +300,8 @@ public final class ItemBuilder {
         ItemBehaviour behaviour = ItemBehaviours.of(item);
         sections.add(ItemModifiers.lore(tag, behaviour.lore(item, tag, item.lore())));
         sections.add(runeLines(tag));
-        for (ItemBlock block : ItemModifiers.blocks(tag, behaviour.blocks(item, tag, item.blocks()))) {
+        // Ultimate Wise's cheaper mana shows in the Mana Cost lines (live lore).
+        for (ItemBlock block : WeaponStats.withWise(tag, ItemModifiers.blocks(tag, behaviour.blocks(item, tag, item.blocks())))) {
             sections.add(ItemModifiers.blockLore(tag, blockLore(SetBonusLore.shown(block, holder), rarity)));
         }
         sections.add(Book.statsLines(item, tag));

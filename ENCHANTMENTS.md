@@ -143,6 +143,8 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
   them): the Hex charges the full Exp levels.
 - **Anvil combining and the Enchantment Table block** (the Hex's Enchant Item is the only way to enchant).
 - **Tiers that grow with use** (Champion's Combat XP, Compact's blocks...): the tier is only what's set.
+- **Weapon enchantments and ultimates** (swords, longswords, gauntlets, bows, fishing weapons): ENCHANTS_WEAPONS.md has
+  each one's status, which overrides the weapon ones below.
 - **Effects** of the enchantments that are text only here, and the system each waits for:
   - Armor and equipment enchantments and their ultimates (Hecatomb's tiers and Small Brain's and Reflection's stats too): built or LATER in ENCHANTS_ARMOR.md, which replaces their rows below.
   - Combat hooks (damage against a mob type, on-hit, on-kill, projectiles): Impaling (Aquatic), Pyroclasm

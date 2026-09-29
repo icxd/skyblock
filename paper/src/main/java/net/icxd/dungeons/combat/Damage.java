@@ -25,8 +25,9 @@ public final class Damage {
     /** Smite, Bane of Arthropods and Ender Slayer. */
     private static final double[] SLAYER = {5, 10, 15, 20, 30, 40, 50};
     private static final double[] CUBISM = {5, 10, 15, 20, 30, 40};
-    /** Smoldering and Gravity (dragon_hunter). */
     private static final double[] SMOLDERING = {5, 10, 15, 20, 30};
+    /** Gravity (dragon_hunter): Smoldering's, and VI's 40% (its book). */
+    private static final double[] GRAVITY = {5, 10, 15, 20, 30, 40};
     private static final double[] GIANT_KILLER = {0.1, 0.2, 0.3, 0.4, 0.6, 0.9, 1.2};
     private static final double[] GIANT_KILLER_CAP = {5, 10, 15, 20, 30, 45, 65};
     private static final double[] PROSECUTE = {0.1, 0.2, 0.3, 0.4, 0.7, 1};
@@ -148,7 +149,7 @@ public final class Damage {
             case "ender_slayer" -> target.types().contains(MobType.ENDER) ? at(SLAYER, level) : 0;
             case "cubism" -> target.types().contains(MobType.CUBIC) ? at(CUBISM, level) : 0;
             case "smoldering" -> target.types().contains(MobType.INFERNAL) ? at(SMOLDERING, level) : 0;
-            case "dragon_hunter" -> target.types().contains(MobType.AIRBORNE) ? at(SMOLDERING, level) : 0;
+            case "dragon_hunter" -> target.types().contains(MobType.AIRBORNE) ? at(GRAVITY, level) : 0;
             case "giant_killer" -> giantKiller(level, attacker.health(), target.health());
             case "prosecute" -> target.maxHealth() <= 0 ? 0 : at(PROSECUTE, level) * Math.max(0, target.health()) / target.maxHealth() * 100;
             case "execute" -> target.maxHealth() <= 0 ? 0

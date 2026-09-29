@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
 
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -64,6 +65,7 @@ public final class Hits {
     static final double FROZEN_TAKEN = 0.1;
     /** Slowness this strong stops a mob walking (each level takes 15% of its speed). */
     private static final int ROOTED = 6;
+    private static final List<ToDoubleFunction<Player>> MAGIC_MULTIPLIERS = new ArrayList<>();
 
     private Hits() {
     }
@@ -132,7 +134,23 @@ public final class Hits {
         Damage.Target target = target(entity);
         double additive = Magic.additive(Skills.combatLevel(caster), PlayerHealth.get(caster), Combat.enchantments(tag), target);
         Magic.Caster by = new Magic.Caster(stats.get(Stat.INTELLIGENCE), stats.get(Stat.ABILITY_DAMAGE), additive);
-        return Magic.damage(spell, dungeonFactor(caster, item, tag), by, target);
+        return Magic.damage(spell, dungeonFactor(caster, item, tag), by, target, magicMultiplier(caster));
+    }
+
+    /**
+     * Adds a multiplicative buff on a player's magic damage (the Loving reforge's "Increases ability damage by 5%": "a
+     * Multiplicative bonus to the player's Base Ability Damage", the wiki's Red Scarf), as a factor (1 for none); they
+     * multiply.
+     */
+    public static void addMagicMultiplier(ToDoubleFunction<Player> multiplier) {
+        MAGIC_MULTIPLIERS.add(multiplier);
+    }
+
+    /** The product of the multiplicative buffs on this player's magic damage (1 for none). */
+    static double magicMultiplier(Player caster) {
+        double product = 1;
+        for (ToDoubleFunction<Player> multiplier : MAGIC_MULTIPLIERS) product *= multiplier.applyAsDouble(caster);
+        return product;
     }
 
     /**

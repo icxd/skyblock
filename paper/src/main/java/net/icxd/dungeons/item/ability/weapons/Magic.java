@@ -47,12 +47,18 @@ public final class Magic {
     /**
      * What the spell does to the target, {@code dungeonFactor} being what its base is multiplied by (1
      * outside a run, or for an item that isn't a dungeon item; in a run 1 + 10% a star + the Catacombs
-     * boost, as the item's own stats are: ItemBuilder#dungeonFactor). The multiplicative buffs are 1: which of
-     * them count for magic damage is UNKNOWN (the classes' are for melee and arrows).
+     * boost, as the item's own stats are: ItemBuilder#dungeonFactor). No multiplicative buffs: which of them
+     * count for magic damage is UNKNOWN (the classes' are for melee and arrows), but for the few that say so
+     * (the next).
      */
     public static double damage(Spell spell, double dungeonFactor, Caster caster, Damage.Target target) {
+        return damage(spell, dungeonFactor, caster, target, 1);
+    }
+
+    /** The same with this product of multiplicative buffs on it (the Loving reforge's 1.05; see Hits#addMagicMultiplier). */
+    public static double damage(Spell spell, double dungeonFactor, Caster caster, Damage.Target target, double multiplier) {
         double initial = Damage.initialAbility(spell.base() * dungeonFactor, spell.scaling(), caster.intelligence(), caster.abilityDamage());
-        double damage = Damage.exactMagic(initial, spell.additive() ? caster.additive() : 0, 1, target);
+        double damage = Damage.exactMagic(initial, spell.additive() ? caster.additive() : 0, multiplier, target);
         return spell.floored() ? Math.floor(damage) : damage;
     }
 

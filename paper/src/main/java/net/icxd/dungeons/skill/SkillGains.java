@@ -17,6 +17,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.util.Map;
+
 /**
  * Skill XP coming in: Combat XP for killing SkyBlock's mobs, and what every gain shows (the action
  * bar's "+60.2 Combat (35.46%)" for 2 seconds, the tab list's skill) and gives (each level's message,
@@ -29,7 +31,7 @@ public final class SkillGains implements Listener {
     static final long SHOWN_MILLIS = 2_000;
 
     /**
-     * The killer gets the mob's Combat XP with their Combat Wisdom and the Champion on what they hold
+     * The killer gets the mob's Combat XP with their Combat Wisdom and the Champion (or Toxophilite) on what they hold
      * (research skills.md 5.1). Only the killer: how a party shares it is UNKNOWN (the recordings are
      * solo). There are no Private Islands here, where mobs would give none. Kill Combo (a pet's) isn't
      * in the plugin.
@@ -40,9 +42,16 @@ public final class SkillGains implements Listener {
         if (killer == null || !killer.isOnline()) return;
         double base = event.variant().combatXp();
         if (base <= 0) return;
-        int champion = Combat.heldEnchantments(killer).getOrDefault("champion", 0);
         // Combat Wisdom is give's, as every skill's Wisdom is: combatXp(base, wisdom, champion) in all.
-        give(killer, Skill.COMBAT, base * (1 + champion(champion) / 100));
+        give(killer, Skill.COMBAT, base * (1 + combatXpPercent(Combat.heldEnchantments(killer)) / 100));
+    }
+
+    /**
+     * The extra Combat XP a weapon's enchantments give, in percent: Champion's, and a bow's Toxophilite's ("Gain 3%
+     * extra Combat XP", the same percents a tier as Champion's).
+     */
+    public static double combatXpPercent(Map<String, Integer> enchantments) {
+        return champion(enchantments.getOrDefault("champion", 0)) + champion(enchantments.getOrDefault("toxophilite", 0));
     }
 
     /** A kill's Combat XP: base x (1 + Combat Wisdom / 100) x (1 + Champion's percent / 100). */

@@ -158,6 +158,10 @@ class DamageTest {
         assertEquals(0, Damage.enchantment("smite", 6, attacker, cube), 1e-9);
         assertEquals(30, Damage.enchantment("cubism", 5, attacker, cube), 1e-9);
         assertEquals(30, Damage.enchantment("smoldering", 5, attacker, cube), 1e-9);
+        // Gravity VI is 40% (its book), not Smoldering's last 30%.
+        Damage.Target bat = target(100, 100, 0, MobType.AIRBORNE);
+        assertEquals(40, Damage.enchantment("dragon_hunter", 6, attacker, bat), 1e-9);
+        assertEquals(30, Damage.enchantment("dragon_hunter", 5, attacker, bat), 1e-9);
         // Execute V: 1% for each percent missing; Prosecute V: 0.7% for each percent left.
         Damage.Target hurt = target(2500, 10000, 0);
         assertEquals(75, Damage.enchantment("execute", 5, attacker, hurt), 1e-9);
