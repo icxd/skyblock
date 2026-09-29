@@ -100,6 +100,19 @@ class WeaponRulesTest {
         assertEquals(400, WeaponRules.soul(2, 200, 1_000_000, false), 1e-9);
     }
 
+    /** A soul is added once, by the hit that takes it from what they hold: not again by a shortbow's other arrows. */
+    @Test
+    void soulOnce() {
+        assertTrue(WeaponRules.soulToAdd(10_000, true, 10_000));
+        // The first arrow took it: the held bow has none left for the second and third, which carry it still.
+        assertFalse(WeaponRules.soulToAdd(10_000, true, 0));
+        // A kill since the arrow left stored another: that one is for the next hit.
+        assertFalse(WeaponRules.soulToAdd(10_000, true, 4_000));
+        // They hold something else now, or it had none.
+        assertFalse(WeaponRules.soulToAdd(10_000, false, 10_000));
+        assertFalse(WeaponRules.soulToAdd(0, true, 0));
+    }
+
     @Test
     void tiersUpAsTheCountReaches() {
         Map<Integer, Double> thresholds = Map.of(1, 50_000.0, 2, 100_000.0, 3, 250_000.0);

@@ -433,12 +433,12 @@ public final class WeaponEnchants implements Listener {
 
     /**
      * Soul Eater's soul goes with the critical hit it's added to, as the hit lands (before it can kill, so the soul of
-     * the kill it makes is the next hit's): what they hold, if it's the one with it, has none left. Not a soul a kill
-     * stored since the arrow left (another value): that one is for the next.
+     * the kill it makes is the next hit's): what they hold, if it's the one with it, has none left. Whether it had this
+     * soul to give (see {@link WeaponRules#soulToAdd}: an arrow carries its bow as it left).
      */
-    private static void eatSoul(Player player, double eaten) {
+    private static boolean eatSoul(Player player, double eaten) {
         NBTTagCompound held = ItemNBT.read(player.getInventory().getItemInMainHand());
-        if (SOUL_EATER.on(held) > 0 && ItemCounters.get(held, SOUL) == eaten) ItemCounters.addHeld(player, SOUL, -eaten);
+        return WeaponRules.soulToAdd(eaten, SOUL_EATER.on(held) > 0, ItemCounters.get(held, SOUL)) && ItemCounters.addHeld(player, SOUL, -eaten);
     }
 
     /** Knockback's and Punch's extra push for the knockback this hit gives the mob, which vanilla does after its listeners. */
@@ -497,11 +497,8 @@ public final class WeaponEnchants implements Listener {
         }
         if (levels.has(SOUL_EATER) && landing.critical()) {
             double soul = ItemCounters.get(landing.weapon(), SOUL);
-            // Not on a mob it can't hurt (the Watcher), where the hit does nothing.
-            if (soul > 0 && MobHits.hittable(landing.entity())) {
-                added += soul;
-                eatSoul(player, soul);
-            }
+            // Not on a mob it can't hurt (the Watcher), where the hit does nothing; and once, from the item they hold.
+            if (soul > 0 && MobHits.hittable(landing.entity()) && eatSoul(player, soul)) added += soul;
         }
         return additive == 0 && added == 0 ? null : new Combat.HitBuff(additive, 1, added);
     }

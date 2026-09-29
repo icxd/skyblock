@@ -129,6 +129,16 @@ public final class WeaponRules {
     }
 
     /**
+     * Whether a hit that carries {@code carried} soul (its weapon as the hit knows it: the bow as the arrow left) may add
+     * it: only while what they hold has Soul Eater and that same soul, which the hit then takes. So one soul is added
+     * once, not by each of a shortbow's arrows (or every arrow still in flight), and a soul a kill stored since the
+     * arrow left is the next hit's.
+     */
+    public static boolean soulToAdd(double carried, boolean heldHasSoulEater, double heldSoul) {
+        return carried > 0 && heldHasSoulEater && heldSoul == carried;
+    }
+
+    /**
      * A tiered enchantment's level once its count has grown (Champion's Combat XP, Toxophilite's): up one for each
      * tier whose "&850k Combat XP to tier up!" the count has reached, several at once if it has ("Fixed Champion not
      * leveling multiple times when gaining enough Combat XP for multiple levels", the wiki). {@code thresholds} gives a
