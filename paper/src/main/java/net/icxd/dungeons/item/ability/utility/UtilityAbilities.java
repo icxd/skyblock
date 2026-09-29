@@ -33,6 +33,7 @@ public final class UtilityAbilities {
         to.accept("Echolocation", new SecretTracker());
         to.accept("Dungeon Breaker", new DungeonBreaker());
         to.accept("Tuning 4 Dummies", new HamRadio());
+        to.accept("Try Your Luck", new ArchfiendDice());
         // Healing
         WandHeal wand = new WandHeal();
         for (String name : new String[] {"Small Heal", "Medium Heal", "Big Heal", "Huge Heal"}) to.accept(name, wand);
