@@ -51,6 +51,10 @@ final class WeaponLore {
     private static final Pattern BOUNCE = Pattern.compile("Your arrows have a ([\\d.]+)% chance to bounce to another target");
     private static final Pattern VOLLEY = Pattern.compile("Fires a volley of (\\d+) arrows");
     private static final Pattern VENOM = Pattern.compile("apply venom to all enemies hit dealing ([\\d.]+)❁ Damage every second for (\\d+) seconds");
+    /** "Ignites enemies for 3s." */
+    private static final Pattern IGNITES = Pattern.compile("Ignites enemies for (\\d+)s");
+    /** "Arrows shot using this bow have an aura around them that deals 360❁ Damage to nearby enemies instead of dealing impact damage." */
+    private static final Pattern AURA = Pattern.compile("have an aura around them that deals ([\\d,.]+)❁ Damage to nearby enemies instead of dealing impact damage");
 
     /** The factor on hits on each mob type ("+100%" is 2, "1.5x" 1.5). */
     final Map<MobType, Double> types = new EnumMap<>(MobType.class);
@@ -81,6 +85,10 @@ final class WeaponLore {
     int volley = 1;
     double venomDamage;
     int venomSeconds;
+    /** How long its melee hits set a mob on fire (0 for not). */
+    int igniteSeconds;
+    /** Its arrows' aura's damage instead of their own (0 for none), and whether they go through mobs. */
+    double auraDamage;
     private boolean any;
 
     private WeaponLore() {
@@ -118,9 +126,12 @@ final class WeaponLore {
             read.venomDamage = number(m.group(1));
             read.venomSeconds = Integer.parseInt(m.group(2));
         }
+        read.igniteSeconds = (int) first(IGNITES, plain);
+        read.auraDamage = first(AURA, plain);
         read.any = !read.types.isEmpty() || read.missingType != null || read.inWater != 1 || read.always != 1 || read.strengthInLava > 0
                 || read.healPerHit > 0 || read.manaPerHit > 0 || !read.wisdom.isEmpty() || read.animalTaken != 1 || read.behindCrit != 1
-                || read.shredStacks > 0 || read.bounceChance > 0 || read.volley > 1 || read.venomSeconds > 0;
+                || read.shredStacks > 0 || read.bounceChance > 0 || read.volley > 1 || read.venomSeconds > 0 || read.igniteSeconds > 0
+                || read.auraDamage > 0;
         return read.any ? read : NONE;
     }
 

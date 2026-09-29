@@ -131,4 +131,16 @@ class WeaponPassivesTest {
         assertFalse(WeaponLore.NONE.any());
         assertNull(WeaponLore.type("Endermen"));
     }
+
+    /** The Flaming Sword's "Ignites enemies for 3s." and the Spider Queen's Stinger's aura, from their text. */
+    @Test
+    void igniteAndAura() {
+        assertEquals(3, WeaponLore.of(List.of("&7Ignites enemies for &a3s&7.")).igniteSeconds);
+        WeaponLore stinger = WeaponLore.of(List.of("&7Arrows shot using this bow have an", "&7aura around them that deals &c360❁",
+                "&cDamage &7to nearby enemies instead of", "&7dealing impact damage. Arrows travel", "&7through enemies.", "",
+                "&4This item is Arachnal Ж!"));
+        assertEquals(360, stinger.auraDamage, EPS);
+        // "360 + (3.6 x Strength) True Damage" (the wiki).
+        assertEquals(360 + 3.6 * 250, BowPassives.auraDamage(360, 250), EPS);
+    }
 }

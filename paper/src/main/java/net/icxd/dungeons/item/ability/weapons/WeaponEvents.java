@@ -46,6 +46,12 @@ public final class WeaponEvents implements Listener {
         BowPassives.arrowLanded(arrow, player, hit, event.getHitBlock());
     }
 
+    /** A Spider Queen's Stinger's arrow goes through the mobs it meets ("Arrows travel through enemies"). */
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onArrowThrough(ProjectileHitEvent event) {
+        if (event.getHitEntity() != null && BowPassives.passesThrough(event.getEntity())) event.setCancelled(true);
+    }
+
     @EventHandler
     public void onArrowGone(EntityRemoveEvent event) {
         if (!(event.getEntity() instanceof AbstractArrow)) return;

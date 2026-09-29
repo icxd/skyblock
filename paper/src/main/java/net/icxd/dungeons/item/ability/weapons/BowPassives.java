@@ -2,6 +2,7 @@ package net.icxd.dungeons.item.ability.weapons;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +34,7 @@ import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.combat.Debuffs;
 import net.icxd.dungeons.combat.HitKind;
 import net.icxd.dungeons.combat.MobDebuffs;
+import net.icxd.dungeons.combat.MobHits;
 import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunItems;
@@ -96,6 +98,14 @@ final class BowPassives {
 
     /** Triple Shot's side arrows homing in. */
     private static final List<AbstractArrow> HOMING = new ArrayList<>();
+    /** "Enemies within 2.5 blocks of the arrow take 360 + (3.6 x Strength) True Damage" (the wiki's Spider Queen's Stinger). */
+    static final double AURA_RADIUS = 2.5;
+
+    /** A Spider Queen's Stinger's arrow in flight: whose, what its aura deals, with what bow, and the mobs it has hurt. */
+    private record Aura(AbstractArrow arrow, UUID by, double damage, NBTTagCompound bow, Set<UUID> hurt) {
+    }
+
+    private static final Map<UUID, Aura> AURAS = new HashMap<>();
     /** The Explosive Bow's arrows in flight: what their blast is worked out with (the shot's, as the arrow's own hit). */
     private static final Map<UUID, Damage.Attacker> EXPLOSIVE = new HashMap<>();
     /** Extreme Focus's damage waiting for their next hit, by player. */
@@ -134,6 +144,10 @@ final class BowPassives {
             return;
         }
         if (weapon.further) arrow.setVelocity(arrow.getVelocity().multiply(SNIPER_SPEED));
+        if (weapon.lore.auraDamage > 0) {
+            double strength = PlayerSession.of(player).stats().get(Stat.STRENGTH);
+            AURAS.put(arrow.getUniqueId(), new Aura(arrow, player.getUniqueId(), auraDamage(weapon.lore.auraDamage, strength), bow, new HashSet<>()));
+        }
         if (weapon.explosive) EXPLOSIVE.put(arrow.getUniqueId(), Hits.striker(player, bow, Hits.Strike.arrow(0, 1)));
         if (weapon.extraArrows > 0) {
             // Triple Shot: "Power and Piercing do not work on them" (the wiki's Runaan's Bow).
@@ -201,8 +215,39 @@ final class BowPassives {
         player.getWorld().playSound(eye, Sound.ENTITY_WITHER_SHOOT, 0.6f, 1);
     }
 
-    /** Every tick: Triple Shot's side arrows turn towards the nearest mob within reach, keeping their speed. */
+    /**
+     * The Spider Queen's Stinger: "Arrows shot using this bow have an aura around them that deals 360❁ Damage to nearby
+     * enemies instead of dealing impact damage. Arrows travel through enemies." The wiki's: "Enemies within 2.5 blocks
+     * of the arrow take 360 + (3.6 x Strength) True Damage", its text's number and the shooter's Strength when it was
+     * shot, "not affected by Hot Potato Book buffs, Enchantments, Crit Damage". Each mob once an arrow (UNKNOWN), as an
+     * effect's damage with no Defense; the arrow goes through mobs (see {@link #passesThrough}).
+     */
+    static double auraDamage(double base, double strength) {
+        return Math.max(0, base) * (1 + Math.max(0, strength) / 100);
+    }
+
+    /** Whether this arrow goes through the mobs it meets (a Spider Queen's Stinger's): its hits are called off. */
+    static boolean passesThrough(Entity arrow) {
+        return !AURAS.isEmpty() && AURAS.containsKey(arrow.getUniqueId());
+    }
+
+    private static void tickAuras() {
+        for (Iterator<Aura> it = AURAS.values().iterator(); it.hasNext(); ) {
+            Aura aura = it.next();
+            Player by = Bukkit.getPlayer(aura.by());
+            if (by == null || !aura.arrow().isValid() || aura.arrow().isInBlock() || aura.arrow().isOnGround() || !Hits.canStillHit(by)) {
+                it.remove();
+                continue;
+            }
+            for (LivingEntity mob : Hits.near(aura.arrow().getLocation(), AURA_RADIUS)) {
+                if (aura.hurt().add(mob.getUniqueId())) MobHits.deal(by, mob, aura.damage(), DamageIndicators.Look.NORMAL, HitKind.OTHER, aura.bow());
+            }
+        }
+    }
+
+    /** Every tick: Triple Shot's side arrows turn towards the nearest mob within reach, keeping their speed; auras hurt. */
     private static void tick() {
+        if (!AURAS.isEmpty()) tickAuras();
         for (Iterator<AbstractArrow> it = HOMING.iterator(); it.hasNext(); ) {
             AbstractArrow arrow = it.next();
             if (!arrow.isValid() || arrow.isInBlock() || arrow.isOnGround()) {
@@ -313,6 +358,7 @@ final class BowPassives {
 
     static void arrowGone(UUID arrow) {
         EXPLOSIVE.remove(arrow);
+        AURAS.remove(arrow);
         SLIME_FACTOR.remove(arrow);
     }
 

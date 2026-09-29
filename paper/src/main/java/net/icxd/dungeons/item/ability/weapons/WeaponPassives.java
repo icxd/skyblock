@@ -69,6 +69,9 @@ import net.icxd.dungeons.user.User;
  * behaviour's (see HeldStats). Its bows' part is {@link BowPassives}'. Registered by Dungeons. Main thread.
  */
 public final class WeaponPassives implements Listener {
+    /** The Flaming Sword's fire: Fire Aspect's damage over time (its source), a second's 3% of the hit (Fire Aspect I's; UNKNOWN). */
+    static final String FIRE = "fire";
+    static final double IGNITE_SHARE = 0.03;
     /** A Cleaver's share of its hit on the mobs around what it hit: "typically ranges from 40% to 50%", less further off (the wiki's Cleaver). */
     static final double CLEAVE_NEAR = 0.5;
     static final double CLEAVE_FAR = 0.4;
@@ -259,6 +262,7 @@ public final class WeaponPassives implements Listener {
      */
     private static void melee(Player player, Weapon weapon, Combat.Landing landing, double damage) {
         WeaponLore lore = weapon.lore;
+        if (lore.igniteSeconds > 0) ignite(player, landing, lore.igniteSeconds);
         if (lore.healPerHit > 0) Heals.give(player, player, lore.healPerHit);
         if (lore.manaPerHit > 0) giveMana(player, lore.manaPerHit);
         if (weapon.loveTap > 0 && RunManager.inRun(player)) Heals.give(player, player, weapon.loveTap);
@@ -268,6 +272,25 @@ public final class WeaponPassives implements Listener {
             if (playing == DungeonClass.MAGE && weapon.mageMana > 0) giveMana(player, weapon.mageMana * Damage.manaOnHit(PlayerSession.of(player).maxMana()));
             if (playing == DungeonClass.ARCHER && weapon.archerMark > 0) mark(player, landing.entity(), weapon.archerMark, weapon.archerMillis);
         }
+    }
+
+    /**
+     * The Flaming Sword's "Ignites enemies for 3s.": the mob burns (fire's look, and the fire damage over time Fire
+     * Aspect's is, "fire", so the two don't burn it twice), a second at a time for the text's seconds. What a second
+     * deals is UNKNOWN (the text gives only the time): Fire Aspect I's 3% of the hit's damage after additive buffs,
+     * through the mob's Defense.
+     */
+    private static void ignite(Player player, Combat.Landing landing, int seconds) {
+        LivingEntity mob = landing.entity();
+        if (!MobHits.alive(mob)) return;
+        Damage.Target target = MobHits.target(mob);
+        if (target == null) return;
+        Damage.Attacker attacker = Combat.attacker(player, landing.weapon(), false, 0);
+        double postAdditive = Damage.initial(attacker.damage(), attacker.strength())
+                * (landing.critical() ? Damage.critMultiplier(attacker.critDamage()) : 1) * (1 + Damage.additive(attacker, target) / 100);
+        double tick = postAdditive * IGNITE_SHARE * Damage.defenseMultiplier(target.defense());
+        mob.setFireTicks(seconds * 20);
+        MobDebuffs.dot(mob, FIRE, player, tick, 20, seconds, DamageIndicators.Look.FIRE);
     }
 
     /** The class they play in the run they're in; null outside one. */
