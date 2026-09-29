@@ -1,6 +1,6 @@
 package net.icxd.dungeons.item.enchanting.weapon;
 
-import io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent;
+import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
@@ -458,13 +458,16 @@ public final class WeaponEnchants implements Listener {
         });
     }
 
-    /** The hit's knockback pushes it that much further: away from the player, or the way the arrow flew. */
+    /**
+     * The hit's knockback pushes it that much further: away from the player, or the way the arrow flew. Paper's event
+     * for a living entity knocked back by another's hit (its parent, EntityPushedByEntityAttackEvent, is deprecated).
+     */
     @EventHandler(ignoreCancelled = true)
-    public void onKnockback(EntityPushedByEntityAttackEvent event) {
+    public void onKnockback(EntityKnockbackByEntityEvent event) {
         if (PUSHES.isEmpty()) return;
         Double strength = PUSHES.remove(event.getEntity().getUniqueId());
         if (strength == null) return;
-        Entity by = event.getPushedBy();
+        Entity by = event.getHitBy();
         Vector away = by instanceof Projectile arrow ? arrow.getVelocity().clone()
                 : event.getEntity().getLocation().toVector().subtract(by.getLocation().toVector());
         away.setY(0);
