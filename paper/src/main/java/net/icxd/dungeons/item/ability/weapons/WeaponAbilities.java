@@ -88,6 +88,7 @@ public final class WeaponAbilities {
         to.accept("Stun Potion", new GhostAbilities.StunPotion());
         to.accept("Absorption Potion", new GhostAbilities.AbsorptionPotion());
         to.accept(GhostAbilities.SPIRIT_BOMB, new GhostAbilities.SpiritBomb());
+        to.accept("Gorilla Tactics", new GorillaTactics());
     }
 
     /**

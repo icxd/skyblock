@@ -173,6 +173,7 @@ public final class WeaponPassives implements Listener {
         BowPassives.register();
         Tormentor.register();
         WornStrikes.register();
+        GorillaTactics.register();
     }
 
     private static double number(Pattern pattern, String plain) {
@@ -447,6 +448,7 @@ public final class WeaponPassives implements Listener {
         BowPassives.forget(player);
         Tormentor.forget(player);
         WornStrikes.forget(player);
+        GorillaTactics.forget(player);
         ArmorAbilities.EyeBeam.forget(player);
     }
 
