@@ -131,9 +131,13 @@ public final class EnchantmentType {
         return stats(getDescription(level));
     }
 
-    /** The stats it grants at a level on this item, here (Efficiency's Mining Speed on a mining tool: see {@link #getDescription(SkyBlockItem, int)}). */
+    /**
+     * The stats it grants at a level on this item, here: Efficiency's Mining Speed on a mining tool off the Hub (see
+     * {@link #getDescription(SkyBlockItem, int)}); every other one's are {@link #getStats(int)}'s.
+     */
     public Stats getStats(SkyBlockItem item, int level) {
-        return stats(getDescription(item, level));
+        String mining = MiningTools.efficiencyText(namespace, item, level);
+        return mining != null ? stats(mining) : getStats(level);
     }
 
     /** What a description's text grants (see {@link #getStats}); nothing for null. */
@@ -141,6 +145,11 @@ public final class EnchantmentType {
         Stats stats = new Stats();
         if (text == null) return stats;
         Matcher m = GRANTS.matcher(text);
+        if (m.find()) {
+            set(stats, m.group(2), m.group(1));
+            return m.group(4) == null ? stats : set(stats, m.group(4), m.group(3));
+        }
+        m = GAINS.matcher(text);
         if (m.find()) {
             set(stats, m.group(2), m.group(1));
             return m.group(4) == null ? stats : set(stats, m.group(4), m.group(3));
@@ -161,15 +170,16 @@ public final class EnchantmentType {
 
     /** One "&a+75 &c❤ Health" of "&7Grants … [&7and …]". */
     private static final String GRANT = "&.\\+([\\d.]+) ?(?:&.)?\\S? ?([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*)";
-    /**
-     * "&7Grants &a+75 &c❤ Health&7." (or "…&7, which …", or Divine Gift's "…Magic Find."), and nothing more to it; or
-     * "&7Gain" (Cultivating's two, as live lore counts them), and the one before "&7and a …" (Compact's Mining Wisdom,
-     * live lore's "Mining Wisdom: +8" at VIII, before its chance of an enchanted item).
-     */
-    private static final Pattern GRANTS = Pattern.compile("^&7(?:Grants|Gain) " + GRANT + "(?: &7and " + GRANT + ")?(?:&7)?(?:\\.$|, which | &7and a )");
+    /** "&7Grants &a+75 &c❤ Health&7." (or "…&7, which …", or Divine Gift's "…Magic Find."), and nothing more to it. */
+    private static final Pattern GRANTS = Pattern.compile("^&7Grants " + GRANT + "(?: &7and " + GRANT + ")?(?:&7)?(?:\\.$|, which )");
     /** One "&9☠ Crit Damage &7by &a10%&7" of "&7Increases … [and …]." */
     private static final String BY = "&.\\S+ ([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*) &7by &a\\+?([\\d.]+)%?&7";
     private static final Pattern INCREASES = Pattern.compile("^&7Increases " + BY + "(?: and " + BY + ")?\\.");
+    /**
+     * "&7Gain" as "&7Grants" (Cultivating's two, as live lore counts them), and the one before "&7and a …" (Compact's
+     * Mining Wisdom, live lore's "Mining Wisdom: +8" at VIII, before its chance of an enchanted item).
+     */
+    private static final Pattern GAINS = Pattern.compile("^&7Gain " + GRANT + "(?: &7and " + GRANT + ")?(?:&7)?(?:\\.$| &7and a )");
     /** A green percent: "&a15%", "&a+12.5%". */
     private static final Pattern PERCENT = Pattern.compile("&a\\+?([\\d.]+)%");
 

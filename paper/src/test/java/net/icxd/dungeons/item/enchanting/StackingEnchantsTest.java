@@ -95,6 +95,14 @@ class StackingEnchantsTest {
         assertEquals(new Stats(), EnchantmentType.stats("&7Gain &a3% &7extra Combat XP."));
     }
 
+    /** On an item, an enchantment's stats are its own ({@link EnchantmentType#getStats(int)}'s) but for Efficiency's Mining Speed. */
+    @Test
+    void onAnItem() {
+        EnchantmentType compact = useTable();
+        assertEquals(compact.getStats(2), compact.getStats(null, 2));
+        assertEquals(new Stats().set(Stat.MINING_WISDOM, 4), compact.getStats(null, 2));
+    }
+
     /** Efficiency's text on a mining tool off the Hub is a stat the text reads: +110 Mining Speed at V. */
     @Test
     void efficiencyReads() {
