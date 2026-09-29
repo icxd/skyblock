@@ -143,4 +143,13 @@ class WeaponPassivesTest {
         // "360 + (3.6 x Strength) True Damage" (the wiki).
         assertEquals(360 + 3.6 * 250, BowPassives.auraDamage(360, 250), EPS);
     }
+
+    /** Vis Temperata: "capped at 33% of the enemy's max Health. This weapon cannot cause a fatal blow." */
+    @Test
+    void visTemperataCapsAndNeverKills() {
+        assertEquals(330, WeaponPassives.strikeCap(0.33, true, 1_000, 1_000), EPS);
+        assertEquals(99, WeaponPassives.strikeCap(0.33, true, 100, 1_000), EPS);
+        assertEquals(0, WeaponPassives.strikeCap(0.33, true, 1, 1_000), EPS);
+        assertEquals(Double.MAX_VALUE, WeaponPassives.strikeCap(0, false, 1, 1_000), EPS);
+    }
 }

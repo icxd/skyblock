@@ -84,6 +84,8 @@ public final class WeaponPassives implements Listener {
     /** The Stone Blade's Archer line: "Your melee attacks cause enemies to take 10% more damage from your arrows for 5 seconds". */
     private static final Pattern ARCHER_MARK = Pattern.compile("cause enemies to take ([\\d.]+)% more damage from your arrows for ([\\d.]+) seconds");
 
+    /** Vis Temperata: "Each strike of this weapon has its damage capped at 33% of the enemy's max Health." */
+    private static final Pattern CAPPED = Pattern.compile("has its damage capped at ([\\d.]+)% of the enemy's max Health");
     /** Triple Shot: "Shoots 3 arrows at a time! The 2 extra arrows deal 40% of the damage and home to targets." */
     private static final Pattern EXTRA_ARROWS = Pattern.compile("The (\\d+) extra arrows deal ([\\d.]+)% of the damage");
 
@@ -107,6 +109,9 @@ public final class WeaponPassives implements Listener {
         double mageMana;
         double archerMark;
         long archerMillis;
+        /** Vis Temperata's cap, a share of the mob's max health (0 for none), and whether it can't kill. */
+        double capShare;
+        boolean neverFatal;
         /** Bows (see {@link BowPassives}): Triple Shot's extra arrows and their share, Tempest, Explosive Shot, Sting, the Crypt Bow's skulls, the Sniper Bow's range. */
         int extraArrows;
         double extraShare = 1;
@@ -135,6 +140,10 @@ public final class WeaponPassives implements Listener {
                         }
                     }
                     case "Tempest" -> tempest = true;
+                    case "Vis Temperata" -> {
+                        capShare = number(CAPPED, plain) / 100;
+                        neverFatal = plain.contains("This weapon cannot cause a fatal blow");
+                    }
                     case "Explosive Shot" -> explosive = true;
                     case "Sting" -> sting = block;
                     default -> {
@@ -160,6 +169,7 @@ public final class WeaponPassives implements Listener {
     public WeaponPassives() {
         Combat.addHitBuffs((Combat.LandingBuffs) WeaponPassives::buff);
         Combat.addHitListener(WeaponPassives::landed);
+        Combat.addHitCap(WeaponPassives::cap);
         Combat.addAlwaysCrits((player, tag) -> {
             Weapon weapon = weapon(tag);
             return weapon != null && weapon.stinger;
@@ -219,6 +229,26 @@ public final class WeaponPassives implements Listener {
         if (landing.kind() == HitKind.ARROW) factor *= marked(player, landing.entity()) * BowPassives.factor(landing, target);
         double added = BowPassives.focus(player);
         return factor == 1 && added == 0 ? null : new Combat.HitBuff(0, factor, added);
+    }
+
+    /**
+     * The hunting axes' Vis Temperata: "Each strike of this weapon has its damage capped at 33% of the enemy's max
+     * Health. This weapon cannot cause a fatal blow.": at most that share of the mob's max health, and never the last
+     * of its health (a mob with 1 or less left takes nothing: UNKNOWN how low Hypixel's goes). Melee hits with it only
+     * (its Ferocity strikes are the hit's damage again).
+     */
+    private static double cap(Player player, Combat.Landing landing, Damage.Target target) {
+        if (landing.kind() != HitKind.MELEE) return Double.MAX_VALUE;
+        Weapon weapon = weapon(landing.weapon());
+        if (weapon == null || weapon.capShare <= 0 && !weapon.neverFatal) return Double.MAX_VALUE;
+        return strikeCap(weapon.capShare, weapon.neverFatal, target.health(), target.maxHealth());
+    }
+
+    /** The most a strike deals: {@code share} of max health (none for 0), and short of killing if it can't kill. */
+    static double strikeCap(double share, boolean neverFatal, double health, double maxHealth) {
+        double most = share > 0 ? share * maxHealth : Double.MAX_VALUE;
+        if (neverFatal) most = Math.min(most, Math.max(0, Math.ceil(health) - 1));
+        return most;
     }
 
     /** The share of their max health they're missing (0 to 1). */
