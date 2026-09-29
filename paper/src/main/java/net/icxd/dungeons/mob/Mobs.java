@@ -279,7 +279,7 @@ public final class Mobs implements Listener {
         double before = live.health;
         live.health -= damage;
         DamageIndicators.show(live.entity, damage, look);
-        CombatState.dealt(player);
+        CombatState.dealt(player, damage);
         DungeonRun run = RunManager.of(player);
         if (run != null) run.damageDealt(player.getUniqueId(), damage);
         if (live.health <= 0) {

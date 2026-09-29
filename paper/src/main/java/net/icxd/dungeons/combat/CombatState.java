@@ -3,6 +3,10 @@ package net.icxd.dungeons.combat;
 import net.icxd.dungeons.session.PlayerSession;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.ObjDoubleConsumer;
+
 /**
  * Whether a player is "in combat" (Respite's "+3 Health Regen while out of combat", the Soulflow items' "per
  * 5s in combat", Overflow Mana "when leaving combat"): they dealt SkyBlock's mobs damage, or took a hit from
@@ -22,6 +26,20 @@ public final class CombatState {
     /** They dealt a mob damage just now (any of theirs: a hit, an ability, a damage over time). */
     public static void dealt(Player player) {
         PlayerSession.of(player).setLastDealtMillis(System.currentTimeMillis());
+    }
+
+    /** What hears of every bit of damage a player deals a mob (see {@link #dealt(Player, double)}). */
+    private static final List<ObjDoubleConsumer<Player>> DEALT = new ArrayList<>();
+
+    /** Adds something that hears of all the damage a player deals SkyBlock's mobs, and how much (the Tactical Insertion's burn). */
+    public static void addDealtListener(ObjDoubleConsumer<Player> listener) {
+        DEALT.add(listener);
+    }
+
+    /** They dealt a mob this much just now: the mob sinks call it with every hit, ability, effect and damage over time. */
+    public static void dealt(Player player, double damage) {
+        dealt(player);
+        for (ObjDoubleConsumer<Player> listener : DEALT) listener.accept(player, damage);
     }
 
     /**
