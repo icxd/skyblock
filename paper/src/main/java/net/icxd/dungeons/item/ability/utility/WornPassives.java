@@ -90,7 +90,8 @@ public final class WornPassives {
     /** The bonuses these are, for SetBonuses (see WornAbilities). */
     public static List<Bonus> all() {
         return List.of(new BlockDamage(), new BoneShield(), new MithrilsProtection(), new Growth(), new DoubleJump(),
-                new Coating("Depth Coating"), new Coating("Pressurized Coating"), new GladiatorsWill(), new BlazingRestoration());
+                new Coating("Depth Coating"), new Coating("Pressurized Coating"), new GladiatorsWill(), new BlazingRestoration(),
+                new FarmersSpeedCap());
     }
 
     /** A worn piece's passive ABILITY block, by its name. */
@@ -428,6 +429,20 @@ public final class WornPassives {
         @Override
         public void second(Player player, Active active) {
             Heals.give(player, player, number(RESTORES, text(active), 0));
+        }
+    }
+
+    /** The Rancher's Boots' Farmer's Speed: while worn, their Speed is at most what's been set on them (see {@link FarmersSpeed}). */
+    static final class FarmersSpeedCap extends Passive {
+        FarmersSpeedCap() {
+            super("Farmer's Speed");
+        }
+
+        @Override
+        public void derivedStats(Player player, Active active, Stats stats) {
+            int cap = FarmersSpeed.NONE;
+            for (Worn.Piece piece : active.pieces()) cap = Math.min(cap, FarmersSpeed.cap(piece.tag()));
+            if (cap < FarmersSpeed.NONE && stats.get(Stat.SPEED) > cap) stats.set(Stat.SPEED, cap);
         }
     }
 

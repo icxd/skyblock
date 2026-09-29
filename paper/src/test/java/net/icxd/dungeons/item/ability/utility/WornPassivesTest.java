@@ -1,10 +1,13 @@
 package net.icxd.dungeons.item.ability.utility;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 
 /** Worn pieces' abilities that don't hit: their rules. */
 class WornPassivesTest {
@@ -34,5 +37,17 @@ class WornPassivesTest {
         assertEquals(0, Masks.upgrades(List.of("TALISMAN_OF_COINS")));
         assertEquals(1, Masks.upgrades(List.of("INTIMIDATION_TALISMAN")));
         assertEquals(4, Masks.upgrades(List.of("INTIMIDATION_RING", "INTIMIDATION_RELIC")));
+    }
+
+    /** Farmer's Speed: the number typed, and the boots' cap (none until it's set). */
+    @Test
+    void farmersSpeedCap() {
+        assertEquals(250, FarmersSpeed.typed(" 250 "));
+        assertNull(FarmersSpeed.typed("fast"));
+        assertNull(FarmersSpeed.typed(""));
+        assertEquals(FarmersSpeed.NONE, FarmersSpeed.cap(null));
+        NBTTagCompound boots = new NBTTagCompound();
+        boots.setInt(FarmersSpeed.CAP, 150);
+        assertEquals(150, FarmersSpeed.cap(boots));
     }
 }
