@@ -128,9 +128,9 @@ public final class Combat {
     }
 
     /**
-     * The most a player's melee hit or arrow may deal to a mob, once it's worked out (the hunting axes' Vis Temperata:
-     * "Each strike of this weapon has its damage capped at 33% of the enemy's max Health. This weapon cannot cause a
-     * fatal blow."); {@link Double#MAX_VALUE} for no cap. Of several, the least counts.
+     * The most a player's melee hit, arrow or Ferocity strike may deal to a mob, once it's worked out (the hunting
+     * axes' Vis Temperata: "Each strike of this weapon has its damage capped at 33% of the enemy's max Health. This
+     * weapon cannot cause a fatal blow."); {@link Double#MAX_VALUE} for no cap. Of several, the least counts.
      */
     @FunctionalInterface
     public interface HitCap {
@@ -382,6 +382,8 @@ public final class Combat {
         Mobs.Live mob = dungeonMob == null ? Mobs.of(target) : null;
         if (dungeonMob != null ? dungeonMob.invulnerable() : mob == null || mob.type().isInvulnerable()) return;
         Damage.Target on = MobHits.target(target);
+        // Its caps as the mob is now (Vis Temperata's "cannot cause a fatal blow" holds for each strike).
+        if (!HIT_CAPS.isEmpty()) damage = capped(player, strike, on, damage);
         slash(player, target);
         if (dungeonMob != null) DungeonMobs.damage(target, player, damage, look, HitKind.FEROCITY, strike.weapon());
         else Mobs.damage(mob, player, damage, look, HitKind.FEROCITY, strike.weapon());

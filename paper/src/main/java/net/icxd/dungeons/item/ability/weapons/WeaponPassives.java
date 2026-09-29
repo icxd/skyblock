@@ -262,11 +262,11 @@ public final class WeaponPassives implements Listener {
     /**
      * The hunting axes' Vis Temperata: "Each strike of this weapon has its damage capped at 33% of the enemy's max
      * Health. This weapon cannot cause a fatal blow.": at most that share of the mob's max health, and never the last
-     * of its health (a mob with 1 or less left takes nothing: UNKNOWN how low Hypixel's goes). Melee hits with it only
-     * (its Ferocity strikes are the hit's damage again).
+     * of its health (a mob with 1 or less left takes nothing: UNKNOWN how low Hypixel's goes). Its melee hits and
+     * their Ferocity strikes (each capped as the mob is when it lands, so no strike after the hit kills it either).
      */
     private static double cap(Player player, Combat.Landing landing, Damage.Target target) {
-        if (landing.kind() != HitKind.MELEE) return Double.MAX_VALUE;
+        if (landing.kind() != HitKind.MELEE && landing.kind() != HitKind.FEROCITY) return Double.MAX_VALUE;
         Weapon weapon = weapon(landing.weapon());
         if (weapon == null || weapon.capShare <= 0 && !weapon.neverFatal) return Double.MAX_VALUE;
         return strikeCap(weapon.capShare, weapon.neverFatal, target.health(), target.maxHealth());
