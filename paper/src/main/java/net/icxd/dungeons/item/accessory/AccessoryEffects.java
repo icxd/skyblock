@@ -3,6 +3,7 @@ package net.icxd.dungeons.item.accessory;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.HitKind;
+import net.icxd.dungeons.combat.MobHits;
 import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.combat.VanillaDamage;
 import net.icxd.dungeons.common.ServerType;
@@ -387,7 +388,8 @@ public final class AccessoryEffects implements Listener {
      */
     private static Combat.HitBuff hit(Player player, Damage.Attacker attacker, Damage.Target target, Combat.Landing landing) {
         Summary s = summary(player);
-        if (s.tarantula == null && s.wedding == null) return null;
+        // Not on a mob that can't be hurt (the Watcher): its hits would count towards the 10th for nothing.
+        if ((s.tarantula == null && s.wedding == null) || !MobHits.hittable(landing.entity())) return null;
         double multiplier = 1;
         double additive = 0;
         if (s.tarantula != null && landing.kind() == HitKind.MELEE) {

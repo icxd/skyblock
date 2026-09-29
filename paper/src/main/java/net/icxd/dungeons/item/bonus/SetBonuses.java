@@ -3,6 +3,7 @@ package net.icxd.dungeons.item.bonus;
 import io.papermc.paper.event.entity.EntityEquipmentChangedEvent;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.MobDebuffs;
+import net.icxd.dungeons.combat.MobHits;
 import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.combat.VanillaDamage;
@@ -123,7 +124,9 @@ public final class SetBonuses implements Listener {
     public static void enable(Plugin plugin) {
         SetBonuses.plugin = plugin;
         PlayerStats.addModifier(SetBonuses::stats);
+        // A hit on a mob that can't be hurt (the Watcher) does nothing: it gains no stacks and spends no charges.
         Combat.addHitBuffs((Combat.LandingBuffs) (player, attacker, target, landing) -> {
+            if (!MobHits.hittable(landing.entity())) return null;
             double additive = 0;
             double multiplier = 1;
             double added = 0;
