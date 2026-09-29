@@ -3,6 +3,10 @@ package net.icxd.dungeons.item.ability.utility;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.ObjIntConsumer;
+import java.util.function.ToIntFunction;
+
+import org.bukkit.entity.Player;
 
 import net.icxd.dungeons.item.ability.AbilityHandler;
 
@@ -32,9 +36,6 @@ public final class UtilityAbilities {
         to.accept("Haunt", new SpiritLeap.Haunt());
         to.accept("Echolocation", new SecretTracker());
         to.accept("Dungeon Breaker", new DungeonBreaker());
-        to.accept("Tuning 4 Dummies", new HamRadio());
-        to.accept("Try Your Luck", new ArchfiendDice());
-        to.accept("Farmer's Speed", new FarmersSpeed());
         // Healing
         WandHeal wand = new WandHeal();
         for (String name : new String[] {"Small Heal", "Medium Heal", "Big Heal", "Huge Heal"}) to.accept(name, wand);
@@ -55,6 +56,19 @@ public final class UtilityAbilities {
         to.accept("To the Moon!", new Movement.ToTheMoon());
         // Shields
         to.accept(CellsAlignment.NAME, new CellsAlignment());
+        // Spells, tools and the rest
+        to.accept(HollowWand.NAME, new HollowWand());
+        to.accept("Tuning 4 Dummies", new HamRadio());
+        to.accept("Try Your Luck", new ArchfiendDice());
+        to.accept("Farmer's Speed", new FarmersSpeed());
+    }
+
+    /**
+     * Where the Hollow Armor's ⚶ Spirit stacks come from (the armor bonuses' tiered Spirit, BONUSES.md), and how
+     * they're spent: the Hollow Wand's spells cost them. Until something gives them there are none.
+     */
+    public static void hollowSpirit(ToIntFunction<Player> stacks, ObjIntConsumer<Player> spend) {
+        HollowWand.spiritFrom(stacks, spend);
     }
 
     /** Whether the ability with this name is one of these (once they're registered). */

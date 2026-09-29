@@ -33,6 +33,7 @@ import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.stats.PlayerStats;
+import net.icxd.dungeons.stats.StatsRunnable;
 
 /**
  * What the utility abilities need besides their clicks: every tick their heals, veils, deployables and
@@ -53,6 +54,9 @@ public final class UtilityListener implements Listener {
         PlayerStats.addModifier(Masks::stats);
         PlayerStats.addModifier(HamRadio::stats);
         PlayerStats.addModifier(ArchfiendDice::stats);
+        PlayerStats.addModifier(HollowWand::stats);
+        StatsRunnable.addManaRegenBonus(HollowWand::manaRegen);
+        Combat.addMultiplier(HollowWand::multiplier);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), UtilityListener::tick, 1, 1);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), SecretTracker::second, 20, 20);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), HamRadio::second, 20, 20);
@@ -69,6 +73,7 @@ public final class UtilityListener implements Listener {
         CellsAlignment.tick();
         DungeonBreaker.tick();
         SecretItems.tick();
+        HollowWand.tick();
     }
 
     /**
@@ -227,6 +232,7 @@ public final class UtilityListener implements Listener {
         SecretTracker.forget(player.getUniqueId());
         DungeonBreaker.forget(player.getUniqueId());
         HamRadio.forget(player.getUniqueId());
+        HollowWand.forget(player.getUniqueId());
     }
 
     @EventHandler
