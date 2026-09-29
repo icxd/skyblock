@@ -5,12 +5,18 @@ import net.icxd.dungeons.OnlyOn;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.collection.CollectionGains;
+import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.dwarven.Powder;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.session.PlayerSession;
+import net.icxd.dungeons.skill.Skill;
+import net.icxd.dungeons.skill.SkillGains;
+import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
+import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Tuple;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.GameMode;
@@ -23,19 +29,33 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerAnimationType;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Mining: the mithril in the Dwarven Mines. */
+/**
+ * Mining: the mithril in the Dwarven Mines. Each block broken gives its drops (with their fortune), its Mining XP
+ * (with Mining Wisdom) and its powder, and counts for the tool's Compact and the player's Flowstate streak.
+ */
 @OnlyOn({ServerType.DWARVEN_MINES})
 public class BlockListener implements Listener {
     /** "The Softcap limits the breaking of a block to at least 4 ticks" (the wiki's Mining Speed). */
     static final int SOFTCAP_TICKS = 4;
     /** The crack stages a break is shown in, vanilla's ten. */
     static final int STAGES = 10;
+
+    /** Flowstate's Mining Speed counts in their stats from now on (on this server, where the streaks are). */
+    public BlockListener() {
+        PlayerStats.addModifier(Flowstate::addSpeed);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        Flowstate.forget(event.getPlayer().getUniqueId());
+    }
 
     @EventHandler
     public void onPlayerAnimation(PlayerAnimationEvent event) {
@@ -53,14 +73,15 @@ public class BlockListener implements Listener {
         String id = tag.getString("id");
         SkyBlockItem skyBlockItem = ItemRegistry.get(id);
         if (skyBlockItem == null) return;
-        int breakingPower = (int) skyBlockItem.stats().get(Stat.BREAKING_POWER);
+        // The player's own stats (tool, armor and all), not just the tool's: its Breaking Power with its reforge's
+        // (a Scraped tool's +1, as its lore counts it), and their Mining Speed and fortune.
+        Stats stats = PlayerSession.of(player).stats();
+        int breakingPower = (int) stats.get(Stat.BREAKING_POWER);
         if (breakingPower < minableBlock.minBreakingPower()) {
             player.sendMessage("You need a pickaxe with at least " + minableBlock.minBreakingPower() + " breaking power to break this block.");
             return;
         }
-        // The player's own mining speed and fortune (tool, armor and all), not just the tool's.
-        Stats stats = PlayerSession.of(player).stats();
-        double miningSpeed = stats.get(Stat.MINING_SPEED);
+        double miningSpeed = stats.get(Stat.MINING_SPEED) * MiningTools.miningRate(player.isUnderWater(), aquaAffinity(player));
         if (miningSpeed <= 0) return;
         double fortune = fortune(stats, minableBlock);
         Location location = block.getLocation();
@@ -85,7 +106,11 @@ public class BlockListener implements Listener {
         breakBlock(player, block, minableBlock, fortune);
     }
 
-    /** Broken, instantly or not: its drops (with their fortune) to the player, and back after its regen time. */
+    /**
+     * Broken, instantly or not: its drops (with their fortune) to the player, its Mining XP (with their Mining Wisdom:
+     * SkillGains) and powder, what it counts for (Compact on the tool, their Flowstate streak), and back after its
+     * regen time.
+     */
     private static void breakBlock(Player player, Block block, MinableBlock minableBlock, double fortune) {
         block.setType(minableBlock.blockWhenBroken());
 
@@ -95,13 +120,13 @@ public class BlockListener implements Listener {
                 if (drop.first() == null) continue;
                 ItemStack stack = ItemBuilder.build(drop.first());
                 stack.setAmount(withFortune(drop.second(), fortune));
-                // Collected as it's mined (what doesn't fit lands at their feet, collected already).
-                CollectionGains.collect(player, stack);
-                for (ItemStack left : player.getInventory().addItem(stack).values()) {
-                    player.getWorld().dropItemNaturally(player.getLocation(), left);
-                }
+                give(player, stack);
             }
         }
+        SkillGains.give(player, Skill.MINING, minableBlock.miningXp());
+        if (minableBlock.powderType() != null) Powder.add(User.ifLoaded(player.getUniqueId()), minableBlock.powderType(), minableBlock.powder());
+        Compact.broke(player, minableBlock);
+        Flowstate.broke(player);
 
         minableBlock.onBreak(block, player);
 
@@ -112,6 +137,19 @@ public class BlockListener implements Listener {
                 minableBlock.place(block.getLocation());
             }
         }.runTaskLater(Dungeons.getInstance(), minableBlock.regenTime());
+    }
+
+    /** A mined block's item: collected as it's mined, into their inventory, and what doesn't fit lands at their feet (collected already). */
+    static void give(Player player, ItemStack stack) {
+        CollectionGains.collect(player, stack);
+        for (ItemStack left : player.getInventory().addItem(stack).values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), left);
+        }
+    }
+
+    /** Whether the helmet they wear has Aqua Affinity. */
+    private static boolean aquaAffinity(Player player) {
+        return Combat.enchantments(Combat.skyBlockData(player.getInventory().getHelmet())).containsKey("aqua_affinity");
     }
 
     /**
