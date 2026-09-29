@@ -74,7 +74,7 @@ named. Accessories whose text is only flavour, or only stats, aren't here (their
 | General Medallion | GENERAL_MEDALLION | **LATER** a count of the secrets a player has found (a run's are kept, a player's aren't) | |
 | Magnetic Talisman | MAGNETIC_TALISMAN | **LATER** item pickup range (vanilla's can't be set; it'd take pulling items in) | [Magnetic Talisman](https://hypixelskyblock.minecraft.wiki/w/Magnetic_Talisman) |
 | Bat Person line | BAT_PERSON_TALISMAN, BAT_PERSON_RING, BAT_PERSON_ARTIFACT | **LATER** summoned bats (the Spirit Sceptre's are its ability's, the Witch Mask and Bat Pet aren't here) | |
-| Piggy Banks | PIGGY_BANK, CRACKED_PIGGY_BANK, BROKEN_PIGGY_BANK | **LATER** purse loss on death (the owner's question, EFFECTS.md) | |
+| Piggy Banks | PIGGY_BANK, CRACKED_PIGGY_BANK, BROKEN_PIGGY_BANK | **LATER** purse loss on death, which came after this part's base (origin's `economy/DeathCoins`, with `DeathCoins.addSaver` for what saves coins): once merged, a saver for a loss of 20k+ and the bank cracking are what's left | |
 | King Talisman | KING_TALISMAN | **LATER** commissions' Heart of the Mountain experience | |
 | Bits Talisman | BITS_TALISMAN | **LATER** a hook on Bits gained | |
 | Potion Affinity line | POTION_AFFINITY_TALISMAN, RING_POTION_AFFINITY, ARTIFACT_POTION_AFFINITY | **LATER** potions | |
@@ -118,3 +118,5 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   { double[] b = AccessoryEffects.runBoost(player); return new RunBoosts.Boost(b[0], b[1]); })` makes the Catacombs
   Expert Ring and Scarf's items work.
 - `AccessoryBag.counted(player)` is the set of counted accessory ids, cheap to ask on every hit.
+- The Piggy Banks ("Saves your coins from death ... Triggers when losing 20k+ coins") can plug into
+  `DeathCoins.addSaver` once this part and the purse loss on death are merged.
