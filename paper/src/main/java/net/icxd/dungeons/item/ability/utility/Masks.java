@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -53,9 +54,14 @@ final class Masks {
         stats.add(Stat.STRENGTH, flock(player));
     }
 
-    /** The mask on their head's ABILITY block with this name; null for none. */
+    /**
+     * The mask on their head's ABILITY block with this name; null for none. Masks are heads: anything else on the head
+     * needs no item's data read to tell (a Parrot Mask is looked for on everyone in the world, for everyone's stats).
+     */
     private static ItemBlock mask(Player player, String name) {
-        NBTTagCompound tag = ItemNBT.read(player.getInventory().getHelmet());
+        ItemStack helmet = player.getInventory().getHelmet();
+        if (helmet == null || helmet.getType() != Material.PLAYER_HEAD) return null;
+        NBTTagCompound tag = ItemNBT.read(helmet);
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
         if (item == null || !"CARNIVAL_MASK".equals(item.typeKey())) return null;
         for (ItemBlock block : item.blocks()) if (block.isAbility() && name.equals(block.name())) return block;
