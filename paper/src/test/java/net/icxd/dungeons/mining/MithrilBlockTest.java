@@ -21,6 +21,13 @@ class MithrilBlockTest {
         assertEquals(Stat.DWARVEN_METAL_FORTUNE, MITHRIL.fortune());
     }
 
+    /** Too little Breaking Power: Hypixel's line, with the block's power and name. */
+    @Test
+    void tooWeak() {
+        assertEquals("&cYou need a tool with a &aBreaking Power &cof &64&c to mine Mithril&c! Speak to &dFragilis &cby the entrance to the "
+                + "Crystal Hollows to learn more!", BlockListener.tooWeak(MITHRIL));
+    }
+
     /** Mining Fortune, and on a Dwarven Metal Dwarven Metal Fortune added to it; other blocks only the first. */
     @Test
     void fortuneOnTheBlock() {

@@ -80,6 +80,8 @@ import net.icxd.dungeons.item.enchanting.armor.ArmorEnchants;
 import net.icxd.dungeons.item.upgrade.BookOfStats;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.npc.Npcs;
+import net.icxd.dungeons.mob.DropEnchants;
+import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
 import net.icxd.dungeons.profile.SandboxDrops;
 import net.icxd.dungeons.profile.SandboxStorage;
@@ -218,6 +220,9 @@ public class Dungeons extends JavaPlugin {
         listen(CraftingTable.Drags.class, CraftingTable.Drags::new);
         listen(HexListener.class, HexListener::new);
         listen(SkyBlockLevels.class, SkyBlockLevels::new);
+        // What changes a kill's drops and a grant's experience orbs (STATS_EFFECTS.md): their order doesn't matter.
+        listen(DropEnchants.class, DropEnchants::new);
+        listen(ExpBonuses.class, ExpBonuses::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));

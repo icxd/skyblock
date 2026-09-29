@@ -29,8 +29,8 @@ import net.icxd.dungeons.utils.Text;
  * loadouts on the right. A loadout shows its armor set's helmet (gray dye until it's set up), and what it
  * has; a left click equips it ("You equipped Loadout 1!", and the menu again), a right click edits it (see
  * {@link LoadoutMenu}). Slots past their rank's are locked in red dye (see {@link Loadouts#loadouts}).
- * The Power Stone opens Select Power Stone for their selected power; the tree slots, Stats Tuning and the
- * empty pet slot do nothing yet (no saved trees, tuning or pets). Main thread.
+ * The Power Stone opens Select Power Stone for their selected power, and Stats Tuning its menu ({@link
+ * StatsTuningMenu}); the tree slots and the empty pet slot do nothing yet (no saved trees or pets). Main thread.
  */
 public final class LoadoutsMenu extends GUI {
     static final int HOTF = 9;
@@ -77,12 +77,13 @@ public final class LoadoutsMenu extends GUI {
         Document storage = StoredInventory.storage(profile);
         int ap = AccessoryBag.accessoryPower(viewer);
 
-        for (Map.Entry<Integer, Icon> e : icons(page, AccessoryBag.selectedPower(profile), ap, StorageTables.get()).entrySet()) {
+        for (Map.Entry<Integer, Icon> e : icons(page, AccessoryBag.selectedPower(profile), ap, StatsTuning.assigned(profile), StorageTables.get()).entrySet()) {
             int slot = e.getKey();
             ItemStack stack = e.getValue().stack();
             switch (slot) {
                 case POWER_STONE -> set(GUIClickableItem.button(slot, powerLook(stack, AccessoryBag.selectedPower(profile)), viewer,
                         () -> new PowerMenu(viewer, -1).open(viewer)));
+                case STATS_TUNING -> set(GUIClickableItem.button(slot, stack, viewer, () -> new StatsTuningMenu(viewer).open(viewer)));
                 case PREVIOUS -> set(GUIClickableItem.button(slot, stack, viewer, () -> new LoadoutsMenu(viewer, page - 1).open(viewer)));
                 case NEXT -> set(GUIClickableItem.button(slot, stack, viewer, () -> new LoadoutsMenu(viewer, page + 1).open(viewer)));
                 default -> set(slot, stack);
@@ -139,8 +140,16 @@ public final class LoadoutsMenu extends GUI {
         return slots;
     }
 
-    /** The slots that don't show what they wear or a loadout: the tree slots, the empty ones, the Power Stone, Stats Tuning, the arrows. */
+    /** {@link #icons(int, StorageTables.Power, int, int, StorageTables)} with no Tuning Points put in. */
     static Map<Integer, Icon> icons(int page, StorageTables.Power power, int accessoryPower, StorageTables tables) {
+        return icons(page, power, accessoryPower, 0, tables);
+    }
+
+    /**
+     * The slots that don't show what they wear or a loadout: the tree slots, the empty ones, the Power Stone, Stats Tuning
+     * (with the {@code assigned} Tuning Points they've put in, see {@link StatsTuning}), the arrows.
+     */
+    static Map<Integer, Icon> icons(int page, StorageTables.Power power, int accessoryPower, int assigned, StorageTables tables) {
         Map<Integer, Icon> icons = new LinkedHashMap<>();
         icons.put(HOTF, tree("Forest", HOTF_HEAD));
         icons.put(HOTM, tree("Mountain", HOTM_HEAD));
@@ -155,11 +164,12 @@ public final class LoadoutsMenu extends GUI {
         icons.put(GLOVES, empty("&7Empty Equipment Slot", "&8> Gloves", "&8> Bracelet"));
         icons.put(BOOTS, empty("&7Empty Boots Slot"));
         icons.put(POWER_STONE, powerStone(power, accessoryPower, tables));
-        // No tuning here, so every point is unassigned: "57!!!" as recorded (UNKNOWN: whether 0 gets the "!!!").
+        // What isn't put in (Stats Tuning) is unassigned: "57!!!" as recorded (UNKNOWN: whether 0 gets the "!!!").
         int tuning = Accessories.tuningPoints(accessoryPower);
+        int unassigned = Math.max(0, tuning - assigned);
         icons.put(STATS_TUNING, new Icon(Material.COMPARATOR, "&aStats Tuning", "&7Optimize your build to your liking by using",
                 "&eTuning Points&7.", "", "&7Every &610 MP &7grants &e1 Tuning Point&7.", "", "&7Magical Power: &6" + accessoryPower,
-                "&7Tuning Points: &e" + tuning, "&7Unassigned Points: &c" + tuning + (tuning > 0 ? "!!!" : ""), "", "&eClick to view!"));
+                "&7Tuning Points: &e" + tuning, "&7Unassigned Points: &c" + unassigned + (unassigned > 0 ? "!!!" : ""), "", "&eClick to view!"));
         if (page > 0) icons.put(PREVIOUS, new Icon(Material.ARROW, "&aPrevious Page", "&ePage " + page));
         if (page < PAGES - 1) icons.put(NEXT, new Icon(Material.ARROW, "&aNext Page", "&ePage " + (page + 2)));
         return icons;

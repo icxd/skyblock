@@ -2,6 +2,7 @@ package net.icxd.dungeons.item.enchanting;
 
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enchanting.weapon.WeaponStats;
+import net.icxd.dungeons.mining.MiningTools;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 
@@ -84,6 +85,37 @@ public final class EnchantmentType {
         return at == null ? null : at.text();
     }
 
+    /**
+     * Its description at a level on this item, here: Efficiency on a mining tool off the Hub says the Mining Speed it
+     * grants there ({@link MiningTools#efficiencyText}); every other one as {@link #getDescription(int)}.
+     */
+    public String getDescription(SkyBlockItem item, int level) {
+        String mining = MiningTools.efficiencyText(namespace, item, level);
+        return mining != null ? mining : getDescription(level);
+    }
+
+    /** What the next tier of a stacking enchantment takes, as its text says ("&8100 blocks to tier up!"); null at its last. */
+    public String getTierUp(int level) {
+        EnchantmentData.Entry data = data();
+        EnchantmentData.Level at = data == null ? null : data.level(level);
+        return at == null ? null : at.tierUp();
+    }
+
+    /**
+     * The first percentage its text gives at a level, in green: Looting's "by &a15%", Experience's "a &a12.5% &7chance",
+     * Compact's "a &a0.25% &7chance"; 0 if it has none.
+     */
+    public double percent(int level) {
+        return percent(getDescription(level));
+    }
+
+    /** The first green percentage in a description (see {@link #percent(int)}); 0 for none. */
+    static double percent(String text) {
+        if (text == null) return 0;
+        Matcher m = PERCENT.matcher(text);
+        return m.find() ? Double.parseDouble(m.group(1)) : 0;
+    }
+
     /** The book's own lines at a level (as the Hex's menus show it); null if there's no text for it. */
     public List<String> getLines(int level) {
         EnchantmentData.Entry data = data();
@@ -102,6 +134,15 @@ public final class EnchantmentType {
         return WeaponStats.listed(namespace, text, stats(text));
     }
 
+    /**
+     * The stats it grants at a level on this item, here: Efficiency's Mining Speed on a mining tool off the Hub (see
+     * {@link #getDescription(SkyBlockItem, int)}); every other one's are {@link #getStats(int)}'s.
+     */
+    public Stats getStats(SkyBlockItem item, int level) {
+        String mining = MiningTools.efficiencyText(namespace, item, level);
+        return mining != null ? stats(mining) : getStats(level);
+    }
+
     /** What a description's text grants (see {@link #getStats}); nothing for null. */
     static Stats stats(String text) {
         Stats stats = new Stats();
@@ -111,6 +152,13 @@ public final class EnchantmentType {
             set(stats, m.group(2), m.group(1));
             return m.group(4) == null ? stats : set(stats, m.group(4), m.group(3));
         }
+        m = GAINS.matcher(text);
+        if (m.find()) {
+            set(stats, m.group(2), m.group(1));
+            return m.group(4) == null ? stats : set(stats, m.group(4), m.group(3));
+        }
+        m = FIRST_OF_TWO.matcher(text);
+        if (m.find()) return set(stats, m.group(2), m.group(1));
         m = INCREASES.matcher(text);
         if (!m.find()) return stats;
         set(stats, m.group(1), m.group(2));
@@ -141,6 +189,19 @@ public final class EnchantmentType {
     /** One "&9☠ Crit Damage &7by &a10%&7" of "&7Increases … [and …]." */
     private static final String BY = "&.\\S+ ([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*) &7by &a\\+?([\\d.]+)%?&7";
     private static final Pattern INCREASES = Pattern.compile("^&7Increases " + BY + "(?: and " + BY + ")?\\.");
+    /**
+     * "&7Gain" as "&7Grants" (Cultivating's two, as live lore counts them), and the one before "&7and a …" (Compact's
+     * Mining Wisdom, live lore's "Mining Wisdom: +8" at VIII, before its chance of an enchanted item).
+     */
+    private static final Pattern GAINS = Pattern.compile("^&7Gain " + GRANT + "(?: &7and " + GRANT + ")?(?:&7)?(?:\\.$| &7and a )");
+    /**
+     * The first of two stats "while" or "when" something (Lapidary's Gemstone Fortune, not its Mining Speed "while
+     * mining Gemstones"; Expertise's Sea Creature Chance, not its Fishing Wisdom "when killing Sea Creatures"), as live
+     * lore counts them in the item's stats (59 of 62 live Lapidary tools, the auction house's; the rest none).
+     */
+    private static final Pattern FIRST_OF_TWO = Pattern.compile("^&7Grants " + GRANT + " &7and " + GRANT + " &7(?:while|when) ");
+    /** A green percent: "&a15%", "&a+12.5%". */
+    private static final Pattern PERCENT = Pattern.compile("&a\\+?([\\d.]+)%");
 
     @Override
     public boolean equals(Object o) {

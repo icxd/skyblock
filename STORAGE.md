@@ -45,7 +45,8 @@ shows it). **Accessory Bag**: 9 slots, more with the Redstone Collection's tiers
 (`PlayerStats.addModifier`), only one of each and only the best of a line (Talisman, Ring, Artifact,
 Relic: NEU's upgrade lines; of two of the same, the recombobulated one). Accessory Power (shown as
 Magical Power) comes from the bag's counted accessories by rarity (the wiki's table), the Hegemony
-Artifact twice, a dungeon accessory twice in a dungeon; Tuning Points are one per 10. The selected
+Artifact twice, a dungeon accessory twice in a dungeon; Tuning Points are one per 10, put into eight stats in
+**Stats Tuning** (Loadouts' comparator: the wiki's Maxwell/UI, what a point gives by its "Per point"; STATS_EFFECTS.md). The selected
 power's stats grow with it (the wiki's formula; the recorded Select Power Stone's numbers come out
 exactly), its Unique Power Bonus doesn't. The Scavenger accessories' coins (KillCoins) count the bag's
 too. **Potion Bag** (potions, God Potions), **Fishing Bag** (fish and bait), **Sack of Sacks** (`/sacks`,
@@ -116,7 +117,7 @@ have all (27, 27, 18), and the locked ones say what unlocks them.
   the set, unseen, until the rank comes back.
 - **Learning Stone Powers**: from Maxwell (the Thaumaturgist) with nine Power Stones, at a Combat
   level; there's no Maxwell, so every Stone Power can be picked until there is (`Powers.unlocked`).
-  Stats Tuning, Enrichments, Abicases' contacts and the Rift Prism aren't here.
+  Stats Tuning's templates, Enrichments, Abicases' contacts and the Rift Prism aren't here.
 - **Pets, saved HOTM/HOTF trees and tuning templates** in loadouts: shown as None.
 - **Equipment outside loadouts**: Hypixel's right-click to equip and the Stats & Equipment menu's slots.
 - **Sacks' contents**: the Sack of Sacks keeps sack items; picking up into sacks and Insert inventory

@@ -142,7 +142,9 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
 - **Collection Exp discounts** (25% for some enchantments at a collection tier; the private collections data has
   them): the Hex charges the full Exp levels.
 - **Anvil combining and the Enchantment Table block** (the Hex's Enchant Item is the only way to enchant).
-- **Tiers that grow with use** (Champion's Combat XP, Compact's blocks...): the tier is only what's set.
+- **Tiers that grow with use**: Champion's and Toxophilite's grow by Combat XP (ENCHANTS_WEAPONS.md), Compact's by
+  the blocks its tool mines (`StackingEnchants`, STATS_EFFECTS.md), Hecatomb's by S runs (ENCHANTS_ARMOR.md); the
+  rest's tier is only what's set.
 - **Weapon enchantments and ultimates** (swords, longswords, gauntlets, bows, fishing weapons): ENCHANTS_WEAPONS.md has
   each one's status, which overrides the weapon ones below.
 - **Effects** of the enchantments that are text only here, and the system each waits for:
@@ -153,8 +155,9 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
     Combo, Swarm, Fatal Tempo, Soul Eater, Chimera (pets), Legion, Last Stand, No Pain No Gain, Transylvanian, Bank
     (death), Refrigerate and Ultimate Wise (per-item mana costs; `Abilities` works per player), Wisdom (vanilla levels),
     Ultimate Jerry (Aspect of the Jerry), Habanero Tactics (wands, Slayer weapons).
-  - Mining, foraging, farming and fishing: Efficiency, Silk Touch, Smelting Touch, Aqua Affinity, Lapidary,
-    Paleontologist, Flowstate, Rainbow, Petalfall (Timber), Karma, First Impression and Missile (axes), Feast, Sunset,
+  - Mining, foraging, farming and fishing (Looting, Chance, Luck, Experience, Efficiency, Compact, Flowstate, Aqua
+    Affinity, and Lapidary's and Expertise's first stats work: STATS_EFFECTS.md): Silk Touch, Smelting Touch, Lapidary's
+    Mining Speed, Paleontologist, Rainbow, Petalfall (Timber), Karma, First Impression and Missile (axes), Feast, Sunset,
     Crop Fever (Overbloom), Dedication (Garden milestones), Green Thumb (visitors), Bug Blender (vacuums), Turbo-Rose,
     -Sunflower and -Moonflower (fortunes with no plugin stat), Flash, Quick Bite, Bobbin' Time, Depth Strider, Frost
     Walker, Stealth (Timid mobs).

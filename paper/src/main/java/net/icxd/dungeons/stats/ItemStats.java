@@ -82,7 +82,7 @@ public final class ItemStats {
         NBTTagList enchantments = tag.getList("enchantments", 10);
         for (int i = 0; i < enchantments.size(); i++) {
             Enchantment enchant = Enchantment.getByIdentifiable(enchantments.get(i).getString("name") + "." + enchantments.get(i).getInt("lvl"));
-            if (enchant.getType() != null) stats.add(enchant.getType().getStats(enchant.getLevel()));
+            if (enchant.getType() != null) stats.add(enchant.getType().getStats(item, enchant.getLevel()));
         }
         // Its gemstones', which a dungeon scales with the rest (the recorded Shadow Assassin Helmet's).
         stats.add(GemSlots.stats(item, tag));

@@ -160,6 +160,8 @@ public final class AccessoryBag {
         for (int i : Accessories.counted(held, tables)) stats.add(ItemStats.of(all.get(i).item(), player));
         StorageTables.Power power = selectedPower(profile);
         if (power != null) stats.add(Powers.stats(power, state.power, tables)).add(Powers.bonus(power));
+        // What their Tuning Points are put in (Stats Tuning), with the points this Accessory Power gives.
+        stats.add(StatsTuning.stats(profile, Accessories.tuningPoints(state.power)));
         state.stats = stats;
     }
 
