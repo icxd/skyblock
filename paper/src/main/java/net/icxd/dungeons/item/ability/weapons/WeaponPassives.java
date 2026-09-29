@@ -18,9 +18,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.DamageIndicators;
@@ -168,6 +170,7 @@ public final class WeaponPassives implements Listener {
         });
         BowPassives.register();
         Tormentor.register();
+        WornStrikes.register();
     }
 
     private static double number(Pattern pattern, String plain) {
@@ -357,6 +360,7 @@ public final class WeaponPassives implements Listener {
      */
     @EventHandler
     public void onKill(SkyBlockMobDeathEvent event) {
+        WornStrikes.killHappened();
         Player killer = event.killer();
         KillingBlow blow = event.killingBlow();
         if (killer == null || !killer.isOnline() || blow == null || blow.weapon() == null) return;
@@ -429,5 +433,11 @@ public final class WeaponPassives implements Listener {
         MARKED.remove(player);
         BowPassives.forget(player);
         Tormentor.forget(player);
+        WornStrikes.forget(player);
+    }
+
+    @EventHandler
+    public void onDisable(PluginDisableEvent event) {
+        if (event.getPlugin() == Dungeons.getInstance()) WornStrikes.removeAll();
     }
 }

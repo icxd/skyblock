@@ -75,6 +75,8 @@ public final class WeaponAbilities {
         to.accept(Tormentor.NAME, new Tormentor.ChainOfAgony());
         to.accept("Arrow Infusion", new BowPassives.ArrowInfusion());
         to.accept("Extreme Focus", new BowPassives.ExtremeFocus());
+        // The Miniature Nuke's (the Creeper Pants' Detonate is a worn piece's passive: WornStrikes).
+        to.accept("Detonate", new WornStrikes.Nuke());
     }
 
     /**

@@ -48,8 +48,8 @@ public final class PlayerAttributes {
         SPEED_CAPS.add(raise);
     }
 
-    /** Their Speed cap: 400, and the most that raises it. */
-    static double speedCap(Player player) {
+    /** Their Speed cap: 400, and the most that raises it (public for the Warden Helmet's Brute Force, which halves what's under it). */
+    public static double speedCap(Player player) {
         double raise = 0;
         for (ToDoubleFunction<Player> cap : SPEED_CAPS) raise = Math.max(raise, cap.applyAsDouble(player));
         return SPEED_CAP + raise;

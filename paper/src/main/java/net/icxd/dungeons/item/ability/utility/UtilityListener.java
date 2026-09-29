@@ -38,7 +38,7 @@ import net.icxd.dungeons.session.PlayerHealth;
  */
 public final class UtilityListener implements Listener {
     /** On what abilities put in the world (a veil's creepers, an orb's stand): not a mob, and never hit. */
-    static final String NOT_A_MOB = "skyblock_ability_prop";
+    public static final String NOT_A_MOB = "skyblock_ability_prop";
 
     public UtilityListener() {
         Protection.register();
@@ -51,6 +51,8 @@ public final class UtilityListener implements Listener {
         CreeperVeil.tick();
         Deployables.tick();
         SpiritGlide.tick();
+        WornPassives.tick();
+        WornPassives.landed();
     }
 
     /**
@@ -169,12 +171,14 @@ public final class UtilityListener implements Listener {
         CreeperVeil.forget(player.getUniqueId());
         Deployables.forget(player.getUniqueId());
         SpiritGlide.forget(player);
+        WornPassives.forget(player.getUniqueId());
     }
 
     @EventHandler
     public void onDisable(PluginDisableEvent event) {
         if (event.getPlugin() != Dungeons.getInstance()) return;
         Deployables.removeAll();
+        WornPassives.removeAll();
         for (Player player : Bukkit.getOnlinePlayers()) {
             CreeperVeil.forget(player.getUniqueId());
             SpiritGlide.forget(player);

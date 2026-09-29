@@ -33,10 +33,11 @@ public final class Protection {
     private Protection() {
     }
 
-    /** On every hit's way to a player's health: immunity, then taunted mobs' less, then the veil, then the saves from death. */
+    /** On every hit's way to a player's health: immunity, then taunted mobs' less, then the veil, then worn pieces' shields, then the saves from death. */
     static void register() {
         PlayerDamage.addShield((player, taken, by) -> immune(player) ? 0 : taken * tauntedFactor(player, by));
         PlayerDamage.addShield(CreeperVeil::absorb);
+        PlayerDamage.addShield(WornPassives::shield);
         PlayerDamage.addShield(LastStand::left);
         Combat.addMultiplier((player, ranged) -> dealtFactor(player.getUniqueId(), System.currentTimeMillis()));
         Vitality.addRegenPause(CreeperVeil::isUp);

@@ -7,6 +7,7 @@ import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
+import net.icxd.dungeons.item.ability.WornAbilities;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.nbt.ItemNBT;
@@ -77,6 +78,8 @@ public final class SetBonuses implements Listener {
         for (Bonus bonus : SlayerSets.all()) add(bonus);
         for (Bonus bonus : OtherSets.all()) add(bonus);
         for (Bonus bonus : TieredSets.all()) add(bonus);
+        // Worn pieces' own passive abilities (item/ability, ABILITIES_UTILITY.md and ABILITIES_WEAPONS.md).
+        for (Bonus bonus : WornAbilities.all()) add(bonus);
     }
 
     private static void add(Bonus bonus) {
