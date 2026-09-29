@@ -204,7 +204,9 @@ final class Bolts {
      * has no mana cost), 1% less for each of its Mana Disintegrators, as a wand's (0.20.5: "Fixed Mana
      * Disintegrators not working on the Staff Of The Rising Sun despite it being a wand"; UNKNOWN whether this
      * share goes down 1% or 2% a disintegrator, as a power orb's does). The blast's size and the scaling are
-     * UNKNOWN (3 blocks, 0.3). The Staff of the Rising Moon's (only for Wizardman, an event's) does nothing.
+     * UNKNOWN (3 blocks, 0.3). The Staff of the Rising Moon's "Launches an explosive moon towards the target
+     * location, dealing 1❤ Heart of damage to Wizardman when hit": its moon flies and bursts, and hurts nothing, as
+     * there's no Wizardman (the Rift's): LATER.
      */
     static final class RayOfHope implements AbilityHandler {
         static final Magic.Spell RAY = new Magic.Spell(500, 0.3);
@@ -221,11 +223,6 @@ final class Bolts {
         }
 
         @Override
-        public boolean casts(Player player, SkyBlockItem item, NBTTagCompound tag) {
-            return !item.id().equals("STAFF_OF_THE_RISING_MOON");
-        }
-
-        @Override
         public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             return Hits.enoughMana(player, cost(player, block, tag));
         }
@@ -236,6 +233,10 @@ final class Bolts {
             Magic.Spell spell = Hits.spellOf(item, RAY);
             Location eye = player.getEyeLocation();
             Vector to = Hits.aimed(player, 40).toVector().subtract(eye.toVector());
+            if (item.id().equals("STAFF_OF_THE_RISING_MOON")) {
+                moon(player, eye, to);
+                return;
+            }
             Particle.DustOptions gold = new Particle.DustOptions(Color.fromRGB(255, 200, 60), 1);
             new Missile(player, eye, to.normalize().multiply(1.5))
                     .range(40)
@@ -248,6 +249,17 @@ final class Bolts {
                     .launch();
             player.getWorld().playSound(eye, Sound.BLOCK_BEACON_ACTIVATE, 0.6f, 1.6f);
         }
+    }
+
+    /** The Rising Moon's moon: it flies to where they aimed and bursts, hurting nothing (only Wizardman, who isn't here). */
+    private static void moon(Player player, Location eye, Vector to) {
+        new Missile(player, eye, to.normalize().multiply(1.5))
+                .range(40)
+                .look(Missile.display(eye, new ItemStack(Material.END_STONE), 0.5f, 0))
+                .onHit((missile, mob) -> false)
+                .onEnd((missile, at, impact) -> at.getWorld().spawnParticle(Particle.END_ROD, at, 20, 0.5, 0.5, 0.5, 0.05))
+                .launch();
+        player.getWorld().playSound(eye, Sound.BLOCK_BEACON_ACTIVATE, 0.6f, 0.8f);
     }
 
     /**
