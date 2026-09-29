@@ -57,6 +57,7 @@ public final class UtilityListener implements Listener {
         WornPassives.tick();
         WornPassives.landed();
         CellsAlignment.tick();
+        DungeonBreaker.tick();
     }
 
     /**
@@ -181,6 +182,7 @@ public final class UtilityListener implements Listener {
         Movement.forget(player.getUniqueId());
         CellsAlignment.forget(player.getUniqueId());
         SecretTracker.forget(player.getUniqueId());
+        DungeonBreaker.forget(player.getUniqueId());
     }
 
     @EventHandler
@@ -188,6 +190,7 @@ public final class UtilityListener implements Listener {
         if (event.getPlugin() != Dungeons.getInstance()) return;
         Deployables.removeAll();
         WornPassives.removeAll();
+        DungeonBreaker.restoreAll();
         for (Player player : Bukkit.getOnlinePlayers()) {
             CreeperVeil.forget(player.getUniqueId());
             SpiritGlide.forget(player);

@@ -404,6 +404,15 @@ public final class DungeonRun implements ScoreCounts {
         roomMobs.superboom(at);
     }
 
+    /** Whether this block is one of a tomb's that hasn't been blown up (a Dungeonbreaker leaves them, see RunItems). */
+    boolean inCrypt(Block block) {
+        return roomMobs.inCrypt(block);
+    }
+
+    RunLayout layout() {
+        return layout;
+    }
+
     // Every second
 
     void second() {

@@ -14,6 +14,9 @@ import org.bukkit.inventory.PlayerInventory;
 
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.DungeonClass;
+import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
+import net.icxd.dungeons.dungeons.generation.room.RoomType;
+import net.icxd.dungeons.dungeons.generation.utils.Position;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
@@ -202,6 +205,40 @@ public final class RunItems {
         if (run == null || !at.getWorld().equals(run.world)) return false;
         run.superboom(at);
         return true;
+    }
+
+    /**
+     * Whether a Dungeonbreaker may break this block for them: "It cannot be used in puzzle rooms, on doors, or to pass
+     * through walls into a separate room", and it "is able to mine any block that is not part of a crypt inside the
+     * explored area of the dungeon, including trap rooms" (the wiki's Dungeonbreaker). So only alive in a running run,
+     * in the room they're in (which isn't a puzzle room), not a door's block or an unblown tomb's; the gap between two
+     * cells counts as the room's only where the room is on both sides of it (inside a room of several cells), so the
+     * walls between rooms stay.
+     */
+    public static boolean mayBreak(Player player, Block block) {
+        DungeonRun run = running(player);
+        if (run == null || !block.getWorld().equals(run.world)) return false;
+        RunLayout layout = run.layout();
+        PlacedRoom room = layout.roomAt(player.getLocation());
+        if (room == null || room.type() == RoomType.PUZZLE) return false;
+        if (!inRoom(layout, room, block.getX(), block.getZ())) return false;
+        return layout.doorAt(block.getX(), block.getY(), block.getZ()) == null && !run.inCrypt(block);
+    }
+
+    /** Whether a block column is the room's: in one of its cells, or in a gap with only its cells around it. */
+    private static boolean inRoom(RunLayout layout, PlacedRoom room, int x, int z) {
+        Position cell = layout.cellAt(x, z);
+        if (cell != null) return room.cells().contains(cell);
+        int around = 0;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                Position next = layout.cellAt(x + dx, z + dz);
+                if (next == null) continue;
+                if (!room.cells().contains(next)) return false;
+                around++;
+            }
+        }
+        return around >= 2;
     }
 
     /** Where the nearest secret of their run that hasn't been found is, in a room that has its secrets out; null for none. */

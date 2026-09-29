@@ -824,6 +824,15 @@ final class RoomMobs {
         }
     }
 
+    /** Whether this block is one of a tomb's that hasn't been blown up. */
+    boolean inCrypt(Block at) {
+        for (Blast crypt : crypts) {
+            if (crypt.blown) continue;
+            for (PastePlan.Block b : crypt.blocks) if (b.x() == at.getX() && b.y() == at.getY() && b.z() == at.getZ()) return true;
+        }
+        return false;
+    }
+
     private void blow(Blast blast) {
         blast.blown = true;
         for (PastePlan.Block b : blast.blocks) {
