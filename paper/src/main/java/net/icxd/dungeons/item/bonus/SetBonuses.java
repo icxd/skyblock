@@ -12,6 +12,7 @@ import net.icxd.dungeons.economy.KillCoins;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
+import net.icxd.dungeons.item.accessory.AccessoryEffects;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.nbt.ItemNBT;
@@ -209,6 +210,8 @@ public final class SetBonuses implements Listener {
         BonusTables.set(BonusTables.load(plugin.getDataFolder().toPath().resolve(BonusTables.FILE), plugin.getLogger()));
         plugin.getServer().getPluginManager().registerEvents(new SetBonuses(), plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, SetBonuses::second, 20, 20);
+        // Accessories' effects beyond their stats (ACCESSORIES.md), with the armor's.
+        AccessoryEffects.enable(plugin);
     }
 
     /**

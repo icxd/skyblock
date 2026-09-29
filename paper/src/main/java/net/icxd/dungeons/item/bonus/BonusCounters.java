@@ -1,6 +1,7 @@
 package net.icxd.dungeons.item.bonus;
 
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.accessory.CrestCounter;
 import net.icxd.dungeons.item.behaviour.ItemBehaviour;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
@@ -30,10 +31,11 @@ public final class BonusCounters implements ItemBehaviour {
     private BonusCounters() {
     }
 
-    /** Puts the behaviour in for each counting piece (see ItemBehaviours). */
+    /** Puts the behaviour in for each counting piece (see ItemBehaviours), and the accessories' that count (the Blood God Crest). */
     public static void register(BiConsumer<String, ItemBehaviour> put) {
         BonusCounters behaviour = new BonusCounters();
         for (String id : IDS) put.accept(id, behaviour);
+        CrestCounter.register(put);
     }
 
     private static CountedSets.Counted counted(String name) {
