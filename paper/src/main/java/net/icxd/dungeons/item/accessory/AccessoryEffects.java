@@ -467,13 +467,14 @@ public final class AccessoryEffects implements Listener {
 
     /**
      * The Intimidation line's "Monsters at or below Level 5 will no longer target you" (the Talisman's "Level 1
-     * monsters"): SkyBlock's mobs by the level their name shows; the Blood Room's undead choose for themselves.
+     * monsters"): SkyBlock's mobs by the level their name shows (a dungeon mob's shows none, so it isn't one of
+     * them: UNKNOWN); the Blood Room's undead choose for themselves.
      */
     private static boolean ignores(LivingEntity mob, Player player) {
         Summary s = summary(player);
         if (s.intimidation < 1) return false;
-        Mobs.Live live = Mobs.of(mob);
-        return live != null && live.type().getLevel() <= s.intimidation;
+        int level = SetBonuses.shownLevel(mob);
+        return level >= 0 && level <= s.intimidation;
     }
 
     // ---------- vanilla damage ----------

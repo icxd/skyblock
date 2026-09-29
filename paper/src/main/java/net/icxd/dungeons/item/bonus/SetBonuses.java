@@ -18,6 +18,8 @@ import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.mob.DataMob;
+import net.icxd.dungeons.mob.MobKind;
 import net.icxd.dungeons.mob.MobType;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
@@ -453,6 +455,19 @@ public final class SetBonuses implements Listener {
         if (live != null) return live.type().getTypes();
         DungeonMobs.Mob dungeonMob = DungeonMobs.of(mob);
         return dungeonMob == null ? Set.of() : dungeonMob.types();
+    }
+
+    /**
+     * The level one of SkyBlock's mobs shows in its name ("[Lv75] Magma Cube"), for what compares a level with the
+     * player's (Fearsome's Fear, the Intimidation line); -1 for one whose name shows none (a dungeon mob's, but for the
+     * Undead Skeleton's kind), or anything else.
+     */
+    public static int shownLevel(Entity entity) {
+        Mobs.Live live = Mobs.of(entity);
+        if (live == null) return -1;
+        if (live.type() instanceof DataMob mob && mob.kind().style() != MobKind.NameStyle.HUB && mob.kind().style() != MobKind.NameStyle.BOSS
+                && mob.kind().style() != MobKind.NameStyle.LEVELED) return -1;
+        return live.type().getLevel();
     }
 
     /** The SkyBlock id of what they hold (upper case); null for nothing, or anything else. */

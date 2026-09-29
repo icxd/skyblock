@@ -333,7 +333,8 @@ final class CombatSets {
      * Great Spook Armor's Fearsome: "Monsters at or below your total Fear level will run away from you": SkyBlock's
      * mobs whose level (as their name shows it) is at most their Fear don't go for them (see
      * TargetNearestPlayerGoal#addIgnored), and those within 10 blocks run 8 blocks further off, looked at again each
-     * second (UNKNOWN both distances: the wiki's Great Spook Armor gives none).
+     * second (UNKNOWN both distances: the wiki's Great Spook Armor gives none). The wiki has it for "some mobs"; which
+     * is UNKNOWN, so it's those whose name shows a level to compare, not the dungeons' (whose names show none).
      */
     static final class Fearsome extends FullSet {
         static final double NEAR = 10;
@@ -344,14 +345,13 @@ final class CombatSets {
             return "Fearsome";
         }
 
-        /** Whether a mob of this level runs from someone with this much Fear. */
+        /** Whether a mob of this level (-1: none shown) runs from someone with this much Fear. */
         static boolean afraid(int level, double fear) {
-            return fear > 0 && level <= fear;
+            return level >= 0 && fear > 0 && level <= fear;
         }
 
         private static int level(Entity entity) {
-            Mobs.Live live = Mobs.of(entity);
-            return live == null ? Integer.MAX_VALUE : live.type().getLevel();
+            return SetBonuses.shownLevel(entity);
         }
 
         /** Whether this mob leaves them alone: they wear the set and it's afraid of them. */

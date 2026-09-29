@@ -39,12 +39,13 @@ class CombatSetsTest {
         assertEquals("&c9&8 (125%)", CombatSets.Refraction.lightLine(text, 9).get(3));
     }
 
-    /** Fearsome: mobs at or below their Fear, none without any. */
+    /** Fearsome: mobs at or below their Fear, none without any, and none whose name shows no level (a dungeon mob's). */
     @Test
     void fearsome() {
         assertTrue(CombatSets.Fearsome.afraid(10, 10));
         assertFalse(CombatSets.Fearsome.afraid(11, 10));
         assertFalse(CombatSets.Fearsome.afraid(0, 0));
+        assertFalse(CombatSets.Fearsome.afraid(-1, 56));
     }
 
     /** Berserk takes 20%, 40% and 60% off health costs with 2, 3 and 4 pieces. */
