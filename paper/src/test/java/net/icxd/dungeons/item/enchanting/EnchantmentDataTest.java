@@ -152,6 +152,20 @@ class EnchantmentDataTest {
         assertEquals(new Stats(), EnchantmentType.stats(null));
     }
 
+    /** Less of a stat (Small Brain), and two sentences of grants before an effect (Reflection), but not a grant with a condition after it. */
+    @Test
+    void statsFromLongerTexts() {
+        Stats small = EnchantmentType.stats("&7Grants &b-10✎ Intelligence&7 and &f+2❂ True Defense&7.");
+        assertEquals(-10, small.get(Stat.INTELLIGENCE), 1e-9);
+        assertEquals(2, small.get(Stat.TRUE_DEFENSE), 1e-9);
+        Stats reflection = EnchantmentType.stats("&7Grants &b+4✎ Intelligence&7. Grants &f+2❂ True Defense&7. When damaged by an arrow, deal "
+                + "&b5x &7your &b✎ Intelligence &7to its shooter.");
+        assertEquals(4, reflection.get(Stat.INTELLIGENCE), 1e-9);
+        assertEquals(2, reflection.get(Stat.TRUE_DEFENSE), 1e-9);
+        assertEquals(new Stats(), EnchantmentType.stats("&7Grants &6+20☘ Wheat Fortune&7. Requires &cBronze &7in a &aWheat Contest&7!"));
+        assertEquals(new Stats(), EnchantmentType.stats("&7Grants &c+3❣ Health Regen &7while out of combat."));
+    }
+
     // The private table as it is
 
     /** Every enchantment Hypixel has, and each one the plugin had before (the 76 with Java constants). */

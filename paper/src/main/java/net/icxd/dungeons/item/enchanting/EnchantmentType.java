@@ -104,7 +104,7 @@ public final class EnchantmentType {
         Stats stats = new Stats();
         if (text == null) return stats;
         Matcher m = GRANTS.matcher(text);
-        if (m.find()) {
+        if (m.find() || (m = TWO_GRANTS.matcher(text)).find()) {
             set(stats, m.group(2), m.group(1));
             return m.group(4) == null ? stats : set(stats, m.group(4), m.group(3));
         }
@@ -122,10 +122,19 @@ public final class EnchantmentType {
         return stats;
     }
 
-    /** One "&a+75 &c❤ Health" of "&7Grants … [&7and …]". */
-    private static final String GRANT = "&.\\+([\\d.]+) ?(?:&.)?\\S? ?([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*)";
-    /** "&7Grants &a+75 &c❤ Health&7." (or "…&7, which …", or Divine Gift's "…Magic Find."), and nothing more to it. */
-    private static final Pattern GRANTS = Pattern.compile("^&7Grants " + GRANT + "(?: &7and " + GRANT + ")?(?:&7)?(?:\\.$|, which )");
+    /** One "&a+75 &c❤ Health" (or Small Brain's "&b-5✎ Intelligence") of "&7Grants … [&7and …]". */
+    private static final String GRANT = "&.([+-][\\d.]+) ?(?:&.)?\\S? ?([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*)";
+    /**
+     * "&7Grants &a+75 &c❤ Health&7." (or "…&7, which …", or Divine Gift's "…Magic Find.", or Small Brain's "…
+     * Intelligence&7 and …"), and nothing more to it.
+     */
+    private static final Pattern GRANTS = Pattern.compile("^&7Grants " + GRANT + "(?:(?: &7|&7 )and " + GRANT + ")?(?:&7)?(?:\\.$|, which )");
+    /**
+     * Reflection's two sentences, "&7Grants &b+2✎ Intelligence&7. Grants &f+1❂ True Defense&7. When damaged by an
+     * arrow, …": both stats count for good, whatever the sentences after them do (a Turbo's "Grants …. Requires
+     * Bronze in a … Contest!" is one sentence of grants, so it still grants nothing).
+     */
+    private static final Pattern TWO_GRANTS = Pattern.compile("^&7Grants " + GRANT + "(?:&7)?\\. Grants " + GRANT + "(?:&7)?\\. ");
     /** One "&9☠ Crit Damage &7by &a10%&7" of "&7Increases … [and …]." */
     private static final String BY = "&.\\S+ ([A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*) &7by &a\\+?([\\d.]+)%?&7";
     private static final Pattern INCREASES = Pattern.compile("^&7Increases " + BY + "(?: and " + BY + ")?\\.");

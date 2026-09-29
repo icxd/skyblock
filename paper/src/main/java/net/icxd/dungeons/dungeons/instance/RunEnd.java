@@ -61,9 +61,15 @@ final class RunEnd {
      */
     static Outcome award(Document profile, DungeonFloor floor, Score score, long millis, double secretPercent,
                          DungeonClass own, Collection<DungeonClass> teammates, LocalDate day) {
+        return award(profile, floor, score, millis, secretPercent, own, teammates, day, RunBoosts.Boost.NONE);
+    }
+
+    /** {@link #award} with the member's own boost to its experience (see {@link RunBoosts}). */
+    static Outcome award(Document profile, DungeonFloor floor, Score score, long millis, double secretPercent,
+                         DungeonClass own, Collection<DungeonClass> teammates, LocalDate day, RunBoosts.Boost boost) {
         DungeonRecords.Completion completion = DungeonRecords.complete(profile, floor, score.total(), score.grade(), millis, day);
-        RunRewards.Reward reward = RunRewards.reward(floor, score.total(), completion.completionsBefore(), completion.todayBefore(),
-                secretPercent, own, teammates);
+        RunRewards.Reward reward = RunBoosts.boosted(RunRewards.reward(floor, score.total(), completion.completionsBefore(),
+                completion.todayBefore(), secretPercent, own, teammates), boost);
         DungeonProfile.addCatacombsXp(profile, reward.catacombs());
         for (Map.Entry<DungeonClass, Double> e : reward.classes().entrySet()) DungeonProfile.addClassXp(profile, e.getKey(), e.getValue());
         int bits = profile.get("bits") instanceof Number n ? n.intValue() : 0;
@@ -81,8 +87,15 @@ final class RunEnd {
      */
     static Outcome awardFailed(Document profile, DungeonFloor floor, Score score, double secretPercent,
                                DungeonClass own, Collection<DungeonClass> teammates) {
+        return awardFailed(profile, floor, score, secretPercent, own, teammates, RunBoosts.Boost.NONE);
+    }
+
+    /** {@link #awardFailed} with the member's own boost to its experience (see {@link RunBoosts}). */
+    static Outcome awardFailed(Document profile, DungeonFloor floor, Score score, double secretPercent,
+                               DungeonClass own, Collection<DungeonClass> teammates, RunBoosts.Boost boost) {
         int completions = DungeonRecords.completions(profile, floor);
-        RunRewards.Reward full = RunRewards.reward(floor, score.total(), completions, RunRewards.DAILY_RUNS, secretPercent, own, teammates);
+        RunRewards.Reward full = RunBoosts.boosted(RunRewards.reward(floor, score.total(), completions, RunRewards.DAILY_RUNS, secretPercent,
+                own, teammates), boost);
         RunRewards.Reward reward = new RunRewards.Reward(full.catacombs(), full.classes(), 0);
         DungeonProfile.addCatacombsXp(profile, reward.catacombs());
         for (Map.Entry<DungeonClass, Double> e : reward.classes().entrySet()) DungeonProfile.addClassXp(profile, e.getKey(), e.getValue());

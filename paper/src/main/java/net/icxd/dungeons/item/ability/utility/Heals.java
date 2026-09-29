@@ -1,7 +1,9 @@
 package net.icxd.dungeons.item.ability.utility;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,8 +47,23 @@ public final class Heals {
 
     /** Heals over time running, by who's healed and then by kind ("wand"). */
     private static final Map<UUID, Map<String, OverTime>> RUNNING = new HashMap<>();
+    private static final List<KindFactor> KIND_FACTORS = new ArrayList<>();
+
+    /** A factor on the heals over time of a kind that a healer casts (see {@link #addKindFactor}): 1 for no change. */
+    @FunctionalInterface
+    public interface KindFactor {
+        double factor(Player healer, String kind);
+    }
 
     private Heals() {
+    }
+
+    /**
+     * Adds a factor on a kind of heal over time a healer casts (Habanero Tactics' "Heal +7.5% more from wands":
+     * "wand"); the factors multiply.
+     */
+    public static void addKindFactor(KindFactor factor) {
+        KIND_FACTORS.add(factor);
     }
 
     /**
@@ -75,13 +92,14 @@ public final class Heals {
     }
 
     /**
-     * Starts or renews a heal over time on {@code target}: {@code amount} a second for {@code seconds}, the
-     * first second's at once when {@code now}. There's one of each {@code kind} at a time: a new one takes the
+     * Starts or renews a heal over time on {@code target}: {@code amount} a second (times its kind's factors, see
+     * {@link #addKindFactor}) for {@code seconds}, the first second's at once when {@code now}. There's one of each {@code kind} at a time: a new one takes the
      * old one's place but keeps its beat, so casting a wand again heals at once and the running heal ticks on
      * ("Wand heals don't stack", yet "the first healing tick is applied immediately. With enough Vitality,
      * repeatedly casting the ability can heal 120 per second": the wiki's Wand of Healing).
      */
     public static void overTime(Player healer, Player target, String kind, double amount, int seconds, boolean now) {
+        for (KindFactor factor : KIND_FACTORS) amount *= factor.factor(healer, kind);
         int pulses = pulses(seconds, now);
         if (now) give(healer, target, amount);
         if (pulses <= 0) return;

@@ -156,7 +156,7 @@ How they're put together (`tools/hex/test_build_reforges.py` has made-up cases o
 - **Bonus effects past a stat.** Only Withered's and Ancient's Catacombs stats work; every other bonus is lore
   only. Each waits for the system it touches:
   - combat damage: Fabled's crit bonus, Suspicious's +15 weapon damage, Fanged's 7th hit, Coldfused;
-  - the stat totals: Renowned's +1% of all combat stats and Perfect's +2% Defense;
+  - the armor and equipment reforges' (Renowned, Perfect, Undead, Cubic, Ridiculous, Bloodshot): built or LATER in ENCHANTS_ARMOR.md;
   - abilities: Loving's +5% ability damage;
   - Spiritual's decoys, Hyper's speed after teleporting, Empowered's Mending in dungeons;
   - mining, farming, fishing and pests: Ambered, Auspicious, Fleet, Glacial, Heated, Lustrous, Magnetic, Mithraic,
