@@ -26,10 +26,12 @@ import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoubleFunction;
@@ -618,6 +620,8 @@ final class TieredSets {
         static final Tiers EVERY = new Tiers(2, 3, 2, 1);
         static final double RANGE = 25;
         static final int OTHERS = 4;
+        /** Who wears it, as the last second's tick saw them: a hit asks only if there's anyone. */
+        private static final Set<UUID> WEARING = new HashSet<>();
         private final Map<UUID, Gained> gained = new HashMap<>();
 
         /** One wearer's stacks, and when each player last granted one. */
@@ -672,10 +676,13 @@ final class TieredSets {
 
         /** Someone hit a mob: they and each wearer within 25 blocks of them may gain a stack. */
         static void heard(Player hitter, Combat.Landing landing) {
+            if (WEARING.isEmpty()) return;
             HitKind kind = landing.kind();
             if (kind != HitKind.MELEE && kind != HitKind.ARROW && kind != HitKind.ABILITY) return;
             long now = System.currentTimeMillis();
-            for (Player wearer : hitter.getWorld().getPlayers()) {
+            for (UUID wearing : WEARING) {
+                Player wearer = Bukkit.getPlayer(wearing);
+                if (wearer == null || !wearer.getWorld().equals(hitter.getWorld())) continue;
                 if (!wearer.equals(hitter) && (!SetBonuses.inPlay(wearer) || wearer.getLocation().distanceSquared(hitter.getLocation()) > RANGE * RANGE)) {
                     continue;
                 }
@@ -688,6 +695,11 @@ final class TieredSets {
         }
 
         @Override
+        public void second(Player player, Active active) {
+            WEARING.add(player.getUniqueId());
+        }
+
+        @Override
         public List<String> text(List<String> text, int count) {
             return EVERY.text(text, "Every &a", count, needs());
         }
@@ -695,11 +707,13 @@ final class TieredSets {
         @Override
         public void ended(Player player) {
             gained.remove(player.getUniqueId());
+            WEARING.remove(player.getUniqueId());
         }
 
         @Override
         public void forget(UUID player) {
             gained.remove(player);
+            WEARING.remove(player);
         }
     }
 
