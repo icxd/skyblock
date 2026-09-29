@@ -149,12 +149,13 @@ public final class RunItems {
     }
 
     /**
-     * Which run they're in, as a name no other run has (its world's), for what an item keeps for one run only (the
-     * Zombie Commander Whip's "Zombies killed during a dungeon run"); null outside one.
+     * Which run they're in, as a name no other run has (its id: run worlds are used again by later runs), for what
+     * an item keeps for one run only (the Zombie Commander Whip's "Zombies killed during a dungeon run"); null
+     * outside one.
      */
     public static String runKey(Player player) {
         DungeonRun run = RunManager.of(player);
-        return run == null ? null : run.world.getName();
+        return run == null ? null : run.id;
     }
 
     /** The floor of the run they're in; null outside one. */
