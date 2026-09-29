@@ -95,6 +95,20 @@ class StackingEnchantsTest {
         assertEquals(new Stats(), EnchantmentType.stats("&7Gain &a3% &7extra Combat XP."));
     }
 
+    /**
+     * Of two stats "while" or "when" something, the first counts, as live lore has Lapidary's Gemstone Fortune and
+     * Expertise's Sea Creature Chance; one stat that only sometimes counts gives nothing.
+     */
+    @Test
+    void firstOfTwo() {
+        assertEquals(new Stats().set(Stat.GEMSTONE_FORTUNE, 30),
+                EnchantmentType.stats("&7Grants &6+30☘ Gemstone Fortune &7and &6+60⸕ Mining Speed &7while mining Gemstones."));
+        assertEquals(new Stats().set(Stat.SEA_CREATURE_CHANCE, 1.8),
+                EnchantmentType.stats("&7Grants &3+1.8α Sea Creature Chance &7and &3+6☯ Fishing Wisdom &7when killing Sea Creatures."));
+        assertEquals(new Stats(), EnchantmentType.stats("&7Grants &6+20☘ Farming Fortune &7when vacuuming &2 Pests&7."));
+        assertEquals(new Stats(), EnchantmentType.stats("&7Grants &c+3❣ Health Regen &7while out of combat."));
+    }
+
     /** On an item, an enchantment's stats are its own ({@link EnchantmentType#getStats(int)}'s) but for Efficiency's Mining Speed. */
     @Test
     void onAnItem() {

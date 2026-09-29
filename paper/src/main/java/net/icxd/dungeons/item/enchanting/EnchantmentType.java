@@ -154,6 +154,8 @@ public final class EnchantmentType {
             set(stats, m.group(2), m.group(1));
             return m.group(4) == null ? stats : set(stats, m.group(4), m.group(3));
         }
+        m = FIRST_OF_TWO.matcher(text);
+        if (m.find()) return set(stats, m.group(2), m.group(1));
         m = INCREASES.matcher(text);
         if (!m.find()) return stats;
         set(stats, m.group(1), m.group(2));
@@ -180,6 +182,12 @@ public final class EnchantmentType {
      * Mining Wisdom, live lore's "Mining Wisdom: +8" at VIII, before its chance of an enchanted item).
      */
     private static final Pattern GAINS = Pattern.compile("^&7Gain " + GRANT + "(?: &7and " + GRANT + ")?(?:&7)?(?:\\.$| &7and a )");
+    /**
+     * The first of two stats "while" or "when" something (Lapidary's Gemstone Fortune, not its Mining Speed "while
+     * mining Gemstones"; Expertise's Sea Creature Chance, not its Fishing Wisdom "when killing Sea Creatures"), as live
+     * lore counts them in the item's stats (59 of 62 live Lapidary tools, the auction house's; the rest none).
+     */
+    private static final Pattern FIRST_OF_TWO = Pattern.compile("^&7Grants " + GRANT + " &7and " + GRANT + " &7(?:while|when) ");
     /** A green percent: "&a15%", "&a+12.5%". */
     private static final Pattern PERCENT = Pattern.compile("&a\\+?([\\d.]+)%");
 

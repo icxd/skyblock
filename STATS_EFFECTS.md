@@ -57,7 +57,9 @@ says. Mining Speed is theirs (tool, armor and all), Aqua Affinity's rate on top.
 | Champion | DONE (Combat XP) | As before (SkillGains). Its coins and orbs are the weapon enchantments' part (ENCHANTS_WEAPONS.md). Its tier-up by Combat XP isn't counted: `StackingEnchants.addHeld(player, "champion", xp)` is the call for whoever builds it (see the questions). |
 | Cultivating | DONE (stats), LATER (the rest) | Its "Gain +1☯ Farming Wisdom and +2☘ Farming Fortune" are now read as stats, as live lore counts them. Its counter and using the stats wait for farming. |
 | Prismatic (`pristine`) | DONE (stat), LATER | Its Pristine shows and sums; gemstone blocks use it. |
-| Lapidary, Smelting Touch, Silk Touch, Paleontologist | LATER | Gemstone blocks; vanilla ore, log and sand blocks; the Glacite Mineshafts. |
+| Lapidary | DONE (stat), LATER (the rest) | Its Gemstone Fortune is read as a stat, the first of its two "while mining Gemstones", as live lore counts it in the tool's stats (59 of 62 live Lapidary tools; the rest show none); its Mining Speed isn't in live lore's stats and waits, with using the fortune, for gemstone blocks. |
+| Expertise | DONE (stat), LATER (the rest) | The same reading: its Sea Creature Chance, not its Fishing Wisdom "when killing Sea Creatures", as live lore counts it. Its counter and the rest are ENCHANTS_WEAPONS.md's, waiting for fishing. |
+| Smelting Touch, Silk Touch, Paleontologist | LATER | Vanilla ore, log and sand blocks; the Glacite Mineshafts. |
 
 ## Other things that raise experience and stats
 
