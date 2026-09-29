@@ -24,6 +24,8 @@ import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.data.ItemBlock;
+import net.icxd.dungeons.item.nbt.ItemNBT;
+import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
@@ -34,7 +36,8 @@ import net.icxd.dungeons.stats.PlayerStats;
  * glides; what immunity does to vanilla damage (SkyBlock hits go through {@link Protection}'s shields); hits
  * from players who can't attack now; a Spirit Leap's immunity ending with a hit; Shadowstep ready again on a
  * kill; the Creeper Veil taken down with a right click; no vanilla use of the items they're on (a thrown
- * ender pearl); Spirit Glide on sneaking; and what a player who leaves had going. Registered by {@link
+ * ender pearl); Spirit Glide on sneaking; the dungeon secret items used; and what a player who leaves had
+ * going. Registered by {@link
  * Dungeons}, which is when the shields and stat hooks go in.
  */
 public final class UtilityListener implements Listener {
@@ -58,6 +61,7 @@ public final class UtilityListener implements Listener {
         WornPassives.landed();
         CellsAlignment.tick();
         DungeonBreaker.tick();
+        SecretItems.tick();
     }
 
     /**
@@ -165,6 +169,23 @@ public final class UtilityListener implements Listener {
         if (block != null && block.isAbility() && UtilityAbilities.has(block.name())) event.setUseItemInHand(Event.Result.DENY);
     }
 
+    /**
+     * A right click with a dungeon secret item that does something when used (see {@link SecretItems}): never its
+     * vanilla use (a spawn egg, a pressure plate), nor the clicked block's. Not a ghost's (the run has called its
+     * clicks off already).
+     */
+    @EventHandler
+    public void onSecretItem(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        NBTTagCompound tag = ItemNBT.read(event.getItem());
+        if (tag == null || !SecretItems.is(tag.getString("id"))) return;
+        boolean denied = event.useItemInHand() == Event.Result.DENY;
+        event.setUseItemInHand(Event.Result.DENY);
+        event.setUseInteractedBlock(Event.Result.DENY);
+        if (!denied) SecretItems.used(event.getPlayer(), tag.getString("id"), event.getClickedBlock(), event.getClickedBlock() == null ? null : event.getBlockFace());
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onSneak(PlayerToggleSneakEvent event) {
         if (event.isSneaking()) SpiritGlide.sneaked(event.getPlayer());
@@ -191,6 +212,7 @@ public final class UtilityListener implements Listener {
         Deployables.removeAll();
         WornPassives.removeAll();
         DungeonBreaker.restoreAll();
+        SecretItems.removeAll();
         for (Player player : Bukkit.getOnlinePlayers()) {
             CreeperVeil.forget(player.getUniqueId());
             SpiritGlide.forget(player);
