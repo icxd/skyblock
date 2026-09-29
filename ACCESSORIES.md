@@ -54,7 +54,7 @@ named. Accessories whose text is only flavour, or only stats, aren't here (their
 | Wedding Rings | WEDDING_RING_0 … _9 | **APPROX** a 1 in N chance of +100% on a hit, additive (the wiki's Additive Sources, as the Ring of Love's); "Requires quest progress!" isn't asked (no quests here) | [Additive Sources](https://hypixelskyblock.minecraft.wiki/w/Damage_Calculation/Additive_Sources) |
 | Vampire Dentist Relic | VAMPIRE_DENTIST_RELIC | **DONE** a melee hit gives a natural regeneration tick (their Health Regen's), 20 s apart; its Rift part waits for the Rift | [Vampire Dentist Relic](https://hypixelskyblock.minecraft.wiki/w/Vampire_Dentist_Relic) |
 | Devour Ring | DEVOUR_RING | **DONE** heal 10 on killing an Undead mob, 0.5 s apart | [Devour Ring](https://hypixelskyblock.minecraft.wiki/w/Devour_Ring) |
-| Intimidation line | INTIMIDATION_TALISMAN, INTIMIDATION_RING, INTIMIDATION_ARTIFACT, INTIMIDATION_RELIC | **DONE** SkyBlock's mobs at or below the text's level (1, 5, 25, 30; the level their name shows) don't go for them; the Blood Room's undead choose for themselves | [Intimidation Talisman](https://hypixelskyblock.minecraft.wiki/w/Intimidation_Talisman) |
+| Intimidation line | INTIMIDATION_TALISMAN, INTIMIDATION_RING, INTIMIDATION_ARTIFACT, INTIMIDATION_RELIC | **APPROX** SkyBlock's mobs at or below the text's level (1, 5, 25, 30; the level their name shows) don't go for them; dungeon mobs, whose names show no level, aren't among them (UNKNOWN); the Blood Room's undead choose for themselves | [Intimidation Talisman](https://hypixelskyblock.minecraft.wiki/w/Intimidation_Talisman) |
 | Experience Artifact | EXPERIENCE_ARTIFACT | **DONE** +25% experience from orbs (the kills' the plugin gives, and the rest through ExpOrbs); experience bottles wait for them | [Experience Artifact](https://hypixelskyblock.minecraft.wiki/w/Experience_Artifact) |
 | Feather line | FEATHER_TALISMAN, FEATHER_RING, FEATHER_ARTIFACT | **APPROX** 5, 7 or 10 blocks more before fall damage (their safe fall distance), and fall damage 5% (15%) less; fall damage stays vanilla's (EFFECTS.md UNKNOWN) | [Feather Talisman](https://hypixelskyblock.minecraft.wiki/w/Feather_Talisman) |
 | Vaccine line | VACCINE_TALISMAN, VACCINE_RING, VACCINE_ARTIFACT | **APPROX** poison's damage 10%, 25% or 50% less (vanilla poison, the only there is here) | [Vaccine Talisman](https://hypixelskyblock.minecraft.wiki/w/Vaccine_Talisman) |
@@ -111,6 +111,7 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
 - Shop discounts: the most of them counts, rounded up to a coin, on every shop here.
 - The Bucket of Dye's 1% is a factor on the drop's chance.
 - The Wedding Rings don't ask for their quest.
+- The Intimidation line leaves out dungeon mobs, whose names show no level.
 
 ## For the other parts
 

@@ -118,7 +118,7 @@ LATER: waits for the system named.
 | Dwarf Wannabe | full set | MITHRIL (4) | **DONE** +30 Mining Speed and +5 Mining Fortune (the text's) with the four equipment pieces on, on the Dwarven Mines | [Mithril Belt](https://hypixelskyblock.minecraft.wiki/w/Mithril_Belt) |
 | Expert Miner | full set | GLACITE (4) | **DONE** +2 Mining Speed per Mining level | [Glacite Armor](https://hypixelskyblock.minecraft.wiki/w/Glacite_Armor) |
 | Fairy's Outfit | full set | FAIRY (4) | **LATER** fairy souls | [Fairy Armor](https://hypixelskyblock.minecraft.wiki/w/Fairy_Armor) |
-| Fearsome | full set | GREAT_SPOOK (4) | **APPROX** mobs at or below their Fear (by the level their name shows) don't go for them, and run 8 blocks off from within 10 (the distances UNKNOWN) | [Great Spook Armor](https://hypixelskyblock.minecraft.wiki/w/Great_Spook_Armor) |
+| Fearsome | full set | GREAT_SPOOK (4) | **APPROX** mobs at or below their Fear (by the level their name shows) don't go for them, and run 8 blocks off from within 10 (the distances UNKNOWN); the wiki has it for "some mobs", taken as those whose name shows a level, so not dungeon mobs (UNKNOWN) | [Great Spook Armor](https://hypixelskyblock.minecraft.wiki/w/Great_Spook_Armor), [Fear](https://hypixelskyblock.minecraft.wiki/w/Fear) |
 | Frozen Blazing Aura | full set | FROZEN_BLAZE (4) | **DONE** 300 + 3% a second, Slowness I 4 s, same most | [Frozen Blaze Armor](https://hypixelskyblock.minecraft.wiki/w/Frozen_Blaze_Armor) |
 | Gemstone Gatherer | full set | AMBER, AMETHYST, JADE, SAPPHIRE (4) | **LATER** the Crystal Hollows (its gems) |  |
 | Heat Shield | full set | HEAT (4) | **LATER** Heat |  |
@@ -281,8 +281,8 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   against Animal mobs only).
 - Task 80's: Intimidate's 10 blocks and nearest mobs; Bouncing Arrow's 10 blocks and the hit's damage again;
   Regenerative Howl's heal (the wiki's, not the text's) and a stack a Ferocity strike; Refraction's 12.5% at light 0
-  and the light at their head; Battalion counting the wearer; Fearsome's
-  10 and 8 blocks; a Zombie as a vanilla zombie (Training, the Zombie Bulwark, the Zombie Hat); the Bulwarks'
+  and the light at their head; Battalion counting the wearer; Fearsome's 10 and 8 blocks, and only mobs whose names
+  show a level; a Zombie as a vanilla zombie (Training, the Zombie Bulwark, the Zombie Hat); the Bulwarks'
   "Maxed!"; Riches' counter counting all Scavenger coins; Arcane Energy's magic damage as ability hits that don't
   crit; Spirit's four others as the first four; Static Charge's damage as additive; Rekindle's parts added up and
   its seconds on fire starting again; Dominus's swipe at most once a stack's time, 5 blocks long, its Additive
