@@ -263,8 +263,8 @@ public final class HeldStats {
     /**
      * The Emerald Blade: "This blade becomes stronger as you carry more coins in your purse (Capped at 2B coins)":
      * the wiki's "DMG = 130 + 2.5 x Coins^(1/4)" (its own 130 is its data's Damage), up to 2B coins. Its "Current
-     * Damage Bonus" line stays its data's (an item's text isn't built for who holds it), and the Curse of Greed does
-     * nothing: there's no coin loss on death here.
+     * Damage Bonus" line stays its data's (an item's text isn't built for who holds it). Its Curse of Greed is
+     * economy/DeathCoins'.
      */
     static final class FromPurse implements ItemBehaviour {
         static final double CAP = 2_000_000_000;

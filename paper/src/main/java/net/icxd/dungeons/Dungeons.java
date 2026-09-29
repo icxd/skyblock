@@ -77,6 +77,8 @@ import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
 import net.icxd.dungeons.item.bonus.SetBonuses;
+import net.icxd.dungeons.item.ability.utility.UtilityAbilities;
+import net.icxd.dungeons.item.ability.weapons.WeaponAbilities;
 import net.icxd.dungeons.item.enchanting.armor.ArmorEnchants;
 import net.icxd.dungeons.item.upgrade.BookOfStats;
 import net.icxd.dungeons.network.ProxyLink;
@@ -141,6 +143,9 @@ public class Dungeons extends JavaPlugin {
         Hex.start(this);
         // What counts collections: the bags' sizes and unlocks, and the set bonuses that count collected items.
         Bag.setCollections(Collections::tier);
+        // Aurora Armor's Arcane Energy stacks for Homing Missiles, and Hollow Armor's Spirit stacks for the Hollow Wand.
+        WeaponAbilities.arcaneEnergy(SetBonuses::arcaneEnergy, SetBonuses::spendArcaneEnergy);
+        UtilityAbilities.hollowSpirit(SetBonuses::spirit, SetBonuses::spendSpirit);
         SetBonuses.setCollections((player, item) -> {
             User user = User.ifLoaded(player.getUniqueId());
             return user == null ? 0 : Collections.count(user.profile(), item);

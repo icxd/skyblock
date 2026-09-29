@@ -414,7 +414,7 @@ What each part owns in full:
   - Spent Vitality and mana: Hardened, Strong and Vivacious Vitality, Vampiric Vitality and Refrigerate.
   - Stats from other things: Cayenne, The One, Quantum, Wisdom and Legion.
   - Also No Pain No Gain, Habanero Tactics' first three lines, and Hecatomb.
-  - Bank waits for purse loss on death (see "Questions for the owner").
+  - Bank, on the purse loss on death (`economy/DeathCoins`, which the lead added with the owner's yes).
 - **Item abilities.**
   - SNEAK and worn: Ground Pound, Homing Missiles, Water Burst, To the Moon!, Bouncy, Eye Beam and Double
     Jump.
@@ -432,8 +432,9 @@ What each part owns in full:
 
 ## Not in the core
 
-- **Purse loss on death** (inv_systems.md Table 3, #11) changes a game rule, so it's left for the owner.
-  It blocks the Bank enchantment.
+- **Purse loss on death** (inv_systems.md Table 3, #11) was left for the owner, who said yes; the lead built it after
+  the core: `economy/DeathCoins` (half the purse outside the Catacombs and Sandbox profiles, `addSaver` for Bank and
+  the Piggy Banks, the Emerald Blade's Curse of Greed cancelling them).
 - **Enchanting-level gating** ("will be greyed out and will not work", armor inventory X1) is left to the
   enchantment parts. It changes lore and the golden test.
 - **Counters on equipment pieces**, the vanilla absorption hearts, and SkyBlock's own fall and fire formulas
