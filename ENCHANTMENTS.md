@@ -142,7 +142,8 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
 - **Collection Exp discounts** (25% for some enchantments at a collection tier; the private collections data has
   them): the Hex charges the full Exp levels.
 - **Anvil combining and the Enchantment Table block** (the Hex's Enchant Item is the only way to enchant).
-- **Tiers that grow with use** (Champion's Combat XP, Compact's blocks...): the tier is only what's set.
+- **Tiers that grow with use** (Champion's Combat XP...): the tier is only what's set, but Compact's, which grows by
+  the blocks its tool mines (`StackingEnchants`, STATS_EFFECTS.md).
 - **Effects** of the enchantments that are text only here, and the system each waits for:
   - Combat hooks (damage against a mob type, on-hit, on-kill, projectiles): Impaling (Aquatic), Pyroclasm
     (Magmatic), Woodsplitter (Woodland), Knockback, Punch, Flame, Piercing, Dragon Tracer, Thorns, Reflection, Tidal,

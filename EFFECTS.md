@@ -165,9 +165,11 @@ itself is unchanged: a SkyBlock item's hit on a player is still called off, and 
 
 ### Drops by how the kill was made: `Mobs.addDropChance`
 
-- `Mobs.addDropChance((killer, blow, drop) -> factor)`: a factor on one of a kill's drops' chance, after Magic
-  Find (Looting on the weapon that dealt the killing blow, Chance on the bow its arrow left, Luck on armor
-  drops). The factors multiply; 1 changes nothing.
+- `Mobs.addDropChance((killer, blow, drop) -> factor)`: a factor on one of a kill's drops' own chance, before
+  Magic Find ("Looting applies BEFORE Magic Find", the wiki's Looting: Magic Find's 5% rule goes by what the
+  factors make it). Looting, Chance and Luck (`mob/DropEnchants`, STATS_EFFECTS.md) are on the killer's held
+  item, as the wiki's Looting says. The factors multiply; 1 changes nothing. Past 100% a drop drops again
+  (`Mobs.copies`).
 - `blow` is the kill's `KillingBlow` (the drops roll before the death event, which has it too); null when it
   isn't known. `blow.weapon()` tells the melee weapon from the bow (`blow.kind()`).
 - It counts for drops of 5% and more too, which Magic Find leaves alone. The drop's own chance and rarity are
@@ -462,4 +464,5 @@ What each part owns in full:
   yet; a boss with them would need it before).
 - How a piercing arrow's later mobs are hit: each with the share of the shot's damage (not of the mob
   before's), crit or not as the shot was.
-- Where a kill's drop factors (Looting) come in: after Magic Find, on every drop, the 5% and more too.
+- Where a kill's drop factors (Looting) come in: settled by the wiki's Looting, before Magic Find, on every drop,
+  the 5% and more too.
