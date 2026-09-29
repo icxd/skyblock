@@ -1,8 +1,10 @@
 package net.icxd.dungeons.economy;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleFunction;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,12 +30,28 @@ import net.icxd.dungeons.user.User;
  *
  * <p>Only the killer gets them (whether a party shares them isn't known), and nothing's said: the
  * sidebar's "(+N)" is all Hypixel shows. In a dungeon the sidebar hides the purse, but it still
- * fills. Not here yet: the bestiary's +2% a tier, Kill Combo (a pet's perk) and the other modifiers.
+ * fills. What multiplies the Scavenger part (Riches) comes in through {@link #addScavengerFactor}. Not here
+ * yet: the bestiary's +2% a tier, Kill Combo (a pet's perk) and the other modifiers.
  */
 public final class KillCoins implements Listener {
     private static final BigDecimal SCAVENGER_PER_TIER = new BigDecimal("0.3");
     /** Coins per level of the killed mob; only the best one counts, as with any accessory family. */
     static final Map<String, Double> ACCESSORIES = Map.of("SCAVENGER_TALISMAN", 0.5, "SCAVENGER_RING", 0.6, "SCAVENGER_ARTIFACT", 0.75);
+    private static final List<ToDoubleFunction<Player>> SCAVENGER_FACTORS = new ArrayList<>();
+
+    /**
+     * Adds a factor on the Scavenger part of a player's kill coins, the enchantment's and the accessory's (Eleanor's
+     * Armor's Riches: "Gain 1.5x Scavenger Coins"); they multiply.
+     */
+    public static void addScavengerFactor(ToDoubleFunction<Player> factor) {
+        SCAVENGER_FACTORS.add(factor);
+    }
+
+    private static double scavengerFactor(Player player) {
+        double factor = 1;
+        for (ToDoubleFunction<Player> f : SCAVENGER_FACTORS) factor *= f.applyAsDouble(player);
+        return factor;
+    }
 
     @EventHandler
     public void onDeath(SkyBlockMobDeathEvent event) {
@@ -42,13 +60,25 @@ public final class KillCoins implements Listener {
         if (user == null || user.isReleased()) return;
         PlayerInventory inventory = killer.getInventory();
         double coins = coins(event.variant().coins(), event.variant().level(), scavenger(ItemNBT.read(inventory.getItemInMainHand())),
-                accessory(AccessoryBag.countedIds(killer)));
+                accessory(AccessoryBag.countedIds(killer)), scavengerFactor(killer));
         if (coins > 0) Purse.add(user, coins);
+    }
+
+    /** The Scavenger part of what they'd get now for a kill of a mob at this level: its coins per level, with their factors. */
+    public static double scavengerCoins(Player killer, int level) {
+        return coins(0, level, scavenger(ItemNBT.read(killer.getInventory().getItemInMainHand())), accessory(AccessoryBag.countedIds(killer)),
+                scavengerFactor(killer));
     }
 
     /** What a kill of a mob at this level is worth, with this Scavenger tier (0 for none) and accessory's coins per level. */
     static double coins(double base, int level, int scavenger, double accessoryPerLevel) {
-        BigDecimal perLevel = SCAVENGER_PER_TIER.multiply(BigDecimal.valueOf(scavenger)).add(BigDecimal.valueOf(accessoryPerLevel));
+        return coins(base, level, scavenger, accessoryPerLevel, 1);
+    }
+
+    /** The same, with the Scavenger part {@code factor} times (Riches). */
+    static double coins(double base, int level, int scavenger, double accessoryPerLevel, double factor) {
+        BigDecimal perLevel = SCAVENGER_PER_TIER.multiply(BigDecimal.valueOf(scavenger)).add(BigDecimal.valueOf(accessoryPerLevel))
+                .multiply(BigDecimal.valueOf(factor));
         return BigDecimal.valueOf(base).add(perLevel.multiply(BigDecimal.valueOf(level))).doubleValue();
     }
 

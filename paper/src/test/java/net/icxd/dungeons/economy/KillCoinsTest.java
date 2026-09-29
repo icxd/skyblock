@@ -56,6 +56,13 @@ class KillCoinsTest {
         assertEquals(1 + 45 * 0.6, KillCoins.coins(1, 45, 0, 0.6), 1e-9);
     }
 
+    /** Riches multiplies the Scavenger part only (the enchantment's and the accessory's), not the mob's own coins. */
+    @Test
+    void scavengerFactor() {
+        assertEquals(1 + 100 * 2.3 * 3, KillCoins.coins(1, 100, 6, 0.5, 3), 1e-9);
+        assertEquals(20, KillCoins.coins(20, 75, 0, 0, 3), 1e-9);
+    }
+
     @Test
     void readsTheTierOffTheWeapon() {
         assertEquals(4, KillCoins.scavenger(sword("sharpness 5", "scavenger 4")));

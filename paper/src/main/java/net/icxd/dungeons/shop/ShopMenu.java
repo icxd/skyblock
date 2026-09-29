@@ -141,7 +141,7 @@ public final class ShopMenu extends GUI {
         SkyBlockItem item = ItemRegistry.get(ware.item());
         ItemStack stack = ItemBuilder.build(item, ware.amount());
         List<String> lore = new ArrayList<>(List.of("", "&7Cost"));
-        for (Cost cost : ware.costs()) lore.add(costLine(cost));
+        for (Cost cost : Shop.costs(ware, viewer)) lore.add(costLine(cost));
         lore.add("");
         // As the wiki shows the third tier of Ophelia's (Ophelia/UI, Floor VI and VII).
         lore.add(ware.locked() ? "&cNot unlocked!" : "&eClick to trade!");
@@ -167,7 +167,8 @@ public final class ShopMenu extends GUI {
         User user = customer();
         SkyBlockItem item = ItemRegistry.get(ware.item());
         if (user == null || item == null || ware.locked()) return;
-        for (Cost cost : ware.costs()) {
+        List<Cost> costs = Shop.costs(ware, viewer);
+        for (Cost cost : costs) {
             if (cost.canPay(viewer, user)) continue;
             tell(cost instanceof CoinCost ? Selling.NOT_ENOUGH_COINS : cost instanceof EssenceCost ? Selling.NOT_ENOUGH_ESSENCE
                     : Selling.NOT_ENOUGH_ITEMS);
@@ -180,7 +181,7 @@ public final class ShopMenu extends GUI {
             tell(Selling.FULL);
             return;
         }
-        for (Cost cost : ware.costs()) cost.pay(viewer, user);
+        for (Cost cost : costs) cost.pay(viewer, user);
         viewer.getInventory().addItem(bought);
         tell(Selling.bought(name(item, bought), ware.amount()));
     }
