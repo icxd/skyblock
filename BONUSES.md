@@ -74,7 +74,9 @@ Blood reaches no one, and Shoal and Armor of the Pack don't count them.
   isn't counted; its +100 Speed cap is.
 - The Aurora Chestplate's Homing Missiles read Arcane Energy's stacks with `SetBonuses.arcaneEnergy(player)` and
   spend them with `SetBonuses.spendArcaneEnergy(player)`; the Hollow Wand reads Spirit's with
-  `SetBonuses.spirit(player)` and spends some with `SetBonuses.spendSpirit(player, n)`.
+  `SetBonuses.spirit(player)` and spends some with `SetBonuses.spendSpirit(player, n)`. With the abilities part's
+  hooks merged, that's `WeaponAbilities.arcaneEnergy(SetBonuses::arcaneEnergy, SetBonuses::spendArcaneEnergy)` and
+  `UtilityAbilities.hollowSpirit(SetBonuses::spirit, SetBonuses::spendSpirit)`, from `SetBonuses.enable`.
 - The Tank's Seismic Wave takes `SetBonuses.seismicWaveCut(player)` off its cooldown (Super Heavy Armor); the
   abilities part's `RunItems.seismicWaveCut` (the Earth Shard) changes the same line: both cuts come off.
 - The Starlight Wand's Starfall asks `SetBonuses.starfallDuration(player)` and `starfallRange(player)` (Starpower).
