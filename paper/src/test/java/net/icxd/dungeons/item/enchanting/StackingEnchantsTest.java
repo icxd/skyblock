@@ -21,15 +21,15 @@ import net.icxd.dungeons.stats.Stats;
  * text (a percent, "Gain" stats, Efficiency's Mining Speed).
  */
 class StackingEnchantsTest {
-    /** A made-up stacking enchantment: three tiers, at 100 and 1.5k. */
+    /** A made-up stacking enchantment (its numbers aren't Hypixel's): three tiers, at 100 and 1.5k. */
     private static final String TABLE = "{\"format\":1,\"order\":[\"compact\"],\"enchantments\":{\"compact\":{\"name\":\"Compact\","
             + "\"hypixel\":\"compact\",\"ultimate\":false,\"min\":1,\"max\":3,\"table\":null,\"xp\":[1,1,1],\"enchanting\":0,"
             + "\"applies\":[\"Pickaxe\"],\"conflicts\":[],\"levels\":{"
-            + "\"1\":{\"text\":\"&7Gain &3+1☯ Mining Wisdom &7and a &a0.25% &7chance to drop an enchanted item.\",\"rarity\":\"COMMON\","
+            + "\"1\":{\"text\":\"&7Gain &3+2☯ Mining Wisdom &7and a &a0.1% &7chance to drop an enchanted item.\",\"rarity\":\"COMMON\","
             + "\"tier_up\":\"&8100 blocks to tier up!\"},"
-            + "\"2\":{\"text\":\"&7Gain &3+2☯ Mining Wisdom &7and a &a0.27% &7chance to drop an enchanted item.\",\"rarity\":\"COMMON\","
+            + "\"2\":{\"text\":\"&7Gain &3+4☯ Mining Wisdom &7and a &a0.2% &7chance to drop an enchanted item.\",\"rarity\":\"COMMON\","
             + "\"tier_up\":\"&81.5k blocks to tier up!\"},"
-            + "\"3\":{\"text\":\"&7Gain &3+3☯ Mining Wisdom &7and a &a0.29% &7chance to drop an enchanted item.\",\"rarity\":\"COMMON\"}}}}}";
+            + "\"3\":{\"text\":\"&7Gain &3+6☯ Mining Wisdom &7and a &a0.3% &7chance to drop an enchanted item.\",\"rarity\":\"COMMON\"}}}}}";
 
     private static EnchantmentType useTable() {
         List<String> problems = new ArrayList<>();
@@ -114,28 +114,38 @@ class StackingEnchantsTest {
         assertEquals(0, EnchantmentType.percent(null), 1e-9);
     }
 
-    // The private table as it is
+    // The private table as it is (skipped without it). Its numbers stay out of this repository: these check that each
+    // text reads, not what it says.
 
     /** Every level's text gives what the effects read: Compact's Wisdom and ladder, the drop and XP percents. */
     @Test
     void theRealTexts() {
         EnchantmentData.use(FakeEnchantments.real());
         EnchantmentType compact = EnchantmentType.getByNamespace("compact");
-        double[] ladder = {100, 500, 1_500, 5_000, 15_000, 50_000, 150_000, 500_000, 1_000_000};
-        for (int level = 1; level <= 10; level++) {
-            assertEquals(new Stats().set(Stat.MINING_WISDOM, level), compact.getStats(level), "Compact " + level);
-            assertTrue(compact.percent(level) > 0, "Compact " + level);
-            if (level < 10) assertEquals(ladder[level - 1], StackingEnchants.nextTier(compact.getTierUp(level)), 1e-9, "Compact " + level);
+        double wisdom = 0;
+        double chance = 0;
+        double ladder = 0;
+        for (int level = 1; level <= compact.getMaxLevel(); level++) {
+            Stats stats = compact.getStats(level);
+            assertEquals(new Stats().set(Stat.MINING_WISDOM, stats.get(Stat.MINING_WISDOM)), stats, "Compact " + level + " grants only Mining Wisdom");
+            assertTrue(stats.get(Stat.MINING_WISDOM) > wisdom, "Compact " + level);
+            assertTrue(compact.percent(level) > chance, "Compact " + level);
+            wisdom = stats.get(Stat.MINING_WISDOM);
+            chance = compact.percent(level);
+            if (level == compact.getMaxLevel()) break;
+            assertTrue(StackingEnchants.nextTier(compact.getTierUp(level)) > ladder, "Compact " + level);
+            ladder = StackingEnchants.nextTier(compact.getTierUp(level));
         }
-        assertNull(compact.getTierUp(10));
-        assertEquals(10, StackingEnchants.tier(compact, 1, 1_000_000));
-        for (int level = 1; level <= 5; level++) {
-            assertEquals(15 * level, EnchantmentType.getByNamespace("looting").percent(level), 1e-9, "Looting " + level);
-            assertEquals(15 * level, EnchantmentType.getByNamespace("chance").percent(level), 1e-9, "Chance " + level);
-            assertEquals(12.5 * level, EnchantmentType.getByNamespace("experience").percent(level), 1e-9, "Experience " + level);
-        }
-        for (int level = 1; level <= 7; level++) {
-            assertEquals(5 * level, EnchantmentType.getByNamespace("luck").percent(level), 1e-9, "Luck " + level);
+        assertNull(compact.getTierUp(compact.getMaxLevel()));
+        assertEquals(compact.getMaxLevel(), StackingEnchants.tier(compact, 1, ladder));
+        assertEquals(compact.getMaxLevel() - 1, StackingEnchants.tier(compact, 1, ladder - 1));
+        for (String id : List.of("looting", "chance", "experience", "luck")) {
+            EnchantmentType type = EnchantmentType.getByNamespace(id);
+            double before = 0;
+            for (int level = 1; level <= type.getMaxLevel(); level++) {
+                assertTrue(type.percent(level) > before, id + " " + level);
+                before = type.percent(level);
+            }
         }
     }
 }

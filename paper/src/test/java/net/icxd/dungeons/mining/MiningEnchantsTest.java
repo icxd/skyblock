@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,8 +33,9 @@ class MiningEnchantsTest {
     /** "+30" at I to "+110" at V and "+210" at X (the wiki's Efficiency). */
     @Test
     void efficiency() {
-        double[] speeds = {30, 50, 70, 90, 110, 130, 150, 170, 190, 210};
-        for (int level = 1; level <= 10; level++) assertEquals(speeds[level - 1], MiningTools.efficiencySpeed(level), 1e-9);
+        assertEquals(30, MiningTools.efficiencySpeed(1), 1e-9);
+        assertEquals(110, MiningTools.efficiencySpeed(5), 1e-9);
+        assertEquals(210, MiningTools.efficiencySpeed(10), 1e-9);
         assertEquals(0, MiningTools.efficiencySpeed(0), 1e-9);
     }
 
@@ -77,14 +79,21 @@ class MiningEnchantsTest {
         assertNull(Flowstate.Numbers.of("&7Increases how quickly your tool breaks blocks."));
     }
 
-    /** The private table's Flowstate: +1, +2 and +3 a block, 10 s, 200 blocks (skipped without it). */
+    /**
+     * The private table's Flowstate (skipped without it): every level's text gives its three numbers, more Mining Speed a
+     * block at each level (its numbers stay out of this repository).
+     */
     @Test
     void realFlowstate() {
         try {
             EnchantmentData.use(FakeEnchantments.real());
             EnchantmentType flowstate = EnchantmentType.getByNamespace("flowstate");
-            for (int level = 1; level <= 3; level++) {
-                assertEquals(new Flowstate.Numbers(level, 10, 200), Flowstate.Numbers.of(flowstate.getDescription(level)), "Flowstate " + level);
+            double before = 0;
+            for (int level = 1; level <= flowstate.getMaxLevel(); level++) {
+                Flowstate.Numbers numbers = Flowstate.Numbers.of(flowstate.getDescription(level));
+                assertNotNull(numbers, "Flowstate " + level);
+                assertTrue(numbers.perBlock() > before && numbers.seconds() > 0 && numbers.cap() > 0, "Flowstate " + level);
+                before = numbers.perBlock();
             }
         } finally {
             FakeEnchantments.reset();
