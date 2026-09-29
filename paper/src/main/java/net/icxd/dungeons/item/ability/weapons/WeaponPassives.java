@@ -389,10 +389,15 @@ public final class WeaponPassives implements Listener {
         return CLEAVE_NEAR + (CLEAVE_FAR - CLEAVE_NEAR) * t;
     }
 
-    /** The Stone Blade's Archer mark: their arrows on this mob are times {@code factor} for {@code millis}. */
+    /**
+     * The Stone Blade's Archer mark: their arrows on this mob are times {@code factor} for {@code millis}. Marks that
+     * have run out go first (a mark nobody shoots at again would stay, one a mob, all run long).
+     */
     private static void mark(Player player, LivingEntity mob, double factor, long millis) {
-        MARKED.computeIfAbsent(player.getUniqueId(), id -> new HashMap<>())
-                .put(mob.getUniqueId(), new double[] {System.currentTimeMillis() + millis, factor});
+        long now = System.currentTimeMillis();
+        Map<UUID, double[]> marks = MARKED.computeIfAbsent(player.getUniqueId(), id -> new HashMap<>());
+        marks.values().removeIf(mark -> mark[0] <= now);
+        marks.put(mob.getUniqueId(), new double[] {now + millis, factor});
     }
 
     private static double marked(Player player, LivingEntity mob) {
