@@ -156,6 +156,8 @@ public final class WeaponEnchants implements Listener {
 
     private static final Map<UUID, MobState> MOBS = new HashMap<>();
     private static final Map<UUID, PlayerState> PLAYERS = new HashMap<>();
+    /** A Flame bow's arrows in flight: the shooter as they were when it left, which its fire is worked out from. */
+    private static final Map<UUID, Damage.Attacker> FLAME_SHOTS = new HashMap<>();
     /** Knockback's and Punch's extra push, for the knockback the hit that set it is about to give (see {@link #onKnockback}). */
     private static final Map<UUID, Double> PUSHES = new HashMap<>();
     private static boolean clearingPushes;
@@ -234,9 +236,11 @@ public final class WeaponEnchants implements Listener {
         Counts hits = hits(mob, player);
         hits.all++;
         if (levels.has(FLAME)) {
-            // The shooter as they are now (the arrow's own stats stay with its shot: UNKNOWN which Hypixel's fire takes).
+            // The shooter as they were when it left, as the arrow's own hit is (Shots), not with what they hold now.
             int level = levels.of(FLAME);
-            double postAdditive = WeaponRules.postAdditive(Combat.attacker(player, bow, true, 0), target, landing.critical());
+            Damage.Attacker shooter = landing.projectile() == null ? null : FLAME_SHOTS.get(landing.projectile().getUniqueId());
+            if (shooter == null) shooter = Combat.attacker(player, bow, true, 0);
+            double postAdditive = WeaponRules.postAdditive(shooter, target, landing.critical());
             fire(player, mob, target, postAdditive, FLAME_PERCENT * level, (int) EnchantText.at(FLAME, level, 0));
         }
         if (levels.has(DUPLEX)) {
@@ -605,6 +609,8 @@ public final class WeaponEnchants implements Listener {
         if (levels.none()) return;
         double pierce = levels.has(PIERCING) ? EnchantText.at(PIERCING, levels.of(PIERCING), 0) / 100 : 0;
         if (pierce > 0) Shots.pierce(projectile, PIERCED, pierce);
+        Damage.Attacker shooter = levels.has(FLAME) ? Combat.attacker(player, bow, true, 0) : null;
+        if (shooter != null) FLAME_SHOTS.put(projectile.getUniqueId(), shooter);
         if (!levels.has(DUPLEX)) return;
         double share = EnchantText.at(DUPLEX, levels.of(DUPLEX), 0) / 100;
         if (share <= 0) return;
@@ -616,6 +622,7 @@ public final class WeaponEnchants implements Listener {
         });
         Shots.record(second, player, bow, fullyDrawn, share);
         if (pierce > 0) Shots.pierce(second, PIERCED, pierce);
+        if (shooter != null) FLAME_SHOTS.put(second.getUniqueId(), shooter);
     }
 
     /**
@@ -689,6 +696,7 @@ public final class WeaponEnchants implements Listener {
     @EventHandler
     public void onRemove(EntityRemoveEvent event) {
         MOBS.remove(event.getEntity().getUniqueId());
+        if (event.getEntity() instanceof Projectile) FLAME_SHOTS.remove(event.getEntity().getUniqueId());
     }
 
     @EventHandler

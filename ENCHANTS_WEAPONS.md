@@ -104,7 +104,7 @@ Status: DONE, APPROX (built, with an UNKNOWN reading), LATER (and what it waits 
 
 | Enchantment | Status | What it does here, and what's UNKNOWN |
 |---|---|---|
-| Flame | APPROX | Fire as Fire Aspect's (the same fire, the greater stays), for the text's seconds (3 s at I; the wiki says 3.5 s), at the wiki's 3% of the arrow's damage a level per second (the text gives no share). UNKNOWN: it's worked out from the shooter's stats when the arrow lands, not the arrow's own. |
+| Flame | APPROX | Fire as Fire Aspect's (the same fire, the greater stays), for the text's seconds (3 s at I; the wiki says 3.5 s), at the wiki's 3% of the shooter's damage after additive buffs a level per second (the text gives no share). It's worked out from the shooter as they were when the arrow left, as the arrow's own hit is (switching to a sword before it lands doesn't change it). UNKNOWN which damage Hypixel's takes. |
 | Punch | APPROX | The arrow's knockback pushes further, by vanilla Punch's 0.6 a level for each 3 blocks the text says, the way the arrow flew. UNKNOWN as Knockback. |
 | Piercing | APPROX | The arrow goes through 1 more mob after the first, which takes the text's 25% of the shot's damage (`Shots.pierce`). UNKNOWN how many: the text says only "Arrows travel through enemies", so it's vanilla Piercing I's one. |
 | Infinite Quiver | DONE | The text's chance that a drawn bow's shot takes no arrow. Shortbows take none anyway. The Quiver itself is STORAGE.md's (LATER). |
@@ -216,7 +216,7 @@ The armor part has the other armor and equipment reforges (Renowned, Perfect, Un
 - The hit counts (Thunderlord, Inferno, Fanged, Rend) are each player's own hits on the mob.
 - Cleave's other mobs take the share as it is, with no Defense. The book's radius is used, not the wiki's.
 - Fire Aspect's, Flame's and Venomous's ticks go through the mob's Defense. Venomous's second multiplier is worked out
-  as a hit puts the stacks on. Flame uses the shooter's stats when the arrow lands.
+  as a hit puts the stacks on. Flame uses the shooter as they were when the arrow left.
 - Life Steal and Vampirism get the Catacombs boost `Heals` gives all healing, and Vampirism is 10x less there too.
 - Mana Steal is a share of the pool, in whole points.
 - Knockback and Punch: 0.5 and 0.6 more strength (vanilla's own per level) for each 3 blocks.
