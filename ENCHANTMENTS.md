@@ -151,8 +151,9 @@ Bottle table: 8 at level 1 and 2, 9 at 3, 23 at 38). Sandbox: free.
     Combo, Swarm, Fatal Tempo, Soul Eater, Chimera (pets), Legion, Last Stand, No Pain No Gain, Transylvanian, Bank
     (death), Refrigerate and Ultimate Wise (per-item mana costs; `Abilities` works per player), Wisdom (vanilla levels),
     Ultimate Jerry (Aspect of the Jerry), Habanero Tactics (wands, Slayer weapons).
-  - Mining, foraging, farming and fishing: Efficiency, Silk Touch, Smelting Touch, Aqua Affinity, Lapidary,
-    Paleontologist, Flowstate, Rainbow, Petalfall (Timber), Karma, First Impression and Missile (axes), Feast, Sunset,
+  - Mining, foraging, farming and fishing (Looting, Chance, Luck, Experience, Efficiency, Compact, Flowstate, Aqua
+    Affinity, and Lapidary's and Expertise's first stats work: STATS_EFFECTS.md): Silk Touch, Smelting Touch, Lapidary's
+    Mining Speed, Paleontologist, Rainbow, Petalfall (Timber), Karma, First Impression and Missile (axes), Feast, Sunset,
     Crop Fever (Overbloom), Dedication (Garden milestones), Green Thumb (visitors), Bug Blender (vacuums), Turbo-Rose,
     -Sunflower and -Moonflower (fortunes with no plugin stat), Flash, Quick Bite, Bobbin' Time, Depth Strider, Frost
     Walker, Stealth (Timid mobs).
