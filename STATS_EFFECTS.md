@@ -51,13 +51,13 @@ says. Mining Speed is theirs (tool, armor and all), Aqua Affinity's rate on top.
 | Chance | APPROX | Bows: the same text and the same as Looting, from the held item (UNKNOWN: the wiki says it of Looting). |
 | Luck | APPROX | "Increases the chance for Monsters to drop their armor by 5%" a level: on drops whose items are all armor (the Rotten, Heavy and Skeleton Grunt pieces), times 1 + 5% a level, as Looting's (UNKNOWN: the wiki's Luck gives only "+5%"), from the held item. It multiplies with Looting. |
 | Experience | DONE (mobs), LATER (ores) | The held item's: at its text's chance (12.5% a level) a kill's experience orbs are doubled (+100% on ExpOrbs' bonuses, which add up). Ores too, but no ore here gives experience: Gray Mithril gives none (UNKNOWN: no source says it does), and the vanilla ores wait for their blocks. |
-| Efficiency | DONE | On a pickaxe, drill or gauntlet everywhere but the Hub (the wiki's "on other islands": here the Dungeon Hub, the Catacombs, the Crimson Isle and the Dwarven Mines), +30 Mining Speed at I to +110 at V (the wiki's table, 10 + 20 a level; the book's text has no number), in the item's stats and lore, whose text there is live lore's "Grants +110 ⸕ Mining Speed." (lore follows where the item was last made, as on Hypixel's auction house). LATER: the Hub's vanilla breaking speed (no block breaking there), VI-X (Silex, which isn't an item here). |
+| Efficiency | DONE | On a pickaxe, drill or gauntlet (the wiki's Efficiency: "if applied to Mining Tools"; its Mining Speed page also lists axes, shovels and shears, but none of 120 live axes, 24 shovels and a pair of shears has the line, where 70 pickaxes, drills and gauntlets do) everywhere but the Hub (the wiki's "on other islands": here the Dungeon Hub, the Catacombs, the Crimson Isle and the Dwarven Mines), +30 Mining Speed at I to +110 at V (the wiki's table, 10 + 20 a level; the book's text has no number), in the item's stats and lore, whose text there is live lore's "Grants +110 ⸕ Mining Speed." (lore follows where the item was last made, as on Hypixel's auction house). LATER: the Hub's vanilla breaking speed (no block breaking there), VI-X (Silex, which isn't an item here). |
 | Compact | APPROX | Its Mining Wisdom is its text's stat, now read ("Gain +8☯ Mining Wisdom", live lore's "Mining Wisdom: +8" at VIII). Each block broken with it counts on the tool (`compact_blocks`, Hypixel's key: a live drill's data) and tiers it up at its text's next tier ("100 blocks to tier up!"; the wiki: "Stacking Enchantment"), with a message (UNKNOWN: Hypixel's words). Each block rolls its text's chance for one Enchanted Mithril, the wiki's "next material" of Mithril (UNKNOWN whether it's what Hypixel gives), on top of the drop (UNKNOWN; no fortune on it), and says "&6&lCOMPACT! &fYou found an &9Enchanted Mithril&f!" (SkyHanni's words for another block; the colours UNKNOWN). Lore: the count after its name while there's a tier to go ("&9Compact VIII &8202,861") and the next tier's line after its description, as live items have them (any stacking enchantment's). |
 | Flowstate | APPROX | Its text's Mining Speed (+1 at I) for each block of a streak, up to its 200, while they hold a tool with it, through their stats (the Stats menu shows it). The streak is blocks broken with a Flowstate tool; it ends its text's 10 s after the last, and starts again in another world (the wiki's Mining Speed: "after mining 200 blocks in the same world"). Holding another tool doesn't end it (the wiki's Flowstate). Blocks broken with another tool don't count (UNKNOWN; SkyHanni's Flowstate helper counts that way). |
 | Aqua Affinity | APPROX | The wiki's "+100%" mining rate: Mining Speed doubled for the break while their head is under water. UNKNOWN whether SkyBlock's own mining is slower under water without it (vanilla's is); it isn't here. |
 | Fortune | DONE | Mining Fortune from its text, on Mithril (as before). |
 | Scavenger | DONE | As before (KillCoins). |
-| Champion | DONE (Combat XP) | As before (SkillGains). Its coins and orbs are the weapon enchantments' part (ENCHANTS_WEAPONS.md). Its tier-up by Combat XP isn't counted: `StackingEnchants.addHeld(player, "champion", xp)` is the call for whoever builds it (see the questions). |
+| Champion | DONE (Combat XP) | As before (SkillGains). Its coins, orbs and tier-up by Combat XP are the weapon enchantments' part (ENCHANTS_WEAPONS.md), which counts `champion_combat_xp` (and Toxophilite's `toxophilite_combat_xp`) itself; this part doesn't count them, so nothing counts twice. The lore here shows that count after the name and the next tier's line, as for Compact (`StackingEnchants.countSuffix`, any stacking enchantment). |
 | Cultivating | DONE (stats), LATER (the rest) | Its "Gain +1☯ Farming Wisdom and +2☘ Farming Fortune" are now read as stats, as live lore counts them. Its counter and using the stats wait for farming. |
 | Prismatic (`pristine`) | DONE (stat), LATER | Its Pristine shows and sums; gemstone blocks use it. |
 | Lapidary | DONE (stat), LATER (the rest) | Its Gemstone Fortune is read as a stat, the first of its two "while mining Gemstones", as live lore counts it in the tool's stats (59 of 62 live Lapidary tools; the rest show none); its Mining Speed isn't in live lore's stats and waits, with using the fortune, for gemstone blocks. |
@@ -105,10 +105,10 @@ works shows there. The recording's Mining Spread and Charm Chance aren't stats h
 | Mining Speed | DONE | Break time on Gray Mithril, with Efficiency's and Flowstate's |
 | Pristine | LATER | Gemstone blocks |
 | Mining Fortune | DONE | More drops, 100 a drop |
-| Ore Fortune, Block Fortune, Gemstone Fortune | LATER | Ores, blocks and gemstone blocks (each needs only its block's `fortune()`) |
+| Ore Fortune, Block Fortune, Gemstone Fortune | LATER | Ores, blocks and gemstone blocks (each needs only its block's `fortune()`). Lapidary's Gemstone Fortune shows and sums now |
 | Dwarven Metal Fortune | DONE | On Mithril. Titanium: LATER (the block) |
 | Bonus Pest Chance, Farming Fortune, the ten crop fortunes | LATER | Farming and the Garden |
-| Fishing Speed, Sea Creature Chance, Double Hook Chance, Trophy Chance, Treasure Chance | LATER | Fishing |
+| Fishing Speed, Sea Creature Chance, Double Hook Chance, Trophy Chance, Treasure Chance | LATER | Fishing (Expertise's Sea Creature Chance shows and sums now) |
 | Sweep, Foraging Fortune, Fig, Mangrove and Helix Fortune | LATER | Foraging |
 | Hunting Fortune, Pull, Tracking | LATER | Hunting |
 | Speed | DONE | Walk speed and its caps; Stats Tuning's +1.5. The Racing Helmet's +400 is only a lore line in the item data (LATER: the items' data; see the questions) |
@@ -124,6 +124,12 @@ works shows there. The recording's Mining Spread and Charm Chance aren't stats h
 | Weapon Ability Damage | DONE | The plugin's own (an item's spell damage), not Hypixel's |
 
 ### Hypixel's stats the enum doesn't have
+
+The stats inventory had adding these to `Stat` as a small job. It isn't done: no item the plugin loads has any of
+them as a stat (every stat name in items.json and the reforges is in the enum), nothing here would use them, and
+of the enchantment texts that grant them only Petalfall's Timber goes on an item that's here (axes; Feast's
+Overbloom and the Turbo fortunes go on Farming Tools, which the item loader leaves out). Timber's symbol is only a
+resource-pack glyph (UNKNOWN classic one). Each goes in with its system.
 
 | Stat | Status | What it waits for |
 |---|---|---|
@@ -142,7 +148,7 @@ works shows there. The recording's Mining Spread and Charm Chance aren't stats h
 | Stats Tuning | APPROX | Above; templates LATER |
 | Absorption | DONE | The core's (`session/Absorption`) |
 | Accessory (Magical) Power, Mana | DONE | As before |
-| Mithril Powder | DONE (earned), LATER (spent) | Mining gives it; the Heart of the Mountain menu's upgrades aren't made yet (a click names the perk), so nothing spends it |
+| Mithril Powder | DONE (earned), LATER (spent) | Mining gives it (and the Mithril Drills raise it); the Heart of the Mountain menu's upgrades aren't made yet (a click names the perk), so nothing spends it. Upgrading a perk also needs it unlocked with a Token of the Mountain, which comes with HotM tiers (commissions) |
 | HotM XP | LATER | Commissions, mining events, nucleus runs |
 | Stats only in an item's lore | LATER | The data keeps 40 items' stats as a lore line because Hypixel's API lacks them (the data's report); most such lines are reforge stones' texts, the real ones (the Racing Helmet's Speed +400, the Clover Helmet's Magic Find, the Emperor accessories', the Freshly Baked ones', the Kuudra cores') need the item data |
 | Effective Health | COSMETIC | Not shown (the stat breakdown pages aren't built) |
@@ -173,5 +179,6 @@ works shows there. The recording's Mining Spread and Charm Chance aren't stats h
 2. **Stats Tuning's templates** (four slots; the first free since 0.26, the others 10,000 Bits each): build them?
 3. **Stats that are only lore lines in the item data** (the Racing Helmet's +400 Speed and a few more): fix them in
    the item generator (the private data) or per item in code?
-4. **Champion's (and Toxophilite's, Expertise's, Hecatomb's) tier-ups**: `StackingEnchants.addHeld` counts and tiers
-   any stacking enchantment, as Compact's does; the weapon and armor enchantment parts own those. Wire them there?
+4. **One tier-up rule or two**: `StackingEnchants` (here: the count on the item, the tier from each level's "to tier
+   up!" text, Compact's use) and the weapon enchantments part's own for Champion and Toxophilite do the same thing.
+   Keep one? Hecatomb's and Expertise's wait for their parts' systems.
