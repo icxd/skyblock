@@ -21,7 +21,11 @@ import net.icxd.dungeons.stats.ItemStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -47,7 +51,7 @@ import java.util.regex.Pattern;
  * Obsidian Chestplate, Rampart and Super Heavy Armor, the Catacombs boss heads, the Clover Helmet, the Farming-level
  * boots and helmet, and the equipment's (the DOJO belts, the Annihilation and Destruction Cloaks, the Balloon Snake,
  * the Demonlord Gauntlet, the Lava Shell Necklace, the Mithril and Titanium equipment's Mithril fortune and the
- * Dragonfuse Glove). Numbers are the text's.
+ * Dragonfuse Glove), the Spring Boots' Feather Falling XX and the Sea Lantern Hat's breath. Numbers are the text's.
  */
 final class PieceText {
     private PieceText() {
@@ -57,7 +61,7 @@ final class PieceText {
         return List.of(new CreeperHat(), new ChickenHead(), new ZombieHat(), new SkeletonHat(), new SlimeHat(),
                 new Jumps(), new CowHead(), new ObsidianChestplate(), new Rampart(), new SuperHeavy(), new BossHeads(), new CloverHelmet(),
                 new FarmingLevels(), new DojoBelts(), new HealingCloaks(), new DemonlordGauntlet(), new LavaShellNecklace(),
-                new MithrilFortune(), new DragonfuseGlove());
+                new MithrilFortune(), new DragonfuseGlove(), new SpringBoots(), new SeaLanternHat());
     }
 
     /** A bonus in the own text of the items it names. */
@@ -107,6 +111,87 @@ final class PieceText {
         @Override
         public boolean immune(Player player, Active active, EntityDamageEvent.DamageCause cause) {
             return cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION || cause == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION;
+        }
+    }
+
+    /**
+     * The Spring Boots' "Feather Falling XX: Increases how high you can fall before taking fall damage by 20 and
+     * reduces fall damage by 100%": lines of their own text (they carry no Feather Falling enchantment for the
+     * enchantment's effect to read), so their safe fall distance is 20 blocks more, and vanilla fall damage that much
+     * less: none at all, the fall not landing as a hit.
+     */
+    static final class SpringBoots extends Own {
+        private static final NamespacedKey SAFE_FALL = new NamespacedKey("dungeons", "spring_boots");
+
+        SpringBoots() {
+            super("SPRING_BOOTS");
+        }
+
+        @Override
+        public String name() {
+            return "Spring Boots";
+        }
+
+        private static double reduced(Active active) {
+            return BonusText.after(lore(active), "reduces fall damage by", 0);
+        }
+
+        @Override
+        public double vanillaDamage(Player player, Active active, VanillaDamage.Cause cause) {
+            return cause == VanillaDamage.Cause.FALL ? Math.max(0, 1 - reduced(active) / 100) : 1;
+        }
+
+        @Override
+        public boolean immune(Player player, Active active, EntityDamageEvent.DamageCause cause) {
+            return cause == EntityDamageEvent.DamageCause.FALL && reduced(active) >= 100;
+        }
+
+        @Override
+        public void second(Player player, Active active) {
+            safeFall(player, SAFE_FALL, BonusText.after(lore(active), "fall damage by", 0));
+        }
+
+        @Override
+        public void ended(Player player) {
+            safeFall(player, SAFE_FALL, 0);
+        }
+    }
+
+    /** Their safe fall distance, our modifier's {@code more} blocks of it (none for 0), left alone if it's that already. */
+    static void safeFall(Player player, NamespacedKey key, double more) {
+        AttributeInstance attribute = player.getAttribute(Attribute.SAFE_FALL_DISTANCE);
+        if (attribute == null) return;
+        AttributeModifier current = attribute.getModifier(key);
+        if (current != null && current.getAmount() == more) return;
+        if (current != null) attribute.removeModifier(key);
+        if (more != 0) attribute.addTransientModifier(new AttributeModifier(key, more, AttributeModifier.Operation.ADD_NUMBER));
+    }
+
+    /**
+     * The Sea Lantern Hat's "Breathe 5x as long underwater when wearing!": under water, each second gives back 4 of
+     * the 20 ticks' air it took, so their air (their Respiration's) lasts 5 times as long; the Respiration stat is as
+     * it was (UNKNOWN whether Hypixel's Stats menu shows more).
+     */
+    static final class SeaLanternHat extends Own {
+        SeaLanternHat() {
+            super("SEA_LANTERN_HAT");
+        }
+
+        @Override
+        public String name() {
+            return "Sea Lantern Hat";
+        }
+
+        /** The air a second under water gives back, for it to last {@code times} as long: of the 20 a second takes. */
+        static int airBack(double times) {
+            return times <= 1 ? 0 : (int) Math.round(20 * (1 - 1 / times));
+        }
+
+        @Override
+        public void second(Player player, Active active) {
+            if (!player.isUnderWater() || player.getRemainingAir() >= player.getMaximumAir()) return;
+            int back = airBack(BonusText.after(lore(active), "Breathe", 1));
+            player.setRemainingAir(Math.min(player.getMaximumAir(), player.getRemainingAir() + back));
         }
     }
 

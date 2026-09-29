@@ -67,6 +67,13 @@ class PieceTextTest {
         assertEquals(0, PieceText.DemonlordGauntlet.additive(1), EPSILON);
     }
 
+    /** The Sea Lantern Hat's "5x as long": 16 of every 20 ticks' air back each second; nothing for 1x. */
+    @Test
+    void seaLanternHat() {
+        assertEquals(16, PieceText.SeaLanternHat.airBack(5));
+        assertEquals(0, PieceText.SeaLanternHat.airBack(1));
+    }
+
     private static net.icxd.dungeons.item.data.DataItem itemWithLore(String id, String type, String lore) {
         String json = "{\"format\":1,\"items\":{\"" + id + "\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test\",\"type\":\"" + type
                 + "\",\"lore\":[\"" + lore + "\"]}}}";

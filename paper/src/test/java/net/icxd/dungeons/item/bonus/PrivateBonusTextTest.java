@@ -115,6 +115,9 @@ class PrivateBonusTextTest {
         assertEquals(10, lore("TITANIUM_NECKLACE", "Grants"), EPSILON);
         assertEquals(5, lore("CLOVER_HELMET", "Magic Find:"), EPSILON);
         assertEquals(5, lore("CLOVER_HELMET", "All Other Stats: -"), EPSILON);
+        assertEquals(20, lore("SPRING_BOOTS", "fall damage by"), EPSILON);
+        assertEquals(100, lore("SPRING_BOOTS", "reduces fall damage by"), EPSILON);
+        assertEquals(5, lore("SEA_LANTERN_HAT", "Breathe"), EPSILON);
         assertEquals(1, PieceText.BossHeads.floor(items.get("GOLD_BONZO_HEAD").lore()));
         assertEquals(7, PieceText.BossHeads.floor(items.get("DIAMOND_NECRON_HEAD").lore()));
     }

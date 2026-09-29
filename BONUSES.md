@@ -127,7 +127,7 @@ LATER: waits for the system named.
 | Newton's Demise | full set | THERMODYNAMIC (4) | **DONE** Attack Speed cap +50 (the text's; `Combat.addAttackSpeedCap`) | [Thermodynamic Armor](https://hypixelskyblock.minecraft.wiki/w/Thermodynamic_Armor), [Attack Speed](https://hypixelskyblock.minecraft.wiki/w/Attack_Speed) |
 | Night Affinity | full set | MUSHROOM (4) | **DONE** Night Vision while worn | [Mushroom Armor](https://hypixelskyblock.minecraft.wiki/w/Mushroom_Armor) |
 | Octodexterity | full set | TARANTULA (4) | **DONE** Tarantula: every 4th landed melee hit x2 (multiplicative); Venom LATER (mobs don't heal) | [Tarantula Armor](https://hypixelskyblock.minecraft.wiki/w/Tarantula_Armor) |
-| Old Blood | full set | OLD_DRAGON (4) | **APPROX** the set's own Growth/Protection/Sugar Rush/True Protection +10 Health/+2 Defense/+1 Speed/+3 True Defense a level on top of their own (the wiki's Enchantment Buffs); Feather Falling LATER (the armor enchantments part's Feather Falling, to merge) | [Old Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Old_Dragon_Armor), [Growth](https://hypixelskyblock.minecraft.wiki/w/Growth) |
+| Old Blood | full set | OLD_DRAGON (4) | **APPROX** the set's own Growth/Protection/Sugar Rush/True Protection +10 Health/+2 Defense/+1 Speed/+3 True Defense a level on top of their own (the wiki's Enchantment Buffs); Feather Falling's +3% fall damage reduction a level is the armor enchantments part's (its Feather Falling reads Old Blood: ENCHANTS_ARMOR.md), to merge | [Old Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Old_Dragon_Armor), [Growth](https://hypixelskyblock.minecraft.wiki/w/Growth) |
 | Protective Blood | full set | PROTECTOR_DRAGON (4) | **DONE** the pieces' Defense +1% per whole missing percent of health | [Protector Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Protector_Dragon_Armor) |
 | Refraction | full set | CRYSTAL (4) | **APPROX** each piece's Defense and Intelligence at 12.5% a light level from 12.5% (0) to 200% (15), at their head (the wiki's table; UNKNOWN whether the text's "from 0" means none at 0); the "Current Light Level" line shows theirs, refreshed when it changes; the colour doesn't change | [Crystal Armor](https://hypixelskyblock.minecraft.wiki/w/Crystal_Armor) |
 | Regenerative Howl | full set | WEREWOLF (4) | **APPROX** each Ferocity strike gives a stack of +50 Defense for 5 s (the newest 10 count) and heals the players within 25 blocks, not the wearer, 1% of their Defense (the wiki's; the text doesn't say it: UNKNOWN whether it still does; a strike each an activation: UNKNOWN) | [Werewolf Armor](https://hypixelskyblock.minecraft.wiki/w/Werewolf_Armor) |
@@ -247,7 +247,9 @@ What armor pieces' own lines (not a bonus block) say they do while worn.
 | "Sets your Health Regen and Mending to 0, and you can no longer receive healing" | LAVA_SHELL_NECKLACE (1) | **APPROX** both stats 0 after the set bonuses (an accessory's after it can add some back); no healing at all LATER (every heal would ask: UNKNOWN which Hypixel stops) | [Lava Shell Necklace](https://hypixelskyblock.minecraft.wiki/w/Lava_Shell_Necklace) |
 | "+5☘ Mining Fortune while mining Mithril" | MITHRIL_ and TITANIUM_ NECKLACE, CLOAK, BELT, GAUNTLET (8) | **DONE** as Dwarven Metal Fortune (Mining Fortune on Mithril, the only such block here) | |
 | "upgrades the Aspect of the Dragons with +35❁ Damage +50❁ Strength" | DRAGONFUSE_GLOVE (1) | **APPROX** the stats while it's held; its "Very reduced ability knockback" is the ability's (not done) | |
-| The rest of armor's own text | SPRING_BOOTS, SEA_LANTERN_HAT, farming helmets, TIKI_MASK, KALHUIKI_MASK, FLEX_HELMET, KRAMPUS_HELMET... | **LATER** Feather Falling (the armor enchantments part's, Spring Boots), air (Sea Lantern Hat), fishing, the Rift, gifts |  |
+| "Feather Falling XX: Increases how high you can fall before taking fall damage by 20 and reduces fall damage by 100%" | SPRING_BOOTS (1) | **DONE** the lines of their own text (they carry no Feather Falling enchantment): 20 blocks more safe fall (the SAFE_FALL_DISTANCE attribute) and no vanilla fall damage | [Spring Boots](https://hypixelskyblock.minecraft.wiki/w/Spring_Boots) |
+| "Breathe 5x as long underwater when wearing!" | SEA_LANTERN_HAT (1) | **APPROX** under water each second gives back 16 of the 20 ticks' air it took, so it lasts 5 times as long; the Respiration stat is unchanged (UNKNOWN whether Hypixel's Stats menu shows more) | [Sea Lantern Hat](https://hypixelskyblock.minecraft.wiki/w/Sea_Lantern_Hat) |
+| The rest of armor's own text | farming helmets, TIKI_MASK, KALHUIKI_MASK, FLEX_HELMET, KRAMPUS_HELMET... | **LATER** farming, fishing, the Rift, gifts |  |
 | The rest of equipment's own text | ANCIENT_CLOAK, SOULWEAVER_GLOVES, FLAMING_FIST, SCOVILLE_BELT, SCOURGE_CLOAK, DELIRIUM_NECKLACE, SHRIVELED_BRACELET, PELT_BELT, ENDER_ and DRAGONFADE_ pieces, gemstone equipment, fishing and Rift equipment... | **LATER** abilities' damage by their cost (Ancient Cloak), the Haunted Skull (Soulweaver), fire on players and ignited mobs, Magic Find by mob type, the Mushroom Desert's bounds, the End, the Crystal Hollows, fishing, the Rift |  |
 
 ## UNKNOWN and approximations
@@ -286,7 +288,8 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   its seconds on fire starting again; Dominus's swipe at most once a stack's time, 5 blocks long, its Additive
   Multiplier the base one; Hydra Strike's side arrows once a shot, 10 degrees apart; Deepness Within's 6 until four
   pieces; Fireproof as lava only; the Skeleton Hat's scaling of 1; the boss heads in Master Mode; the Clover
-  Helmet's "most other Stats"; the Demonlord Gauntlet's 1.15x as +15% additive.
+  Helmet's "most other Stats"; the Demonlord Gauntlet's 1.15x as +15% additive; the Sea Lantern Hat's air given
+  back each second (the Respiration stat unchanged).
 
 ## LATER, by what they wait for
 
@@ -303,4 +306,4 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
 - Fishing, farming and the Garden, the Rift, the Crimson Isle, Magmatic mobs and Kuudra, Jerry's
   Workshop, the Spooky Festival, Mythological mobs, pets, necromancy, soulflow, Heat, the Mining Spread
   stat, fairy souls, the End: the bonuses named for them above.
-- The armor enchantments part's Feather Falling (Old Blood's, the Spring Boots'), to merge.
+- Old Blood's Feather Falling: the armor enchantments part's Feather Falling reads it, to merge.
