@@ -17,6 +17,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
+import net.icxd.dungeons.dungeons.instance.RunItems;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
@@ -42,6 +43,7 @@ import net.icxd.dungeons.item.bonus.SetBonuses;
  * heads are (slots 11 on, as Odin reads them), their lore (dead and left ones say so: Skyblocker looks for
  * "dead" and "offline" in it) and what a click on a dead one says (nothing). Not built: "Spirit Leaps cannot
  * be used in trap rooms", the Ice puzzle's own landing spot, and outside a run the Aspiring Leap's recipe.
+ * A ghost's Haunt is the same menu for a ghost ({@link Haunt}).
  */
 final class SpiritLeap implements AbilityHandler {
     static final String NAME = "Spirit Leap";
@@ -82,11 +84,48 @@ final class SpiritLeap implements AbilityHandler {
             Player online = Bukkit.getPlayer(id);
             return online != null && run.isHere(online);
         });
-        new Menu(run, player, targets, (long) (block.cooldown() * 1000), item.id()).open(player);
+        new Menu(NAME, run, player, targets, (long) (block.cooldown() * 1000), item.id(), false).open(player);
+    }
+
+    /**
+     * A dungeon ghost's Haunt: "Teleport to an alive player!" ("Players can teleport to a chosen alive teammate by
+     * using their Haunt ability", the wiki's Ghosts). The menu is Spirit Leap's, titled "Teleport to Player" (the
+     * title the SkyHanni, Skytils and Odin mods read with Spirit Leap's); a click on a living teammate takes the
+     * ghost there. Nothing is used up and there's no immunity (a ghost can't be hurt); its 2 s cooldown starts
+     * when it's used, as other abilities' do. Only a ghost in a running run uses it.
+     */
+    static final class Haunt implements AbilityHandler {
+        static final String TITLE = "Teleport to Player";
+
+        @Override
+        public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+            return RunItems.ghost(player);
+        }
+
+        @Override
+        public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+            DungeonRun run = RunManager.of(player);
+            if (run == null) return;
+            List<Target> targets = targets(run.teammates(player.getUniqueId()), id -> {
+                Player online = Bukkit.getPlayer(id);
+                return online != null && run.isHere(online);
+            });
+            new Menu(TITLE, run, player, targets, 0, item.id(), true).open(player);
+        }
     }
 
     private static String cooldownKey() {
         return "ability:" + NAME;
+    }
+
+    /** A ghost haunting {@code target} (see {@link Haunt}), if they're still alive and here, and it's still a ghost. */
+    private static void haunt(DungeonRun run, Player player, UUID target) {
+        Player to = Bukkit.getPlayer(target);
+        if (to == null || !run.isHere(to) || run.isGhost(target) || !run.isGhost(player.getUniqueId())) return;
+        player.teleport(to.getLocation());
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+        // Hypixel's words for a haunt are UNKNOWN: a Spirit Leap's.
+        player.sendMessage(Utils.color("&aYou have teleported to " + to.getName() + "!"));
     }
 
     /** To {@code target}, if they can still be leapt to and the cooldown's over. */
@@ -128,10 +167,10 @@ final class SpiritLeap implements AbilityHandler {
         return true;
     }
 
-    /** The teammates to leap to. */
+    /** The teammates to leap to (or, for a ghost's Haunt, to haunt). */
     private static final class Menu extends GUI {
-        Menu(DungeonRun run, Player player, List<Target> targets, long cooldownMillis, String itemId) {
-            super(NAME, Size.THREE);
+        Menu(String title, DungeonRun run, Player player, List<Target> targets, long cooldownMillis, String itemId, boolean haunting) {
+            super(title, Size.THREE);
             fill(filler());
             for (int i = 0; i < targets.size() && FIRST_SLOT + i < Size.THREE - 9; i++) {
                 Target target = targets.get(i);
@@ -142,8 +181,9 @@ final class SpiritLeap implements AbilityHandler {
                     public void run(InventoryClickEvent event) {
                         if (target.status() != Status.HERE) return;
                         player.closeInventory();
-                        Bukkit.getScheduler().runTask(Dungeons.getInstance(),
-                                () -> leap(run, player, target.teammate().id(), cooldownMillis, itemId));
+                        Bukkit.getScheduler().runTask(Dungeons.getInstance(), haunting
+                                ? () -> haunt(run, player, target.teammate().id())
+                                : () -> leap(run, player, target.teammate().id(), cooldownMillis, itemId));
                     }
 
                     @Override

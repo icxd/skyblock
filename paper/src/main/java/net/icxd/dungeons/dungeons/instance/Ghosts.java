@@ -189,6 +189,8 @@ final class Ghosts {
         if (ghost != null && (ghost.head == null || !ghost.head.isValid())) ghost.head = head(player);
         hideFromOthers(player);
         PlayerHealth.sync(player);
+        // Haunt and their class's ghost abilities (item/ability).
+        RunItems.giveGhostItems(run, player);
     }
 
     /**
@@ -274,6 +276,7 @@ final class Ghosts {
 
     /** Undoes a ghost's state (the game mode, if one's given). */
     private void restore(Player player, GameMode mode) {
+        RunItems.takeGhostItems(player);
         if (mode != null) player.setGameMode(mode);
         else if (player.getGameMode() == GameMode.ADVENTURE) player.setGameMode(GameMode.SURVIVAL);
         if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) {

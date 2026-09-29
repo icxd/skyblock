@@ -163,6 +163,8 @@ public final class WeaponPassives implements Listener {
         });
         PlayerDamage.addTakenMultiplier(WeaponPassives::angered);
         PlayerDamage.addTakenFrom(WeaponPassives::takenFrom);
+        // A stunned mob's hits do nothing (the Stun Potion's).
+        PlayerDamage.addTakenFrom((player, by) -> Hits.stunned(PlayerDamage.attacker(by)) ? 0 : 1);
         SkillGains.addKillWisdom(WeaponPassives::killWisdom);
         BlockListener.addBrokenListener((player, block) -> {
             Weapon held = held(player);
@@ -424,6 +426,17 @@ public final class WeaponPassives implements Listener {
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
         if (item == null || !RunItems.usesClassAbility(item, tag)) return;
         RunItems.classAbility(event.getPlayer());
+    }
+
+    /**
+     * A dungeon ghost's right click: its ghost abilities (see GhostAbilities). The run calls a ghost's clicks off
+     * before anything else sees them, so this hears them anyway.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onGhostClick(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        GhostAbilities.clicked(event.getPlayer());
     }
 
     /** What's kept about them goes with them. */

@@ -84,6 +84,10 @@ public final class WeaponAbilities {
         to.accept(ArmorAbilities.HomingMissiles.NAME, new ArmorAbilities.HomingMissiles());
         to.accept("Ground Pound", new ArmorAbilities.GroundPound());
         to.accept(ArmorAbilities.EyeBeam.NAME, new ArmorAbilities.EyeBeam());
+        // Dungeon ghosts' (Haunt is the utility abilities').
+        to.accept("Stun Potion", new GhostAbilities.StunPotion());
+        to.accept("Absorption Potion", new GhostAbilities.AbsorptionPotion());
+        to.accept(GhostAbilities.SPIRIT_BOMB, new GhostAbilities.SpiritBomb());
     }
 
     /**

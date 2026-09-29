@@ -31,7 +31,7 @@ import net.icxd.dungeons.Dungeons;
  * mobs are hit: each mob it touches once ({@link #onHit} says whether it goes on through), and it stops
  * at the first block in its way (unless it goes {@link #throughBlocks}) or at the end of its range. What it
  * looks like is an entity carried along with it, if any, and a trail. It ends when its caster can't hit any
- * more (gone, dead, a ghost). Main thread.
+ * more (gone, dead, a ghost), unless it's a ghost's own ({@link #byGhost}). Main thread.
  */
 final class Missile {
     /** Touched a mob it hadn't: whether it goes on. */
@@ -56,6 +56,7 @@ final class Missile {
     private double gravity;
     private double width = 0.3;
     private boolean throughBlocks;
+    private boolean byGhost;
     private Function<Missile, Vector> steer;
     private Hit onHit = (missile, mob) -> false;
     private End onEnd = (missile, where, impact) -> {
@@ -95,6 +96,12 @@ final class Missile {
 
     Missile throughBlocks() {
         this.throughBlocks = true;
+        return this;
+    }
+
+    /** A dungeon ghost's (a ghost ability): it flies while its caster is still on and a ghost, as ghosts can't be hurt. */
+    Missile byGhost() {
+        this.byGhost = true;
         return this;
     }
 
@@ -170,7 +177,7 @@ final class Missile {
 
     private void tick() {
         if (done) return;
-        if (!Hits.canStillHit(caster) || !caster.getWorld().equals(at.getWorld()) || ++ticks > MAX_TICKS) {
+        if (!(byGhost ? caster.isOnline() && !caster.isDead() : Hits.canStillHit(caster)) || !caster.getWorld().equals(at.getWorld()) || ++ticks > MAX_TICKS) {
             finish();
             return;
         }

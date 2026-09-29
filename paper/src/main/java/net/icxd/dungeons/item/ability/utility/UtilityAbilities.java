@@ -29,6 +29,7 @@ public final class UtilityAbilities {
         to.accept("Aspiring Leap", new Refusal("&cYou can only use this item on your private island!"));
         to.accept(CreeperVeil.NAME, new CreeperVeil());
         to.accept(Shadowstep.NAME, new Shadowstep());
+        to.accept("Haunt", new SpiritLeap.Haunt());
         // Healing
         WandHeal wand = new WandHeal();
         for (String name : new String[] {"Small Heal", "Medium Heal", "Big Heal", "Huge Heal"}) to.accept(name, wand);
