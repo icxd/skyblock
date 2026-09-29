@@ -68,8 +68,18 @@ public class FleeGoal implements Goal<Mob> {
             });
         }
         Player nearest = TargetNearestPlayerGoal.nearest(mob, distance, false);
-        from = nearest != null && noticed.computeIfAbsent(nearest.getUniqueId(), id -> !unnoticed.unnoticed(mob, nearest)) ? nearest : null;
+        from = nearest != null && notices(nearest) ? nearest : null;
         return from != null;
+    }
+
+    /** Whether it noticed this player near it, asked the first time they're near (it's asked every tick until it flees). */
+    private boolean notices(Player player) {
+        Boolean seen = noticed.get(player.getUniqueId());
+        if (seen == null) {
+            seen = !unnoticed.unnoticed(mob, player);
+            noticed.put(player.getUniqueId(), seen);
+        }
+        return seen;
     }
 
     @Override
