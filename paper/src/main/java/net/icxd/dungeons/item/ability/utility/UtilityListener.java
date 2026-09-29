@@ -1,6 +1,7 @@
 package net.icxd.dungeons.item.ability.utility;
 
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -184,7 +185,8 @@ public final class UtilityListener implements Listener {
     /**
      * A right click with a dungeon secret item that does something when used (see {@link SecretItems}): never its
      * vanilla use (a spawn egg, a pressure plate), nor the clicked block's. Not a ghost's (the run has called its
-     * clicks off already).
+     * clicks off already). A click on a block that's used by a click (a chest, a lever, a button) is that block's, as
+     * it is with anything else in hand, unless they sneak (vanilla's way): holding a Decoy doesn't keep a chest shut.
      */
     @EventHandler
     public void onSecretItem(PlayerInteractEvent event) {
@@ -192,6 +194,11 @@ public final class UtilityListener implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         NBTTagCompound tag = ItemNBT.read(event.getItem());
         if (tag == null || !SecretItems.is(tag.getString("id"))) return;
+        Block clicked = event.getClickedBlock();
+        if (clicked != null && clicked.getType().isInteractable() && !event.getPlayer().isSneaking()) {
+            event.setUseItemInHand(Event.Result.DENY);
+            return;
+        }
         boolean denied = event.useItemInHand() == Event.Result.DENY;
         event.setUseItemInHand(Event.Result.DENY);
         event.setUseInteractedBlock(Event.Result.DENY);

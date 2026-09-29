@@ -112,7 +112,8 @@ used as every ability is (`Activations.use`).
 
 What secrets hand out (`SecretRewards`) that does something when used, "Dungeons only!" (`SecretItems`,
 `TrainingWeights`); none has an ability block, so they're found by id. Each is used up, only alive in a
-running run. Their vanilla use (a spawn egg, a pressure plate) never happens. Tests: `SecretItemsTest`,
+running run. Their vanilla use (a spawn egg, a pressure plate) never happens; a click on a block that's used by a
+click (a chest, a lever) is the block's, unless they sneak, as with anything else in hand. Tests: `SecretItemsTest`,
 `HeldStatsTest`.
 
 | Item | Status | Notes and sources |
