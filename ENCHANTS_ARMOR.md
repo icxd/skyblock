@@ -111,6 +111,7 @@ for the system named. Every enchantment the table applies to armor or equipment 
 | Ridiculous (Red Nose) | **APPROX** | Sneaking with at least its Crit Chance: 20 Crit Chance less for 20 s, +30 Defense for 5 s, +50 mana, and not again while the Crit Chance is down; a low note for the fart |
 | Ancient (Precursor Gear) | **DONE** | Before this part: +1 Crit Damage a Catacombs level (it has nothing else) |
 | Blood-Soaked (Presumed Gallon of Red Paint) | **APPROX** | `enchantLevelBonus` is here; the weapon enchantments add it (see "For the other parts") |
+| Bloodshot (Shriveled Cornea), on belts | **LATER** | "2.5% chance to cocoon" a kill outside the Dungeons (the wiki's Cocooning: the mob comes back after 6 s): the plugin spawns mobs only in dungeon rooms (and an admin's `/spawnentity`), so it waits for mobs outside the dungeons |
 | Hyper (End Stone Geode), Loving (Red Scarf), Empowered (Sadan's Brooch) | the weapon part's | EFFECTS.md |
 | Calcified | **LATER** | Sea Creatures: fishing |
 | Candied | **LATER** | The Spooky Festival's candy |
@@ -161,6 +162,7 @@ Each is marked UNKNOWN in the code, with the reading taken:
 
 ## LATER, by what they wait for
 
+- **Mobs outside the dungeons** (the plugin spawns them only in dungeon rooms): Bloodshot's cocooning.
 - **Fishing**: Tidal, Bobbin' Time, Calcified.
 - **The Garden** (farming, pests, visitors, Overbloom): Pesterminator, Green Thumb, Sunset, Mantid, Squeaky, Thorny.
 - **Foraging** and Galatea's pressure: Forest Pledge, Scuba, Marshy.
