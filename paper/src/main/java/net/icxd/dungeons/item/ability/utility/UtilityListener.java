@@ -46,6 +46,7 @@ public final class UtilityListener implements Listener {
         Deployables.register();
         PlayerStats.addModifier(Masks::stats);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), UtilityListener::tick, 1, 1);
+        Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), SecretTracker::second, 20, 20);
     }
 
     private static void tick() {
@@ -179,6 +180,7 @@ public final class UtilityListener implements Listener {
         WornPassives.forget(player.getUniqueId());
         Movement.forget(player.getUniqueId());
         CellsAlignment.forget(player.getUniqueId());
+        SecretTracker.forget(player.getUniqueId());
     }
 
     @EventHandler
