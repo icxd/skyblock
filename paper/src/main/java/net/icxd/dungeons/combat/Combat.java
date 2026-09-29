@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiPredicate;
 import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 
@@ -56,6 +57,7 @@ public final class Combat {
     private static final List<HitListener> HIT_LISTENERS = new ArrayList<>();
     private static final List<PlayerHitListener> PLAYER_HIT_LISTENERS = new ArrayList<>();
     private static final List<ToDoubleFunction<Player>> ATTACK_SPEED_CAPS = new ArrayList<>();
+    private static final List<BiPredicate<Player, NBTTagCompound>> ALWAYS_CRITS = new ArrayList<>();
     /** The hit listeners are hearing of a hit now (see {@link #landed}). */
     private static boolean hearing;
 
@@ -150,6 +152,20 @@ public final class Combat {
     /** Adds something that happens when a player hits another player (see {@link PlayerHitListener}). */
     public static void addPlayerHitListener(PlayerHitListener listener) {
         PLAYER_HIT_LISTENERS.add(listener);
+    }
+
+    /**
+     * Adds what makes a player's melee hits with a weapon always crit, by the weapon's data (null for a fist): the
+     * Sting's Stinger, "Attacks from this sword will always critically strike!".
+     */
+    public static void addAlwaysCrits(BiPredicate<Player, NBTTagCompound> crits) {
+        ALWAYS_CRITS.add(crits);
+    }
+
+    /** Whether their melee hit with this weapon crits whatever their Crit Chance (see {@link #addAlwaysCrits}). */
+    static boolean alwaysCrits(Player player, NBTTagCompound weapon) {
+        for (BiPredicate<Player, NBTTagCompound> crits : ALWAYS_CRITS) if (crits.test(player, weapon)) return true;
+        return false;
     }
 
     /** The {@link HitBuff}s on this hit of theirs on this target, as one: additives and added damage summed, factors multiplied. */
@@ -272,7 +288,8 @@ public final class Combat {
         } else {
             weapon = projectile == null ? skyBlockData(player.getInventory().getItemInMainHand()) : null;
             attacker = attacker(player, weapon, projectile != null, 0);
-            critical = Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
+            critical = (projectile == null && alwaysCrits(player, weapon))
+                    || Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
             look = DamageIndicators.Look.of(critical, false);
         }
         Landing landing = new Landing(target, projectile != null ? HitKind.ARROW : HitKind.MELEE, critical, weapon, projectile);

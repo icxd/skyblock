@@ -262,6 +262,29 @@ final class RunSecrets {
         return state == null || state.count.allFound();
     }
 
+    /**
+     * The nearest secret the team hasn't found yet (a chest, an item, a bat, a Wither Essence), of the rooms whose
+     * secrets are out (someone has walked in), for the Secret Tracker; null for none. A bat's is where it is.
+     */
+    Location nearestUnfound(Location from) {
+        Location best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (RoomState room : rooms.values()) {
+            if (!room.out) continue;
+            for (Spot spot : room.spots) {
+                if (spot.done || !spot.kind().secret()) continue;
+                Location at = spot.bat != null && spot.bat.entity().isValid() ? spot.bat.entity().getLocation() : spot.center();
+                if (!at.getWorld().equals(from.getWorld())) continue;
+                double distance = at.distanceSquared(from);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    best = at;
+                }
+            }
+        }
+        return best;
+    }
+
     /** "          &72/5 Secrets" after the mana for the room they're in, if it has secrets. */
     String actionBar(Player player) {
         PlacedRoom room = layout.roomAt(player.getLocation());

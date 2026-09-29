@@ -403,7 +403,8 @@ final class RunClasses {
                 abilities.explosiveShot(player, highestHit(s));
             }
             case TANK -> {
-                s.abilityReadyAt = now + SEISMIC_WAVE_COOLDOWN;
+                // Less what they hold takes off it (the Earth Shard's 2 s).
+                s.abilityReadyAt = now + Math.max(0, SEISMIC_WAVE_COOLDOWN - RunItems.seismicWaveCut(player));
                 abilities.seismicWave(player);
             }
             default -> {
@@ -436,7 +437,8 @@ final class RunClasses {
                 abilities.castleOfStone(player);
                 yield CASTLE_OF_STONE_COOLDOWN;
             }
-            case HEALER -> ClassAbilities.wishCooldown(abilities.wish(player));
+            // Less what they hold takes off it (the Fel Sword's 10 s).
+            case HEALER -> Math.max(0, ClassAbilities.wishCooldown(abilities.wish(player)) - RunItems.wishCut(player));
             case MAGE -> 0;
         };
         usedUltimate(s, ticks, now, cooldown);
