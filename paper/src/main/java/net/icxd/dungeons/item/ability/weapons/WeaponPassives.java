@@ -266,10 +266,15 @@ public final class WeaponPassives implements Listener {
      * their Ferocity strikes (each capped as the mob is when it lands, so no strike after the hit kills it either).
      */
     private static double cap(Player player, Combat.Landing landing, Damage.Target target) {
-        if (landing.kind() != HitKind.MELEE && landing.kind() != HitKind.FEROCITY) return Double.MAX_VALUE;
+        if (!strikes(landing.kind())) return Double.MAX_VALUE;
         Weapon weapon = weapon(landing.weapon());
         if (weapon == null || weapon.capShare <= 0 && !weapon.neverFatal) return Double.MAX_VALUE;
         return strikeCap(weapon.capShare, weapon.neverFatal, target.health(), target.maxHealth());
+    }
+
+    /** Whether a hit of this kind is one of a weapon's strikes for Vis Temperata: its melee hits and their Ferocity strikes. */
+    static boolean strikes(HitKind kind) {
+        return kind == HitKind.MELEE || kind == HitKind.FEROCITY;
     }
 
     /** The most a strike deals: {@code share} of max health (none for 0), and short of killing if it can't kill. */

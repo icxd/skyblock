@@ -12,6 +12,7 @@ import java.util.Set;
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
+import net.icxd.dungeons.combat.HitKind;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.mob.MobType;
@@ -144,6 +145,15 @@ class WeaponPassivesTest {
         assertEquals(360, stinger.auraDamage, EPS);
         // "360 + (3.6 x Strength) True Damage" (the wiki).
         assertEquals(360 + 3.6 * 250, BowPassives.auraDamage(360, 250), EPS);
+    }
+
+    /** "Each strike of this weapon": its melee hits and their Ferocity strikes, so no strike after the hit kills either. */
+    @Test
+    void visTemperataCapsEveryStrike() {
+        assertTrue(WeaponPassives.strikes(HitKind.MELEE));
+        assertTrue(WeaponPassives.strikes(HitKind.FEROCITY));
+        assertFalse(WeaponPassives.strikes(HitKind.ARROW));
+        assertFalse(WeaponPassives.strikes(HitKind.ABILITY));
     }
 
     /** Vis Temperata: "capped at 33% of the enemy's max Health. This weapon cannot cause a fatal blow." */
