@@ -3,6 +3,9 @@ package net.icxd.dungeons.mining;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.dwarven.PowderType;
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.enchanting.EnchantmentData;
+import net.icxd.dungeons.item.enchanting.EnchantmentType;
+import net.icxd.dungeons.item.enchanting.FakeEnchantments;
 import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.mining.blocks.MithrilBlock;
 import org.bukkit.Material;
@@ -72,6 +75,20 @@ class MiningEnchantsTest {
         assertEquals(400, Flowstate.speed(numbers, 250), 1e-9);
         assertNull(Flowstate.Numbers.of(null));
         assertNull(Flowstate.Numbers.of("&7Increases how quickly your tool breaks blocks."));
+    }
+
+    /** The private table's Flowstate: +1, +2 and +3 a block, 10 s, 200 blocks (skipped without it). */
+    @Test
+    void realFlowstate() {
+        try {
+            EnchantmentData.use(FakeEnchantments.real());
+            EnchantmentType flowstate = EnchantmentType.getByNamespace("flowstate");
+            for (int level = 1; level <= 3; level++) {
+                assertEquals(new Flowstate.Numbers(level, 10, 200), Flowstate.Numbers.of(flowstate.getDescription(level)), "Flowstate " + level);
+            }
+        } finally {
+            FakeEnchantments.reset();
+        }
     }
 
     /** Compact's chance, and what it says. */
