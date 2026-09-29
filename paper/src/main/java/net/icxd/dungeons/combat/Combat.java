@@ -58,6 +58,7 @@ public final class Combat {
     private static final List<PlayerHitListener> PLAYER_HIT_LISTENERS = new ArrayList<>();
     private static final List<ToDoubleFunction<Player>> ATTACK_SPEED_CAPS = new ArrayList<>();
     private static final List<BiPredicate<Player, NBTTagCompound>> ALWAYS_CRITS = new ArrayList<>();
+    private static final List<HitCap> HIT_CAPS = new ArrayList<>();
     /** The hit listeners are hearing of a hit now (see {@link #landed}). */
     private static boolean hearing;
 
@@ -126,7 +127,28 @@ public final class Combat {
         void hit(Player attacker, Player target, HitKind kind, NBTTagCompound weapon, Projectile projectile);
     }
 
+    /**
+     * The most a player's melee hit or arrow may deal to a mob, once it's worked out (the hunting axes' Vis Temperata:
+     * "Each strike of this weapon has its damage capped at 33% of the enemy's max Health. This weapon cannot cause a
+     * fatal blow."); {@link Double#MAX_VALUE} for no cap. Of several, the least counts.
+     */
+    @FunctionalInterface
+    public interface HitCap {
+        double most(Player player, Landing landing, Damage.Target target);
+    }
+
     private Combat() {
+    }
+
+    /** Adds a cap on hits (see {@link HitCap}). */
+    public static void addHitCap(HitCap cap) {
+        HIT_CAPS.add(cap);
+    }
+
+    /** The hit's damage under its caps (see {@link HitCap}). */
+    static double capped(Player player, Landing landing, Damage.Target target, double damage) {
+        for (HitCap cap : HIT_CAPS) damage = Math.min(damage, cap.most(player, landing, target));
+        return Math.max(0, damage);
     }
 
     /** Adds a multiplicative buff: its factor for a player's hit (the flag says whether it's an arrow). */
@@ -297,6 +319,7 @@ public final class Combat {
         Damage.Attacker buffed = Damage.buffed(attacker, on, buff.additive(), buff.multiplier());
         // What its debuffs make it take ("Frozen mobs take 10% increased damage"), on the whole hit.
         double damage = Math.floor(Damage.exact(buffed, on, critical, buff.added()) * MobDebuffs.takenFactor(target));
+        if (!HIT_CAPS.isEmpty()) damage = capped(player, landing, on, damage);
 
         boolean invulnerable = dungeonMob != null ? dungeonMob.invulnerable() : mob.type().isInvulnerable();
         if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED), attackSpeedCap(player));
