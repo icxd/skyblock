@@ -77,6 +77,7 @@ class ArmorEnchantsTest {
                 entry("thorns", level(1, "&7Grants a &a50% &7chance to rebound &a5% &7of damage dealt back at the attacker.")),
                 entry("feather_falling", level(2, "&7Increases how high you can fall before taking fall damage by &a2&7 and reduces fall "
                         + "damage by &a8%&7.")),
+                entry("bank", level(1, "&7Saves &620% &7of your coins on death. Additionally, enemies drop &6+1.5 coins &7when killed.")),
                 entry("habanero_tactics", level(1, "&8ℏ &7Heal &a+5% &7more from wands. &8ℏ &7Deal &c+10% damage &7with Slayer weapons. "
                         + "&8ℏ &7Gain &3+2☯ Combat Wisdom &7with Slayer weapons.")),
                 entry("hecatomb", "\"1\":{\"text\":\"&7Gain &a+0.5% &cCatacombs &7XP & &a+1% &3Class &7XP, doubled on &b&lS+ &7runs. Grants "
@@ -283,6 +284,20 @@ class ArmorEnchantsTest {
                 worn(HELMET, null, "ultimate_habanero_tactics", 1), worn(BOOTS, null, "habanero_tactics", 1))));
         assertEquals(20, Habanero.damage(pieces), 1e-9);
         assertEquals(10, Habanero.wandHeal(pieces), 1e-9);
+    }
+
+    // ---------- Bank ----------
+
+    /** Each piece saves its share of a death's loss and gives its coins for a kill; the pieces' add up. */
+    @Test
+    void bank() {
+        List<WornEnchants.Piece> two = WornEnchants.pieces(new Worn(List.of(
+                worn(HELMET, null, "ultimate_bank", 1), worn(BOOTS, null, "ultimate_bank", 1))));
+        assertEquals(0.4, Bank.saved(two), 1e-9);
+        assertEquals(3, Bank.killCoins(two), 1e-9);
+        List<WornEnchants.Piece> none = WornEnchants.pieces(new Worn(List.of(worn(HELMET, null, "thorns", 1))));
+        assertEquals(0, Bank.saved(none), 1e-9);
+        assertEquals(0, Bank.killCoins(none), 1e-9);
     }
 
     // ---------- Hecatomb ----------

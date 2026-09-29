@@ -3,6 +3,7 @@ package net.icxd.dungeons.item.enchanting.armor;
 import net.icxd.dungeons.combat.MobHits;
 import net.icxd.dungeons.item.ability.utility.Heals;
 import net.icxd.dungeons.item.enums.SpecificItemType;
+import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.reforge.ArmorReforgeBonuses;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.stats.PlayerStats;
@@ -30,8 +31,8 @@ import java.util.UUID;
  * Armor and equipment enchantments that do more than their text's plain stats (ENCHANTS_ARMOR.md), and the armor
  * reforges' bonuses ({@link ArmorReforgeBonuses}), on the core's hooks (EFFECTS.md): the stats that depend on
  * something ({@link StatEnchants}), hits taken ({@link HitsTaken}), vanilla damage and movement ({@link
- * Protections}), what spending Vitality and mana turns into ({@link Conversions}), Habanero Tactics, Hecatomb and
- * Stealth; and here, a tick a second (Transylvanian, the vanilla attributes, Frost Walker's melting) and the
+ * Protections}), what spending Vitality and mana turns into ({@link Conversions}), Habanero Tactics, Hecatomb,
+ * Stealth and Bank; and here, a tick a second (Transylvanian, the vanilla attributes, Frost Walker's melting) and the
  * events they need. What each piece has comes from {@link WornEnchants}, its numbers from its book's text ({@link
  * EnchantNumbers}). Main thread.
  */
@@ -58,6 +59,7 @@ public final class ArmorEnchants implements Listener {
         Habanero.register();
         Hecatomb.register();
         Stealth.register();
+        Bank.register();
         ArmorReforgeBonuses.register();
         plugin.getServer().getPluginManager().registerEvents(new ArmorEnchants(plugin), plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, ArmorEnchants::second, 20, 20);
@@ -123,6 +125,12 @@ public final class ArmorEnchants implements Listener {
         if (before == null) return;
         List<WornEnchants.Piece> pieces = WornEnchants.of(player);
         if (!pieces.isEmpty()) HitsTaken.lastStand(player, pieces, before, PlayerHealth.get(player));
+    }
+
+    /** Bank's coins for a kill. */
+    @EventHandler
+    public void onKill(SkyBlockMobDeathEvent event) {
+        if (event.killer() != null) Bank.killed(event.killer());
     }
 
     @EventHandler(ignoreCancelled = true)

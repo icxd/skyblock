@@ -39,7 +39,7 @@ class ArmorTextsTest {
                 Map.entry("depth_strider", 1), Map.entry("frost_walker", 1), Map.entry("stealth", 1), Map.entry("hardened_mana", 3),
                 Map.entry("strong_mana", 3), Map.entry("ferocious_mana", 3), Map.entry("mana_vampire", 1), Map.entry("refrigerate", 3),
                 Map.entry("respite", 1), Map.entry("transylvanian", 3), Map.entry("cayenne", 2), Map.entry("the_one", 3),
-                Map.entry("quantum", 2), Map.entry("wisdom", 3), Map.entry("legion", 3), Map.entry("habanero_tactics", 4),
+                Map.entry("quantum", 2), Map.entry("wisdom", 3), Map.entry("legion", 3), Map.entry("habanero_tactics", 4), Map.entry("bank", 2),
                 Map.entry("hecatomb", 4));
         for (Map.Entry<String, Integer> e : counts.entrySet()) {
             EnchantmentData.Entry entry = data.get(e.getKey());

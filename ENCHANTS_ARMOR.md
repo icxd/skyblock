@@ -96,7 +96,7 @@ for the system named. Every enchantment the table applies to armor or equipment 
 | Refrigerate (`refrigerate`) | **APPROX** | Its share of the mana spent as Defense for its seconds, up to its max per piece (the wiki's "per armor piece"); spending again adds to it | text; [Refrigerate](https://hypixelskyblock.minecraft.wiki/w/Refrigerate) |
 | The One (`the_one`) | **APPROX** | Health and Strength per collection at its last tier (not boss collections); its lore keeps the book's "&k73" | text; [The One](https://hypixelskyblock.minecraft.wiki/w/The_One) |
 | Habanero Tactics (`habanero_tactics`) | **APPROX** | Healing Wands' heals its percent more; its damage an additive buff on melee hits and arrows with a Slayer weapon (the wiki's Damage Calculation: additive); its Combat Wisdom while holding one. The Smoldering Polarization line is **LATER** (the Re-heated Gummy Polar Bear's effect) | text; [Habanero Tactics](https://hypixelskyblock.minecraft.wiki/w/Habanero_Tactics), [Additive Sources](https://hypixelskyblock.minecraft.wiki/w/Damage_Calculation/Additive_Sources) |
-| Bank (`bank`) | **LATER** | Purse loss on death, which the owner hasn't decided (EFFECTS.md "Not in the core"); its "+coins per kill" goes with it | |
+| Bank (`bank`) | **APPROX** | Its share of what a death takes from the purse is saved (`DeathCoins.addSaver`: the pieces' shares add up, two Bank V save it all); each kill of theirs gives each piece's coins into the purse | text; [Bank (Enchantment)](https://hypixelskyblock.minecraft.wiki/w/Bank_(Enchantment)), [Death](https://hypixelskyblock.minecraft.wiki/w/Death) |
 | Bobbin' Time (`bobbin_time`) | **LATER** | Fishing (bobbers) | |
 | Sunset (`sunset`) | **LATER** | The Garden (Overbloom, Visitor Cooldown) | |
 
@@ -157,10 +157,10 @@ Each is marked UNKNOWN in the code, with the reading taken:
   Reaper Armor's +50%.
 - **Cubic**: "Nether mobs" are the Infernal, Magmatic and Arcane types.
 - **Ridiculous**: 20 Crit Chance off (not a fifth of it); no fart while it's off; its sound.
+- **Bank**: each piece's coins for a kill add up, as their savings on death do (only the savings are sourced).
 
 ## LATER, by what they wait for
 
-- **Purse loss on death** (the owner's call): Bank.
 - **Fishing**: Tidal, Bobbin' Time, Calcified.
 - **The Garden** (farming, pests, visitors, Overbloom): Pesterminator, Green Thumb, Sunset, Mantid, Squeaky, Thorny.
 - **Foraging** and Galatea's pressure: Forest Pledge, Scuba, Marshy.
