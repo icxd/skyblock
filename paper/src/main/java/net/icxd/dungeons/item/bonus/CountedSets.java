@@ -39,6 +39,8 @@ final class CountedSets {
     static final String ENDERMAN_KILLS = "enderman_kills";
     static final String MAGMA_CUBE_KILLS = "magma_cube_kills";
     static final String SCAVENGER_COINS = "scavenger_coins";
+    /** What follows a colour code's "&" (see {@link #startsWith}). */
+    private static final String CODES = "0123456789abcdefklmnor";
     /** What a "Zombie" is (see the class). */
     static final Set<EntityType> ZOMBIES = Set.of(EntityType.ZOMBIE);
 
@@ -80,16 +82,32 @@ final class CountedSets {
                 block.cooldown(), block.soulflow(), block.healthCost(), block.vitality(), block.pieces());
     }
 
-    /** The lines with the one that starts {@code start} (after its colour codes) set to {@code line}; as they are without one. */
+    /**
+     * The lines with the one that starts {@code start} (after its colour codes) set to {@code line}; as they are without
+     * one. A worn piece's blocks are worked out each tick, so the lines are compared as they are, with no copies made.
+     */
     static List<String> line(List<String> text, String start, String line) {
-        List<String> out = new ArrayList<>(text);
-        for (int i = 0; i < out.size(); i++) {
-            if (out.get(i).replaceAll("[&§][0-9a-fk-or]", "").startsWith(start)) {
-                out.set(i, line);
-                return out;
-            }
+        for (int i = 0; i < text.size(); i++) {
+            if (!startsWith(text.get(i), start)) continue;
+            List<String> out = new ArrayList<>(text);
+            out.set(i, line);
+            return out;
         }
-        return out;
+        return text;
+    }
+
+    /** Whether the line, its colour codes ("&7", "§a") left out, starts with {@code start}. */
+    static boolean startsWith(String line, String start) {
+        int j = 0;
+        for (int i = 0; i < line.length() && j < start.length(); i++) {
+            char c = line.charAt(i);
+            if ((c == '&' || c == '§') && i + 1 < line.length() && CODES.indexOf(line.charAt(i + 1)) >= 0) {
+                i++;
+                continue;
+            }
+            if (c != start.charAt(j++)) return false;
+        }
+        return j == start.length();
     }
 
     /** Whole numbers grouped by thousands: "1,000". */

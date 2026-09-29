@@ -53,6 +53,15 @@ class CountedSetsTest {
         assertEquals("&7Bonus HP: &a120", counted.get(4));
     }
 
+    /** A line is found by its start after its colour codes, not by the words elsewhere in it; without one, the text is as it was. */
+    @Test
+    void lines() {
+        List<String> text = List.of("&7Kills and Zombies Killed: here", "&7Zombies &7Killed: &a0");
+        assertEquals(List.of("&7Kills and Zombies Killed: here", "&7Zombies Killed: &a5"), CountedSets.line(text, "Zombies Killed:", "&7Zombies Killed: &a5"));
+        List<String> none = List.of("&7Nothing to count");
+        assertSame(none, CountedSets.line(none, "Zombies Killed:", "&7Zombies Killed: &a5"));
+    }
+
     /** A Bulwark without the tables has only the step its text shows; with them, all of theirs, and "Maxed!" past the last. */
     @Test
     void bulwark() {
