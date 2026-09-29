@@ -41,8 +41,8 @@ import net.icxd.dungeons.item.bonus.SetBonuses;
  * Then "You have teleported to Name!" (the text Odin reads; its colours are UNKNOWN). The cooldown (5 seconds,
  * the Infinileap's 2) is between leaps: opening the menu doesn't start it (UNKNOWN). UNKNOWN too: where the
  * heads are (slots 11 on, as Odin reads them), their lore (dead and left ones say so: Skyblocker looks for
- * "dead" and "offline" in it) and what a click on a dead one says (nothing). Not built: "Spirit Leaps cannot
- * be used in trap rooms", the Ice puzzle's own landing spot, and outside a run the Aspiring Leap's recipe.
+ * "dead" and "offline" in it) and what a click on a dead one says (nothing). Not from the trap room (see {@link
+ * #usable}). Not built: the Ice puzzle's own landing spot, and outside a run the Aspiring Leap's recipe.
  * A ghost's Haunt is the same menu for a ghost ({@link Haunt}).
  */
 final class SpiritLeap implements AbilityHandler {
@@ -69,9 +69,16 @@ final class SpiritLeap implements AbilityHandler {
         return out;
     }
 
+    /**
+     * In a run, but not from its trap room: "Spirit Leaps cannot be used in trap rooms; however, players can teleport
+     * to other players in trap rooms" (the wiki). What it says there is UNKNOWN.
+     */
     @Override
     public boolean usable(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-        return RunManager.of(player) != null;
+        if (RunManager.of(player) == null) return false;
+        if (!RunItems.inTrapRoom(player)) return true;
+        player.sendMessage(Utils.color("&cYou can't use this in a trap room!"));
+        return false;
     }
 
     @Override

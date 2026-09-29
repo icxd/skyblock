@@ -199,6 +199,14 @@ public final class RunItems {
         return m.find() ? Double.parseDouble(m.group(1)) : 0;
     }
 
+    /** Whether they stand in their run's trap room ("Spirit Leaps cannot be used in trap rooms", the wiki). */
+    public static boolean inTrapRoom(Player player) {
+        DungeonRun run = RunManager.of(player);
+        if (run == null || !player.getWorld().equals(run.world)) return false;
+        PlacedRoom room = run.layout().roomAt(player.getLocation());
+        return room != null && room.type() == RoomType.TRAP;
+    }
+
     /** Resets the failed puzzle in the room they're in (the Architect's First Draft); its name, or null for none. */
     public static String resetFailedPuzzle(Player player) {
         DungeonRun run = running(player);
