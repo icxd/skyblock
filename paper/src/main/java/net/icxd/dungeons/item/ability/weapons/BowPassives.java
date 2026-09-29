@@ -342,7 +342,9 @@ final class BowPassives {
      */
     static void arrowLanded(AbstractArrow arrow, Player shooter, Entity hit, Block block) {
         Damage.Attacker shot = EXPLOSIVE.remove(arrow.getUniqueId());
-        SLIME_FACTOR.remove(arrow.getUniqueId());
+        // A slime-fed arrow's factor is for its hit, which is worked out after this: it goes with the arrow (arrowGone),
+        // or here when it lands on a block.
+        if (hit == null) SLIME_FACTOR.remove(arrow.getUniqueId());
         if (shot == null || !Hits.canStillHit(shooter)) return;
         Location at = arrow.getLocation();
         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 1);
