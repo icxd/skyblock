@@ -69,7 +69,10 @@ public enum Stat {
     PRESSURE_RESISTANCE("Pressure Resistance", "❍", '9'),
     PULL("Pull", "ᛷ", 'b'),
     TRACKING("Tracking", "❃", 'd'),
-    /** How much more XP the skill gains: 1 + Wisdom / 100 (research skills.md 5.1). Only Combat's is used yet. */
+    /**
+     * How much more XP the skill gains: 1 + Wisdom / 100 (research skills.md 5.1), each skill's own (SkillGains.wisdom).
+     * Combat's, Mining's, Enchanting's and Carpentry's skills gain XP here (STATS_EFFECTS.md).
+     */
     COMBAT_WISDOM("Combat Wisdom", "☯", '3'),
     FARMING_WISDOM("Farming Wisdom", "☯", '3'),
     FISHING_WISDOM("Fishing Wisdom", "☯", '3'),
