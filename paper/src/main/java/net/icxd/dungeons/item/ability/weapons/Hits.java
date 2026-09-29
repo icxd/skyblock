@@ -68,8 +68,6 @@ public final class Hits {
     static final double FROZEN_TAKEN = 0.1;
     /** Slowness this strong stops a mob walking (each level takes 15% of its speed). */
     private static final int ROOTED = 6;
-    /** Stunned mobs (see {@link #stun}), until when. */
-    private static final Map<UUID, Long> STUNNED = new HashMap<>();
 
     private Hits() {
     }
@@ -360,6 +358,9 @@ public final class Hits {
     public static void root(LivingEntity entity, int ticks) {
         entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, ROOTED, false, false, false));
     }
+
+    /** Stunned mobs (see {@link #stun}), until when. */
+    private static final Map<UUID, Long> STUNNED = new HashMap<>();
 
     /**
      * Stunned for this long: rooted, and its hits on players do nothing (see {@link #stunned}, which

@@ -14,6 +14,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.stats.StatsRunnable;
 
 /**
  * What weapon abilities need to hear of: players' arrows landing (a Terminator's count towards Salvation,
@@ -25,6 +26,9 @@ public final class WeaponEvents implements Listener {
         PlayerDamage.addTakenMultiplier(WitherBlade::takenFactor);
         PlayerDamage.addTakenMultiplier(Buffs.Hellstorm::takenFactor);
         Combat.addMultiplier(Buffs.SmashHead::multiplier);
+        Combat.addHitListener(Buffs.SmashHead::landed);
+        PlayerDamage.addTakenFrom((player, by) -> Buffs.SmashHead.weakened(PlayerDamage.attacker(by)));
+        StatsRunnable.addManaRegenFactor(Buffs.GravityStorm::regenFactor);
     }
 
     /**

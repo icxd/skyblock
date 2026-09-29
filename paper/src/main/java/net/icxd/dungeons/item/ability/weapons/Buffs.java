@@ -1,10 +1,10 @@
 package net.icxd.dungeons.item.ability.weapons;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -16,10 +16,15 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.combat.Combat;
+import net.icxd.dungeons.combat.Damage;
+import net.icxd.dungeons.combat.HitKind;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.ability.utility.AbilityText;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.mob.MobType;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.stats.Stat;
@@ -36,6 +41,8 @@ final class Buffs {
     static void forget(UUID player) {
         Hellstorm.UNTIL.remove(player);
         SmashHead.PENDING.remove(player);
+        SmashHead.SMASHED.remove(player);
+        GravityStorm.SLOWED.remove(player);
     }
 
     /**
@@ -86,22 +93,49 @@ final class Buffs {
 
     /**
      * The Edible Mace's ME SMASH HEAD: "Your next attack deals double damage and weakens Animal mobs, making
-     * them deal -35% damage for 30 seconds." The next melee hit (theirs, or an ability's worked out as one) is
-     * doubled, as a multiplicative buff; the weakening isn't built (mobs' damage has no per-target factor:
-     * LATER).
+     * them deal -35% damage for 30 seconds. Debuff doesn't stack." The next melee hit (theirs, or an ability's
+     * worked out as one) is doubled, as a multiplicative buff; the mob it lands on, if it's an Animal mob, deals
+     * its text's share less to players for its text's time (see {@link #weakened}): a new one starts the time again.
      */
     static final class SmashHead implements AbilityHandler {
-        private static final Set<UUID> PENDING = new HashSet<>();
+        private static final Pattern WEAKENS = Pattern.compile("making them deal -(\\d+)% damage for (\\d+) seconds");
+        /** Cast, and waiting for the next hit: the weakening it puts on (a share less, for how long), by player. */
+        private static final Map<UUID, double[]> PENDING = new HashMap<>();
+        /** Its hit worked out, not landed yet. */
+        private static final Map<UUID, double[]> SMASHED = new HashMap<>();
+        /** Weakened mobs: until when, and the factor on their hits. */
+        private static final Map<UUID, double[]> WEAKENED = new HashMap<>();
 
         /** Their melee hit's factor (see Combat#addMultiplier): 2 for the next one after a cast, once. */
         static double multiplier(Player player, Boolean ranged) {
-            if (ranged || !PENDING.remove(player.getUniqueId())) return 1;
+            if (ranged) return 1;
+            double[] weakens = PENDING.remove(player.getUniqueId());
+            if (weakens == null) return 1;
+            SMASHED.put(player.getUniqueId(), weakens);
             return 2;
+        }
+
+        /** The doubled hit landed (a melee hit, or an ability's): an Animal mob it hit is weakened. */
+        static void landed(Player player, Combat.Landing landing, Damage.Target target, double damage, boolean killed) {
+            if (SMASHED.isEmpty() || landing.kind() != HitKind.MELEE && landing.kind() != HitKind.ABILITY) return;
+            double[] weakens = SMASHED.remove(player.getUniqueId());
+            if (weakens == null || killed || !target.types().contains(MobType.ANIMAL)) return;
+            long now = System.currentTimeMillis();
+            WEAKENED.values().removeIf(w -> w[0] <= now);
+            WEAKENED.put(landing.entity().getUniqueId(), new double[] {now + weakens[1], 1 - weakens[0]});
+        }
+
+        /** The factor on a hit by this mob: less while it's weakened, else 1. */
+        static double weakened(Entity mob) {
+            if (mob == null || WEAKENED.isEmpty()) return 1;
+            double[] weak = WEAKENED.get(mob.getUniqueId());
+            return weak != null && weak[0] > System.currentTimeMillis() ? weak[1] : 1;
         }
 
         @Override
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
-            PENDING.add(player.getUniqueId());
+            Matcher m = WEAKENS.matcher(AbilityText.plain(block.text()));
+            PENDING.put(player.getUniqueId(), m.find() ? new double[] {Double.parseDouble(m.group(1)) / 100, Long.parseLong(m.group(2)) * 1000} : new double[] {0, 0});
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_HURT, 1, 0.6f);
         }
     }
@@ -147,15 +181,29 @@ final class Buffs {
     /**
      * The Gyrokinetic Wand's Gravity Storm (LEFT CLICK): "Create a large rift at the aimed location, pulling all
      * mobs together." How large, how far it pulls from and for how long are UNKNOWN (8 blocks, 3 seconds, aimed
-     * up to 20 blocks away). "Regen mana 10x slower for 3s after cast" isn't built (LATER: mana regeneration has
-     * no hook), nor is its 10 Soulflow charged (no Soulflow yet).
+     * up to 20 blocks away). "Regen mana 10x slower for 3s after cast": their mana regeneration a tenth of itself
+     * for that long ({@link #regenFactor}). Its 10 Soulflow isn't charged (no Soulflow yet).
      */
     static final class GravityStorm implements AbilityHandler {
         static final double PULL = 8;
         static final int TICKS = 60;
+        private static final Pattern SLOWER = Pattern.compile("Regen mana (\\d+)x slower for (\\d+)s after cast");
+        /** Whose mana regenerates slower: until when, and the factor. */
+        private static final Map<UUID, double[]> SLOWED = new HashMap<>();
+
+        /** Their mana regeneration's factor now: 0.1 for "10x slower" while it lasts, else 1. */
+        static double regenFactor(Player player) {
+            double[] slowed = SLOWED.get(player.getUniqueId());
+            if (slowed == null) return 1;
+            if (slowed[0] > System.currentTimeMillis()) return slowed[1];
+            SLOWED.remove(player.getUniqueId());
+            return 1;
+        }
 
         @Override
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
+            Matcher m = SLOWER.matcher(AbilityText.plain(block.text()));
+            if (m.find()) SLOWED.put(player.getUniqueId(), new double[] {System.currentTimeMillis() + Long.parseLong(m.group(2)) * 1000, 1.0 / Double.parseDouble(m.group(1))});
             Location at = Hits.aimed(player, 20);
             new BukkitRunnable() {
                 private int ticks;
