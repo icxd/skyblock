@@ -202,8 +202,10 @@ public final class WeaponEnchants implements Listener {
         Counts hits = hits(mob, player);
         hits.melee++;
         hits.all++;
-        // The mob's hits before this one (every player's), as First Strike counts them: this is its 2nd.
-        if (levels.has(CHAMPION) && target.hitsTaken() == 1) championHit(player, mob, levels.of(CHAMPION));
+        // The mob's hits before this one (every player's), as First Strike counts them: this is its text's "2nd".
+        if (levels.has(CHAMPION) && target.hitsTaken() + 1 == (int) EnchantText.at(CHAMPION, levels.of(CHAMPION), 1)) {
+            championHit(player, mob, levels.of(CHAMPION));
+        }
         int blood = levels.has(LIFE_STEAL) || levels.has(DRAIN) ? bloodSoaked(player) : 0;
         if (levels.has(LIFE_STEAL)) {
             Heals.give(player, player, EnchantText.linear(LIFE_STEAL, levels.of(LIFE_STEAL) + blood, 0));

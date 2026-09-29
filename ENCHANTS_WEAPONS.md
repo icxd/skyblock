@@ -92,7 +92,7 @@ Status: DONE, APPROX (built, with an UNKNOWN reading), LATER (and what it waits 
 | Thunderlord | DONE | On every 3rd melee hit on a mob, a lightning strike (its look and sound) for the text's share of that hit's damage, as a separate hit (the wiki's Multiplicative Sources, melee only). |
 | Thunderbolt | DONE | The same count, the text's share to up to 10 mobs within 2 blocks, the target too. |
 | Knockback | APPROX | The melee hit's knockback pushes further, by vanilla Knockback's 0.5 strength for each 3 blocks the text says. UNKNOWN how Hypixel turns "3 blocks" into a push. |
-| Champion | DONE | The mob's 2nd hit (with this weapon) gives the text's coins into the purse and its exp orbs. The orbs go the way the mob's drops do (`ExpOrbs`: to them from a dungeon mob). Its Combat XP percent was done in `SkillGains`. Its tiers are under "Tiers". |
+| Champion | DONE | The mob's 2nd hit (the text's "2nd"; this one with the weapon) gives the text's coins into the purse and its exp orbs. The orbs go the way the mob's drops do (`ExpOrbs`: to them from a dungeon mob). Its Combat XP percent was done in `SkillGains`. Its tiers are under "Tiers". |
 
 ### On a kill
 
