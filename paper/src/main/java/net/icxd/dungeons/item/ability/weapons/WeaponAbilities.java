@@ -1,8 +1,11 @@
 package net.icxd.dungeons.item.ability.weapons;
 
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
 
 import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.Player;
 
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
@@ -77,6 +80,18 @@ public final class WeaponAbilities {
         to.accept("Extreme Focus", new BowPassives.ExtremeFocus());
         // The Miniature Nuke's (the Creeper Pants' Detonate is a worn piece's passive: WornStrikes).
         to.accept("Detonate", new WornStrikes.Nuke());
+        // Armor's sneak abilities (and the Giant's Eye Sword's right click).
+        to.accept(ArmorAbilities.HomingMissiles.NAME, new ArmorAbilities.HomingMissiles());
+        to.accept("Ground Pound", new ArmorAbilities.GroundPound());
+        to.accept(ArmorAbilities.EyeBeam.NAME, new ArmorAbilities.EyeBeam());
+    }
+
+    /**
+     * Where the Aurora Armor's Arcane Energy stacks come from (the armor bonuses' tiered bonus, BONUSES.md), and how
+     * they're spent: Homing Missiles goes off at 10 of them. Until something gives them there are none.
+     */
+    public static void arcaneEnergy(ToIntFunction<Player> stacks, Consumer<Player> spend) {
+        ArmorAbilities.HomingMissiles.stacksFrom(stacks, spend);
     }
 
     /**

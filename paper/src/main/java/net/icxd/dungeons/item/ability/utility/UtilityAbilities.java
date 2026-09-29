@@ -45,6 +45,8 @@ public final class UtilityAbilities {
         to.accept("Jingle Bells", new Taunt("block.note_block.bell"));
         // Movement
         to.accept("Ether Transmission", new EtherTransmission());
+        to.accept(Movement.WaterBurst.NAME, new Movement.WaterBurst());
+        to.accept("To the Moon!", new Movement.ToTheMoon());
     }
 
     /** Whether the ability with this name is one of these (once they're registered). */

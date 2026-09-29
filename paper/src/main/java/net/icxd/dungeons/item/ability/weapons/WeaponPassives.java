@@ -434,6 +434,7 @@ public final class WeaponPassives implements Listener {
         BowPassives.forget(player);
         Tormentor.forget(player);
         WornStrikes.forget(player);
+        ArmorAbilities.EyeBeam.forget(player);
     }
 
     @EventHandler

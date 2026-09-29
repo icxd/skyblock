@@ -67,6 +67,7 @@ public final class UtilityListener implements Listener {
             return;
         }
         if (!(event.getEntity() instanceof Player player)) return;
+        if (Movement.fell(player, event)) return;
         EntityDamageEvent.DamageCause cause = event.getCause();
         if (cause == EntityDamageEvent.DamageCause.VOID || cause == EntityDamageEvent.DamageCause.KILL) return;
         if (Protection.immune(player)) {
@@ -162,6 +163,7 @@ public final class UtilityListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onSneak(PlayerToggleSneakEvent event) {
         if (event.isSneaking()) SpiritGlide.sneaked(event.getPlayer());
+        else Movement.released(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -172,6 +174,7 @@ public final class UtilityListener implements Listener {
         Deployables.forget(player.getUniqueId());
         SpiritGlide.forget(player);
         WornPassives.forget(player.getUniqueId());
+        Movement.forget(player.getUniqueId());
     }
 
     @EventHandler
