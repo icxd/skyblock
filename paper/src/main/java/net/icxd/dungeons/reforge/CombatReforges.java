@@ -96,9 +96,10 @@ public final class CombatReforges implements Listener {
     /**
      * On a hit as it lands, by the weapon's reforge: Fabled's "Critical hits have a chance to deal up to 15% extra
      * damage" (a melee crit's damage times 1 + 0.15 x a roll from 0 to 1, the wiki's Multiplicative Sources, which has
-     * it ConfirmationNeeded), Fanged's "Every 7th melee hit on an enemy deals +100% damage" (each player's own melee
-     * hits on it; additive, as the wiki has other reforges' "+X% damage": UNKNOWN), and Precise's and Headstrong's
-     * "Deal +10% extra damage when arrows hit the head of a mob" (additive, the wiki's Additive Sources).
+     * it ConfirmationNeeded: UNKNOWN how Hypixel rolls it), Fanged's "Every 7th melee hit on an enemy deals +100%
+     * damage" (each player's own melee hits on it; additive, as the wiki has other reforges' "+X% damage": UNKNOWN),
+     * and Precise's and Headstrong's "Deal +10% extra damage when arrows hit the head of a mob" (additive, the wiki's
+     * Additive Sources).
      */
     static Combat.HitBuff buff(Player player, Damage.Attacker attacker, Damage.Target target, Combat.Landing landing) {
         Reforge reforge = Reforge.of(landing.weapon());

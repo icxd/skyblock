@@ -154,7 +154,8 @@ How they're put together (`tools/hex/test_build_reforges.py` has made-up cases o
 ## Later, and what it waits for
 
 - **Bonus effects in a fight** (Fabled, Suspicious, Fanged, Precise, Headstrong, Loving, Hyper, Empowered,
-  Blood-Soaked; Coldfusion, Spiritual and Gilded still waiting) are ENCHANTS_WEAPONS.md's "Reforges" now.
+  Blood-Soaked; Coldfusion, Spiritual and Gilded still waiting) are ENCHANTS_WEAPONS.md's "Reforges" now, which
+  overrides the rows below for them.
 - **Bonus effects past a stat.** Only Withered's and Ancient's Catacombs stats work; every other bonus is lore
   only. Each waits for the system it touches:
   - combat damage: Fabled's crit bonus, Suspicious's +15 weapon damage, Fanged's 7th hit, Coldfused;

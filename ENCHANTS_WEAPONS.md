@@ -82,15 +82,15 @@ Status: DONE, APPROX (built, with an UNKNOWN reading), LATER (and what it waits 
 
 | Enchantment | Status | What it does here, and what's UNKNOWN |
 |---|---|---|
-| Cleave | DONE | On a melee hit, the text's share of the hit's damage to every other mob within the text's radius of the target's middle. It uses the book's radius (3.3-4.8), not the wiki's 3.5-6. UNKNOWN whether the other mobs' Defense counts: it doesn't. |
-| Life Steal | DONE | Heals the text's ❤ per melee hit on a mob, through `Heals` (so the Catacombs boost that "all healing" gets applies, UNKNOWN for enchantments). |
+| Cleave | APPROX | On a melee hit, the text's share of the hit's damage to every other mob within the text's radius of the target's middle. It uses the book's radius (3.3-4.8), not the wiki's 3.5-6. UNKNOWN whether the other mobs' Defense counts: it doesn't. |
+| Life Steal | APPROX | Heals the text's ❤ per melee hit on a mob, through `Heals` (so the Catacombs boost that "all healing" gets applies, UNKNOWN for enchantments). |
 | Drain (syphon) | DONE | Gives the text's Vitality per melee hit, never past the pool, with the text's 1 s cooldown. |
 | Mana Steal | APPROX | Gives the text's share of their mana pool per melee hit, in whole points, as dungeons' mana on hit does. UNKNOWN whether it's a share of the pool or of what they have: the pool, as "regain" reads. |
-| Lethality | DONE | A Defense debuff for the text's 4 s per melee hit, up to its 4 stacks. The level put on first is kept until it runs out ("Hitting that enemy with Lethality II or higher will not increase that 4.8%", the wiki's Damage Calculation). It is one debuff per mob from every player's hits (UNKNOWN). |
+| Lethality | APPROX | A Defense debuff for the text's 4 s per melee hit, up to its 4 stacks. The level put on first is kept until it runs out ("Hitting that enemy with Lethality II or higher will not increase that 4.8%", the wiki's Damage Calculation). It is one debuff per mob from every player's hits (UNKNOWN). |
 | Venomous | APPROX | Each melee hit saves its damage after additive buffs times the text's share, up to 40 stacks (from every player's hits, "stacking globally"), for 5 s from the last hit. Each second the mob takes what they saved times the Additive Multiplier worked out again without melee-only buffs (the wiki's examples 4 and 5), through its Defense, as a dark green number. There's also the text's slow, 80% weaker in the Catacombs (the wiki's trivia). UNKNOWN: the second multiplier is worked out when a hit puts the stacks on, not each second for what's held then as the wiki has it. UNKNOWN whether Defense counts for the tick. |
 | Fire Aspect | APPROX | Fire for the text's seconds, each second the text's share of the hit's damage after additive buffs, through the mob's Defense, as a gold number (the wiki's example 4 and its damage indicators). Put on again, it keeps the greater and counts its time from then (example 5). It shows as flames, since 0.10 "displays fire particles instead of physically lighting the target on fire". UNKNOWN whether Defense counts (the wiki's examples are on a Training Dummy; its Toxic Arrow Poison example takes Defense off a damage over time). |
-| Thunderlord | DONE | On every 3rd melee hit on a mob, a lightning strike (its look and sound) for the text's share of that hit's damage, as a separate hit (the wiki's Multiplicative Sources, melee only). |
-| Thunderbolt | DONE | The same count, the text's share to up to 10 mobs within 2 blocks, the target too. |
+| Thunderlord | APPROX | On every 3rd melee hit on a mob, a lightning strike (its look and sound) for the text's share of that hit's damage, as a separate hit (the wiki's Multiplicative Sources, melee only). UNKNOWN whose hits count: each player's own on the mob. |
+| Thunderbolt | APPROX | The same count, the text's share to up to 10 mobs within 2 blocks, the target too. |
 | Knockback | APPROX | The melee hit's knockback pushes further, by vanilla Knockback's 0.5 strength for each 3 blocks the text says. UNKNOWN how Hypixel turns "3 blocks" into a push. |
 | Champion | DONE | The mob's 2nd hit (the text's "2nd"; this one with the weapon) gives the text's coins into the purse and its exp orbs. The orbs go the way the mob's drops do (`ExpOrbs`: to them from a dungeon mob). Its Combat XP percent was done in `SkillGains`. Its tiers are under "Tiers". |
 
@@ -116,7 +116,7 @@ Status: DONE, APPROX (built, with an UNKNOWN reading), LATER (and what it waits 
 
 | Enchantment | Status | What it does here, and what's UNKNOWN |
 |---|---|---|
-| Champion's and Toxophilite's tiers | DONE | A kill's Combat XP (as the kill gives it: the mob's, with Combat Wisdom and the weapon's percent) is added to the held item's `champion_combat_xp` or `toxophilite_combat_xp`. The level goes up for each tier-up text it reaches ("&850k Combat XP to tier up!"; several at once if it has, the wiki's 0.19.7 fix), to the last tier. Only while their data is here (as the XP is), and not while their inventory is being handed on. UNKNOWN: what Hypixel says when it tiers up (nothing here). The lore's progress after the name ("§9Toxophilite VIII §82.1M", a Hypixel setting) isn't shown. |
+| Champion's and Toxophilite's tiers | APPROX | A kill's Combat XP (as the kill gives it: the mob's, with Combat Wisdom and the weapon's percent) is added to the held item's `champion_combat_xp` or `toxophilite_combat_xp`. The level goes up for each tier-up text it reaches ("&850k Combat XP to tier up!"; several at once if it has, the wiki's 0.19.7 fix), to the last tier. Only while their data is here (as the XP is), and not while their inventory is being handed on. UNKNOWN: what Hypixel says when it tiers up (nothing here). The lore's progress after the name ("§9Toxophilite VIII §82.1M", a Hypixel setting) isn't shown. |
 
 ### Ultimates
 
@@ -188,7 +188,7 @@ rarity, as its lore shows them.
 | Reforge | Status | What it does here, and what's UNKNOWN |
 |---|---|---|
 | Fabled (Dragon Claw, swords) | APPROX | A melee crit's damage times 1 + 15% x a roll from 0 to 1 (the wiki's Multiplicative Sources, "ConfirmationNeeded"). |
-| Suspicious (Suspicious Vial, swords) | DONE | "+15" weapon damage in the stats, not the lore: live Twilight Daggers with it show their own Damage (REFORGES.md). Not grown by a dungeon's boost (UNKNOWN). |
+| Suspicious (Suspicious Vial, swords) | APPROX | "+15" weapon damage in the stats, not the lore: live Twilight Daggers with it show their own Damage (REFORGES.md). Not grown by a dungeon's boost (UNKNOWN). |
 | Fanged (Full-Jaw Fanging Kit, swords) | APPROX | Every 7th melee hit of theirs on a mob gets +100% as an additive buff. UNKNOWN: additive or multiplicative (the wiki lists it in neither; its other reforges' "+X% damage" are additive). |
 | Precise (Optical Lens, bows), Headstrong (bows) | APPROX | An arrow that hits a mob's head gets +10% or +8% (additive, the wiki's Additive Sources). The head is from the mob's eyes, less as far again as its top is above them. UNKNOWN where Hypixel puts a head. |
 | Loving (Red Scarf, chestplates) | DONE | A worn chestplate's +5% multiplies their magic damage ("a Multiplicative bonus to the player's Base Ability Damage", the wiki's Red Scarf), through `Hits.magic`. |

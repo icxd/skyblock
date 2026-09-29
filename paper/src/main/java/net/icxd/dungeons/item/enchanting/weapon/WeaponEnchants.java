@@ -208,6 +208,7 @@ public final class WeaponEnchants implements Listener {
         }
         int blood = levels.has(LIFE_STEAL) || levels.has(DRAIN) ? bloodSoaked(player) : 0;
         if (levels.has(LIFE_STEAL)) {
+            // UNKNOWN whether the Catacombs boost that "all healing" gets there counts for it: through Heals, it does.
             Heals.give(player, player, EnchantText.linear(LIFE_STEAL, levels.of(LIFE_STEAL) + blood, 0));
         }
         if (levels.has(DRAIN)) drain(player, levels.of(DRAIN), blood);
@@ -246,6 +247,7 @@ public final class WeaponEnchants implements Listener {
             fire(player, mob, target, postAdditive, FLAME_PERCENT * level, (int) EnchantText.at(FLAME, level, 0));
         }
         if (levels.has(DUPLEX)) {
+            // The text's "1.1x fire damage". UNKNOWN: the wiki's Multiplicative Sources has 0.1x live ("might be a bug").
             int level = levels.of(DUPLEX);
             MobState state = mob(mob);
             state.fireTaken = EnchantText.at(DUPLEX, level, 1);
@@ -399,7 +401,8 @@ public final class WeaponEnchants implements Listener {
      * Inferno's "Every 10th hit on a mob spawns an inferno which traps the mob and deals 125% of your last hit": each
      * player's melee hits and arrows on it (UNKNOWN whose count), and on the 10th it can't walk for 5s and takes that
      * share of the hit spread over them, a second at a time, as magic damage its magic resistance takes from ("The
-     * trap damage counts as Magic Damage", the wiki's Inferno). Flames show it.
+     * trap damage counts as Magic Damage", the wiki's Inferno). Flames show it. UNKNOWN how often Hypixel's ticks, and
+     * whether its "trap" is more than rooted: once a second, rooted.
      */
     private static void inferno(Player player, LivingEntity mob, Damage.Target target, double damage, int level, int hits) {
         if (!WeaponRules.every(hits, (int) EnchantText.at(INFERNO, level, 0)) || !MobHits.hittable(mob)) return;
@@ -483,7 +486,8 @@ public final class WeaponEnchants implements Listener {
      * Swarm's "Increases your damage by 2% for each enemy within 10 blocks. Maximum of 10 enemies." (the mobs that can
      * be hurt around them: UNKNOWN whether it's around them or the target), Combo's "+1% per kill up to 2 kills within
      * 2s" (both additive, the wiki's Additive Sources) and Soul Eater's soul "at the end of your next critical hit"
-     * (added damage, which only the crit multiplies: the wiki's "Add Damage").
+     * (added damage, which only the crit multiplies: the wiki's "Add Damage"). UNKNOWN: that's the private data's book;
+     * live items and the wiki now say "adds it as Strength" with no cap (ENCHANTS_WEAPONS.md's questions).
      */
     static Combat.HitBuff buff(Player player, Damage.Attacker attacker, Damage.Target target, Combat.Landing landing) {
         WeaponEnchant.Levels levels = WeaponEnchant.levels(landing.weapon());
