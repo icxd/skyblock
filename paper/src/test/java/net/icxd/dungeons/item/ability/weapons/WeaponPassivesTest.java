@@ -9,8 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Set;
 
+import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
+import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.mob.MobType;
 
@@ -151,5 +153,32 @@ class WeaponPassivesTest {
         assertEquals(99, WeaponPassives.strikeCap(0.33, true, 100, 1_000), EPS);
         assertEquals(0, WeaponPassives.strikeCap(0.33, true, 1, 1_000), EPS);
         assertEquals(Double.MAX_VALUE, WeaponPassives.strikeCap(0, false, 1, 1_000), EPS);
+    }
+
+    /** The Reaving Strike blocks' lines: the holder's missing health against Undead, the target's missing health. */
+    @Test
+    void reapersFromMissingHealth() {
+        ItemBlock bone = new ItemBlock("ABILITY", "Reaving Strike", null, "RIGHT_CLICK", List.of("&7Slash in a huge arc, dealing &c125% &7melee",
+                "&7damage to all enemies hit!", "", "&7Deals &c+1% &7damage to &aUndead", "&7monsters for every &a1% &7of your", "&7missing health."),
+                0, 0, 0, 0, 0, 0, 0);
+        ItemBlock felthorn = new ItemBlock("ABILITY", "Reaving Strike", null, "RIGHT_CLICK", List.of("&7Deals &c+1% &7damage for every &a1% &7of",
+                "&7missing health on the target."), 0, 0, 0, 0, 0, 0, 0);
+        WeaponPassives.Weapon reaver = new WeaponPassives.Weapon(new FakeItem("BONE_REAVER", List.of(), List.of(bone)));
+        assertEquals(MobType.UNDEAD, reaver.ownMissingType);
+        assertEquals(1, reaver.ownPerMissing, EPS);
+        assertEquals(1, new WeaponPassives.Weapon(new FakeItem("FELTHORN_REAPER", List.of(), List.of(felthorn))).targetPerMissing, EPS);
+    }
+
+    /** An item with only an id, its lore and its blocks. */
+    private record FakeItem(String id, List<String> lore, List<ItemBlock> blocks) implements SkyBlockItem {
+        @Override
+        public String name() {
+            return id;
+        }
+
+        @Override
+        public Material material() {
+            return Material.IRON_SWORD;
+        }
     }
 }

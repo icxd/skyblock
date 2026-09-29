@@ -84,6 +84,10 @@ public final class WeaponPassives implements Listener {
     /** The Stone Blade's Archer line: "Your melee attacks cause enemies to take 10% more damage from your arrows for 5 seconds". */
     private static final Pattern ARCHER_MARK = Pattern.compile("cause enemies to take ([\\d.]+)% more damage from your arrows for ([\\d.]+) seconds");
 
+    /** Reaving Strike's lines: "Deals +1% damage to Undead monsters for every 1% of your missing health." (the Bone Reaver). */
+    private static final Pattern YOUR_MISSING = Pattern.compile("Deals \\+([\\d.]+)% damage to (\\p{L}+) monsters for every ([\\d.]+)% of your missing health");
+    /** "Deals +1% damage for every 1% of missing health on the target." (the Felthorn Reaper). */
+    private static final Pattern TARGET_MISSING = Pattern.compile("Deals \\+([\\d.]+)% damage for every ([\\d.]+)% of missing health on the target");
     /** Vis Temperata: "Each strike of this weapon has its damage capped at 33% of the enemy's max Health." */
     private static final Pattern CAPPED = Pattern.compile("has its damage capped at ([\\d.]+)% of the enemy's max Health");
     /** Triple Shot: "Shoots 3 arrows at a time! The 2 extra arrows deal 40% of the damage and home to targets." */
@@ -109,6 +113,14 @@ public final class WeaponPassives implements Listener {
         double mageMana;
         double archerMark;
         long archerMillis;
+        /**
+         * Its Reaving Strike block's bonuses from missing health: a mob type and the share a whole share of the
+         * holder's missing health gives against it (the Bone Reaver), and the share a whole share of the target's
+         * missing health gives (the Felthorn Reaper).
+         */
+        MobType ownMissingType;
+        double ownPerMissing;
+        double targetPerMissing;
         /** Vis Temperata's cap, a share of the mob's max health (0 for none), and whether it can't kill. */
         double capShare;
         boolean neverFatal;
@@ -129,6 +141,14 @@ public final class WeaponPassives implements Listener {
                 String plain = AbilityText.plain(block.text());
                 switch (block.name()) {
                     case "Cleave" -> cleaveRadius = AbilityText.blocks(plain).orElse(3);
+                    case "Reaving Strike" -> {
+                        Matcher own = YOUR_MISSING.matcher(plain);
+                        if (own.find() && (ownMissingType = WeaponLore.type(own.group(2))) != null) {
+                            ownPerMissing = Double.parseDouble(own.group(1)) / Double.parseDouble(own.group(3));
+                        }
+                        Matcher theirs = TARGET_MISSING.matcher(plain);
+                        if (theirs.find()) targetPerMissing = Double.parseDouble(theirs.group(1)) / Double.parseDouble(theirs.group(2));
+                    }
                     case "Love Tap" -> loveTap = number(LOVE_TAP, plain);
                     case "Stinger" -> stinger = true;
                     case "Angered" -> angered = number(ANGERED, plain) / 100;
@@ -225,6 +245,14 @@ public final class WeaponPassives implements Listener {
             factor *= lore.factor(target.types(), missing(player), player.isInWater());
             if (lore.strengthInLava > 0 && landing.entity().isInLava()) factor *= WeaponLore.strengthFactor(attacker.strength(), lore.strengthInLava);
             if (lore.behindCrit != 1 && landing.critical() && behind(player.getLocation(), landing.entity().getLocation())) factor *= lore.behindCrit;
+        }
+        if (weapon != null && landing.kind() == HitKind.MELEE) {
+            if (weapon.ownPerMissing > 0 && target.types().contains(weapon.ownMissingType)) {
+                factor *= WeaponLore.missingFactor(weapon.ownPerMissing, missing(player));
+            }
+            if (weapon.targetPerMissing > 0 && target.maxHealth() > 0) {
+                factor *= WeaponLore.missingFactor(weapon.targetPerMissing, 1 - target.health() / target.maxHealth());
+            }
         }
         if (landing.kind() == HitKind.ARROW) factor *= marked(player, landing.entity()) * BowPassives.factor(landing, target);
         double added = BowPassives.focus(player);
