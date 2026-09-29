@@ -355,9 +355,15 @@ public final class WornStrikes {
             }
         }
 
+        /** The mask's off: its bats go, and when each is due back stays (putting it on again doesn't hurry them). */
         @Override
         public void ended(Player player) {
-            forgetSwarm(player.getUniqueId());
+            Swarm swarm = SWARMS.get(player.getUniqueId());
+            if (swarm == null) return;
+            for (int i = 0; i < SWARM_BATS; i++) {
+                if (swarm.bats[i] != null) swarm.bats[i].remove();
+                swarm.bats[i] = null;
+            }
         }
     }
 

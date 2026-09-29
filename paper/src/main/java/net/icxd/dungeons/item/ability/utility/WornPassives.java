@@ -74,10 +74,15 @@ public final class WornPassives {
     private static final Pattern GLADIATOR = Pattern.compile("Gain \\+([\\d.]+)❈ Defense for each enemy within ([\\d.]+) blocks up to \\+([\\d.]+)❈ Defense");
     private static final Pattern GLADIATOR_TANK = Pattern.compile("Range increases to ([\\d.]+) blocks and the cap increases to \\+([\\d.]+)❈ Defense when you play as a Tank");
 
-    /** Bone Shield's bones: how many they have, when the next comes back, and the bones shown around them. */
+    /**
+     * Bone Shield's bones: how many they have, when the next comes back, whether the helmet is on (the bones show
+     * only then), and the bones shown around them. Kept while the helmet is off, so putting it on again brings none
+     * back.
+     */
     private static final class Bones {
         int left = BONES;
         long nextBack;
+        boolean on;
         final List<ItemDisplay> shown = new ArrayList<>();
     }
 
@@ -197,8 +202,10 @@ public final class WornPassives {
     }
 
     /**
-     * The Skeleton's Helmet's Bone Shield: 3 bones around them, each taking a whole hit, one back every 30 seconds.
-     * They're full when it goes on (UNKNOWN). The bones circle their waist (UNKNOWN how Hypixel's move).
+     * The Skeleton's Helmet's Bone Shield: 3 bones around them, each taking a whole hit, one back every 30 seconds
+     * while it's on. They're full the first time it goes on (UNKNOWN); taking it off and on again keeps what was left,
+     * or the helmet would be a way to have them all back at once. The bones circle their waist (UNKNOWN how Hypixel's
+     * move).
      */
     static final class BoneShield extends Passive {
         static final String NAME = "Bone Shield";
@@ -219,6 +226,7 @@ public final class WornPassives {
         @Override
         public void second(Player player, Active active) {
             Bones bones = BONE_SHIELDS.computeIfAbsent(player.getUniqueId(), id -> new Bones());
+            bones.on = true;
             long now = System.currentTimeMillis();
             if (bones.left < BONES && now >= bones.nextBack) {
                 bones.left++;
@@ -226,9 +234,14 @@ public final class WornPassives {
             }
         }
 
+        /** The helmet's off (or they're dead, or a ghost): the bones stop showing, and they keep how many they had. */
         @Override
         public void ended(Player player) {
-            forgetBones(player.getUniqueId());
+            Bones bones = BONE_SHIELDS.get(player.getUniqueId());
+            if (bones == null) return;
+            bones.on = false;
+            for (ItemDisplay bone : bones.shown) bone.remove();
+            bones.shown.clear();
         }
     }
 
@@ -239,7 +252,7 @@ public final class WornPassives {
         for (Map.Entry<UUID, Bones> entry : BONE_SHIELDS.entrySet()) {
             Player player = org.bukkit.Bukkit.getPlayer(entry.getKey());
             Bones bones = entry.getValue();
-            if (player == null) continue;
+            if (player == null || !bones.on) continue;
             while (bones.shown.size() > bones.left) bones.shown.remove(bones.shown.size() - 1).remove();
             while (bones.shown.size() < bones.left) bones.shown.add(bone(player.getLocation()));
             for (int i = 0; i < bones.shown.size(); i++) {
