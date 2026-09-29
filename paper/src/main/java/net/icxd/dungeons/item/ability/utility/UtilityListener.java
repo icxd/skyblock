@@ -53,6 +53,7 @@ public final class UtilityListener implements Listener {
         SpiritGlide.tick();
         WornPassives.tick();
         WornPassives.landed();
+        CellsAlignment.tick();
     }
 
     /**
@@ -175,6 +176,7 @@ public final class UtilityListener implements Listener {
         SpiritGlide.forget(player);
         WornPassives.forget(player.getUniqueId());
         Movement.forget(player.getUniqueId());
+        CellsAlignment.forget(player.getUniqueId());
     }
 
     @EventHandler

@@ -163,7 +163,8 @@ public final class WornPassives {
      * ❤ Health, the first damage you take will be nullified", every 60 s, its cooldown), a bone of Bone Shield
      * ("nullifying damage you take but consuming a bone in the process"; not a boss's hits: "Bone Shields ability
      * won't work on Magma Boss and new bosses anymore", the wiki's history), Mithril's Protection's cap ("Any damage
-     * taken is max 40% of the wearer's ❤ Health", their max health's: UNKNOWN whether it's their health now).
+     * taken is max 40% of the wearer's ❤ Health", their max health's: UNKNOWN whether it's their health now), and a
+     * Gyrokinetic Wand's Aligned (see {@link CellsAlignment}).
      */
     static double shield(Player player, double taken, Entity by) {
         ItemBlock block = worn(player, "Block Damage");
@@ -178,7 +179,7 @@ public final class WornPassives {
                 PlayerSession.of(player).buff("Mithril's Protection", new Stats().set(Stat.HEALTH_REGEN, REGENERATION), REGENERATION_MILLIS);
             }
         }
-        return taken;
+        return CellsAlignment.aligned(player, taken);
     }
 
     /** Whether what hit them is a boss's (or its projectile). */

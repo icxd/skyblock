@@ -47,6 +47,8 @@ public final class UtilityAbilities {
         to.accept("Ether Transmission", new EtherTransmission());
         to.accept(Movement.WaterBurst.NAME, new Movement.WaterBurst());
         to.accept("To the Moon!", new Movement.ToTheMoon());
+        // Shields
+        to.accept(CellsAlignment.NAME, new CellsAlignment());
     }
 
     /** Whether the ability with this name is one of these (once they're registered). */
