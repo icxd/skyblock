@@ -130,15 +130,15 @@ Each is marked UNKNOWN in the code, with the reading taken:
 - **Thorns**: "damage dealt" is what the hit took from them (after Defense); arrows' hits count; each piece rolls
   its own chance; the mob's Defense doesn't lessen the rebound.
 - **Reflection**: nothing multiplies its damage; every arrow counts.
-- **Counter-Strike**: "first hit from an enemy" is each mob's first, for as long as that mob is alive; a new one
-  takes the last one's place and starts its seven seconds again.
+- **Counter-Strike**: "first hit from an enemy" is each mob's first, for as long as that mob is alive and they
+  don't die (or switch profiles); a new one takes the last one's place and starts its seven seconds again.
 - **Blast, Fire and Projectile Protection on vanilla damage**: their Defense (True Defense) lessens it as it would
   a hit, 100 / (100 + it), and nothing else does (SkyBlock's own fire and explosion rules: the wiki's "Differs").
 - **Frost Walker**: 5 s before the ice melts; only on something solid; not in dungeon runs.
 - **Stealth**: rolled once each time they come near (until they've gone half as far again away); the message each
   time the roll goes their way.
 - **The Vitality enchantments and Refrigerate**: spending again while it lasts adds to it (up to the max) and starts
-  its time again.
+  its time again (a profile switch, which starts a new session without the buffs, starts it from none).
 - **Vampiric Vitality and Transylvanian**: heals of their own, so the Catacombs boost counts in a run.
 - **Respite**: "out of combat" is the core's `CombatState` (5 s since they last dealt or took a mob's damage).
 - **Last Stand**: one cooldown for all its pieces; any hit or vanilla damage (traps and true damage too); the

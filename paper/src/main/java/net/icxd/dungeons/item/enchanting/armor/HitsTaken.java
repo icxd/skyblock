@@ -40,8 +40,14 @@ final class HitsTaken {
     static final String NO_PAIN_NO_GAIN = "no_pain_no_gain";
     private static final String LAST_STAND_KEY = "enchant:" + LAST_STAND;
 
-    /** The mobs that have hit each player who wears Counter-Strike (its "first hit from an enemy"). */
-    private static final Map<UUID, Set<UUID>> HIT_BY = new HashMap<>();
+    /**
+     * The mobs that have hit each player who wears Counter-Strike (its "first hit from an enemy"), in the session
+     * they were hit in (a profile switch starts a new one; a death forgets them, see {@link #forget}).
+     */
+    private static final Map<UUID, HitBy> HIT_BY = new HashMap<>();
+
+    private record HitBy(PlayerSession session, Set<UUID> mobs) {
+    }
     /** Whose health was {@link #before} as the hit being taken got to it (see {@link #register}'s shield). */
     private static Player beforeOf;
     private static double before;
@@ -132,7 +138,7 @@ final class HitsTaken {
     /**
      * "Gain +10 Defense for 7s on the first hit from an enemy": each mob's first hit on them gives it again
      * (a new one in place of the last, from its start). UNKNOWN: "first" is taken as each mob's first, for as
-     * long as that mob is alive; what several pieces do (Counter-Strike is the chestplate's alone).
+     * long as that mob and their life last; what several pieces do (Counter-Strike is the chestplate's alone).
      */
     private static void counterStrike(Player player, List<WornEnchants.Piece> pieces, Entity attacker) {
         double defense = 0;
@@ -145,23 +151,31 @@ final class HitsTaken {
             defense += n[0];
             seconds = Math.max(seconds, n[1]);
         }
-        if (defense <= 0 || !HIT_BY.computeIfAbsent(player.getUniqueId(), id -> new HashSet<>()).add(attacker.getUniqueId())) return;
-        PlayerSession.of(player).buff("enchant:" + COUNTER_STRIKE, new Stats().set(Stat.DEFENSE, defense), (long) (seconds * 1000));
+        if (defense <= 0) return;
+        PlayerSession session = PlayerSession.of(player);
+        HitBy hitBy = HIT_BY.get(player.getUniqueId());
+        if (hitBy == null || hitBy.session() != session) {
+            hitBy = new HitBy(session, new HashSet<>());
+            HIT_BY.put(player.getUniqueId(), hitBy);
+        }
+        if (!hitBy.mobs().add(attacker.getUniqueId())) return;
+        session.buff("enchant:" + COUNTER_STRIKE, new Stats().set(Stat.DEFENSE, defense), (long) (seconds * 1000));
     }
 
     /** Once a second: the mobs that are gone are forgotten. */
     static void second() {
-        for (Iterator<Map.Entry<UUID, Set<UUID>>> players = HIT_BY.entrySet().iterator(); players.hasNext(); ) {
-            Map.Entry<UUID, Set<UUID>> e = players.next();
+        for (Iterator<Map.Entry<UUID, HitBy>> players = HIT_BY.entrySet().iterator(); players.hasNext(); ) {
+            Map.Entry<UUID, HitBy> e = players.next();
             if (Bukkit.getPlayer(e.getKey()) == null) {
                 players.remove();
                 continue;
             }
-            e.getValue().removeIf(mob -> {
+            Set<UUID> mobs = e.getValue().mobs();
+            mobs.removeIf(mob -> {
                 Entity entity = Bukkit.getEntity(mob);
                 return entity == null || !entity.isValid();
             });
-            if (e.getValue().isEmpty()) players.remove();
+            if (mobs.isEmpty()) players.remove();
         }
     }
 
@@ -218,7 +232,7 @@ final class HitsTaken {
         if (orbs > 0) ExpOrbs.grant(player, orbs, ExpOrbs.Source.OTHER, null, true);
     }
 
-    /** They've left. */
+    /** They've left, or died. */
     static void forget(UUID player) {
         HIT_BY.remove(player);
     }

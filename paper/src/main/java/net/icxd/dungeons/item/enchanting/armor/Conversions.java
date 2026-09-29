@@ -28,8 +28,12 @@ final class Conversions {
     static final String VAMPIRIC = "mana_vampire";
     static final String REFRIGERATE = "refrigerate";
 
-    /** A conversion's stat now on one piece: how much, and until when. */
+    /**
+     * A conversion's stat now on one piece: how much, and until when, as a buff of the session it was given in (a
+     * new session, as a profile switch starts, has none of it).
+     */
     private static final class Pool {
+        PlayerSession session;
         double amount;
         long endMillis;
     }
@@ -68,11 +72,16 @@ final class Conversions {
             if (n.length < 3) continue;
             String key = id + ":" + piece.index();
             Pool pool = POOLS.computeIfAbsent(player.getUniqueId(), p -> new HashMap<>()).computeIfAbsent(key, k -> new Pool());
+            PlayerSession session = PlayerSession.of(player);
+            if (pool.session != session) {
+                pool.session = session;
+                pool.endMillis = 0;
+            }
             long now = System.currentTimeMillis();
             long millis = (long) (n[1] * 1000);
             pool.amount = pooled(pool.amount, pool.endMillis, now, spent * n[0] / 100, n[2]);
             pool.endMillis = now + millis;
-            PlayerSession.of(player).buff("enchant:" + key, new Stats().set(stat, pool.amount), millis);
+            session.buff("enchant:" + key, new Stats().set(stat, pool.amount), millis);
         }
     }
 
