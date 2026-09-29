@@ -37,6 +37,8 @@ import net.icxd.dungeons.item.bonus.SetBonuses;
 import net.icxd.dungeons.item.bonus.Worn;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.mob.DataMob;
+import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
@@ -139,6 +141,16 @@ public final class WornStrikes {
         return null;
     }
 
+    /**
+     * Whether a mob is up and about: not one of a room's that waits for its room to open (behind a wall, say). What
+     * acts on its own around a wearer (Rejuvenate, Bat Swarm) leaves those be, as a hit on one opens its room
+     * (RunManager.abilityHit): walking past a room with the mask on doesn't open it.
+     */
+    static boolean awake(LivingEntity mob) {
+        Mobs.Live live = Mobs.of(mob);
+        return live == null || !(live.type() instanceof DataMob data) || !data.dormant();
+    }
+
     private static double number(Pattern pattern, String plain, int group, double otherwise) {
         Matcher m = pattern.matcher(plain);
         return m.find() ? Double.parseDouble(m.group(group).replace(",", "")) : otherwise;
@@ -171,7 +183,8 @@ public final class WornStrikes {
 
     /**
      * The Vampire masks' Rejuvenate: "While wearing, drains 5 health per second from all monsters within 8 blocks",
-     * and "The wearer heals for the amount the ability damages mobs" (the wiki's Vampire Mask).
+     * and "The wearer heals for the amount the ability damages mobs" (the wiki's Vampire Mask). Not a room's mobs that
+     * wait for it to open (see {@link #awake}).
      */
     static final class Rejuvenate extends Passive {
         Rejuvenate() {
@@ -185,7 +198,7 @@ public final class WornStrikes {
             double range = number(DRAINS, plain, 2, 8);
             double drained = 0;
             for (LivingEntity mob : Hits.near(player.getLocation(), range)) {
-                if (MobHits.deal(player, mob, drain, DamageIndicators.Look.NORMAL, HitKind.OTHER, null)) drained += drain;
+                if (awake(mob) && MobHits.deal(player, mob, drain, DamageIndicators.Look.NORMAL, HitKind.OTHER, null)) drained += drain;
             }
             if (drained > 0) Heals.give(player, player, drained);
         }
@@ -340,6 +353,7 @@ public final class WornStrikes {
             Swarm swarm = SWARMS.computeIfAbsent(player.getUniqueId(), id -> new Swarm());
             long now = System.currentTimeMillis();
             List<LivingEntity> near = Hits.near(player.getLocation(), SWARM_RANGE);
+            near.removeIf(mob -> !awake(mob));
             for (int i = 0; i < SWARM_BATS; i++) {
                 if (swarm.bats[i] == null || !swarm.bats[i].isValid()) {
                     if (now < swarm.backAt[i]) continue;
