@@ -9,8 +9,11 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.function.BiPredicate;
 
 /**
  * Targets the nearest player in survival or adventure within {@code range} blocks, and lets go past it.
@@ -19,6 +22,7 @@ import java.util.EnumSet;
  */
 public class TargetNearestPlayerGoal implements Goal<Mob> {
     private static final GoalKey<Mob> KEY = GoalKey.of(Mob.class, new NamespacedKey("dungeons", "target_nearest_player"));
+    private static final List<BiPredicate<LivingEntity, Player>> IGNORED = new ArrayList<>();
 
     private final Mob mob;
     private final double range;
@@ -46,10 +50,26 @@ public class TargetNearestPlayerGoal implements Goal<Mob> {
                 .min(Comparator.comparingDouble(p -> p.getLocation().distanceSquared(from.getLocation()))).orElse(null);
     }
 
-    /** Who it goes for now: the one it had while they're still fair, else the nearest. */
+    /**
+     * Adds what keeps a mob from going for a player (the Intimidation Talisman's "Level 1 monsters will no longer
+     * target you"): asked for each player it would choose. It can still flee from them.
+     */
+    public static void addIgnored(BiPredicate<LivingEntity, Player> ignores) {
+        IGNORED.add(ignores);
+    }
+
+    /** Whether it leaves this player alone (see {@link #addIgnored}). */
+    static boolean ignores(LivingEntity from, Player player) {
+        for (BiPredicate<LivingEntity, Player> ignores : IGNORED) if (ignores.test(from, player)) return true;
+        return false;
+    }
+
+    /** Who it goes for now: the one it had while they're still fair, else the nearest; never one it leaves alone. */
     public static Player choose(LivingEntity from, LivingEntity current, double range, boolean sight) {
-        if (current instanceof Player player && fair(from, player, range)) return player;
-        return nearest(from, range, sight);
+        if (current instanceof Player player && fair(from, player, range) && !ignores(from, player)) return player;
+        if (IGNORED.isEmpty()) return nearest(from, range, sight);
+        return from.getWorld().getPlayers().stream().filter(p -> fair(from, p, range) && (!sight || from.hasLineOfSight(p)) && !ignores(from, p))
+                .min(Comparator.comparingDouble(p -> p.getLocation().distanceSquared(from.getLocation()))).orElse(null);
     }
 
     @Override

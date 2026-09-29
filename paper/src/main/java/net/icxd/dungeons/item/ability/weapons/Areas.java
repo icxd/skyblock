@@ -18,6 +18,7 @@ import org.bukkit.util.Vector;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.AbilityHandler;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerSession;
@@ -206,7 +207,8 @@ final class Areas {
      * The Starlight Wand's Starfall: "Shower stars in a 3 blocks area for 5s, dealing 300 damage per second to
      * mobs within"; "places down a cloud on the position of the caster's crosshair up to 10 blocks away ...
      * dealing damage every 0.25 seconds" (the wiki): a quarter of it every 5 ticks; scaling 0.3. The area as a
-     * ball 1.5 blocks across the middle.
+     * ball 1.5 blocks across the middle. Starlight Armor's Starpower makes it last longer and its area wider ("from
+     * 3 blocks to 4 blocks", the wiki's Starlight Armor: SetBonuses#starfallDuration, #starfallRange).
      */
     static final class Starfall implements AbilityHandler {
         static final Magic.Spell STARS = new Magic.Spell(300, 0.3);
@@ -214,13 +216,15 @@ final class Areas {
         @Override
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             Location at = Hits.aimed(player, 10);
-            Hits.overTime(player, item, tag, Hits.spellOf(item, STARS), 0.25, 5, 20, () -> Hits.near(at, 1.5));
+            int times = (int) Math.round(20 * SetBonuses.starfallDuration(player));
+            double radius = 1.5 + SetBonuses.starfallRange(player) / 2;
+            Hits.overTime(player, item, tag, Hits.spellOf(item, STARS), 0.25, 5, times, () -> Hits.near(at, radius));
             new BukkitRunnable() {
                 private int ticks;
 
                 @Override
                 public void run() {
-                    if ((ticks += 5) > 100) {
+                    if ((ticks += 5) > times * 5) {
                         cancel();
                         return;
                     }

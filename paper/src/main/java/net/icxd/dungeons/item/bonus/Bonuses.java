@@ -1,6 +1,8 @@
 package net.icxd.dungeons.item.bonus;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.SkyBlockServer;
+import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.combat.DamageIndicators;
 import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.instance.DungeonMobs;
@@ -70,6 +72,12 @@ final class Bonuses {
         double health = PlayerSession.of(player).getHealth();
         if (health < 0 || max <= 0) return 1;
         return Math.min(1, health / max);
+    }
+
+    /** Whether this server hosts that part of SkyBlock (the Dwarven Mines, the Crimson Isle); false before the plugin has started. */
+    static boolean on(ServerType type) {
+        SkyBlockServer server = Dungeons.getSkyBlockServer();
+        return server != null && server.getServerType() == type;
     }
 
     /** Their Catacombs level for stats (at most 50); 0 while their data isn't loaded. */

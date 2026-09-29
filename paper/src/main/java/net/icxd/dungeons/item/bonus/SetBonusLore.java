@@ -47,13 +47,18 @@ public final class SetBonusLore {
         if (holder == null || set == null) return block;
         Bonus bonus = SetBonuses.bonus(block.kind(), block.name());
         int count = SetBonuses.worn(holder).count(set);
-        return shown(block, count, count >= SetBonuses.needs(bonus, set), bonus);
+        return shown(block, count, count >= SetBonuses.needs(bonus, set), bonus, holder);
     }
 
     /** The block for someone wearing {@code count} of its set, which counts ({@code active}) or not. */
     static ItemBlock shown(ItemBlock block, int count, boolean active, Bonus bonus) {
+        return shown(block, count, active, bonus, null);
+    }
+
+    /** The same, for {@code holder} (null for none), whose own numbers some bonuses' text shows (Crystal Armor's light level). */
+    static ItemBlock shown(ItemBlock block, int count, boolean active, Bonus bonus, Player holder) {
         String header = header(block, count, active);
-        List<String> text = bonus == null ? block.text() : bonus.text(block.text(), count);
+        List<String> text = bonus == null ? block.text() : holder == null ? bonus.text(block.text(), count) : bonus.text(block.text(), count, holder);
         if (Objects.equals(header, block.header()) && text.equals(block.text())) return block;
         return new ItemBlock(block.kind(), block.name(), header, block.activation(), text, block.mana(), block.manaPercent(),
                 block.cooldown(), block.soulflow(), block.healthCost(), block.vitality(), block.pieces());

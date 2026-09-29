@@ -33,6 +33,7 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.ability.Abilities;
+import net.icxd.dungeons.item.bonus.SetBonuses;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.session.PlayerHealth;
@@ -403,8 +404,9 @@ final class RunClasses {
                 abilities.explosiveShot(player, highestHit(s));
             }
             case TANK -> {
-                // Less what they hold takes off it (the Earth Shard's 2 s).
-                s.abilityReadyAt = now + Math.max(0, SEISMIC_WAVE_COOLDOWN - RunItems.seismicWaveCut(player));
+                // Less what they hold takes off it (the Earth Shard's 2 s) and what Super Heavy Armor does ("reduces the
+                // cooldown of Seismic Wave by 1s" a piece).
+                s.abilityReadyAt = now + Math.max(0, SEISMIC_WAVE_COOLDOWN - RunItems.seismicWaveCut(player) - SetBonuses.seismicWaveCut(player));
                 abilities.seismicWave(player);
             }
             default -> {

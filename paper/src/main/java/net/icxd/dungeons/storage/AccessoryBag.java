@@ -2,9 +2,12 @@ package net.icxd.dungeons.storage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 import org.bson.Document;
 import org.bukkit.entity.Player;
@@ -51,6 +54,9 @@ public final class AccessoryBag {
         boolean inDungeon;
         int power;
         Stats stats = new Stats();
+        /** The counted ones' ids, and each one's item (see {@link #counted}). */
+        Set<String> ids = Set.of();
+        Map<String, ItemStack> items = Map.of();
     }
 
     private AccessoryBag() {
@@ -156,6 +162,7 @@ public final class AccessoryBag {
         List<Entry> all = new ArrayList<>(state.bag);
         all.addAll(entries(player.getInventory().getStorageContents()));
         List<Accessories.Held> held = all.stream().map(Entry::held).toList();
+        counted(state, all, Accessories.counted(held, tables));
         Stats stats = new Stats();
         for (int i : Accessories.counted(held, tables)) stats.add(ItemStats.of(all.get(i).item(), player));
         StorageTables.Power power = selectedPower(profile);
@@ -163,6 +170,63 @@ public final class AccessoryBag {
         // What their Tuning Points are put in (Stats Tuning), with the points this Accessory Power gives.
         stats.add(StatsTuning.stats(profile, Accessories.tuningPoints(state.power)));
         state.stats = stats;
+    }
+
+    /** Keeps which of them count, and their items, for {@link #counted} and {@link #countedItem}. */
+    private static void counted(State state, List<Entry> all, List<Integer> counted) {
+        Set<String> ids = new HashSet<>();
+        Map<String, ItemStack> items = new HashMap<>();
+        for (int i : counted) {
+            ids.add(all.get(i).held().id());
+            items.put(all.get(i).held().id(), all.get(i).item());
+        }
+        state.ids = Set.copyOf(ids);
+        state.items = items;
+    }
+
+    /**
+     * The ids of the accessories that count for them now (see {@link #countedIds}), as they were at the last look
+     * (at most a second ago): cheap to ask on every hit, for what accessories do beyond their stats.
+     */
+    public static Set<String> counted(Player player) {
+        return state(player).ids;
+    }
+
+    /** The item of the counted accessory with this id, as it was at the last look; null if it doesn't count. */
+    public static ItemStack countedItem(Player player, String id) {
+        return state(player).items.get(id);
+    }
+
+    /**
+     * Changes the first accessory with this id in their Accessory Bag ({@code change}: a count on it, the Blood God
+     * Crest's kills) and keeps it; false if it isn't in their bag or their data isn't loaded. What's known of the bag
+     * follows at once, without reading it all again.
+     */
+    public static boolean rewrite(Player player, String id, UnaryOperator<ItemStack> change) {
+        User user = User.ifLoaded(player.getUniqueId());
+        State state = STATES.get(player.getUniqueId());
+        if (user == null || user.isReleased() || state == null || state.bag == null || state.profile != user.profile()) return false;
+        Document storage = StoredInventory.storage(user.profile());
+        int capacity = capacity(user.profile());
+        List<Object> slots = StorageDocument.slots(storage, Bag.ACCESSORY_BAG.key(), capacity);
+        for (int i = 0; i < slots.size(); i++) {
+            ItemStack item = StorageItems.peek(slots.get(i));
+            Accessories.Held held = held(item);
+            if (held == null || !held.id().equals(id)) continue;
+            ItemStack changed = change.apply(item);
+            if (changed == null) return false;
+            slots.set(i, StorageItems.encode(new ItemStack[] {changed}).get(0));
+            StorageDocument.setSlots(storage, Bag.ACCESSORY_BAG.key(), slots);
+            for (int e = 0; e < state.bag.size(); e++) {
+                if (state.bag.get(e).held().id().equals(id)) {
+                    state.bag.set(e, new Entry(changed, held(changed)));
+                    break;
+                }
+            }
+            state.at = 0;
+            return true;
+        }
+        return false;
     }
 
     /** The SkyBlock ids of the accessories that count for them: in the bag or their inventory (KillCoins's Scavenger). */

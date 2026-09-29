@@ -544,6 +544,11 @@ public final class DungeonRun implements ScoreCounts {
         return floor.isMasterMode();
     }
 
+    /** Its floor's number: 0 for the Entrance, 1 to 7 (the same for Master Mode's; the boss heads' "on The Catacombs Floor I"). */
+    public int floorNumber() {
+        return floor.getNumber();
+    }
+
     /** Every secret on the floor, as Hypixel counts them room by room (for the score and the tab list). */
     public int totalSecrets() {
         return secrets == null ? 0 : secrets.total();

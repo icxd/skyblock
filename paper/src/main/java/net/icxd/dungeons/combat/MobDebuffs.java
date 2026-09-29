@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.ToDoubleBiFunction;
 
 /**
  * SkyBlock's own status effects on mobs (vanilla fire and poison on them stay cancelled, see Mobs): per mob,
@@ -47,12 +48,21 @@ public final class MobDebuffs {
     /** The mob whose damages over time are ticking (so the sink needn't be made anew for each mob, each tick). */
     private static LivingEntity ticking;
     private static final Debuffs.DotSink SINK = (source, by, damage, look) -> DUE.add(new Due(ticking, by, damage, look));
+    private static final List<ToDoubleBiFunction<Player, DamageIndicators.Look>> DOT_FACTORS = new ArrayList<>();
 
     private MobDebuffs() {
     }
 
     private static Tracked tracked(LivingEntity mob) {
         return MOBS.computeIfAbsent(mob.getUniqueId(), id -> new Tracked(mob));
+    }
+
+    /**
+     * Adds a factor on a player's damages over time, by how they look (Rekindled Ember Armor's "Increase all of your
+     * outgoing burning damage by 200%": {@link DamageIndicators.Look#FIRE}), on each tick as it deals; they multiply.
+     */
+    public static void addDotFactor(ToDoubleBiFunction<Player, DamageIndicators.Look> factor) {
+        DOT_FACTORS.add(factor);
     }
 
     /** Puts a debuff on (again) a mob that can be hurt (see {@link Debuffs#add}); {@code by} is who did (null for nobody). */
@@ -142,7 +152,10 @@ public final class MobDebuffs {
         DUE.clear();
         for (Due hit : due) {
             Player by = Bukkit.getPlayer(hit.by());
-            if (by != null) MobHits.deal(by, hit.entity(), hit.damage(), hit.look(), HitKind.DOT, null);
+            if (by == null) continue;
+            double damage = hit.damage();
+            for (ToDoubleBiFunction<Player, DamageIndicators.Look> factor : DOT_FACTORS) damage *= factor.applyAsDouble(by, hit.look());
+            MobHits.deal(by, hit.entity(), damage, hit.look(), HitKind.DOT, null);
         }
     }
 

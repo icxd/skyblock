@@ -1,6 +1,10 @@
 package net.icxd.dungeons.shop;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.ToDoubleFunction;
+
+import org.bukkit.entity.Player;
 
 import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
@@ -32,6 +36,37 @@ public record Shop(String name, List<Ware> wares) {
     /** What it shows a player whose highest completed floor is this. */
     public List<Ware> wares(int highestFloor) {
         return wares.stream().filter(w -> w.floor() <= highestFloor).toList();
+    }
+
+    private static final List<ToDoubleFunction<Player>> DISCOUNTS = new ArrayList<>();
+
+    /**
+     * Adds a discount a player has on shops' coin costs, in percent (the Shady Ring's "Get 1% off on most shops");
+     * of several, the most counts (UNKNOWN whether Hypixel's add: the three there are are one accessory line).
+     */
+    public static void addDiscount(ToDoubleFunction<Player> percent) {
+        DISCOUNTS.add(percent);
+    }
+
+    /** Their discount on shops now, in percent. */
+    static double discount(Player player) {
+        double most = 0;
+        for (ToDoubleFunction<Player> discount : DISCOUNTS) most = Math.max(most, discount.applyAsDouble(player));
+        return Math.min(100, most);
+    }
+
+    /** A ware's costs to this player: its coins less their discount, the rest as they are. */
+    public static List<Cost> costs(Ware ware, Player player) {
+        double discount = player == null ? 0 : discount(player);
+        if (discount <= 0) return ware.costs();
+        List<Cost> costs = new ArrayList<>(ware.costs().size());
+        for (Cost cost : ware.costs()) costs.add(cost instanceof CoinCost coins ? new CoinCost(discounted(coins.getAmount(), discount)) : cost);
+        return costs;
+    }
+
+    /** Coins less a discount of this many percent, rounded up to a whole coin (UNKNOWN how Hypixel rounds). */
+    static int discounted(int coins, double percent) {
+        return (int) Math.ceil(coins * (1 - percent / 100) - 1e-9);
     }
 
     /**

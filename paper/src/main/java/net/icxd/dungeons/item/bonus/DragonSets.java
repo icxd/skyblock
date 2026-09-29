@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * The dragon armor sets' full set bonuses (the "Blood" ones). Not here: Superior Blood's "Aspect of the
  * Dragons ability deals 50% more damage" (the ability's: it can ask {@link SetBonuses#active}), and Old
- * Blood's Feather Falling (fall damage isn't SkyBlock's yet).
+ * Blood's Feather Falling (the armor enchantments' Feather Falling reads it).
  */
 final class DragonSets {
     /** The Stats & Equipment menu's Combat Stats (as recorded), taken as the bonuses' "Combat stats" (UNKNOWN). */
