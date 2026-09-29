@@ -83,11 +83,14 @@ public final class AccessoryEffects implements Listener {
     private static final Pattern TAKEN = Pattern.compile("damage taken from \\S* ?([A-Z][a-z]+) mobs by ([\\d.]+)%");
     private static final Pattern HASTE = Pattern.compile("Haste ([IVX]+)");
     private static final NamespacedKey SAFE_FALL = new NamespacedKey("dungeons", "accessory_safe_fall");
-    /** Mining Speed a level of Haste is given as (the wiki's Haste Ring: "instead of the Haste being overridden, the player is given +100 Mining Speed" for II). */
+    /**
+     * Mining Speed a level of Haste is given as (the wiki's Haste Ring: "instead of the Haste being overridden, the
+     * player is given +100 Mining Speed" for II; the Artifact's III as 150 is UNKNOWN).
+     */
     static final double HASTE_MINING_SPEED = 50;
     /** How far from an island's spawn the Gravity Talisman's +10 drops to +1: UNKNOWN (the wiki gives no distances), a point every 10 blocks. */
     static final double GRAVITY_STEP = 10;
-    /** Players on the island the Bluetooth Rings want, as the text says; the island is this server's world. */
+    /** The Blood God Crest and Sigil, whose kills are counted on them. */
     static final String CREST = "BLOOD_GOD_CREST";
     static final String SIGIL = "BLOOD_GOD_SIGIL";
     /** Where the Blood God Crest keeps its counter. */
@@ -295,6 +298,7 @@ public final class AccessoryEffects implements Listener {
             stats.add(Stat.STRENGTH, more).add(Stat.DEFENSE, more);
         }
         if (!s.burning.isEmpty() && player.getFireTicks() > 0) for (String id : s.burning) stats.add(AccessoryText.stats(id));
+        // No most for the Reaper Orb's stacks: the wiki's "stacking up to {{InfoNeeded}}" (UNKNOWN).
         if (s.reaperOrb != null) {
             Deque<Long> kills = REAPER_KILLS.get(player.getUniqueId());
             int recent = kills == null ? 0 : recent(kills, System.currentTimeMillis(), (long) (AccessoryText.after(s.reaperOrb, "last", 5) * 1000));
@@ -304,6 +308,7 @@ public final class AccessoryEffects implements Listener {
             Double count = CREST_COUNT.get(player.getUniqueId());
             if (count != null) stats.add(Stat.STRENGTH, bloodGod(count, AccessoryText.after(s.bloodGod, "Gain", 1), AccessoryText.after(s.bloodGod, "Max", 7)));
         }
+        // The Bluetooth Rings' "players on the island you're on": in their world, this server's island (UNKNOWN).
         if (s.bluetooth != null && player.getWorld().getPlayers().size() >= AccessoryText.after(s.bluetooth, "least", 6)) {
             stats.add(Stat.DAMAGE, AccessoryText.after(s.bluetooth, "Deal", 0));
         }
@@ -316,6 +321,7 @@ public final class AccessoryEffects implements Listener {
             stats.add(Stat.STRENGTH, more).add(Stat.DEFENSE, more);
         }
         if (s.haste > 0) stats.add(Stat.MINING_SPEED, HASTE_MINING_SPEED * s.haste);
+        // The Master Skulls' and IQ Points' shares are of the stats as they are here (UNKNOWN where Hypixel's come).
         if (s.masterSkull != null) {
             DungeonRun run = RunManager.of(player);
             if (run != null && run.masterMode()) {
@@ -384,7 +390,8 @@ public final class AccessoryEffects implements Listener {
     /**
      * On a hit of theirs: the Tarantula Talisman's "Every 10th melee hit on the same enemy deals +10% damage" (a
      * multiplicative 1.1, the wiki's Multiplicative Sources; its hits on each mob counted apart), and a Wedding Ring's
-     * "1 in 100 chance to deal +100% damage" (additive, the wiki's Additive Sources, as the Ring of Love's).
+     * "1 in 100 chance to deal +100% damage" (additive, the wiki's Additive Sources, as the Ring of Love's; its
+     * "Requires quest progress!" isn't asked, there being no quests here: UNKNOWN whether it'd stop it).
      */
     private static Combat.HitBuff hit(Player player, Damage.Attacker attacker, Damage.Target target, Combat.Landing landing) {
         Summary s = summary(player);
@@ -512,7 +519,8 @@ public final class AccessoryEffects implements Listener {
     // ---------- every second, every minute ----------
 
     /**
-     * Every second: the Night Vision Charm's "Grants Night Vision" (until it doesn't count), the Feather line's
+     * Every second: the Night Vision Charm's "Grants Night Vision" (until it doesn't count; from the Accessory Bag
+     * too, though its text says "in your inventory": UNKNOWN), the Feather line's
      * "Increases how high you can fall before taking fall damage by 5 blocks" (their safe fall distance), the Blood
      * God Crest's count as it is on the item, and the Tarantula Talisman's counts on mobs that are gone.
      */
