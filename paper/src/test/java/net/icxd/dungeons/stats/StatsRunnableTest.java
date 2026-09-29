@@ -29,4 +29,13 @@ class StatsRunnableTest {
         assertEquals("&66,171/4,422❤", StatsRunnable.health(4422, 1749.5, 4422));
         assertEquals("&61,500/4,422❤", StatsRunnable.health(900, 600, 4422));
     }
+
+    /** "Regen mana 10x slower": a tenth of a second's regeneration, rounded up as the base is. */
+    @Test
+    void manaRegenSlowed() {
+        assertEquals(20, StatsRunnable.slowed(20, 1));
+        assertEquals(2, StatsRunnable.slowed(20, 0.1));
+        assertEquals(3, StatsRunnable.slowed(21, 0.1));
+        assertEquals(0, StatsRunnable.slowed(20, 0));
+    }
 }

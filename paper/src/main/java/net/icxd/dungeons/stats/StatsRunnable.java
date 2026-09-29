@@ -21,9 +21,22 @@ public class StatsRunnable implements Runnable {
     /** What else speeds up a player's mana regeneration, as shares of the base that add up (see {@link Damage#manaRegen(int, double)}). */
     private static final List<ToDoubleFunction<Player>> MANA_REGEN = new ArrayList<>();
 
+    /** What slows a player's mana regeneration, as factors that multiply (see {@link #addManaRegenFactor}). */
+    private static final List<ToDoubleFunction<Player>> MANA_REGEN_FACTORS = new ArrayList<>();
+
     /** Adds something that speeds up mana regeneration (a Power Orb's "+50% base mana regen": 0.5). */
     public static void addManaRegenBonus(ToDoubleFunction<Player> bonus) {
         MANA_REGEN.add(bonus);
+    }
+
+    /** Adds a factor on a player's mana regeneration, after its bonuses (the Gravity Storm's "Regen mana 10x slower": 0.1). */
+    public static void addManaRegenFactor(ToDoubleFunction<Player> factor) {
+        MANA_REGEN_FACTORS.add(factor);
+    }
+
+    /** {@code regen} a second, times {@code factor} (rounded up, as the base is). */
+    static int slowed(int regen, double factor) {
+        return factor >= 1 ? regen : (int) Math.ceil(regen * Math.max(0, factor) - 1e-9);
     }
 
     @Override
@@ -46,7 +59,9 @@ public class StatsRunnable implements Runnable {
             int mana = session.getMana() < 0 ? manaPool : session.getMana();
             double bonus = 0;
             for (ToDoubleFunction<Player> more : MANA_REGEN) bonus += more.applyAsDouble(player);
-            session.setMana(Math.min(manaPool, mana + (mana < manaPool ? Damage.manaRegen(manaPool, bonus) : 0)));
+            double factor = 1;
+            for (ToDoubleFunction<Player> slower : MANA_REGEN_FACTORS) factor *= slower.applyAsDouble(player);
+            session.setMana(Math.min(manaPool, mana + (mana < manaPool ? slowed(Damage.manaRegen(manaPool, bonus), factor) : 0)));
             Vitality.regenerate(player);
 
             sendActionBar(player);
