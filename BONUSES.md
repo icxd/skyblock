@@ -140,7 +140,7 @@ LATER: waits for the system named.
 | Soul Whisper | full set | NECROMANCER_LORD (4) | **LATER** necromancy |  |
 | Spooky | full set | GREAT_SPOOK (4) | **LATER** Great Spook Staff |  |
 | Springsneak (SNEAK) | full set | RABBIT (4) | **DONE** Jump Boost II while sneaking |  |
-| Starpower | full set | STARLIGHT (4) | **APPROX** the Starlight Wand's Starfall lasts 2x and goes 1 block further (the range taken as how far it can be put: UNKNOWN; `SetBonuses.starfallDuration`/`starfallRange`) | [Starlight Armor](https://hypixelskyblock.minecraft.wiki/w/Starlight_Armor) |
+| Starpower | full set | STARLIGHT (4) | **DONE** the Starlight Wand's Starfall lasts 2x (10 s) and its area is 1 block wider, 3 to 4 blocks across (the wiki; `SetBonuses.starfallDuration`/`starfallRange`) | [Starlight Armor](https://hypixelskyblock.minecraft.wiki/w/Starlight_Armor) |
 | Strong Blood | full set | STRONG_DRAGON (4) | **DONE** +75 Damage holding the Aspect of the End; its Instant Transmission +2 range, +3 s, +5 Strength for the cast's speed time (UNKNOWN); not the Aspect of the Void | [Strong Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Strong_Dragon_Armor) |
 | Superior Blood | full set | SUPERIOR_DRAGON (4) | **DONE** Combat Stats (as the Stats menu groups them) and Magic Find x1.05; the Aspect of the Dragons +50% is the weapon's (it can ask SetBonuses.active) | [Superior Dragon Armor](https://hypixelskyblock.minecraft.wiki/w/Superior_Dragon_Armor) |
 | Tank | full set | EMERALD_ARMOR (4) | **DONE** +1 Health and Defense per 3,000 Emeralds collected (max 350): 0 until SetBonuses.setCollections is wired | [Emerald Armor](https://hypixelskyblock.minecraft.wiki/w/Emerald_Armor) |
@@ -279,7 +279,7 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   against Animal mobs only).
 - Task 80's: Intimidate's 10 blocks and nearest mobs; Bouncing Arrow's 10 blocks and the hit's damage again;
   Regenerative Howl's heal (the wiki's, not the text's) and a stack a Ferocity strike; Refraction's 12.5% at light 0
-  and the light at their head; Starpower's range as how far Starfall goes; Battalion counting the wearer; Fearsome's
+  and the light at their head; Battalion counting the wearer; Fearsome's
   10 and 8 blocks; a Zombie as a vanilla zombie (Training, the Zombie Bulwark, the Zombie Hat); the Bulwarks'
   "Maxed!"; Riches' counter counting all Scavenger coins; Arcane Energy's magic damage as ability hits that don't
   crit; Spirit's four others as the first four; Static Charge's damage as additive; Rekindle's parts added up and

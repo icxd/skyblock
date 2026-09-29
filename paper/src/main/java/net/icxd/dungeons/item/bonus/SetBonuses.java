@@ -372,7 +372,7 @@ public final class SetBonuses implements Listener {
         return 1;
     }
 
-    /** How many blocks further their Starfall reaches (Starpower's "its range by +1"); 0 without it. */
+    /** How many blocks wider their Starfall's area is (Starpower's "its range by +1": 3 blocks to 4); 0 without it. */
     public static double starfallRange(Player player) {
         for (Bonus.Active a : active(player)) if (a.bonus() instanceof CombatSets.Starpower starpower) return starpower.range(a);
         return 0;

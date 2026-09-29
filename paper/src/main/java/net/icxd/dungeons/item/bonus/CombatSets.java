@@ -310,9 +310,9 @@ final class CombatSets {
     }
 
     /**
-     * Starlight Armor's Starpower: "Increases the duration of Starfall by 2x and its range by +1". The Starlight
-     * Wand's Starfall asks for both ({@link SetBonuses#starfallDuration}, {@link SetBonuses#starfallRange}); the
-     * range is how far away it can be put down (UNKNOWN: it could be the area's size).
+     * Starlight Armor's Starpower: "Increases the duration of Starfall by 2x and its range by +1": "its area of effect
+     * is enlarged by 1 from 3 blocks to 4 blocks" (the wiki's Starlight Armor). The Starlight Wand's Starfall asks for
+     * both ({@link SetBonuses#starfallDuration}, {@link SetBonuses#starfallRange}).
      */
     static final class Starpower extends FullSet {
         @Override
