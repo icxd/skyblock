@@ -38,13 +38,14 @@ bracelets) do past their text's plain stats, their ultimates, and the armor and 
 
 ### For the other parts (wiring after the merge)
 
-- **Blood-Soaked** (the cloak reforge): "Increase the enchantment effects of Life Steal, Vampirism and Drain by 1
-  level". The weapon enchantments add `ArmorReforgeBonuses.enchantLevelBonus(player, id)` to those three's level
-  (ids `life_steal`, `vampirism`, `syphon`). Until they do, it does nothing.
 - **Old Blood** (Old Dragon Armor): its Feather Falling part is here (`Protections`, the wiki's "+3% Fall damage
   reduction Per Level"). BONUSES.md's Old Blood row and `DragonSets`' comment ("Not here: ... Old Blood's Feather
   Falling") can point here.
-- **Hyper, Loving and Empowered** are armor reforges, but EFFECTS.md gives them to the weapon part.
+- **Hyper, Loving and Empowered** are armor reforges, but EFFECTS.md gives them to the weapon part, and the cloaks'
+  **Blood-Soaked** is theirs too (it raises their Life Steal, Vampirism and Drain a level): ENCHANTS_WEAPONS.md.
+- **Hecatomb's count**: the stats part's `StackingEnchants` (the held items' stacking enchantments, their count in
+  lore and a tier-up message) keys Hecatomb's count as `hecatomb_s_runs` too, as `Hecatomb` here writes it on the
+  worn helmet. After the merge the helmet's count and tier-up could go through it.
 
 ## Status
 
@@ -110,9 +111,8 @@ for the system named. Every enchantment the table applies to armor or equipment 
 | Cubic (Molten Cube) | **APPROX** | Hits by "Nether mobs" take 2% less, per piece: the Infernal, Magmatic and Arcane types (the wiki's Mob Types: "commonly found in the Crimson Isle") |
 | Ridiculous (Red Nose) | **APPROX** | Sneaking with at least its Crit Chance: 20 Crit Chance less for 20 s, +30 Defense for 5 s, +50 mana, and not again while the Crit Chance is down; a low note for the fart |
 | Ancient (Precursor Gear) | **DONE** | Before this part: +1 Crit Damage a Catacombs level (it has nothing else) |
-| Blood-Soaked (Presumed Gallon of Red Paint) | **APPROX** | `enchantLevelBonus` is here; the weapon enchantments add it (see "For the other parts") |
 | Bloodshot (Shriveled Cornea), on belts | **LATER** | "2.5% chance to cocoon" a kill outside the Dungeons (the wiki's Cocooning: the mob comes back after 6 s): the plugin spawns mobs only in dungeon rooms (and an admin's `/spawnentity`), so it waits for mobs outside the dungeons |
-| Hyper (End Stone Geode), Loving (Red Scarf), Empowered (Sadan's Brooch) | the weapon part's | EFFECTS.md |
+| Hyper (End Stone Geode), Loving (Red Scarf), Empowered (Sadan's Brooch), Blood-Soaked (Presumed Gallon of Red Paint) | the weapon part's | EFFECTS.md, ENCHANTS_WEAPONS.md |
 | Calcified | **LATER** | Sea Creatures: fishing |
 | Candied | **LATER** | The Spooky Festival's candy |
 | Greater Spook | **LATER** | Fear: the Great Spook |

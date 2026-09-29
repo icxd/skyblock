@@ -64,13 +64,13 @@ class ArmorTextsTest {
         assertEquals(0, EnchantNumbers.tierUp("hecatomb", data.get("hecatomb").max()).length);
     }
 
-    /** The reforges' bonus texts at every rarity: a percent each, Blood-Soaked's one level, and Ridiculous's six numbers. */
+    /** The reforges' bonus texts at every rarity: a percent each, and Ridiculous's six numbers. */
     @Test
     void theReforgesTexts() {
         List<String> problems = new ArrayList<>();
         ReforgeTable table = ReforgeTable.read(HexData.json(PrivateHex.folder(), ReforgeTable.FILE, problems), problems);
         assertNotNull(table, problems.toString());
-        Map<String, Integer> counts = Map.of("renowned", 1, "perfect", 1, "undead", 1, "cubic", 1, "blood_soaked", 1, "ridiculous", 6);
+        Map<String, Integer> counts = Map.of("renowned", 1, "perfect", 1, "undead", 1, "cubic", 1, "ridiculous", 6);
         for (Map.Entry<String, Integer> e : counts.entrySet()) {
             Reforge reforge = table.reforge(e.getKey());
             assertNotNull(reforge, e.getKey());

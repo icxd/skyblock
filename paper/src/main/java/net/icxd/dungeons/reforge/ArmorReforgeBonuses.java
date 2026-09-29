@@ -26,12 +26,11 @@ import java.util.Set;
  *   <li>Renowned: "Increases all Combat stats and Magic Find by +1%", and Perfect: "Increases Defense by +2%"
  *   (with Legion's, in the armor enchantments' stats, StatEnchants);</li>
  *   <li>Undead: "Decreases damage taken from Undead mobs by 2%", and Cubic: "... from Nether mobs by 2%";</li>
- *   <li>Ridiculous, the helmet's: "Fart when you sneak" ({@link #sneaked});</li>
- *   <li>Blood-Soaked, the cloak's: "Increase the enchantment effects of Life Steal, Vampirism and Drain by 1 level",
- *   for those enchantments to ask ({@link #enchantLevelBonus}).</li>
+ *   <li>Ridiculous, the helmet's: "Fart when you sneak" ({@link #sneaked}).</li>
  * </ul>
  * Hyper's Speed after teleporting, Loving's ability damage and Empowered's Mending are the weapon enchantments
- * part's (EFFECTS.md). Main thread.
+ * part's (EFFECTS.md), and so is the cloaks' Blood-Soaked, with the three enchantments it raises a level
+ * (ENCHANTS_WEAPONS.md). Main thread.
  */
 public final class ArmorReforgeBonuses {
     public static final String RENOWNED = "renowned";
@@ -39,9 +38,6 @@ public final class ArmorReforgeBonuses {
     public static final String UNDEAD = "undead";
     public static final String CUBIC = "cubic";
     public static final String RIDICULOUS = "ridiculous";
-    public static final String BLOOD_SOAKED = "blood_soaked";
-    /** The enchantments Blood-Soaked strengthens (Drain's id is Syphon's). */
-    static final Set<String> BLOOD_SOAKED_ENCHANTMENTS = Set.of("life_steal", "vampirism", "syphon");
     /**
      * Cubic's "Nether mobs": no mob type has that name. UNKNOWN: taken as the types the wiki's Mob Types says are
      * "commonly found in the Crimson Isle" (the Nether's island): Infernal, Magmatic and Arcane.
@@ -143,21 +139,5 @@ public final class ArmorReforgeBonuses {
         session.buff(RIDICULOUS_KEY + ":defense", new Stats().set(Stat.DEFENSE, n[2]), (long) (n[3] * 1000));
         session.setMana(Math.min(session.maxMana(), Mana.get(player) + (int) n[4]));
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 0.5f);
-    }
-
-    /**
-     * Blood-Soaked's extra levels of this enchantment (by its id: Life Steal, Vampirism, Drain's "syphon") on their
-     * weapon: 1 for each piece with it they wear (a cloak), 0 for any other enchantment. The weapon enchantments
-     * add it to their level.
-     */
-    public static int enchantLevelBonus(Player player, String enchantment) {
-        if (!BLOOD_SOAKED_ENCHANTMENTS.contains(enchantment)) return 0;
-        int levels = 0;
-        for (WornEnchants.Piece piece : WornEnchants.of(player)) {
-            if (!piece.reforged(BLOOD_SOAKED)) continue;
-            double[] n = numbers(piece);
-            levels += n.length > 0 ? (int) n[0] : 0;
-        }
-        return levels;
     }
 }
