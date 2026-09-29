@@ -77,8 +77,9 @@ final class Bolts {
                     .onEnd((missile, at, impact) -> {
                         if (!impact || explosion <= 0) return;
                         at.getWorld().spawnParticle(Particle.SNOWFLAKE, at, 30, explosion / 2, 0.5, explosion / 2, 0.05);
+                        double blast = Explosions.factor(missile.caster());
                         for (LivingEntity mob : Hits.near(at, explosion)) {
-                            if (hit(missile.caster(), item, tag, spell, mob, 1)) slow(mob);
+                            if (hit(missile.caster(), item, tag, spell, mob, blast)) slow(mob);
                         }
                     })
                     .launch();
@@ -241,7 +242,8 @@ final class Bolts {
                     .trail(at -> at.getWorld().spawnParticle(Particle.DUST, at, 2, 0.05, 0.05, 0.05, 0, gold))
                     .onEnd((missile, at, impact) -> {
                         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 1);
-                        for (LivingEntity mob : Hits.near(at, 3)) hit(missile.caster(), item, tag, spell, mob, 1);
+                        double blast = Explosions.factor(missile.caster());
+                        for (LivingEntity mob : Hits.near(at, 3)) hit(missile.caster(), item, tag, spell, mob, blast);
                     })
                     .launch();
             player.getWorld().playSound(eye, Sound.BLOCK_BEACON_ACTIVATE, 0.6f, 1.6f);

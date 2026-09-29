@@ -41,22 +41,32 @@ final class Skulls implements AbilityHandler {
         for (int i = 0; i < skulls; i++) {
             Location from = eye.clone();
             from.setYaw(eye.getYaw() + (i - (skulls - 1) / 2f) * SPREAD);
-            Vector direction = from.getDirection();
-            new Missile(player, eye, direction.multiply(SPEED))
-                    .look(Missile.display(eye, new ItemStack(Material.WITHER_SKELETON_SKULL), 0.6f, 0))
-                    .trail(at -> at.getWorld().spawnParticle(Particle.SMOKE, at, 1, 0, 0, 0, 0))
-                    .onEnd((missile, at, impact) -> {
-                        if (impact) explode(missile.caster(), item, tag, spell, at);
-                    })
-                    .launch();
+            shoot(player, item, tag, spell, name, eye, from.getDirection());
         }
         player.getWorld().playSound(eye, Sound.ENTITY_WITHER_SHOOT, 0.6f, 1);
     }
 
-    /** Its chat line is UNKNOWN: in the form the others have, by the ability's name. */
-    private void explode(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, Location at) {
+    /**
+     * One skull from {@code from} along {@code direction}, exploding where it hits for the spell's damage (the
+     * Crypt Bow's arrows are these too, see BowPassives), with the chat line under {@code name}.
+     */
+    static void shoot(Player player, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, String name, Location from, Vector direction) {
+        new Missile(player, from, direction.clone().normalize().multiply(SPEED))
+                .look(Missile.display(from, new ItemStack(Material.WITHER_SKELETON_SKULL), 0.6f, 0))
+                .trail(at -> at.getWorld().spawnParticle(Particle.SMOKE, at, 1, 0, 0, 0, 0))
+                .onEnd((missile, at, impact) -> {
+                    if (impact) explode(missile.caster(), item, tag, spell, name, at);
+                })
+                .launch();
+    }
+
+    /**
+     * Its chat line is UNKNOWN: in the form the others have, by the ability's name. It's an explosion, so the
+     * Implosion Belt's Consolidated counts (see {@link Explosions}).
+     */
+    private static void explode(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, String name, Location at) {
         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 1);
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 1.2f);
-        Hits.report(caster, name, Hits.spell(caster, item, tag, spell, Hits.near(at, RADIUS)));
+        Hits.report(caster, name, Hits.spell(caster, item, tag, spell.times(Explosions.factor(caster)), Hits.near(at, RADIUS)));
     }
 }
