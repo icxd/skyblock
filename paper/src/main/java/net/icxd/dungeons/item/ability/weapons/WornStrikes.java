@@ -260,7 +260,8 @@ public final class WornStrikes {
      * The Gauntlet of Contagion's Contaminate: "Killing an enemy causes an explosion dealing 10% of their total ❤ Health
      * as damage to all enemies within 2 blocks. Enemies in the blast radius will also be contaminated causing them to
      * explode on death." A contaminated mob's blast is the wearer's too, however it dies (UNKNOWN), and its own
-     * blast contaminates again (a chain). Times Consolidated.
+     * blast contaminates again (a chain). A death is one blast: a wearer's kill of a contaminated mob doesn't also
+     * set its contamination off (UNKNOWN whether Hypixel's are two). Times Consolidated.
      */
     static final class Contaminate extends Passive {
         Contaminate() {
@@ -271,8 +272,15 @@ public final class WornStrikes {
         public void killed(Player player, Active active, SkyBlockMobDeathEvent event) {
             String plain = text(active);
             double maxHealth = event.mob() != null ? event.mob().getMaxHealth() : event.variant().health();
+            // Its contamination is this blast (see killHappened, which comes after the kill's bonuses).
+            CONTAMINATED.removeIf(c -> !MobHits.alive(c.mob()) && diedAt(c.mob(), event.location()));
             explode(player, event.location(), maxHealth, number(CONTAMINATE, plain, 1, 10) / 100, number(CONTAMINATE, plain, 2, 2));
         }
+    }
+
+    /** Whether a mob that's gone was where a death was (the death event has its place, not the mob). */
+    private static boolean diedAt(LivingEntity mob, Location at) {
+        return mob.getWorld().equals(at.getWorld()) && mob.getLocation().distanceSquared(at) < 0.25;
     }
 
     private static void explode(Player player, Location at, double maxHealth, double share, double radius) {
@@ -286,8 +294,8 @@ public final class WornStrikes {
     }
 
     /**
-     * A kill anywhere (see WeaponPassives): contaminated mobs that have died since explode where they fell, for their
-     * wearer, while they wear the gauntlet (as its own blast's numbers).
+     * A kill anywhere, once the kill's bonuses are done (see WeaponPassives): contaminated mobs that have died since
+     * explode where they fell, for their wearer, while they wear the gauntlet (as its own blast's numbers).
      */
     static void killHappened() {
         if (CONTAMINATED.isEmpty()) return;

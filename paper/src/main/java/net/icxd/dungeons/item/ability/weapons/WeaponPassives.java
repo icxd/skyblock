@@ -444,7 +444,6 @@ public final class WeaponPassives implements Listener {
      */
     @EventHandler
     public void onKill(SkyBlockMobDeathEvent event) {
-        WornStrikes.killHappened();
         Player killer = event.killer();
         KillingBlow blow = event.killingBlow();
         if (killer == null || !killer.isOnline() || blow == null || blow.weapon() == null) return;
@@ -491,6 +490,15 @@ public final class WeaponPassives implements Listener {
         }
         ItemCounters.add(tag, HeldStats.COMMANDER_WHIP_ZOMBIES, 1);
         player.getInventory().setItemInMainHand(ItemBuilder.build(item, tag, stack.getAmount(), player));
+    }
+
+    /**
+     * After every other listener, the kill's worn bonuses among them: the contaminated mobs that died explode (see
+     * WornStrikes), but the one the killer's own Contaminate already blew up.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onKillDone(SkyBlockMobDeathEvent event) {
+        WornStrikes.killHappened();
     }
 
     // ---------- the class ability ----------
