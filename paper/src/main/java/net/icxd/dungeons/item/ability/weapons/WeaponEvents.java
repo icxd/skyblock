@@ -39,11 +39,14 @@ public final class WeaponEvents implements Listener {
             Salvation.landed(player.getUniqueId());
         }
         Bows.landed(arrow, player, hit);
+        BowPassives.arrowLanded(arrow, player, hit, event.getHitBlock());
     }
 
     @EventHandler
     public void onArrowGone(EntityRemoveEvent event) {
-        if (event.getEntity() instanceof AbstractArrow) Bows.gone(event.getEntity().getUniqueId());
+        if (!(event.getEntity() instanceof AbstractArrow)) return;
+        Bows.gone(event.getEntity().getUniqueId());
+        BowPassives.arrowGone(event.getEntity().getUniqueId());
     }
 
     /** What their abilities kept about them goes with them. */

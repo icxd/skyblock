@@ -71,6 +71,10 @@ public final class WeaponAbilities {
         to.accept("ME SMASH HEAD", new Buffs.SmashHead());
         to.accept("Gravity Storm", new Buffs.GravityStorm());
         to.accept("Fire Freeze", new Buffs.FireFreeze());
+        // Weapons' passives with a click of their own (the rest are WeaponPassives').
+        to.accept(Tormentor.NAME, new Tormentor.ChainOfAgony());
+        to.accept("Arrow Infusion", new BowPassives.ArrowInfusion());
+        to.accept("Extreme Focus", new BowPassives.ExtremeFocus());
     }
 
     /**
