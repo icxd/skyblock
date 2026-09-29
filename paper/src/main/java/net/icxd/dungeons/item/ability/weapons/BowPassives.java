@@ -108,8 +108,14 @@ final class BowPassives {
     private static final Map<UUID, Aura> AURAS = new HashMap<>();
     /** The Explosive Bow's arrows in flight: what their blast is worked out with (the shot's, as the arrow's own hit). */
     private static final Map<UUID, Damage.Attacker> EXPLOSIVE = new HashMap<>();
-    /** Extreme Focus's damage waiting for their next hit, by player. */
-    private static final Map<UUID, Double> FOCUS = new HashMap<>();
+    /**
+     * Extreme Focus's damage waiting for their next hit, by player, with the session it was cast in: a profile switch
+     * starts a new one (PlayerSession), and a focus from the old profile's mana doesn't carry over to the new's hits.
+     */
+    private record Focus(PlayerSession session, double added) {
+    }
+
+    private static final Map<UUID, Focus> FOCUS = new HashMap<>();
     /** A slime-fed arrow's factor on Magma Cubes and Slimes, by arrow. */
     private static final Map<UUID, Double> SLIME_FACTOR = new HashMap<>();
     private static final Map<String, String> IDS_BY_NAME = new HashMap<>();
@@ -280,10 +286,11 @@ final class BowPassives {
         return factor != null && target.types().contains(MobType.CUBIC) ? factor : 1;
     }
 
-    /** Extreme Focus's damage for their next hit, taken; 0 for none. */
+    /** Extreme Focus's damage for their next hit, taken; 0 for none (or one cast in a session that's over). */
     static double focus(Player player) {
-        Double added = FOCUS.remove(player.getUniqueId());
-        return added == null ? 0 : added;
+        if (FOCUS.isEmpty()) return 0;
+        Focus focus = FOCUS.remove(player.getUniqueId());
+        return focus == null || focus.session() != PlayerSession.of(player) ? 0 : focus.added();
     }
 
     /**
@@ -482,7 +489,7 @@ final class BowPassives {
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             int mana = Mana.get(player);
             int spent = Mana.spend(player, mana, block.name());
-            if (spent > 0) FOCUS.put(player.getUniqueId(), (double) spent);
+            if (spent > 0) FOCUS.put(player.getUniqueId(), new Focus(PlayerSession.of(player), spent));
             player.getWorld().playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_FRAME_FILL, 1, 1.2f);
         }
     }
