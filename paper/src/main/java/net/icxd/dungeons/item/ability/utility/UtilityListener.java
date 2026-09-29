@@ -27,6 +27,7 @@ import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
+import net.icxd.dungeons.stats.PlayerStats;
 
 /**
  * What the utility abilities need besides their clicks: every tick their heals, veils, deployables and
@@ -43,6 +44,7 @@ public final class UtilityListener implements Listener {
     public UtilityListener() {
         Protection.register();
         Deployables.register();
+        PlayerStats.addModifier(Masks::stats);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), UtilityListener::tick, 1, 1);
     }
 
