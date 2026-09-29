@@ -44,8 +44,10 @@ public final class ArmorReforgeBonuses {
      */
     static final Set<MobType> NETHER = Set.of(MobType.INFERNAL, MobType.MAGMATIC, MobType.ARCANE);
     private static final String RIDICULOUS_KEY = "reforge:" + RIDICULOUS;
-    /** The numbers in each bonus's lines, by the lines (the table's own lists, kept while it's in use). */
+    private static final double[] NONE = new double[0];
+    /** The numbers in each bonus's lines, by the lines (the table's own lists, kept while it's the one in use). */
     private static final Map<List<String>, double[]> NUMBERS = new IdentityHashMap<>();
+    private static ReforgeTable numbersFor;
 
     private ArmorReforgeBonuses() {
     }
@@ -57,9 +59,20 @@ public final class ArmorReforgeBonuses {
 
     /** The numbers of a piece's reforge bonus at its rarity; none without one. */
     static double[] numbers(WornEnchants.Piece piece) {
-        if (piece.reforge() == null) return new double[0];
+        if (piece.reforge() == null) return NONE;
         List<String> lines = piece.reforge().bonusLines(piece.rarity());
-        return NUMBERS.computeIfAbsent(lines, l -> EnchantNumbers.numbers(String.join(" ", l)));
+        if (lines.isEmpty()) return NONE;
+        // A table read again has lists of its own: the old one's go with it.
+        if (ReforgeTable.get() != numbersFor) {
+            numbersFor = ReforgeTable.get();
+            NUMBERS.clear();
+        }
+        double[] numbers = NUMBERS.get(lines);
+        if (numbers == null) {
+            numbers = EnchantNumbers.numbers(String.join(" ", lines));
+            NUMBERS.put(lines, numbers);
+        }
+        return numbers;
     }
 
     /** The first number of each piece's bonus with this reforge, added up. */
