@@ -47,8 +47,16 @@ public final class HeldStats {
     public static final String COMMANDER_WHIP_RUN = "commander_whip_run";
     public static final String PROMISING_PICKAXE_BLOCKS = "promising_pickaxe_blocks";
     public static final String GROWTH_HEALTH = "growth_health";
+    /** Minutes a Training Weights has been in an inventory (see item/ability/utility's TrainingWeights). */
+    public static final String TRAINING_WEIGHTS_MINUTES = "training_weights_minutes";
 
     private HeldStats() {
+    }
+
+    /** The Strength a Training Weights gives now, for the minutes it has been held (see {@link Weights}). */
+    public static int trainingWeightsStrength(NBTTagCompound tag) {
+        SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
+        return Weights.strength(ItemCounters.get(tag, TRAINING_WEIGHTS_MINUTES), item == null ? Weights.MAX : Weights.max(item.lore()));
     }
 
     /** How many arrows a Hurricane Bow's shot is with this many kills (see {@link Tempest}). */
@@ -71,6 +79,7 @@ public final class HeldStats {
         to.accept("HURRICANE_BOW", new Tempest());
         to.accept("PROMISING_PICKAXE", new StoredPotential());
         for (String piece : new String[] {"HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"}) to.accept("GROWTH_" + piece, new Growth());
+        to.accept("TRAINING_WEIGHTS", new Weights());
     }
 
     /** The text's lines with the first that matches {@code line} replaced by {@code with} (given its match); as they were if none does. */
@@ -420,6 +429,49 @@ public final class HeldStats {
         public List<String> lore(SkyBlockItem item, NBTTagCompound tag, List<String> lore) {
             if (!tag.hasKey(HEALTH)) return lore;
             return replace(lore, LINE, m -> m.group(1) + count(ItemCounters.get(tag, HEALTH)) + m.group(2));
+        }
+    }
+
+    /**
+     * Training Weights: "The longer you hold this in your inventory, the stronger you'll become for 2 minutes after
+     * removing it from your inventory! Max +50. Time Held: 0 Minutes Strength Gain: +1❁": the minutes it has been held
+     * under {@link #TRAINING_WEIGHTS_MINUTES} (item/ability/utility counts them, and shatters it), shown on its two
+     * lines.
+     */
+    static final class Weights implements ItemBehaviour {
+        static final int MAX = 50;
+        private static final Pattern MAX_TEXT = Pattern.compile("Max \\+(\\d+)");
+        private static final Pattern HELD = Pattern.compile("(&fTime Held: &a)[\\d,]+( Minutes?)");
+        private static final Pattern GAIN = Pattern.compile("(&fStrength Gain: &c\\+)[\\d,]+(❁)");
+
+        /** Its "Max +50" (50 if it doesn't say). */
+        static int max(List<String> lore) {
+            Matcher m = MAX_TEXT.matcher(AbilityText.plain(lore));
+            return m.find() ? Integer.parseInt(m.group(1)) : MAX;
+        }
+
+        /**
+         * The Strength after {@code minutes} held, at most {@code max}: +1 from the start, and each +1 after takes 20
+         * minutes more for each five before it (+2 at 40 minutes, then 20 more each to +5 at 100, 40 more each to +10
+         * at 300, 60 more each to +15 at 600, ... +50 at 5,500): the wiki's Training Weights table follows this.
+         */
+        static int strength(double minutes, int max) {
+            int strength = 1;
+            double needed = 20;
+            while (strength < max) {
+                needed += 20 * (strength / 5 + 1);
+                if (minutes < needed) break;
+                strength++;
+            }
+            return strength;
+        }
+
+        @Override
+        public List<String> lore(SkyBlockItem item, NBTTagCompound tag, List<String> lore) {
+            if (!tag.hasKey(TRAINING_WEIGHTS_MINUTES)) return lore;
+            double minutes = ItemCounters.get(tag, TRAINING_WEIGHTS_MINUTES);
+            List<String> out = replace(lore, HELD, m -> m.group(1) + count(minutes) + m.group(2));
+            return replace(out, GAIN, m -> m.group(1) + strength(minutes, max(lore)) + m.group(2));
         }
     }
 }

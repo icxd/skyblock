@@ -104,4 +104,20 @@ class HeldStatsTest {
         assertEquals(40, HeldStats.roman("XL"));
         assertEquals(7, HeldStats.roman("VII"));
     }
+
+    /** The wiki's table: +1 from the start, +2 at 40 minutes, +5 at 100, +6 at 140, +10 at 300, +11 at 360, +50 at 5,500. */
+    @Test
+    void trainingWeightsGrowSlowerAndSlower() {
+        assertEquals(1, HeldStats.Weights.strength(0, 50));
+        assertEquals(1, HeldStats.Weights.strength(39, 50));
+        assertEquals(2, HeldStats.Weights.strength(40, 50));
+        assertEquals(5, HeldStats.Weights.strength(100, 50));
+        assertEquals(6, HeldStats.Weights.strength(140, 50));
+        assertEquals(10, HeldStats.Weights.strength(359, 50));
+        assertEquals(11, HeldStats.Weights.strength(360, 50));
+        assertEquals(49, HeldStats.Weights.strength(5_499, 50));
+        assertEquals(50, HeldStats.Weights.strength(5_500, 50));
+        assertEquals(50, HeldStats.Weights.strength(1e9, 50));
+        assertEquals(50, HeldStats.Weights.max(List.of("&7it from your inventory! Max +50.")));
+    }
 }

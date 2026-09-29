@@ -13,6 +13,9 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -36,8 +39,8 @@ import net.icxd.dungeons.stats.PlayerStats;
  * glides; what immunity does to vanilla damage (SkyBlock hits go through {@link Protection}'s shields); hits
  * from players who can't attack now; a Spirit Leap's immunity ending with a hit; Shadowstep ready again on a
  * kill; the Creeper Veil taken down with a right click; no vanilla use of the items they're on (a thrown
- * ender pearl); Spirit Glide on sneaking; the dungeon secret items used; and what a player who leaves had
- * going. Registered by {@link
+ * ender pearl); Spirit Glide on sneaking; the dungeon secret items used and Training Weights shattering; and
+ * what a player who leaves had going. Registered by {@link
  * Dungeons}, which is when the shields and stat hooks go in.
  */
 public final class UtilityListener implements Listener {
@@ -50,6 +53,7 @@ public final class UtilityListener implements Listener {
         PlayerStats.addModifier(Masks::stats);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), UtilityListener::tick, 1, 1);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), SecretTracker::second, 20, 20);
+        Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), TrainingWeights::minute, 1200, 1200);
     }
 
     private static void tick() {
@@ -184,6 +188,21 @@ public final class UtilityListener implements Listener {
         event.setUseItemInHand(Event.Result.DENY);
         event.setUseInteractedBlock(Event.Result.DENY);
         if (!denied) SecretItems.used(event.getPlayer(), tag.getString("id"), event.getClickedBlock(), event.getClickedBlock() == null ? null : event.getBlockFace());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onDrop(PlayerDropItemEvent event) {
+        TrainingWeights.dropped(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent event) {
+        TrainingWeights.clicked(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        TrainingWeights.dragged(event);
     }
 
     @EventHandler(ignoreCancelled = true)
