@@ -51,8 +51,10 @@ public final class UtilityListener implements Listener {
         Protection.register();
         Deployables.register();
         PlayerStats.addModifier(Masks::stats);
+        PlayerStats.addModifier(HamRadio::stats);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), UtilityListener::tick, 1, 1);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), SecretTracker::second, 20, 20);
+        Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), HamRadio::second, 20, 20);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), TrainingWeights::minute, 1200, 1200);
     }
 
@@ -223,6 +225,7 @@ public final class UtilityListener implements Listener {
         CellsAlignment.forget(player.getUniqueId());
         SecretTracker.forget(player.getUniqueId());
         DungeonBreaker.forget(player.getUniqueId());
+        HamRadio.forget(player.getUniqueId());
     }
 
     @EventHandler

@@ -49,6 +49,15 @@ public final class HeldStats {
     public static final String GROWTH_HEALTH = "growth_health";
     /** Minutes a Training Weights has been in an inventory (see item/ability/utility's TrainingWeights). */
     public static final String TRAINING_WEIGHTS_MINUTES = "training_weights_minutes";
+    /** The Blazetekk™ Ham Radio's channel: its place in {@link #RADIO_CHANNELS} (see item/ability/utility's HamRadio). */
+    public static final String HAM_RADIO_CHANNEL = "ham_radio_channel";
+    /**
+     * The radio's channels, in the order Tuning 4 Dummies goes through them (the wiki's Blazetekk™ Ham Radio, with
+     * their colours), the last its data's "103.5 FM". Search and Rescue's "&" is a full-width one: an "&" starts a
+     * colour code in lore and chat.
+     */
+    public static final List<String> RADIO_CHANNELS = List.of("&c610 AM", "&bS＆R 40.5 FM", "&aSETI.930Mhz", "&c1512 AM",
+            "&1Bluetooth 2.48 GHz", "&d2325 XM", "&4Infrared", "&2GPS.1227Mhz", "&b103.5 FM");
 
     private HeldStats() {
     }
@@ -57,6 +66,14 @@ public final class HeldStats {
     public static int trainingWeightsStrength(NBTTagCompound tag) {
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
         return Weights.strength(ItemCounters.get(tag, TRAINING_WEIGHTS_MINUTES), item == null ? Weights.MAX : Weights.max(item.lore()));
+    }
+
+    /** The radio's channel ({@link #RADIO_CHANNELS}' place): its data's, the last, until it's switched. */
+    public static int hamRadioChannel(NBTTagCompound tag) {
+        int last = RADIO_CHANNELS.size() - 1;
+        if (tag == null || !tag.hasKey(HAM_RADIO_CHANNEL)) return last;
+        int channel = tag.getInt(HAM_RADIO_CHANNEL);
+        return channel < 0 || channel > last ? last : channel;
     }
 
     /** How many arrows a Hurricane Bow's shot is with this many kills (see {@link Tempest}). */
@@ -80,6 +97,7 @@ public final class HeldStats {
         to.accept("PROMISING_PICKAXE", new StoredPotential());
         for (String piece : new String[] {"HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"}) to.accept("GROWTH_" + piece, new Growth());
         to.accept("TRAINING_WEIGHTS", new Weights());
+        to.accept("BLAZETEKK_HAM_RADIO", new Radio());
     }
 
     /** The text's lines with the first that matches {@code line} replaced by {@code with} (given its match); as they were if none does. */
@@ -472,6 +490,18 @@ public final class HeldStats {
             double minutes = ItemCounters.get(tag, TRAINING_WEIGHTS_MINUTES);
             List<String> out = replace(lore, HELD, m -> m.group(1) + count(minutes) + m.group(2));
             return replace(out, GAIN, m -> m.group(1) + strength(minutes, max(lore)) + m.group(2));
+        }
+    }
+
+    /** The Blazetekk™ Ham Radio: its Tuning 4 Dummies' "Your channel: 103.5 FM" line, once it's been switched. */
+    static final class Radio implements ItemBehaviour {
+        private static final Pattern CHANNEL = Pattern.compile("(&7Your channel: ).*");
+
+        @Override
+        public List<ItemBlock> blocks(SkyBlockItem item, NBTTagCompound tag, List<ItemBlock> blocks) {
+            if (!tag.hasKey(HAM_RADIO_CHANNEL)) return blocks;
+            String channel = RADIO_CHANNELS.get(hamRadioChannel(tag));
+            return replaceText(blocks, "Tuning 4 Dummies", text -> replace(text, CHANNEL, m -> m.group(1) + channel));
         }
     }
 }
