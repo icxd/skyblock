@@ -17,6 +17,7 @@ import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
 import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.item.enchanting.Enchantment;
+import net.icxd.dungeons.item.enchanting.StackingEnchants;
 import net.icxd.dungeons.item.enums.DungeonStar;
 import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.enums.Rarity;
@@ -347,7 +348,7 @@ public final class ItemBuilder {
         // owns, its holder's (whose stats count it, ItemStats).
         int catacombsLevel = reforge == null || reforge.perLevel().isEmpty() ? 0 : catacombsLevel(owner != null ? owner : holder);
         Stats enchanted = new Stats();
-        for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(enchantment.getLevel()));
+        for (Enchantment enchantment : enchantments(tag)) enchanted.add(enchantment.getType().getStats(item, enchantment.getLevel()));
         Stats gems = GemSlots.stats(item, tag);
         Stats modified = ItemModifiers.stats(tag);
         for (Stat stat : Stat.values()) {
@@ -451,8 +452,9 @@ public final class ItemBuilder {
     }
 
     /**
-     * Up to 5 on an item that isn't a dungeon item: each with its description. Up to 9: one a line.
-     * More, or any on a dungeon item (a lone one still gets its own line): three a line.
+     * Up to 5 on an item that isn't a dungeon item: each with its description (and a stacking one's next tier). Up to
+     * 9: one a line. A stacking one on its own line has its count after its name ({@link StackingEnchants}). More, or
+     * any on a dungeon item (a lone one still gets its own line): three a line.
      */
     static List<String> enchantmentLines(SkyBlockItem item, NBTTagCompound tag) {
         List<Enchantment> enchantments = enchantments(tag);
@@ -462,11 +464,13 @@ public final class ItemBuilder {
         boolean dungeon = DungeonItems.is(item, tag);
         if (!dungeon && count <= 5) {
             for (Enchantment enchantment : enchantments) {
-                lines.add(enchantment.getDisplayName());
-                lines.addAll(enchantment.getDescription());
+                lines.add(enchantment.getDisplayName() + StackingEnchants.countSuffix(tag, enchantment));
+                lines.addAll(enchantment.getDescription(item));
+                String tierUp = enchantment.getType().getTierUp(enchantment.getLevel());
+                if (tierUp != null) lines.add(tierUp);
             }
         } else if ((!dungeon && count <= 9) || count == 1) {
-            for (Enchantment enchantment : enchantments) lines.add(enchantment.getDisplayName());
+            for (Enchantment enchantment : enchantments) lines.add(enchantment.getDisplayName() + StackingEnchants.countSuffix(tag, enchantment));
         } else {
             for (int i = 0; i < count; i += 3) {
                 List<String> names = new ArrayList<>();

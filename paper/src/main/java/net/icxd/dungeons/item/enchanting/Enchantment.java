@@ -1,6 +1,7 @@
 package net.icxd.dungeons.item.enchanting;
 
 import lombok.Getter;
+import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
@@ -33,6 +34,12 @@ public class Enchantment implements ConfigurationSerializable {
     /** Hypixel's description, wrapped as item lore; empty if there's none for this level. */
     public List<String> getDescription() {
         String text = type.getDescription(level);
+        return text == null ? List.of() : Text.wrap(text, Text.LORE_WIDTH);
+    }
+
+    /** Its description on this item, here (see {@link EnchantmentType#getDescription(SkyBlockItem, int)}), wrapped as item lore. */
+    public List<String> getDescription(SkyBlockItem item) {
+        String text = type.getDescription(item, level);
         return text == null ? List.of() : Text.wrap(text, Text.LORE_WIDTH);
     }
 
