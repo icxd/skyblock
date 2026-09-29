@@ -243,7 +243,7 @@ What armor pieces' own lines (not a bonus block) say they do while worn.
 | Stats a Farming level | FARMER_BOOTS, RANCHERS_BOOTS, ENCHANTED_JACK_O_LANTERN (3) | **APPROX** +2 Defense and +4 Speed (the Jack o' Lantern's +2 Defense, +4 Health) a Farming level; the Garden's Farming Fortune LATER | |
 | "Reduces damage taken by 6%" | DOJO_WHITE to DOJO_BLACK_BELT (6) | **DONE** 0.5% to 6% off every hit (traps' too) | |
 | "Heal 25❤ every 1s while worn" | ANNIHILATION_CLOAK, DESTRUCTION_CLOAK (15) | **DONE** | [Annihilation Cloak](https://hypixelskyblock.minecraft.wiki/w/Annihilation_Cloak) |
-| "Deal 1.15x damage against ♨ Infernal Mobs" | DEMONLORD_GAUNTLET (1) | **DONE** multiplicative (the Hub's Magma Cube is Infernal) | |
+| "Deal 1.15x damage against ♨ Infernal Mobs" | DEMONLORD_GAUNTLET (1) | **APPROX** +15% additive, as the wiki's Additive Sources has the Magmatic pieces' "1.2x" and the other mob-type damage (UNKNOWN for this one); the Hub's Magma Cube is Infernal | [Additive Sources](https://hypixelskyblock.minecraft.wiki/w/Damage_Calculation/Additive_Sources) |
 | "Sets your Health Regen and Mending to 0, and you can no longer receive healing" | LAVA_SHELL_NECKLACE (1) | **APPROX** both stats 0 after the set bonuses (an accessory's after it can add some back); no healing at all LATER (every heal would ask: UNKNOWN which Hypixel stops) | [Lava Shell Necklace](https://hypixelskyblock.minecraft.wiki/w/Lava_Shell_Necklace) |
 | "+5☘ Mining Fortune while mining Mithril" | MITHRIL_ and TITANIUM_ NECKLACE, CLOAK, BELT, GAUNTLET (8) | **DONE** as Dwarven Metal Fortune (Mining Fortune on Mithril, the only such block here) | |
 | "upgrades the Aspect of the Dragons with +35❁ Damage +50❁ Strength" | DRAGONFUSE_GLOVE (1) | **APPROX** the stats while it's held; its "Very reduced ability knockback" is the ability's (not done) | |
@@ -286,7 +286,7 @@ Each is a one-line comment with UNKNOWN where it's decided in the code.
   its seconds on fire starting again; Dominus's swipe at most once a stack's time, 5 blocks long, its Additive
   Multiplier the base one; Hydra Strike's side arrows once a shot, 10 degrees apart; Deepness Within's 6 until four
   pieces; Fireproof as lava only; the Skeleton Hat's scaling of 1; the boss heads in Master Mode; the Clover
-  Helmet's "most other Stats".
+  Helmet's "most other Stats"; the Demonlord Gauntlet's 1.15x as +15% additive.
 
 ## LATER, by what they wait for
 

@@ -60,6 +60,13 @@ class PieceTextTest {
         assertEquals(2, PieceText.Jumps.level(List.of(snake)));
     }
 
+    /** The Demonlord Gauntlet's "1.15x" is +15% additive; a factor of 1 or less adds nothing. */
+    @Test
+    void demonlordGauntlet() {
+        assertEquals(15, PieceText.DemonlordGauntlet.additive(1.15), EPSILON);
+        assertEquals(0, PieceText.DemonlordGauntlet.additive(1), EPSILON);
+    }
+
     private static net.icxd.dungeons.item.data.DataItem itemWithLore(String id, String type, String lore) {
         String json = "{\"format\":1,\"items\":{\"" + id + "\":{\"material\":\"PLAYER_HEAD\",\"name\":\"Test\",\"type\":\"" + type
                 + "\",\"lore\":[\"" + lore + "\"]}}}";

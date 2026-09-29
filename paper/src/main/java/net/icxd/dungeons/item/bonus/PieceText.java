@@ -519,7 +519,11 @@ final class PieceText {
         }
     }
 
-    /** The Demonlord Gauntlet's "Deal 1.15x damage against ♨ Infernal Mobs", a multiplicative factor. */
+    /**
+     * The Demonlord Gauntlet's "Deal 1.15x damage against ♨ Infernal Mobs": +15% additive, as the wiki's Additive
+     * Sources has the Magmatic pieces' "damage dealt is increased by 1.2x" (Thunder Armor's +20%) and every other
+     * damage against a mob type (UNKNOWN for the gauntlet itself: its page doesn't say).
+     */
     static final class DemonlordGauntlet extends Own {
         DemonlordGauntlet() {
             super("DEMONLORD_GAUNTLET");
@@ -532,7 +536,12 @@ final class PieceText {
 
         @Override
         public Combat.HitBuff hit(Player player, Active active, boolean ranged, Damage.Target target) {
-            return target.types().contains(MobType.INFERNAL) ? new Combat.HitBuff(0, BonusText.after(lore(active), "Deal", 1)) : null;
+            return target.types().contains(MobType.INFERNAL) ? new Combat.HitBuff(additive(BonusText.after(lore(active), "Deal", 1)), 1) : null;
+        }
+
+        /** "1.15x" as an additive share, in percent: 15. */
+        static double additive(double times) {
+            return Math.max(0, times - 1) * 100;
         }
     }
 
