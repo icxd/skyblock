@@ -369,7 +369,8 @@ public final class Mobs implements Listener {
     /**
      * How many times a drop this likely (percent) drops, with {@code roll} (0 to 1) as the random: once for each whole
      * 100%, and the rest is the chance of once more ("chances above 100% representing a chance to drop an additional
-     * item", the wiki's Looting: Looting IV on a sure drop is 1 and a 60% chance of 2). Each is the drop's amount again.
+     * item", the wiki's Looting: Looting IV on a sure drop is 1 and a 60% chance of 2). Each is the drop's amount again
+     * (the wiki's 2 or 4 Rotten Flesh); a drop of "min to max" rolls each copy's own (UNKNOWN).
      */
     static int copies(double chance, double roll) {
         double times = Math.max(0, chance) / 100;
