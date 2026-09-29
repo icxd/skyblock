@@ -78,6 +78,24 @@ class CombatReforgesTest {
         assertNull(CombatReforges.reforge(reforged("warped"), "fanged"));
     }
 
+    /**
+     * A reforge the table doesn't have (made anew each time it's asked for) has no numbers and isn't kept; another
+     * table's reforges are read from it, not from what the last one said.
+     */
+    @Test
+    void numbersForTheTableInUse() {
+        for (int i = 0; i < 3; i++) assertArrayEquals(new double[0], CombatReforges.numbers(Reforge.unknown("double_bit"), Rarity.EPIC));
+        assertArrayEquals(new double[] {7, 100}, CombatReforges.numbers(Reforge.of("fanged"), Rarity.EPIC));
+        assertEquals(1, CombatReforges.kept());
+        List<String> problems = new ArrayList<>();
+        ReforgeTable.set(ReforgeTable.read(JsonParser.parseString("""
+                {"reforges": {"fanged": {"name": "Fanged", "stats": {},
+                  "bonus": {"COMMON": ["&7Every &c5th &7melee hit on an enemy", "&7&7deals &c+50% &7damage."]}}}}"""), problems));
+        assertEquals(List.of(), problems);
+        assertArrayEquals(new double[] {5, 50}, CombatReforges.numbers(Reforge.of("fanged"), Rarity.EPIC));
+        assertEquals(1, CombatReforges.kept());
+    }
+
     /** Suspicious's "+15" weapon damage counts in the stats, not the lore (live Twilight Daggers show their own). */
     @Test
     void suspicious() {

@@ -42,8 +42,12 @@ import java.util.concurrent.ThreadLocalRandom;
  * (WeaponEnchants). Main thread.
  */
 public final class CombatReforges implements Listener {
-    /** Their bonus texts' numbers by rarity, worked out once each (a reloaded table's reforges are new ones). */
+    /**
+     * Their bonus texts' numbers by rarity, worked out once each, for the table they're from (a reloaded table's
+     * reforges are new ones, so the old ones are let go).
+     */
     private static final Map<Reforge, double[][]> NUMBERS = new IdentityHashMap<>();
+    private static ReforgeTable numbersFor;
     private static final double[] NONE = new double[0];
     /** Each player's melee hits on each mob, for Fanged's "Every 7th melee hit on an enemy". */
     private static final Map<UUID, Map<UUID, int[]>> MELEE = new HashMap<>();
@@ -57,10 +61,22 @@ public final class CombatReforges implements Listener {
 
     /** The numbers in this reforge's bonus on an item of this rarity ("Every 7th melee hit ... deals +100% damage." is 7, 100). */
     static double[] numbers(Reforge reforge, Rarity rarity) {
+        // One the table doesn't have is made anew each time it's asked for (Reforge#unknown), with no bonus: kept, they'd pile up.
+        if (reforge.bonus().isEmpty()) return NONE;
+        ReforgeTable table = ReforgeTable.get();
+        if (table != numbersFor) {
+            numbersFor = table;
+            NUMBERS.clear();
+        }
         double[][] byRarity = NUMBERS.computeIfAbsent(reforge, r -> new double[Rarity.values().length][]);
         double[] numbers = byRarity[rarity.ordinal()];
         if (numbers == null) numbers = byRarity[rarity.ordinal()] = EnchantText.numbers(String.join(" ", reforge.bonusLines(rarity)));
         return numbers;
+    }
+
+    /** How many reforges' numbers are kept now (for tests). */
+    static int kept() {
+        return NUMBERS.size();
     }
 
     /** The {@code index}th number of the reforge's bonus on this item; 0 if there's none. */
