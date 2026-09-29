@@ -1,6 +1,7 @@
 package net.icxd.dungeons.item.behaviour;
 
 import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.bonus.BonusCounters;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -13,6 +14,8 @@ public final class ItemBehaviours {
     private static final Map<String, ItemBehaviour> BY_ID = new HashMap<>();
 
     static {
+        // Armor whose bonus lines show a count kept on the piece (Training's kills, the Bulwarks').
+        BonusCounters.register(BY_ID::put);
         NecronsBlade blade = new NecronsBlade();
         for (String id : NecronsBlade.IDS) BY_ID.put(id, blade);
         BY_ID.put("ATTRIBUTE_SHARD", new AttributeShard());

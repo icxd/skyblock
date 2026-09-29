@@ -4,6 +4,9 @@ import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.Damage;
 import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.economy.Purse;
+import net.icxd.dungeons.item.ItemCounters;
+import net.icxd.dungeons.item.SkyBlockItem;
+import net.icxd.dungeons.item.data.ItemBlock;
 import net.icxd.dungeons.mob.MobType;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
 import net.icxd.dungeons.session.PlayerHealth;
@@ -16,6 +19,7 @@ import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.SkyBlockTime;
 import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -341,10 +345,14 @@ final class OtherSets {
     }
 
     /**
-     * Sponge and Shark Scale Armor's Absorb: "Doubles your Defense while in water." Armor of Magma's and
-     * Yog Armor's Absorb (kills of Magma Cubes and Yogs, kept on the item) aren't here.
+     * Sponge and Shark Scale Armor's Absorb: "Doubles your Defense while in water." Armor of Magma's: "Every 10
+     * Magma Cubes killed gives the wearer +1 ❤ Health and ✎ Intelligence while wearing the set. Max 200 each", the
+     * kills while the set is worn, kept on the chestplate (its "Magma Cubes Killed" lines, see {@link CountedSets}).
+     * Yog Armor's (Yogs' kills: there are no Yogs) isn't here.
      */
-    static final class Absorb implements Bonus {
+    static final class Absorb implements Bonus, CountedSets.Counted {
+        static final String MAGMA = "ARMOR_OF_MAGMA_";
+
         @Override
         public String kind() {
             return SetKey.FULL_SET;
@@ -356,11 +364,59 @@ final class OtherSets {
         }
 
         @Override
+        public String key() {
+            return CountedSets.MAGMA_CUBE_KILLS;
+        }
+
+        @Override
         public void derivedStats(Player player, Active active, Stats stats) {
             for (Worn.Piece piece : active.pieces()) if (!piece.id().startsWith("SPONGE_") && !piece.id().startsWith("SHARK_SCALE_")) return;
             if (player.isInWater()) stats.set(Stat.DEFENSE, stats.get(Stat.DEFENSE) * 2);
         }
+
+        /** The chestplate of an all-Magma set, which keeps its kills; null for any other. */
+        private static Worn.Piece keeper(Active active) {
+            Worn.Piece keeper = null;
+            for (Worn.Piece piece : active.pieces()) {
+                if (!piece.id().startsWith(MAGMA)) return null;
+                if (piece.id().endsWith("_CHESTPLATE")) keeper = piece;
+            }
+            return keeper;
+        }
+
+        /** Health and Intelligence each for this many kills, with the text's numbers: every {@code per}, {@code gain}, at most {@code most}. */
+        static double each(double kills, double per, double gain, double most) {
+            return per <= 0 ? 0 : Math.min(most, Math.floor(Math.max(0, kills) / per) * gain);
+        }
+
+        private static double each(ItemBlock block, double kills) {
+            return each(kills, BonusText.after(block, "Every", 10), BonusText.after(block, "wearer", 1), BonusText.after(block, "Max", 200));
+        }
+
+        @Override
+        public void killed(Player player, Active active, SkyBlockMobDeathEvent event) {
+            Worn.Piece keeper = keeper(active);
+            if (keeper != null && CountedSets.killedOne(event, MAGMA_CUBES)) CountedSets.count(player, keeper, key(), 1);
+        }
+
+        @Override
+        public void stats(Player player, Active active, Stats stats) {
+            Worn.Piece keeper = keeper(active);
+            if (keeper == null) return;
+            double each = each(BonusText.block(keeper, kind(), name()), ItemCounters.get(keeper.tag(), key()));
+            stats.add(Stat.HEALTH, each).add(Stat.INTELLIGENCE, each);
+        }
+
+        @Override
+        public List<String> counted(List<String> text, double count, SkyBlockItem item) {
+            double each = each(new ItemBlock(kind(), name(), null, null, text, 0, 0, 0, 0, 0, 0, 0), count);
+            text = CountedSets.line(text, "Magma Cubes Killed:", "&7Magma Cubes Killed: &a" + CountedSets.whole(count));
+            text = CountedSets.line(text, "Bonus HP:", "&7Bonus HP: &a" + CountedSets.whole(each));
+            return CountedSets.line(text, "Bonus Intelligence:", "&7Bonus Intelligence: &a" + CountedSets.whole(each));
+        }
     }
+
+    private static final Set<EntityType> MAGMA_CUBES = Set.of(EntityType.MAGMA_CUBE);
 
     /** Cactus Armor's Deflect: "Rebound 33% of the damage you take back at your enemy." */
     static final class Deflect implements Bonus {
@@ -466,13 +522,18 @@ final class OtherSets {
     /**
      * Each Bat Person piece: "All Combat Stats on this armor piece are multiplied by 2x at night, or by 3x
      * during the Spooky Festival!": at SkyBlock's night (7pm to 6am, when the sidebar shows the moon) the
-     * piece's Combat Stats ({@link DragonSets#COMBAT}) count twice. There's no Spooky Festival yet.
+     * piece's Combat Stats ({@link DragonSets#COMBAT}) count twice, and three times in the Spooky Festival
+     * (Autumn 29th to 31st, the wiki's Spooky Festival: its calendar dates, day and night). Its candy waits for
+     * the festival's candy.
      */
     static final class BatPerson implements Bonus {
         @Override
         public String kind() {
             return ITEM;
         }
+
+        /** Autumn's month in SkyBlock's calendar (Early Spring is 0). */
+        static final int AUTUMN = 7;
 
         @Override
         public String name() {
@@ -486,13 +547,30 @@ final class OtherSets {
 
         @Override
         public void stats(Player player, Active active, Stats stats) {
-            if (SkyBlockTime.now().isDay()) return;
-            for (Worn.Piece piece : active.pieces()) twice(ItemStats.of(piece.stack(), player), stats);
+            int times = times(SkyBlockTime.now());
+            if (times <= 1) return;
+            for (Worn.Piece piece : active.pieces()) more(ItemStats.of(piece.stack(), player), stats, times - 1);
         }
 
-        /** A piece's Combat Stats (its own, reforge's, enchantments'...) once more, so they count twice. */
+        /** How many times a piece's Combat Stats count at this time: 3 in the Spooky Festival, 2 at night, else 1. */
+        static int times(SkyBlockTime time) {
+            if (spookyFestival(time)) return 3;
+            return time.isDay() ? 1 : 2;
+        }
+
+        /** The Spooky Festival: Autumn 29th to 31st. */
+        static boolean spookyFestival(SkyBlockTime time) {
+            return time.month() == AUTUMN && time.day() >= 29;
+        }
+
+        /** A piece's Combat Stats (its own, reforge's, enchantments'...) {@code more} times more. */
+        static void more(Stats piece, Stats stats, int more) {
+            for (Stat stat : DragonSets.COMBAT) stats.add(stat, piece.get(stat) * more);
+        }
+
+        /** A piece's Combat Stats once more, so they count twice. */
         static void twice(Stats piece, Stats stats) {
-            for (Stat stat : DragonSets.COMBAT) stats.add(stat, piece.get(stat));
+            more(piece, stats, 1);
         }
     }
 
