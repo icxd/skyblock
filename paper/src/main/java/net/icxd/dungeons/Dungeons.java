@@ -45,6 +45,7 @@ import net.icxd.dungeons.command.commands.user.StatsCommand;
 import net.icxd.dungeons.command.commands.user.StorageCommand;
 import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.command.commands.user.ViewStashCommand;
+import net.icxd.dungeons.economy.DeathCoins;
 import net.icxd.dungeons.economy.KillCoins;
 import net.icxd.dungeons.gui.GUIListener;
 import net.icxd.dungeons.leveling.LevelingSources;
@@ -188,6 +189,7 @@ public class Dungeons extends JavaPlugin {
         listen(WeaponEvents.class, WeaponEvents::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
+        listen(DeathCoins.class, DeathCoins::new);
         listen(BookOfStats.class, BookOfStats::new);
         listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);
