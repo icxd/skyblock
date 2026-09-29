@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -124,6 +125,8 @@ final class HamRadio implements AbilityHandler {
 
     /** Their radio's data: the one they hold, else the first in their inventory; null for none. */
     private static NBTTagCompound radio(Player player) {
+        // A radio is a head: most inventories have none, and this needs no item's data read.
+        if (!player.getInventory().contains(Material.PLAYER_HEAD)) return null;
         NBTTagCompound held = ItemNBT.read(player.getInventory().getItemInMainHand());
         if (held != null && ID.equals(held.getString("id"))) return held;
         for (ItemStack stack : player.getInventory().getStorageContents()) {
