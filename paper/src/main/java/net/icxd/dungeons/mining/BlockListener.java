@@ -16,7 +16,6 @@ import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
-import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Tuple;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.GameMode;
@@ -124,7 +123,7 @@ public class BlockListener implements Listener {
             }
         }
         SkillGains.give(player, Skill.MINING, minableBlock.miningXp());
-        if (minableBlock.powderType() != null) Powder.add(User.ifLoaded(player.getUniqueId()), minableBlock.powderType(), minableBlock.powder());
+        if (minableBlock.powderType() != null) Powder.mined(player, minableBlock.powderType(), minableBlock.powder());
         Compact.broke(player, minableBlock);
         Flowstate.broke(player);
 

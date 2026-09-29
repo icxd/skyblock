@@ -31,8 +31,11 @@ Each block broken, after its drops (with their fortune):
   broken, not per Mithril its fortune drops), times 1 + Mining Wisdom / 100 (`SkillGains.give`). It shows on the
   action bar as every skill's XP does.
 - **Mithril Powder**: 1 (the wiki's Mithril Powder: "Gray Wool: 1"), into the profile's `dwarvenMines.powder.MITHRIL`,
-  which the Heart of the Mountain menu shows; at most 2 billion (the same page). Nothing raises it yet (Core of the
-  Mountain, Powder Buff, drills: none of them is here).
+  which the Heart of the Mountain menu shows; at most 2 billion (the same page). What they hold raises it by its
+  text: the Mithril Drills' "Grants +20% Mithril Powder." (+40% for the SX-R326; `Powder.mined`), the share of one
+  powder being the chance of one more (UNKNOWN how Hypixel gives it). APPROX. Its other raises (Core of the
+  Mountain, Powder Buff, Sky Mall, 2x Powder, Fallen Stars, pets) wait for the Heart of the Mountain's perks, events
+  and pets. The Gemstone Drills' "+5% Gemstone Powder" reads the same way and waits for gemstone blocks.
 - **HotM XP**: none. The wiki's Heart of the Mountain gives HotM XP only for commissions, mining events and
   nucleus runs.
 - **Compact** and **Flowstate** count it (see the enchantments).
@@ -149,6 +152,7 @@ works shows there. The recording's Mining Spread and Charm Chance aren't stats h
 
 - Mining XP per block broken, not per Mithril dropped: the Dwarven Metals list gives it by block.
 - Whether Mithril gives experience orbs: it doesn't (no source says so).
+- A drill's powder raise on 1 powder a block (1.2 with +20%): the share of one is the chance of one more.
 - Compact: which enchanted item (Enchanted Mithril, the wiki's next material); on top of the drop; no fortune on it;
   its message's colours; the tier-up message's words.
 - Flowstate: blocks broken with another tool don't count; another world starts a new streak.
