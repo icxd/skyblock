@@ -3,6 +3,7 @@ package net.icxd.dungeons.item.behaviour;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -174,6 +175,8 @@ public final class HeldStats {
      */
     static final class PerEnderPiece implements ItemBehaviour {
         private static final Pattern PER = Pattern.compile("Gain \\+([\\d.]+)❁ Strength per piece of Ender Armor");
+        /** Ender Armor's pieces ("Ender Helmet" is END_HELMET in the data). */
+        private static final Set<String> ENDER_ARMOR = Set.of("END_HELMET", "END_CHESTPLATE", "END_LEGGINGS", "END_BOOTS");
 
         @Override
         public void whileHeld(Player holder, NBTTagCompound tag, Stats stats) {
@@ -183,8 +186,7 @@ public final class HeldStats {
             int pieces = 0;
             for (ItemStack armor : holder.getInventory().getArmorContents()) {
                 NBTTagCompound worn = ItemNBT.read(armor);
-                // Ender Armor is ENDER_HELMET and the rest.
-                if (worn != null && worn.getString("id").startsWith("ENDER_")) pieces++;
+                if (worn != null && ENDER_ARMOR.contains(worn.getString("id"))) pieces++;
             }
             stats.add(Stat.STRENGTH, pieces * Double.parseDouble(m.group(1)));
         }
