@@ -55,9 +55,7 @@ public final class UtilityListener implements Listener {
         PlayerStats.addModifier(Masks::stats);
         PlayerStats.addModifier(HamRadio::stats);
         PlayerStats.addModifier(ArchfiendDice::stats);
-        PlayerStats.addModifier(HollowWand::stats);
         StatsRunnable.addManaRegenBonus(HollowWand::manaRegen);
-        Combat.addMultiplier(HollowWand::multiplier);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), UtilityListener::tick, 1, 1);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), SecretTracker::second, 20, 20);
         Bukkit.getScheduler().runTaskTimer(Dungeons.getInstance(), HamRadio::second, 20, 20);

@@ -36,7 +36,9 @@ import net.icxd.dungeons.utils.Utils;
  * spells do is the wiki's Hollow Wand ('/wandinfo'): Spirit Spark heals "yourself and up to 5 players within 25
  * blocks for 8% max HP"; Hollowed Rush grants them "+1.3x" Mana Regen for 6 s; Raging Wind "+30%" Damage and +10
  * Ferocity for 20 s, "Stacks up to 3 times"; Ichor Pool is "a pool with 8 block radius. Up to 5 players standing
- * within this pool gains +1.2x Damage and +40 Ferocity. Pool lasts for 20s." "The effects of the Spells do not stack
+ * within this pool gains +1.2x Damage and +40 Ferocity. Pool lasts for 20s." Both Damages are the Damage stat (the
+ * wiki's stat templates, as Hollowed Rush's Mana Regen is), so the pool's is 1.2 times their Damage stat, not their
+ * hits. "The effects of the Spells do not stack
  * when used by multiple players unless otherwise specified": each is one buff whoever cast it. How long a first click
  * waits for its second, and what's shown, are UNKNOWN (3 seconds; the clicks so far where Defense is on the action
  * bar). Main thread.
@@ -57,6 +59,9 @@ final class HollowWand implements AbilityHandler {
     static final double POOL_DAMAGE = 1.2;
     static final double POOL_FEROCITY = 40;
     static final long POOL_MILLIS = 20_000;
+    /** A pool's buffs are given again this often while they stand in it, each for a little longer, so they go soon after they step out. */
+    private static final int POOL_EVERY_TICKS = 5;
+    private static final long POOL_BUFF_MILLIS = 500;
     /** How long a first click waits for its second (UNKNOWN). */
     static final long COMBO_MILLIS = 3_000;
 
@@ -102,6 +107,7 @@ final class HollowWand implements AbilityHandler {
     private static final Map<UUID, Long> RUSHED = new HashMap<>();
     private static final Map<UUID, Wind> WINDS = new HashMap<>();
     private static final List<Pool> POOLS = new ArrayList<>();
+    private static int ticks;
 
     /** Where the ⚶ Spirit stacks come from, and how they're spent (see {@link UtilityAbilities#hollowSpirit}). */
     static void spiritFrom(ToIntFunction<Player> stacks, ObjIntConsumer<Player> spend) {
@@ -195,37 +201,27 @@ final class HollowWand implements AbilityHandler {
         return in.size() > PLAYERS ? in.subList(0, PLAYERS) : in;
     }
 
-    /** Whether they stand in an Ichor Pool that gives to them now (one pool's worth, however many there are). */
-    static boolean inAPool(Player player) {
-        if (POOLS.isEmpty()) return false;
-        long now = System.currentTimeMillis();
-        for (Pool pool : POOLS) {
-            if (pool.until() > now && pool.at().getWorld().equals(player.getWorld()) && inPool(pool).contains(player)) return true;
-        }
-        return false;
-    }
-
-    /** An Ichor Pool's Ferocity (see PlayerStats#addModifier). */
-    static void stats(Player player, Stats stats) {
-        if (inAPool(player)) stats.add(Stat.FEROCITY, POOL_FEROCITY);
-    }
-
-    /** An Ichor Pool's "+1.2x Damage" on their hits (see Combat#addMultiplier). */
-    static double multiplier(Player player, Boolean ranged) {
-        return inAPool(player) ? POOL_DAMAGE : 1;
-    }
-
-    /** Every tick: pools that are done go; the rest show. */
+    /**
+     * Every tick: pools that are done go; the rest show, and give those standing in them their "+1.2x Damage and +40
+     * Ferocity" (one pool's worth, however many there are: the same buffs), a moment at a time.
+     */
     static void tick() {
         if (POOLS.isEmpty()) return;
         long now = System.currentTimeMillis();
+        boolean give = ++ticks % POOL_EVERY_TICKS == 0;
         for (Iterator<Pool> it = POOLS.iterator(); it.hasNext(); ) {
             Pool pool = it.next();
             if (pool.until() <= now) {
                 it.remove();
                 continue;
             }
-            if (now / 50 % 10 == 0) pool.at().getWorld().spawnParticle(Particle.DRIPPING_OBSIDIAN_TEAR, pool.at(), 30, POOL_RADIUS / 2, 0.1, POOL_RADIUS / 2, 0);
+            if (ticks % 10 == 0) pool.at().getWorld().spawnParticle(Particle.DRIPPING_OBSIDIAN_TEAR, pool.at(), 30, POOL_RADIUS / 2, 0.1, POOL_RADIUS / 2, 0);
+            if (!give) continue;
+            for (Player player : inPool(pool)) {
+                PlayerSession session = PlayerSession.of(player);
+                session.buffPercent(Spell.ICHOR_POOL.display, Stat.DAMAGE, (POOL_DAMAGE - 1) * 100, POOL_BUFF_MILLIS);
+                session.buff(Spell.ICHOR_POOL.display, new Stats().set(Stat.FEROCITY, POOL_FEROCITY), POOL_BUFF_MILLIS);
+            }
         }
     }
 
