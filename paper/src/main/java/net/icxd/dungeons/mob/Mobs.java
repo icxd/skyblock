@@ -74,10 +74,10 @@ public final class Mobs implements Listener {
     private static final List<DropChance> DROP_CHANCES = new ArrayList<>();
 
     /**
-     * What changes the chance of a kill's drops, by the killer and how they killed it (Looting on the weapon
-     * that dealt the killing blow, Chance on the bow its arrow left, Luck on armor drops): a factor on one drop's
-     * chance, after Magic Find (1 for none); they multiply. {@code blow} is the killing blow (see {@link
-     * KillingBlow}; null when it isn't known).
+     * What changes the chance of a kill's drops, by the killer and how they killed it (Looting and Chance on what
+     * the killer holds, Luck on armor drops: DropEnchants): a factor on one drop's own chance, before Magic Find
+     * ("Looting applies BEFORE Magic Find", the wiki's Looting), 1 for none; they multiply. {@code blow} is the
+     * killing blow (see {@link KillingBlow}; null when it isn't known).
      */
     @FunctionalInterface
     public interface DropChance {
@@ -327,10 +327,10 @@ public final class Mobs implements Listener {
     }
 
     /**
-     * Each drop rolls on its own: Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind}),
-     * and what changes a kill's drops by how it was made its factor on each (see {@link DropChance}); Pet Luck
-     * would raise a pet's, but no mob drops a pet yet. A dungeon mob's go straight into the
-     * killer's inventory, as recorded on Hypixel (into their item stash if there's no room), and
+     * Each drop rolls on its own: what changes a kill's drops by how it was made puts its factor on each (see {@link
+     * DropChance}), then Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind}); Pet Luck
+     * would raise a pet's, but no mob drops a pet yet. Past 100% it drops again ({@link #copies}). A dungeon mob's go
+     * straight into the killer's inventory, as recorded on Hypixel (into their item stash if there's no room), and
      * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
      * on the ground, and each is announced.
      */
@@ -340,23 +340,41 @@ public final class Mobs implements Listener {
         double petLuck = stats.get(Stat.PET_LUCK);
         boolean toInventory = dungeon && !InventorySyncListener.frozen(killer);
         for (MobDrop drop : drops) {
-            SkyBlockItem item = drop.item();
-            if (item == null || Math.random() >= chance(drop, magicFind, petLuck, dropFactor(killer, blow, drop)) / 100) continue;
-            ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
-            // Collected as it comes from the world: now if it goes straight to them, else when it's picked up.
-            if (toInventory) {
-                CollectionGains.collect(killer, stack);
-                ItemStash.give(killer, stack);
-            } else {
-                CollectionGains.fromWorld(at.getWorld().dropItemNaturally(at, stack));
+            int copies = copies(chance(drop, magicFind, petLuck, dropFactor(killer, blow, drop)), Math.random());
+            for (int i = 0; i < copies; i++) {
+                SkyBlockItem item = drop.item();
+                if (item == null) break;
+                ItemStack stack = ItemBuilder.build(item, Utils.random(drop.min(), drop.max()));
+                // Collected as it comes from the world: now if it goes straight to them, else when it's picked up.
+                if (toInventory) {
+                    CollectionGains.collect(killer, stack);
+                    ItemStash.give(killer, stack);
+                } else {
+                    CollectionGains.fromWorld(at.getWorld().dropItemNaturally(at, stack));
+                }
+                if (announced(dungeon, drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
             }
-            if (announced(dungeon, drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
         }
     }
 
-    /** A drop's chance for a kill, in percent: with the killer's Magic Find (and Pet Luck), times {@code factor}. */
+    /**
+     * A drop's chance for a kill, in percent: its own times {@code factor}, then with the killer's Magic Find (and Pet
+     * Luck). "Looting applies BEFORE Magic Find", so Magic Find's 5% rule goes by what the factor makes it (Looting V
+     * on a 3% drop is 5.25%, and "Magic Find does NOT apply": the wiki's Looting).
+     */
     static double chance(MobDrop drop, double magicFind, double petLuck, double factor) {
-        return MobDrop.withMagicFind(drop.chance(), magicFind, petLuck, false) * Math.max(0, factor);
+        return MobDrop.withMagicFind(drop.chance() * Math.max(0, factor), magicFind, petLuck, false);
+    }
+
+    /**
+     * How many times a drop this likely (percent) drops, with {@code roll} (0 to 1) as the random: once for each whole
+     * 100%, and the rest is the chance of once more ("chances above 100% representing a chance to drop an additional
+     * item", the wiki's Looting: Looting IV on a sure drop is 1 and a 60% chance of 2). Each is the drop's amount again.
+     */
+    static int copies(double chance, double roll) {
+        double times = Math.max(0, chance) / 100;
+        int whole = (int) times;
+        return whole + (roll < times - whole ? 1 : 0);
     }
 
     /** The product of what changes this drop's chance for this kill (see {@link DropChance}). */

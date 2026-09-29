@@ -68,6 +68,7 @@ import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.item.ability.Activations;
 import net.icxd.dungeons.item.ability.weapons.WeaponEvents;
+import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
@@ -188,6 +189,7 @@ public class Dungeons extends JavaPlugin {
         listen(WeaponEvents.class, WeaponEvents::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
+        listen(DropEnchants.class, DropEnchants::new);
         listen(BookOfStats.class, BookOfStats::new);
         listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);
