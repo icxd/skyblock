@@ -71,7 +71,7 @@ Status: DONE, APPROX (built, with an UNKNOWN reading), LATER (and what it waits 
 
 | Enchantment | Status | Notes |
 |---|---|---|
-| Sharpness, Smite, Bane of Arthropods, Ender Slayer, Cubism, Smoldering, Giant Killer, Titan Killer, Prosecute, Execute, First Strike, Triple-Strike, Power, Snipe, One For All | DONE | `Damage.enchantment` (the books' values). Bane of Arthropods and Ender Slayer wait for mobs of their types (no Arthropod or Ender mob yet). |
+| Sharpness, Smite, Bane of Arthropods, Ender Slayer, Cubism, Smoldering, Giant Killer, Titan Killer, Prosecute, Execute, First Strike, Triple-Strike, Power, Snipe, One For All | DONE | `Damage.enchantment` (the books' values). Bane of Arthropods and Ender Slayer wait for mobs of their types (no Arthropod or Ender mob yet). Bane of Arthropods IV's lore shows "0%": its text in the private data has "&20%" (a colour code eats the 2) where the code, NEU and the wiki have 20% (see the questions). |
 | Gravity (dragon_hunter) | DONE | VI now gives the book's 40%. It reused Smoldering's five levels, so VI gave 30%. |
 | Overload | DONE | Crit stats from the text, and the mega crit (`Shots`). |
 | Critical, Vicious, Divine Gift | DONE | Stats read from the text. |
@@ -245,3 +245,6 @@ The armor part has the other armor and equipment reforges (Renowned, Perfect, Un
    would have to be private data. Should it be built, and should Sandbox profiles give or get those coins?
 4. **Enchanting-level gating** (enchantments that "will be greyed out and will not work" below their Enchanting
    level) is every enchantment's rule and changes lore and the golden. Which part should build it, or should it wait?
+   The armor part left it too, so it would be built once, after both are merged.
+5. **Bane of Arthropods IV's text** in the private data reads "&20%", which items show as "0%". Should the data say
+   "&a20%", as its other levels do?
