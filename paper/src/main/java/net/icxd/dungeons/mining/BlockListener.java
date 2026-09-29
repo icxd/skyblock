@@ -17,6 +17,7 @@ import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.utils.Tuple;
+import net.icxd.dungeons.utils.Utils;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -77,7 +78,7 @@ public class BlockListener implements Listener {
         Stats stats = PlayerSession.of(player).stats();
         int breakingPower = (int) stats.get(Stat.BREAKING_POWER);
         if (breakingPower < minableBlock.minBreakingPower()) {
-            player.sendMessage("You need a pickaxe with at least " + minableBlock.minBreakingPower() + " breaking power to break this block.");
+            player.sendMessage(Utils.color(tooWeak(minableBlock)));
             return;
         }
         double miningSpeed = stats.get(Stat.MINING_SPEED) * MiningTools.miningRate(player.isUnderWater(), aquaAffinity(player));
@@ -144,6 +145,16 @@ public class BlockListener implements Listener {
         for (ItemStack left : player.getInventory().addItem(stack).values()) {
             player.getWorld().dropItemNaturally(player.getLocation(), left);
         }
+    }
+
+    /**
+     * Hypixel's line on a swing with too little Breaking Power: "§cYou need a tool with a §aBreaking Power §cof §64§c to
+     * mine Mithril§c! Speak to §dFragilis §cby the entrance to the Crystal Hollows to learn more!" (SkyHanni's chat
+     * filters, which hide it as the spam it is: it comes with each swing).
+     */
+    static String tooWeak(MinableBlock block) {
+        return "&cYou need a tool with a &aBreaking Power &cof &6" + block.minBreakingPower() + "&c to mine " + block.name()
+                + "&c! Speak to &dFragilis &cby the entrance to the Crystal Hollows to learn more!";
     }
 
     /** Whether the helmet they wear has Aqua Affinity. */

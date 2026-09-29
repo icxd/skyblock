@@ -20,6 +20,8 @@ public interface MinableBlock {
     default int instaBreakStrength() { return -1; } // -1 = no insta break
     default Material blockWhenBroken() { return Material.BEDROCK; }
     default ArrayList<Tuple<SkyBlockItem, Integer>> drops() { return null; }
+    /** What it's called in chat ("to mine Mithril"). */
+    default String name() { return "this block"; }
 
     /**
      * The fortune stat that's added to Mining Fortune on this block (Dwarven Metal Fortune on Mithril and
