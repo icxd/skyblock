@@ -199,6 +199,12 @@ public final class RunItems {
         return m.find() ? Double.parseDouble(m.group(1)) : 0;
     }
 
+    /** Resets the failed puzzle in the room they're in (the Architect's First Draft); its name, or null for none. */
+    public static String resetFailedPuzzle(Player player) {
+        DungeonRun run = running(player);
+        return run == null ? null : run.resetFailedPuzzle(player.getLocation());
+    }
+
     /** Superboom TNT goes off at this block in their run (an Explosive Bow's arrow: "Acts as Superboom TNT!"); false outside one. */
     public static boolean superboom(Player player, Block at) {
         DungeonRun run = running(player);

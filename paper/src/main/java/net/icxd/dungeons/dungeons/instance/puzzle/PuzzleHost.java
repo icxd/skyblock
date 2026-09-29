@@ -30,6 +30,10 @@ public interface PuzzleHost {
     /** A puzzle room was failed: its red cross on the map. */
     void failed(int room);
 
+    /** A failed puzzle room was set up again (the Architect's First Draft): its red cross comes off the map. */
+    default void reset(int room) {
+    }
+
     /** A line for the server log. */
     void log(String message);
 

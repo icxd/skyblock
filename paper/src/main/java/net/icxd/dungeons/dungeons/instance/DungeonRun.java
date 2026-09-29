@@ -373,6 +373,16 @@ public final class DungeonRun implements ScoreCounts {
         runMap.fail(room);
     }
 
+    /** A failed puzzle room was set up again: no red cross. */
+    void puzzleReset(PlacedRoom room) {
+        runMap.unfail(room);
+    }
+
+    /** Resets the failed puzzle in whose room this is (the Architect's First Draft); its name, or null for none. */
+    String resetFailedPuzzle(Location at) {
+        return puzzleRooms.resetFailedAt(at.getX(), at.getZ());
+    }
+
     /**
      * "You have proven yourself. You may pass.": the Blood Room is done, though Hypixel only counts it
      * after the end-of-run summary (see {@link #end}).

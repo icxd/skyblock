@@ -32,7 +32,7 @@ final class TicTacToePuzzle extends Puzzle {
     private static final float PLING_PITCH = 2;
 
     private final PuzzleData.TicTacToe data;
-    private final TicTacToeTurns turns = new TicTacToeTurns();
+    private TicTacToeTurns turns = new TicTacToeTurns();
     private final Random random = new Random();
     private final List<ItemFrame> frames = new ArrayList<>();
 
@@ -115,6 +115,16 @@ final class TicTacToePuzzle extends Puzzle {
     @Override
     boolean owns(Entity entity) {
         return entity instanceof ItemFrame && frames.contains(entity);
+    }
+
+    /** A new game on a new board. */
+    @Override
+    boolean restart() {
+        dispose();
+        frames.clear();
+        turns = new TicTacToeTurns();
+        start();
+        return true;
     }
 
     @Override

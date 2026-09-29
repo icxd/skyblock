@@ -139,4 +139,14 @@ final class ThreeWeirdosPuzzle extends Puzzle {
         for (List<Entity> npc : npcs) npc.forEach(Entity::remove);
         chests.forEach(PuzzleChest::dispose);
     }
+
+    /** New weirdos with a new riddle, and their chests shut again. */
+    @Override
+    boolean restart() {
+        dispose();
+        npcs.clear();
+        chests.clear();
+        start();
+        return true;
+    }
 }

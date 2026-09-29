@@ -101,6 +101,14 @@ public final class RunPuzzles {
         return out;
     }
 
+    /** Resets the failed puzzle whose room this is in (see Puzzle#resetFailed); its name, or null for none. */
+    public String resetFailedAt(double x, double z) {
+        for (Puzzle puzzle : puzzles) {
+            if (puzzle.frame != null && puzzle.frame.contains(x, z) && puzzle.resetFailed()) return puzzle.name();
+        }
+        return null;
+    }
+
     public int count() {
         return puzzles.size();
     }
