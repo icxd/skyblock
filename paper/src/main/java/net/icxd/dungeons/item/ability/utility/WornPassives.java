@@ -15,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -91,7 +92,7 @@ public final class WornPassives {
     public static List<Bonus> all() {
         return List.of(new BlockDamage(), new BoneShield(), new MithrilsProtection(), new Growth(), new DoubleJump(),
                 new Coating("Depth Coating"), new Coating("Pressurized Coating"), new GladiatorsWill(), new BlazingRestoration(),
-                new FarmersSpeedCap());
+                new FarmersSpeedCap(), new EvilIncarnate());
     }
 
     /** A worn piece's passive ABILITY block, by its name. */
@@ -443,6 +444,55 @@ public final class WornPassives {
             int cap = FarmersSpeed.NONE;
             for (Worn.Piece piece : active.pieces()) cap = Math.min(cap, FarmersSpeed.cap(piece.tag()));
             if (cap < FarmersSpeed.NONE && stats.get(Stat.SPEED) > cap) stats.set(Stat.SPEED, cap);
+        }
+    }
+
+    /**
+     * The Reaper Mask's Evil Incarnate: "While wearing: Zombie Armor triggers on all hits." Zombie Armor's Projectile
+     * Absorption ("Heals the wearer for 10 per second for 5 seconds when hit by a projectile", its text's numbers) is
+     * the armor bonuses'; with the mask on, a hit that isn't a projectile starts the same heal here (with a projectile
+     * the armor's own does: UNKNOWN whether two at once would heal twice; here they're the two kinds of hit). Its
+     * "Store 2 extra necromancer souls. Summon 2 more necromancy mobs." is LATER (no necromancy).
+     */
+    static final class EvilIncarnate extends Passive {
+        private static final Pattern HEALS = Pattern.compile("Heals the wearer for ([\\d.]+) per second for (\\d+) seconds");
+        /** Whose heal is going: until when, and how much a second. */
+        private final Map<UUID, double[]> healing = new HashMap<>();
+
+        EvilIncarnate() {
+            super("Evil Incarnate");
+        }
+
+        @Override
+        public void hurt(Player player, Active active, Entity by, double taken) {
+            if (by == null || by instanceof Projectile) return;
+            ItemBlock zombie = zombieArmor(player);
+            if (zombie == null) return;
+            Matcher m = HEALS.matcher(AbilityText.plain(zombie.text()));
+            if (!m.find()) return;
+            healing.put(player.getUniqueId(), new double[] {System.currentTimeMillis() + Long.parseLong(m.group(2)) * 1000, Double.parseDouble(m.group(1))});
+        }
+
+        @Override
+        public void second(Player player, Active active) {
+            double[] heal = healing.get(player.getUniqueId());
+            if (heal == null) return;
+            if (heal[0] < System.currentTimeMillis()) healing.remove(player.getUniqueId());
+            else PlayerHealth.heal(player, heal[1]);
+        }
+
+        @Override
+        public void forget(UUID player) {
+            healing.remove(player);
+        }
+
+        /** Zombie Armor's full set block, while its bonus counts for them; null otherwise. */
+        private static ItemBlock zombieArmor(Player player) {
+            if (!SetBonuses.active(player, "Projectile Absorption")) return null;
+            for (Worn.Piece piece : SetBonuses.worn(player).pieces()) {
+                for (ItemBlock block : piece.blocks()) if ("FULL_SET".equals(block.kind()) && "Projectile Absorption".equals(block.name())) return block;
+            }
+            return null;
         }
     }
 
