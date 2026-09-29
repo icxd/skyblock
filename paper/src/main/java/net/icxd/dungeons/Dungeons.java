@@ -68,8 +68,6 @@ import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.combat.Shots;
 import net.icxd.dungeons.item.ability.Activations;
 import net.icxd.dungeons.item.ability.weapons.WeaponEvents;
-import net.icxd.dungeons.mob.DropEnchants;
-import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
@@ -78,6 +76,8 @@ import net.icxd.dungeons.item.bonus.SetBonuses;
 import net.icxd.dungeons.item.upgrade.BookOfStats;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.npc.Npcs;
+import net.icxd.dungeons.mob.DropEnchants;
+import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
 import net.icxd.dungeons.profile.SandboxDrops;
 import net.icxd.dungeons.profile.SandboxStorage;
@@ -190,8 +190,6 @@ public class Dungeons extends JavaPlugin {
         listen(WeaponEvents.class, WeaponEvents::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
-        listen(DropEnchants.class, DropEnchants::new);
-        listen(ExpBonuses.class, ExpBonuses::new);
         listen(BookOfStats.class, BookOfStats::new);
         listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);
@@ -208,6 +206,9 @@ public class Dungeons extends JavaPlugin {
         listen(CraftingTable.Drags.class, CraftingTable.Drags::new);
         listen(HexListener.class, HexListener::new);
         listen(SkyBlockLevels.class, SkyBlockLevels::new);
+        // What changes a kill's drops and a grant's experience orbs (STATS_EFFECTS.md): their order doesn't matter.
+        listen(DropEnchants.class, DropEnchants::new);
+        listen(ExpBonuses.class, ExpBonuses::new);
         if (skyBlockServer.runs(Ophelia.class)) {
             try {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));
