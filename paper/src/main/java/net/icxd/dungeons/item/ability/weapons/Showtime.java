@@ -62,7 +62,7 @@ final class Showtime implements AbilityHandler {
     private static void explode(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, Location at) {
         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 2, 0.5, 0.5, 0.5, 0);
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.6f);
-        Hits.report(caster, "Showtime", Hits.spell(caster, item, tag, spell, Hits.near(at, RADIUS)));
+        Hits.report(caster, "Showtime", Hits.spell(caster, item, tag, spell.times(Explosions.factor(caster)), Hits.near(at, RADIUS)));
         if (caster.getWorld().equals(at.getWorld()) && Shapes.inBall(at.toVector(), RADIUS, caster.getBoundingBox())) {
             Vector back = caster.getLocation().getDirection().setY(0);
             if (back.lengthSquared() > 0) back.normalize().multiply(-BACK);

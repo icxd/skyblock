@@ -52,6 +52,6 @@ final class GuidedBat implements AbilityHandler {
     private static void explode(Player caster, SkyBlockItem item, NBTTagCompound tag, Magic.Spell spell, Location at) {
         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 3, 1, 1, 1, 0);
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.4f);
-        Hits.report(caster, "Spirit Sceptre", Hits.spell(caster, item, tag, spell, Hits.near(at, RADIUS)));
+        Hits.report(caster, "Spirit Sceptre", Hits.spell(caster, item, tag, spell.times(Explosions.factor(caster)), Hits.near(at, RADIUS)));
     }
 }

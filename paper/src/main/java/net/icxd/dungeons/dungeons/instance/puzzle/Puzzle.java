@@ -109,6 +109,25 @@ abstract class Puzzle {
         host.later(tabDelay, () -> shown = PuzzleTab.State.SOLVED);
     }
 
+    /**
+     * A failed puzzle set up again as it was when it started, to be done again (the Architect's First Draft: "reset a
+     * failed Dungeon Puzzle in the room the player is in"): its red cross comes off the map. False if it isn't failed,
+     * or can't be set up again (see {@link #restart}).
+     */
+    final boolean resetFailed() {
+        if (state != PuzzleTab.State.FAILED || !host.running() || !restart()) return false;
+        state = PuzzleTab.State.DISCOVERED;
+        shown = PuzzleTab.State.DISCOVERED;
+        failedBy = null;
+        host.reset(room);
+        return true;
+    }
+
+    /** Takes away what it put in the world and starts it again; false for one that can't be (the ones that never fail). */
+    boolean restart() {
+        return false;
+    }
+
     void fail(Player by, long tabDelay) {
         if (isOver() || !host.running()) return;
         state = PuzzleTab.State.FAILED;

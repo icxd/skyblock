@@ -17,7 +17,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleBiFunction;
 
 /**
  * Skill XP coming in: Combat XP for killing SkyBlock's mobs, and what every gain shows (the action
@@ -29,6 +32,15 @@ public final class SkillGains implements Listener {
     private static final double[] CHAMPION = {3, 3.78, 4.56, 5.33, 6.11, 6.89, 7.67, 8.44, 9.22, 10};
     /** The XP part of the action bar stays about 2 seconds after the last gain (research skills.md 2.1). */
     static final long SHOWN_MILLIS = 2_000;
+    private static final List<ToDoubleBiFunction<Player, SkyBlockMobDeathEvent>> KILL_WISDOM = new ArrayList<>();
+
+    /**
+     * Adds Combat Wisdom one kill has on top of the killer's own (the Reaper Falchion's "Gain +45☯ Combat Wisdom
+     * against ༕ Undead mobs"), 0 for none; what they give adds up, as Wisdom does.
+     */
+    public static void addKillWisdom(ToDoubleBiFunction<Player, SkyBlockMobDeathEvent> wisdom) {
+        KILL_WISDOM.add(wisdom);
+    }
 
     /**
      * The killer gets the mob's Combat XP with their Combat Wisdom and the Champion (or Toxophilite) on what they hold
@@ -42,8 +54,10 @@ public final class SkillGains implements Listener {
         if (killer == null || !killer.isOnline()) return;
         double base = event.variant().combatXp();
         if (base <= 0) return;
+        double extra = 0;
+        for (ToDoubleBiFunction<Player, SkyBlockMobDeathEvent> wisdom : KILL_WISDOM) extra += wisdom.applyAsDouble(killer, event);
         // Combat Wisdom is give's, as every skill's Wisdom is: combatXp(base, wisdom, champion) in all.
-        give(killer, Skill.COMBAT, base * (1 + combatXpPercent(Combat.heldEnchantments(killer)) / 100));
+        give(killer, Skill.COMBAT, base * (1 + combatXpPercent(Combat.heldEnchantments(killer)) / 100), extra);
     }
 
     /**
@@ -93,8 +107,13 @@ public final class SkillGains implements Listener {
      * nothing) while their data isn't here to keep it.
      */
     public static Skills.Gain give(Player player, Skill skill, double amount) {
+        return give(player, skill, amount, 0);
+    }
+
+    /** {@link #give(Player, Skill, double)} with {@code extraWisdom} more of that skill's Wisdom for this gain alone. */
+    public static Skills.Gain give(Player player, Skill skill, double amount, double extraWisdom) {
         if (!(amount > 0)) return null;
-        return giveFlat(player, skill, withWisdom(amount, PlayerSession.of(player).stats().get(wisdom(skill))));
+        return giveFlat(player, skill, withWisdom(amount, PlayerSession.of(player).stats().get(wisdom(skill)) + extraWisdom));
     }
 
     /**

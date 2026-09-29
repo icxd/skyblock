@@ -17,6 +17,7 @@ public final class ItemBehaviours {
         for (String id : NecronsBlade.IDS) BY_ID.put(id, blade);
         BY_ID.put("ATTRIBUTE_SHARD", new AttributeShard());
         BY_ID.put(Terminator.ID, new Terminator());
+        HeldStats.register(BY_ID::put);
     }
 
     private ItemBehaviours() {

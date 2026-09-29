@@ -222,10 +222,11 @@ public final class RunManager {
     /**
      * Deaths make ghosts; classes have their stats and abilities (see {@link Ghosts}, {@link RunClasses}).
      * Revive Stones are never saved with a player's items ("This item will vanish from your inventory at
-     * the end of the Dungeon!"), however they got one.
+     * the end of the Dungeon!"), however they got one; nor are ghosts' ability items.
      */
     private void registerGhostsAndClasses() {
         StoredInventory.neverSave(ReviveStones.ID);
+        RunItems.neverSaveGhostItems();
         Bukkit.getPluginManager().registerEvents(new GhostEvents(this, plugin), plugin);
         ClassEvents classEvents = new ClassEvents(this, plugin);
         Bukkit.getPluginManager().registerEvents(classEvents, plugin);

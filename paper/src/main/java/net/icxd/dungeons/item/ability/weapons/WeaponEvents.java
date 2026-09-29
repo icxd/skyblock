@@ -14,6 +14,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.PlayerDamage;
+import net.icxd.dungeons.stats.StatsRunnable;
 
 /**
  * What weapon abilities need to hear of: players' arrows landing (a Terminator's count towards Salvation,
@@ -25,6 +26,9 @@ public final class WeaponEvents implements Listener {
         PlayerDamage.addTakenMultiplier(WitherBlade::takenFactor);
         PlayerDamage.addTakenMultiplier(Buffs.Hellstorm::takenFactor);
         Combat.addMultiplier(Buffs.SmashHead::multiplier);
+        Combat.addHitListener(Buffs.SmashHead::landed);
+        PlayerDamage.addTakenFrom((player, by) -> Buffs.SmashHead.weakened(PlayerDamage.attacker(by)));
+        StatsRunnable.addManaRegenFactor(Buffs.GravityStorm::regenFactor);
     }
 
     /**
@@ -39,11 +43,20 @@ public final class WeaponEvents implements Listener {
             Salvation.landed(player.getUniqueId());
         }
         Bows.landed(arrow, player, hit);
+        BowPassives.arrowLanded(arrow, player, hit, event.getHitBlock());
+    }
+
+    /** A Spider Queen's Stinger's arrow goes through the mobs it meets ("Arrows travel through enemies"). */
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onArrowThrough(ProjectileHitEvent event) {
+        if (event.getHitEntity() != null && BowPassives.passesThrough(event.getEntity())) event.setCancelled(true);
     }
 
     @EventHandler
     public void onArrowGone(EntityRemoveEvent event) {
-        if (event.getEntity() instanceof AbstractArrow) Bows.gone(event.getEntity().getUniqueId());
+        if (!(event.getEntity() instanceof AbstractArrow)) return;
+        Bows.gone(event.getEntity().getUniqueId());
+        BowPassives.arrowGone(event.getEntity().getUniqueId());
     }
 
     /** What their abilities kept about them goes with them. */

@@ -56,7 +56,7 @@ final class Areas {
         public void use(Player player, SkyBlockItem item, NBTTagCompound tag, ItemBlock block) {
             Location at = player.getLocation();
             List<LivingEntity> caught = Hits.near(at, RADIUS);
-            Hits.spell(player, item, tag, Hits.spellOf(item, BLAST), caught);
+            Hits.spell(player, item, tag, Hits.spellOf(item, BLAST).times(Explosions.factor(player)), caught);
             for (LivingEntity mob : caught) if (mob.isValid()) mob.setFireTicks(20);
             at.getWorld().spawnParticle(Particle.EXPLOSION, at, 4, 1.5, 0.5, 1.5, 0);
             at.getWorld().spawnParticle(Particle.LAVA, at, 20, 2, 0.5, 2, 0);

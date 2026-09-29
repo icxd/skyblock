@@ -145,6 +145,6 @@ public final class DungeonMobs {
         }
         if (mob.invulnerable()) return;
         DamageIndicators.show(entity, damage, look);
-        CombatState.dealt(player);
+        CombatState.dealt(player, damage);
     }
 }

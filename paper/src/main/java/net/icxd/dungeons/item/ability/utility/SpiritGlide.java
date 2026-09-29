@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
+import net.icxd.dungeons.dungeons.instance.RunItems;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.item.ability.Abilities;
 import net.icxd.dungeons.item.data.ItemBlock;
@@ -27,7 +28,7 @@ import net.icxd.dungeons.utils.Replacement;
  * this duration". UNKNOWN, and plain here: it starts only on a sneak in mid-air (so that sneaking on the ground
  * stays sneaking), how high the launch and how fast the flight are, that letting go of sneak glides them down
  * gently, and what it looks and sounds like. It doesn't land them with fall damage. A ghost's (dead in a run)
- * boots don't glide.
+ * boots don't glide, nor anyone's in the run's trap room.
  */
 final class SpiritGlide {
     static final String NAME = "Spirit Glide";
@@ -52,6 +53,8 @@ final class SpiritGlide {
         if (gliding(player) || player.isOnGround() || player.isFlying()) return;
         DungeonRun run = RunManager.of(player);
         if (run != null && run.isGhost(player.getUniqueId())) return;
+        // "Spirit Glide no longer works in the Dungeon Trap room" (the wiki's history, 2021).
+        if (RunItems.inTrapRoom(player)) return;
         ItemBlock block = Worn.ability(player.getInventory().getBoots(), NAME);
         if (block == null) return;
         PlayerSession session = PlayerSession.of(player);

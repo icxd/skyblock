@@ -340,8 +340,8 @@ Those multipliers are community reverse-engineering, unverified.
   his real icons (placeholders for now).
 - The puzzles of later floors (Higher or Lower, Boulder, Ice Path, Quiz, Ice Fill) and the
   Teleport Maze; Water Boards 1 and 2 (only 3 and 4 were captured); the Three Weirdos' skins.
-- Ghosts' Haunt and ghost abilities; the Healer's revives, Healing Circle and Wish's shield; the
-  Mage's abilities; Lust For Blood and Weapon Master's extra targets; Ragnarok's minions; "Acts as
-  Superboom TNT!".
+- Ghosts' abilities but Haunt, the Tank's and the Spirit items' (ABILITIES_UTILITY.md, "Dungeon ghosts");
+  the Healer's revives, Healing Circle and Wish's shield; the Mage's abilities; Lust For Blood and Weapon
+  Master's extra targets; Ragnarok's minions.
 - Stars on the score card, Catacombs and class level-up messages, the "Creating instance..." and
   "Undersized party!" menus, the Catacombs Gate menu in the Dungeon Hub.

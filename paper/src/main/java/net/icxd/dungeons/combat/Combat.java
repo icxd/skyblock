@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiPredicate;
 import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 
@@ -56,6 +57,8 @@ public final class Combat {
     private static final List<HitListener> HIT_LISTENERS = new ArrayList<>();
     private static final List<PlayerHitListener> PLAYER_HIT_LISTENERS = new ArrayList<>();
     private static final List<ToDoubleFunction<Player>> ATTACK_SPEED_CAPS = new ArrayList<>();
+    private static final List<BiPredicate<Player, NBTTagCompound>> ALWAYS_CRITS = new ArrayList<>();
+    private static final List<HitCap> HIT_CAPS = new ArrayList<>();
     /** The hit listeners are hearing of a hit now (see {@link #landed}). */
     private static boolean hearing;
 
@@ -124,7 +127,28 @@ public final class Combat {
         void hit(Player attacker, Player target, HitKind kind, NBTTagCompound weapon, Projectile projectile);
     }
 
+    /**
+     * The most a player's melee hit, arrow or Ferocity strike may deal to a mob, once it's worked out (the hunting
+     * axes' Vis Temperata: "Each strike of this weapon has its damage capped at 33% of the enemy's max Health. This
+     * weapon cannot cause a fatal blow."); {@link Double#MAX_VALUE} for no cap. Of several, the least counts.
+     */
+    @FunctionalInterface
+    public interface HitCap {
+        double most(Player player, Landing landing, Damage.Target target);
+    }
+
     private Combat() {
+    }
+
+    /** Adds a cap on hits (see {@link HitCap}). */
+    public static void addHitCap(HitCap cap) {
+        HIT_CAPS.add(cap);
+    }
+
+    /** The hit's damage under its caps (see {@link HitCap}). */
+    static double capped(Player player, Landing landing, Damage.Target target, double damage) {
+        for (HitCap cap : HIT_CAPS) damage = Math.min(damage, cap.most(player, landing, target));
+        return Math.max(0, damage);
     }
 
     /** Adds a multiplicative buff: its factor for a player's hit (the flag says whether it's an arrow). */
@@ -150,6 +174,20 @@ public final class Combat {
     /** Adds something that happens when a player hits another player (see {@link PlayerHitListener}). */
     public static void addPlayerHitListener(PlayerHitListener listener) {
         PLAYER_HIT_LISTENERS.add(listener);
+    }
+
+    /**
+     * Adds what makes a player's melee hits with a weapon always crit, by the weapon's data (null for a fist): the
+     * Sting's Stinger, "Attacks from this sword will always critically strike!".
+     */
+    public static void addAlwaysCrits(BiPredicate<Player, NBTTagCompound> crits) {
+        ALWAYS_CRITS.add(crits);
+    }
+
+    /** Whether their melee hit with this weapon crits whatever their Crit Chance (see {@link #addAlwaysCrits}). */
+    static boolean alwaysCrits(Player player, NBTTagCompound weapon) {
+        for (BiPredicate<Player, NBTTagCompound> crits : ALWAYS_CRITS) if (crits.test(player, weapon)) return true;
+        return false;
     }
 
     /** The {@link HitBuff}s on this hit of theirs on this target, as one: additives and added damage summed, factors multiplied. */
@@ -272,7 +310,8 @@ public final class Combat {
         } else {
             weapon = projectile == null ? skyBlockData(player.getInventory().getItemInMainHand()) : null;
             attacker = attacker(player, weapon, projectile != null, 0);
-            critical = Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
+            critical = (projectile == null && alwaysCrits(player, weapon))
+                    || Damage.crits(attacker.critChance(), ThreadLocalRandom.current().nextDouble());
             look = DamageIndicators.Look.of(critical, false);
         }
         Landing landing = new Landing(target, projectile != null ? HitKind.ARROW : HitKind.MELEE, critical, weapon, projectile);
@@ -280,6 +319,7 @@ public final class Combat {
         Damage.Attacker buffed = Damage.buffed(attacker, on, buff.additive(), buff.multiplier());
         // What its debuffs make it take ("Frozen mobs take 10% increased damage"), on the whole hit.
         double damage = Math.floor(Damage.exact(buffed, on, critical, buff.added()) * MobDebuffs.takenFactor(target));
+        if (!HIT_CAPS.isEmpty()) damage = capped(player, landing, on, damage);
 
         boolean invulnerable = dungeonMob != null ? dungeonMob.invulnerable() : mob.type().isInvulnerable();
         if (projectile == null && !invulnerable) attackSpeed(target, PlayerSession.of(player).stats().get(Stat.ATTACK_SPEED), attackSpeedCap(player));
@@ -342,6 +382,8 @@ public final class Combat {
         Mobs.Live mob = dungeonMob == null ? Mobs.of(target) : null;
         if (dungeonMob != null ? dungeonMob.invulnerable() : mob == null || mob.type().isInvulnerable()) return;
         Damage.Target on = MobHits.target(target);
+        // Its caps as the mob is now (Vis Temperata's "cannot cause a fatal blow" holds for each strike).
+        if (!HIT_CAPS.isEmpty()) damage = capped(player, strike, on, damage);
         slash(player, target);
         if (dungeonMob != null) DungeonMobs.damage(target, player, damage, look, HitKind.FEROCITY, strike.weapon());
         else Mobs.damage(mob, player, damage, look, HitKind.FEROCITY, strike.weapon());

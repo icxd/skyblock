@@ -105,6 +105,11 @@ final class RunMap extends MapRenderer {
         if (!ticked.contains(r.id()) && failed.add(r.id())) redraw();
     }
 
+    /** A failed puzzle room was set up again: the red cross comes off. */
+    void unfail(PlacedRoom r) {
+        if (failed.remove(r.id())) redraw();
+    }
+
     int foundRooms() {
         return found.size();
     }

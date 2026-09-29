@@ -71,6 +71,7 @@ import net.icxd.dungeons.item.ability.Activations;
 import net.icxd.dungeons.item.enchanting.weapon.WeaponEnchants;
 import net.icxd.dungeons.reforge.CombatReforges;
 import net.icxd.dungeons.item.ability.weapons.WeaponEvents;
+import net.icxd.dungeons.item.ability.weapons.WeaponPassives;
 import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.item.ItemRegistry;
@@ -192,6 +193,7 @@ public class Dungeons extends JavaPlugin {
         listen(SandboxStorage.class, SandboxStorage::new);
         listen(Shots.class, Shots::new);
         listen(WeaponEvents.class, WeaponEvents::new);
+        listen(WeaponPassives.class, WeaponPassives::new);
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
         listen(DeathCoins.class, DeathCoins::new);

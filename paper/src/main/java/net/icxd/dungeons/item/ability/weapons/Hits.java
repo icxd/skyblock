@@ -2,7 +2,10 @@ package net.icxd.dungeons.item.ability.weapons;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -14,6 +17,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -371,6 +375,28 @@ public final class Hits {
     /** Can't walk for this long ("rooting" them, as Shadow Fury does); nothing else. */
     public static void root(LivingEntity entity, int ticks) {
         entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, ROOTED, false, false, false));
+    }
+
+    /** Stunned mobs (see {@link #stun}), until when. */
+    private static final Map<UUID, Long> STUNNED = new HashMap<>();
+
+    /**
+     * Stunned for this long: rooted, and its hits on players do nothing (see {@link #stunned}, which
+     * WeaponPassives puts on hits taken), and it lets go of whoever it was after.
+     */
+    public static void stun(LivingEntity entity, int ticks) {
+        long now = System.currentTimeMillis();
+        STUNNED.values().removeIf(until -> until <= now);
+        STUNNED.merge(entity.getUniqueId(), now + ticks * 50L, Math::max);
+        root(entity, ticks);
+        if (entity instanceof Mob mob) mob.setTarget(null);
+    }
+
+    /** Whether it's stunned now (null for nothing). */
+    public static boolean stunned(Entity entity) {
+        if (entity == null || STUNNED.isEmpty()) return false;
+        Long until = STUNNED.get(entity.getUniqueId());
+        return until != null && until > System.currentTimeMillis();
     }
 
     /** What an ability's hit on it is multiplied by: its debuffs' (1.1 while it's frozen), else 1. */

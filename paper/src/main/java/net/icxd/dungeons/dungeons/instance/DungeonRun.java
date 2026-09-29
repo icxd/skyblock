@@ -373,6 +373,16 @@ public final class DungeonRun implements ScoreCounts {
         runMap.fail(room);
     }
 
+    /** A failed puzzle room was set up again: no red cross. */
+    void puzzleReset(PlacedRoom room) {
+        runMap.unfail(room);
+    }
+
+    /** Resets the failed puzzle in whose room this is (the Architect's First Draft); its name, or null for none. */
+    String resetFailedPuzzle(Location at) {
+        return puzzleRooms.resetFailedAt(at.getX(), at.getZ());
+    }
+
     /**
      * "You have proven yourself. You may pass.": the Blood Room is done, though Hypixel only counts it
      * after the end-of-run summary (see {@link #end}).
@@ -402,6 +412,15 @@ public final class DungeonRun implements ScoreCounts {
     /** A Superboom TNT went off at this block. */
     void superboom(Block at) {
         roomMobs.superboom(at);
+    }
+
+    /** Whether this block is one of a tomb's that hasn't been blown up (a Dungeonbreaker leaves them, see RunItems). */
+    boolean inCrypt(Block block) {
+        return roomMobs.inCrypt(block);
+    }
+
+    RunLayout layout() {
+        return layout;
     }
 
     // Every second

@@ -102,7 +102,7 @@ final class WitherBlade {
         // How it looks and sounds is UNKNOWN: a big explosion's.
         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 6, 1.5, 1, 1.5, 0);
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
-        Hits.report(player, "Implosion", Hits.spell(player, item, tag, IMPLOSION, Hits.near(at, RADIUS)));
+        Hits.report(player, "Implosion", Hits.spell(player, item, tag, IMPLOSION.times(Explosions.factor(player)), Hits.near(at, RADIUS)));
     }
 
     /**
@@ -284,7 +284,7 @@ final class WitherBlade {
         private static void detonate(Player player, SkyBlockItem item, NBTTagCompound tag, Location at) {
             at.getWorld().spawnParticle(Particle.EXPLOSION, at, 6, 1.5, 1, 1.5, 0);
             at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
-            Hits.report(player, "Shadow Warp", Hits.spell(player, item, tag, IMPLOSION, Hits.near(at, RADIUS)));
+            Hits.report(player, "Shadow Warp", Hits.spell(player, item, tag, IMPLOSION.times(Explosions.factor(player)), Hits.near(at, RADIUS)));
         }
     }
 }

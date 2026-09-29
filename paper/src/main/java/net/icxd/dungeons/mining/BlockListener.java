@@ -34,7 +34,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiConsumer;
 
 /**
  * Mining: the mithril in the Dwarven Mines. Each block broken gives its drops (with their fortune), its Mining XP
@@ -46,6 +49,12 @@ public class BlockListener implements Listener {
     static final int SOFTCAP_TICKS = 4;
     /** The crack stages a break is shown in, vanilla's ten. */
     static final int STAGES = 10;
+    private static final List<BiConsumer<Player, Block>> BROKEN = new ArrayList<>();
+
+    /** Adds something that hears of each block a player mines here, once it's broken (the Promising Pickaxe counts them). */
+    public static void addBrokenListener(BiConsumer<Player, Block> listener) {
+        BROKEN.add(listener);
+    }
 
     /** Flowstate's Mining Speed counts in their stats from now on (on this server, where the streaks are). */
     public BlockListener() {
@@ -129,6 +138,7 @@ public class BlockListener implements Listener {
         Flowstate.broke(player);
 
         minableBlock.onBreak(block, player);
+        for (BiConsumer<Player, Block> listener : BROKEN) listener.accept(player, block);
 
         new BukkitRunnable() {
             @Override

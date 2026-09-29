@@ -74,6 +74,11 @@ final class RunPuzzleHost implements PuzzleHost {
     }
 
     @Override
+    public void reset(int room) {
+        run.puzzleReset(layout.room(room));
+    }
+
+    @Override
     public void log(String message) {
         plugin.getLogger().info("Run " + run.id + ": " + message);
     }

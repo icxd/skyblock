@@ -35,6 +35,11 @@ public final class Magic {
         Spell withBase(double base) {
             return new Spell(base, scaling, additive, floored);
         }
+
+        /** The same spell doing {@code factor} times as much (a multiplicative multiplier on it: Consolidated's 1.25). */
+        Spell times(double factor) {
+            return factor == 1 ? this : withBase(base * factor);
+        }
     }
 
     /** What the caster brings: Intelligence, Ability Damage, and the additive buffs on this target (in percent). */
