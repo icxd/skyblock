@@ -47,10 +47,12 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.chunk.PalettedContainerFactory;
 import net.minecraft.world.level.chunk.PalettedContainerRO;
 import net.minecraft.world.level.chunk.Strategy;
@@ -198,6 +200,7 @@ public final class WorldCapture {
     ChunkSnapshot snapshot = snapshot(w, chunk);
     io.execute(() -> {
       try {
+        for (ChunkSnapshot.Section s : snapshot.sections()) persistentLeaves(s.blocks());
         w.chunkFiles.write(pos, ChunkNbt.chunk(snapshot, w.blocks));
       } catch (Exception e) {
         failed("chunk " + pos.x() + ", " + pos.z(), e);
@@ -228,6 +231,28 @@ public final class WorldCapture {
     return new ChunkSnapshot(chunk.getPos().x(), chunk.getPos().z(), sections, blockEntities);
   }
 
+  /**
+   * Leaves made persistent. Hypixel's worlds don't random-tick, so its trees never decay; on a
+   * server that does tick, the client's leaves (which aren't persistent) would fall apart. Sections
+   * without such leaves are left as they are.
+   */
+  static PalettedContainer<BlockState> persistentLeaves(PalettedContainer<BlockState> states) {
+    if (!states.maybeHas(WorldCapture::decays)) return states;
+    for (int y = 0; y < 16; y++) {
+      for (int z = 0; z < 16; z++) {
+        for (int x = 0; x < 16; x++) {
+          BlockState state = states.get(x, y, z);
+          if (decays(state)) states.getAndSetUnchecked(x, y, z, state.setValue(LeavesBlock.PERSISTENT, true));
+        }
+      }
+    }
+    return states;
+  }
+
+  private static boolean decays(BlockState state) {
+    return state.hasProperty(LeavesBlock.PERSISTENT) && !state.getValue(LeavesBlock.PERSISTENT);
+  }
+
   /** Biomes keep the server's names, Hypixel's own ("hypixel:wilderness") included: a datapack can give them their colours. */
   private static String biomeName(Holder<Biome> biome) {
     return biome.unwrapKey().map(key -> key.identifier().toString()).orElse("minecraft:plains");
@@ -238,8 +263,11 @@ public final class WorldCapture {
       if (!isDecoration(e) || w.decorations.containsKey(e.getUUID())) continue;
       TagValueOutput out = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, w.level.registryAccess());
       if (!e.saveAsPassenger(out)) continue;
+      CompoundTag tag = out.buildResult();
+      // Hypixel never moves them, but the client doesn't hear of NoGravity: a server would drop them.
+      if (e instanceof ArmorStand) tag.putBoolean("NoGravity", true);
       long chunk = e.chunkPosition().pack();
-      w.decorations.put(e.getUUID(), new Decoration(chunk, out.buildResult()));
+      w.decorations.put(e.getUUID(), new Decoration(chunk, tag));
       w.dirty.add(chunk);
     }
   }

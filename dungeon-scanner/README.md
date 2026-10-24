@@ -70,6 +70,10 @@ worlds/<time>[_name]/<n>_<area>/region/r.x.z.mca     blocks, biomes and block en
   breaking a block afterwards doesn't change it. Decorations are kept as first seen.
 - Name tags, holograms, NPCs and mobs aren't saved; the game spawns those. The replay tool's
   `npcs.json` has a recording's NPCs and holograms.
+- Leaves are saved persistent and armor stands without gravity, as they behave on Hypixel, whose
+  worlds don't random-tick and never move them. As the client has them, a server that ticks would
+  decay the trees (766 items dropped in a minute in the Hub, none with random ticks off) and drop
+  the stands over the void out of the world. Captures from before this have both.
 - Light isn't saved: the server works it out as it loads the chunks. Nor are heightmaps, which
   it makes when they're missing.
 - Biomes keep the names the server sent, Hypixel's own included (`hypixel:wilderness`,

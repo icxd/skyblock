@@ -10,6 +10,12 @@ import org.junit.jupiter.api.Test;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.chunk.Strategy;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
@@ -55,5 +61,21 @@ class WorldCaptureTest {
     assertEquals(List.of("10/24/26 m91AA", " 8:00am ☀", " \uE067 Your Island", "Purse: 0"), lines);
     assertEquals("Your Island", Sidebar.area(lines));
     assertEquals("m91AA", Sidebar.server(lines));
+  }
+
+  @Test
+  void leavesAreSavedPersistentAndNothingElseChanges() {
+    PalettedContainer<BlockState> states = new PalettedContainer<>(Blocks.AIR.defaultBlockState(), Strategy.createForBlockStates(Block.BLOCK_STATE_REGISTRY));
+    BlockState decaying = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false).setValue(LeavesBlock.DISTANCE, 3);
+    BlockState placed = Blocks.BIRCH_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
+    states.set(1, 2, 3, decaying);
+    states.set(4, 5, 6, placed);
+    states.set(7, 8, 9, Blocks.STONE.defaultBlockState());
+
+    WorldCapture.persistentLeaves(states);
+    assertEquals(decaying.setValue(LeavesBlock.PERSISTENT, true), states.get(1, 2, 3));
+    assertEquals(placed, states.get(4, 5, 6));
+    assertEquals(Blocks.STONE.defaultBlockState(), states.get(7, 8, 9));
+    assertEquals(Blocks.AIR.defaultBlockState(), states.get(0, 0, 0));
   }
 }
