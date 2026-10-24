@@ -1,6 +1,9 @@
 package net.icxd.dungeonscanner;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -9,10 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -21,6 +27,7 @@ import net.icxd.dungeonscanner.legacy.LegacyMapper;
 import net.icxd.dungeonscanner.scan.DungeonScan;
 import net.icxd.dungeonscanner.scan.RoomDatabase;
 import net.icxd.dungeonscanner.scan.ScannedDungeon;
+import net.icxd.dungeonscanner.world.WorldCapture;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -32,7 +39,8 @@ import net.minecraft.world.scores.PlayerTeam;
  * ({@code /dscan auto true}, the default) it starts by itself when Mort hands out the map. While a
  * scan is running, every second it re-reads the loaded part of the dungeon and saves every room
  * whose chunks are all loaded, so rooms are captured before anyone walks in and changes them.
- * {@code /dscan status} shows how many of Hypixel's rooms you have.
+ * {@code /dscan status} shows how many of Hypixel's rooms you have. {@code /dscan world start}
+ * saves whatever world you walk through as region files ({@link WorldCapture}).
  */
 public final class DungeonScannerClient implements ClientModInitializer {
   static final Logger LOG = LoggerFactory.getLogger("dungeonscanner");
@@ -50,6 +58,7 @@ public final class DungeonScannerClient implements ClientModInitializer {
   private Exporter exporter;
   private ClientLevel scanning;
   private int ticks;
+  private WorldCapture world;
 
   @Override
   public void onInitializeClient() {
@@ -78,6 +87,24 @@ public final class DungeonScannerClient implements ClientModInitializer {
                   auto = BoolArgumentType.getBool(c, "enabled");
                   say("Auto scan " + (auto ? "on" : "off") + ".", ChatFormatting.GRAY);
                   return 1;
+                })))
+            .then(ClientCommands.literal("world")
+                .then(ClientCommands.literal("start")
+                    .executes(c -> {
+                      startWorld(null);
+                      return 1;
+                    })
+                    .then(ClientCommands.argument("name", StringArgumentType.word()).executes(c -> {
+                      startWorld(StringArgumentType.getString(c, "name"));
+                      return 1;
+                    })))
+                .then(ClientCommands.literal("stop").executes(c -> {
+                  stopWorld();
+                  return 1;
+                }))
+                .then(ClientCommands.literal("status").executes(c -> {
+                  say(world == null ? "Not saving the world." : world.status(), ChatFormatting.GRAY);
+                  return 1;
                 })))));
 
     ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
@@ -87,6 +114,31 @@ public final class DungeonScannerClient implements ClientModInitializer {
     });
 
     ClientTickEvents.END_CLIENT_TICK.register(this::tick);
+    ClientChunkEvents.CHUNK_UNLOAD.register((level, chunk) -> {
+      if (world != null) world.unloading(level, chunk);
+    });
+    ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> stopWorld());
+  }
+
+  private void startWorld(String name) {
+    if (world != null) {
+      say("Already saving the world to " + world.folder() + ".", ChatFormatting.YELLOW);
+      return;
+    }
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+    Path folder = root.resolve("worlds").resolve(name == null ? time : time + "_" + name);
+    for (int i = 2; Files.exists(folder); i++) folder = folder.resolveSibling(time + "_" + (name == null ? "" : name + "_") + i);
+    world = new WorldCapture(folder, text -> say(text, ChatFormatting.GREEN), text -> say(text, ChatFormatting.RED));
+    say("Saving the world as it loads; nothing is asked of the server, so walk wherever you want it. "
+        + "/dscan world stop to finish.", ChatFormatting.GRAY);
+  }
+
+  private void stopWorld() {
+    if (world == null) return;
+    WorldCapture stopping = world;
+    world = null;
+    stopping.stop();
+    say("Stopped saving the world (" + stopping.folder() + ").", ChatFormatting.GRAY);
   }
 
   private void start(String why) {
@@ -110,6 +162,7 @@ public final class DungeonScannerClient implements ClientModInitializer {
   }
 
   private void tick(Minecraft mc) {
+    if (world != null) world.tick(mc);
     if (exporter == null) return;
     if (mc.level != scanning) {
       stop("ended (left the dungeon)");

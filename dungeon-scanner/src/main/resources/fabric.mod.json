@@ -3,7 +3,7 @@
   "id": "dungeonscanner",
   "version": "${version}",
   "name": "Dungeon Scanner",
-  "description": "Scans a Hypixel Catacombs run and saves every room as a schematic, plus the run's layout.",
+  "description": "Scans a Hypixel Catacombs run and saves every room as a schematic, plus the run's layout; saves the worlds you walk through as region files.",
   "authors": ["icxd"],
   "license": "All-Rights-Reserved",
   "environment": "client",
