@@ -20,11 +20,14 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
   - Complete Dungeons: each floor's first completion (Entrance to VII: 20/20/20/20/20/30/30/30, Master: 50).
   - Collections: tiers reached, through `LevelingSources` (none until the collections code is wired in:
     `SkyBlockLevels.sources(...)` with `collectionTiers` and `collectionTier` from `Collections.tier(...)`).
+  - Complete Objectives: the SkyBlock XP quests' objectives gave as their reward (`Quests.skyBlockXp`: Saving Up's
+    "Talk to the Banker", +5, as recorded; Getting Started's gave none).
   - Every task is capped at what the data says it's worth.
-- **Cached per player and profile** (`SkyBlockLevels`): worked out again 2 s after something that gives XP (a skill
-  level-up in `SkillGains`, a run's rewards in `DungeonRun`: the level-up message comes 2 s after, as in real chat
-  logs), on a profile switch, and every 10 s for everyone (for changes nothing reports, such as admin commands). A
-  full profile (every skill maxed, Catacombs and classes 50, every floor) takes about 14 µs.
+- **Cached per player and profile** (`SkyBlockLevels`): worked out again 0.5 s after something that gives XP (a skill
+  level-up in `SkillGains`, a run's rewards in `DungeonRun`, a quest's reward: the action bar's gain came 0.5 s after
+  Saving Up's, as recorded), on a profile switch, and every 10 s for everyone (for changes nothing reports, such as
+  admin commands). The level-up message comes 2 s after what gave the XP, as in real chat logs. A full profile
+  (every skill maxed, Catacombs and classes 50, every floor) takes about 14 µs.
 - **The old field**: `User.getSkyBlockXp()` was only the skill levels' part and was never saved; it now reads the
   model, and every reader (the SkyBlock Menu, the dungeon tab list) goes through it or `SkyBlockXp`. The old number
   is the Skill Level Up task's part of the new (tested).
@@ -38,7 +41,7 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
   (UNKNOWN: a skill's). The profile keeps the last level it was told of (`leveling.level`); a profile without one is
   told nothing the first time, so progress from before this existed isn't announced.
 - **Action bar**: "+20 SkyBlock XP (Skill Level Up) (34/100)" in place of Defense for 2 s, for the task that gave the
-  most (UNKNOWN how Hypixel shows two).
+  most (UNKNOWN how Hypixel shows two). Complete Objectives is "Complete Objective" there, as recorded.
 - **Colours**: every 40 levels, gray to dark red at 480 (the recorded Prefix Color rewards, NEU's `sblevel_colours`).
 - **Chat**: "[88] ♦ [MVP+] Name: text" (a real chat log's order), for viewers with SkyBlock Levels in Chat on (the
   switch in SkyBlock Leveling, saved on the account as `settings.levelsInChat`).

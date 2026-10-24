@@ -18,6 +18,7 @@ class QuestsTest {
     private static final Place HUB = new Place(Island.HUB, null);
     private static final Place VILLAGE = new Place(Island.HUB, "Village");
     private static final Place DUNGEON_HUB = new Place(Island.DUNGEON_HUB, "Dungeon Hub");
+    private static final Place BANK = new Place(Island.HUB, "Bank");
 
     @Test
     void gettingStartedGoesStepByStepAndLeadsToMarco() {
@@ -89,6 +90,32 @@ class QuestsTest {
         assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, VILLAGE, Quests.MARCO_THE_ARTIST, true));
         // Progress elsewhere leaves the one followed (the Banker's quest didn't take the boss bar).
         assertSame(Quests.MARCO_THE_ARTIST, Quests.follow(profile, VILLAGE, Quests.MARCO_THE_ARTIST, false));
+    }
+
+    /**
+     * The recording's Saving Up: the Banker starts it with its first objective done (+5 SkyBlock XP), the
+     * boss bar staying on the Bartender; in the Bank it's followed, and the first deposit completes it.
+     */
+    @Test
+    void savingUp() {
+        Document profile = new Document();
+        Quests.start(profile, Quests.TIME_TO_STRIKE, 1000);
+        assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, BANK, null, true));
+        assertTrue(Quests.start(profile, Quests.SAVING_UP, 2000));
+        assertFalse(Quests.complete(profile, Quests.SAVING_UP, Quests.TALK_TO_THE_BANKER, 2000).completed());
+        assertEquals(5, Quests.skyBlockXp(profile));
+        assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, BANK, Quests.TIME_TO_STRIKE, false));
+        // Back in the Bank: its own quest.
+        assertSame(Quests.SAVING_UP, Quests.follow(profile, BANK, Quests.TIME_TO_STRIKE, true));
+        assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, VILLAGE, Quests.SAVING_UP, true));
+        Quests.Step deposited = Quests.complete(profile, Quests.SAVING_UP, Quests.DEPOSIT_COINS, 3000);
+        assertTrue(deposited.completed());
+        assertNull(deposited.started());
+        // The coins it gave aren't SkyBlock XP.
+        assertEquals(5, Quests.skyBlockXp(profile));
+        // Done, so the bar goes back to the Bartender.
+        assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, BANK, Quests.SAVING_UP, false));
+        assertSame(Quests.SAVING_UP, Quests.byId("SAVING_UP"));
     }
 
     @Test

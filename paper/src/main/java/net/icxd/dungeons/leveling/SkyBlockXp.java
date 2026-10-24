@@ -13,6 +13,7 @@ import net.icxd.dungeons.dungeons.DungeonRecords;
 import net.icxd.dungeons.leveling.LevelingData.Category;
 import net.icxd.dungeons.leveling.LevelingData.Task;
 import net.icxd.dungeons.leveling.LevelingData.Unlock;
+import net.icxd.dungeons.quest.Quests;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
 
@@ -40,6 +41,7 @@ public final class SkyBlockXp {
     static final String CLASSES = "class_level_up";
     static final String DUNGEONS = "complete_dungeons";
     static final String COLLECTIONS = "collections";
+    static final String OBJECTIVES = "complete_objectives";
 
     private SkyBlockXp() {
     }
@@ -81,6 +83,7 @@ public final class SkyBlockXp {
                     case CLASSES -> classes(profile, task);
                     case DUNGEONS -> completions(profile, task, tasks);
                     case COLLECTIONS -> sources.collectionTiers(profile) * task.xpEach();
+                    case OBJECTIVES -> Quests.skyBlockXp(profile);
                     default -> 0;
                 };
                 // No more than the task is worth (a data file with no most for it caps nothing).

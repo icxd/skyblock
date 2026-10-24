@@ -23,9 +23,9 @@ import net.icxd.dungeons.quest.Quest.Objective;
  *
  * <p>The quests are the recording's (2026-10-24, a new profile's first ten minutes) and the names
  * the Quest Log and chat gave them: Getting Started on the island, then Marco the Artist, which it
- * leads to, and Time to Strike in the Hub. Marco and the Bartender aren't in the Hub yet (their
- * places weren't recorded), so those two stay going, as they still were on the recorded older
- * profile, years in.
+ * leads to, Time to Strike in the Hub, and the Banker's Saving Up. Marco and the Bartender aren't in
+ * the Hub yet (their places weren't recorded), so those two stay going, as they still were on the
+ * recorded older profile, years in.
  */
 public final class Quests {
     public static final String KEY = "quests";
@@ -45,7 +45,17 @@ public final class Quests {
     public static final Quest TIME_TO_STRIKE = new Quest("TIME_TO_STRIKE", "Time to Strike", Material.PAPER, Home.on(Island.HUB),
             List.of(new Objective("Talk to the Bartender", true)), null);
 
-    public static final List<Quest> ALL = List.of(GETTING_STARTED, MARCO_THE_ARTIST, TIME_TO_STRIKE);
+    /**
+     * Started by talking to the Banker, which is its first objective (+5 SkyBlock XP); a deposit is the
+     * second (+10 Coins). At home in the Bank: the boss bar went to it there, and only there.
+     */
+    public static final Quest SAVING_UP = new Quest("SAVING_UP", "Saving Up", Material.PAPER, Home.in(Island.HUB, "Bank"),
+            List.of(new Objective("Talk to the Banker", true, Quest.Reward.skyBlockXp(5)),
+                    new Objective("Deposit Coins in the Bank", true, Quest.Reward.coins(10))), null);
+    public static final int TALK_TO_THE_BANKER = 0;
+    public static final int DEPOSIT_COINS = 1;
+
+    public static final List<Quest> ALL = List.of(GETTING_STARTED, MARCO_THE_ARTIST, TIME_TO_STRIKE, SAVING_UP);
 
     private Quests() {
     }
@@ -119,6 +129,19 @@ public final class Quests {
 
     /** An objective done: whether that completed the quest, and the quest that started because of it (null for none). */
     public record Step(Quest quest, boolean completed, Quest started) {
+    }
+
+    /** The SkyBlock XP the objectives it has done gave (SkyBlock Leveling's Complete Objectives). */
+    public static int skyBlockXp(Document profile) {
+        int xp = 0;
+        for (Quest quest : ALL) {
+            int done = done(profile, quest);
+            for (int i = 0; i < done; i++) {
+                Quest.Reward reward = quest.objective(i).reward();
+                if (reward != null) xp += reward.skyBlockXp();
+            }
+        }
+        return xp;
     }
 
     /** The quests going, oldest first (the Quest Log's order after the Fairy Souls). */

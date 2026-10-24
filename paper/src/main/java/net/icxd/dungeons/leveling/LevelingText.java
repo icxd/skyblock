@@ -101,4 +101,9 @@ final class LevelingText {
     static String actionBar(int xp, String task, int total) {
         return "&b+" + xp + " SkyBlock XP &7(" + task + "&7)&b (" + SkyBlockXp.intoLevel(total) + "/" + SkyBlockXp.PER_LEVEL + ")";
     }
+
+    /** What the action bar calls a task: its name, but "Complete Objective" for Complete Objectives (recorded). */
+    static String gainName(LevelingData.Task task) {
+        return SkyBlockXp.OBJECTIVES.equals(task.id()) ? "Complete Objective" : task.name();
+    }
 }
