@@ -159,12 +159,22 @@ test('worlds are named by the sidebar: server after the date, area after the tim
   const r = run(s => {
     s.login()
     s.tag(1, 0, 70, 0, 'Sign')
-    s.sidebar('[&e&lSKYBLOCK]\n  | &709/26/26 &8m12&v&8DQ\n  | &f Early Autumn 8th\n  |  &710:30am &e☀\n  |  &7 &aYour Isla&q&and\n  | &fPurse: &657,690')
+    s.sidebar('[&e&lSKYBLOCK]\n  | &709/26/26 &8m12&v&8DQ\n  | &f Early Autumn 8th\n  |  &710:30am &e☀\n  |  &7\uE067 &aYour Isla&q&and\n  | &fPurse: &657,690')
     s.wait(5000)
   })
   assert.strictEqual(r.worlds[0].server, 'm12DQ')
   assert.deepStrictEqual(r.worlds[0].areas, ['Your Island'])
   assert.match(r.text, /server m12DQ: Your Island/)
+})
+
+test('another line that reads like a time doesn\'t name the area: the line with the icon does', () => {
+  const r = run(s => {
+    s.login()
+    s.tag(1, 0, 70, 0, 'Sign')
+    s.sidebar('[SKYBLOCK]\n  | 8:00am\n  |  8:00am ☀\n  |  \uE067 Test Island\n  | Purse: 0')
+    s.wait(5000)
+  })
+  assert.deepStrictEqual(r.worlds[0].areas, ['Test Island'])
 })
 
 test('a skin without the usual JSON still has its property', () => {

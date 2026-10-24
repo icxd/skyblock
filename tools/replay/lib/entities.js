@@ -197,8 +197,11 @@ function track (types, describe) {
     const lines = sidebarText.split('\n').slice(1).map(l => plain(l.replace(/^\s*\|/, '')).trim())
     const server = lines.map(l => l.match(/^\d\d\/\d\d\/\d\d\s+(\S+)/)).find(Boolean)
     if (server && !world.server) world.server = server[1]
-    const time = lines.findIndex(l => /\b\d{1,2}:\d\d\s?(am|pm)\b/i.test(l))
-    const here = time >= 0 && lines[time + 1] && lines[time + 1].replace(/[-⏣ф]/g, '').trim()
+    // Of the lines after a time, the one with the area's icon if any has it.
+    const after = lines.filter((l, i) => i > 0 && /\b\d{1,2}:\d\d\s?(am|pm)\b/i.test(lines[i - 1]))
+      .filter(l => l.replace(/[\uE000-\uF8FF⏣ф]/g, '').trim())
+    const line = after.find(l => /^[\uE000-\uF8FF⏣ф]/.test(l)) || after[0]
+    const here = line && line.replace(/[\uE000-\uF8FF⏣ф]/g, '').trim()
     if (here && !world.areas.includes(here)) world.areas.push(here)
   }
 
