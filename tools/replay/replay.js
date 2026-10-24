@@ -66,7 +66,14 @@ function load (file) {
     entities = {}
     for (const entity of dec.data.entitiesArray) entities[entity.id] = entity.name
   }
-  return { rec, dec, items, entities, colors: generated ? readData('map-colors.json') : null }
+  let sounds = generated && readData('sounds.json')
+  if (generated && !sounds) console.error('  these tables are from before sounds were added: run `replay.js setup` again')
+  if (!sounds) {
+    sounds = {}
+    // minecraft-data counts from 1; the decoder gives the registry's ids, which count from 0.
+    for (const sound of dec.data.soundsArray || []) sounds[sound.id - 1] = sound.name
+  }
+  return { rec, dec, items, entities, sounds, colors: generated ? readData('map-colors.json') : null }
 }
 
 function outDir (args, file, kind) {
@@ -85,9 +92,9 @@ function main (argv) {
     case 'decode': {
       const dir = outDir(args, args[0])
       if (!args[0]) break
-      const { rec, dec, items, entities } = load(args[0])
-      const stats = decode(rec, dec, { items, entities }, dir)
-      console.error(`${stats.packets} packets (${stats.errors} undecodable); ${stats.timeline} timeline entries, ${stats.sidebars} sidebars, ${stats.tabs} tab lists, ${stats.npcs} NPCs, ${stats.holograms} holograms -> ${dir}`)
+      const { rec, dec, items, entities, sounds } = load(args[0])
+      const stats = decode(rec, dec, { items, entities, sounds }, dir)
+      console.error(`${stats.packets} packets (${stats.errors} undecodable); ${stats.timeline} timeline entries, ${stats.sidebars} sidebars, ${stats.tabs} tab lists, ${stats.sounds} sounds, ${stats.npcs} NPCs, ${stats.holograms} holograms -> ${dir}`)
       return
     }
     case 'maps': {

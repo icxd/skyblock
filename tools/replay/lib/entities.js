@@ -212,7 +212,13 @@ function track (types, describe) {
     return { worlds: out, text: write(out), npcs: out.reduce((n, w) => n + w.npcs.length, 0), holograms: out.reduce((n, w) => n + w.holograms.length, 0) }
   }
 
-  return { handle, area, report }
+  /** Where an entity of the world the player is in is now ([x, y, z]); null if it isn't there. */
+  const positionOf = id => {
+    const e = world && world.live.get(id)
+    return e ? e.pos : null
+  }
+
+  return { handle, area, report, positionOf }
 }
 
 const overlaps = (a, b) => a.t <= b.gone && b.t <= a.gone

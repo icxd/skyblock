@@ -181,3 +181,14 @@ test('a skin without the usual JSON still has its property', () => {
   assert.deepStrictEqual(skin([{ name: 'textures', value: 'not base64 json' }]), { value: 'not base64 json', signature: null })
   assert.strictEqual(skin([{ name: 'other', value: 'x' }]), null)
 })
+
+test("an entity's position follows its moves, and is gone with it", () => {
+  const npcs = track(TYPES, () => null)
+  const at = (t, name, params) => npcs.handle({ t, state: 'play', name, params })
+  at(0, 'login', {})
+  at(100, 'spawn_entity', { entityId: 7, objectUUID: PLAYER, type: 999, x: 7.5, y: 100, z: 7.5, yaw: 0, pitch: 0 })
+  at(200, 'rel_entity_move', { entityId: 7, dX: 4096, dY: 0, dZ: -2048 })
+  assert.deepStrictEqual(npcs.positionOf(7), [8.5, 100, 7])
+  at(300, 'entity_destroy', { entityIds: [7] })
+  assert.strictEqual(npcs.positionOf(7), null)
+})

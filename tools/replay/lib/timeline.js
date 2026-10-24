@@ -1,7 +1,9 @@
 'use strict'
 // A readable account of a recording: what the player saw, in order.
 //   timeline.txt  chat, action bar (when it changes in more than numbers), titles, boss bar,
-//                 server and world changes, teleports, menus opened, items put in the inventory
+//                 server and world changes, teleports, menus opened, items put in the inventory,
+//                 and the sounds played where the player stood (see sounds.js)
+//   sounds.txt    every sound, with where it played and how far from the player
 //   sidebar.txt   the sidebar each time it settles into something new (numbers aside)
 //   tab.txt       the tab list the same way, in slot order
 //   gui.txt       every menu's contents: slots, item names and lore
@@ -11,8 +13,9 @@ const path = require('path')
 const { text, plain, clock } = require('./text')
 const { packets } = require('./recording')
 const { track } = require('./entities')
+const { collect, describe: describeSound } = require('./sounds')
 
-function decode (recording, dec, { items, entities }, outDir) {
+function decode (recording, dec, { items, entities, sounds = {} }, outDir) {
   const out = { main: [], sidebar: [], tab: [], gui: [] }
   const numbersAside = s => plain(s).replace(/[\d,.]+/g, '#')
 
@@ -28,6 +31,18 @@ function decode (recording, dec, { items, entities }, outDir) {
   }
   const describe = x => x.id + ' x' + x.count + ' ' + (x.name || '') + (x.lore.length ? '\n      ' + x.lore.join('\n      ') : '')
   const npcs = track(entities, itemInfo)
+
+  // The recording player: Replay Mod spawns them as an entity of their own, numbered as the
+  // complement of the login packet's id (which the replay's camera takes), so where they are is
+  // that entity's position, or their last teleport's until it's there.
+  let self = null
+  let selfPos = null
+  const playerPos = () => (self != null && npcs.positionOf(self)) || selfPos
+  const heard = collect(sounds)
+  const sound = (t, holder, category, pos, volume, pitch) => {
+    const s = heard.played(t, holder, category, pos, volume, pitch, playerPos())
+    if (s && s.atPlayer) out.main.push({ t, line: '[sound] ' + s.name + ' (' + describeSound(s) + ')' })
+  }
 
   // Scoreboard: objectives, scores, teams (sidebar lines are team prefix + holder + suffix, or the
   // score's own display name).
@@ -143,11 +158,24 @@ function decode (recording, dec, { items, entities }, outDir) {
         break
       case 'login':
       case 'respawn': {
+        if (name === 'login') {
+          self = -d.entityId - 1
+          selfPos = null
+        }
         const w = d.worldState || {}
         log(`[world] ${name}: ${w.name || d.worldName} (${w.gamemode ?? ''})`)
         break
       }
-      case 'position': log('[teleport] ' + [d.x, d.y, d.z].map(v => (+v).toFixed(1)).join(', ')); break
+      case 'position': {
+        const relative = d.flags || {}
+        const was = selfPos || [0, 0, 0]
+        selfPos = ['x', 'y', 'z'].map((k, i) => (relative[k] ? was[i] : 0) + Number(d[k]))
+        log('[teleport] ' + [d.x, d.y, d.z].map(v => (+v).toFixed(1)).join(', '))
+        break
+      }
+      // Positions come in eighths of a block.
+      case 'sound_effect': sound(t, d.sound, d.soundCategory, [d.x / 8, d.y / 8, d.z / 8], d.volume, d.pitch); break
+      case 'entity_sound_effect': sound(t, d.sound, d.soundCategory, npcs.positionOf(d.entityId) || (d.entityId === self ? playerPos() : null), d.volume, d.pitch); break
       case 'kick_disconnect': log('[disconnect] ' + text(d.reason)); break
       case 'transfer': log('[transfer] ' + JSON.stringify(d)); break
 
@@ -249,10 +277,13 @@ function decode (recording, dec, { items, entities }, outDir) {
   fs.writeFileSync(path.join(outDir, 'sidebar.txt'), out.sidebar.join('\n\n') + '\n')
   fs.writeFileSync(path.join(outDir, 'tab.txt'), out.tab.join('\n') + '\n')
   fs.writeFileSync(path.join(outDir, 'gui.txt'), out.gui.join('\n') + '\n')
+  const where = s => !s.pos ? '' : ' at ' + s.pos.map(v => Math.round(v * 10) / 10).join(' ') +
+    (s.distance == null ? '' : s.atPlayer ? ', at the player' : ', ' + Math.round(s.distance) + ' blocks away')
+  fs.writeFileSync(path.join(outDir, 'sounds.txt'), heard.heard.map(s => clock(s.t) + '  ' + s.name + ' (' + describeSound(s) + ')' + where(s)).join('\n') + '\n')
   const seen = npcs.report()
   fs.writeFileSync(path.join(outDir, 'npcs.txt'), seen.text)
   fs.writeFileSync(path.join(outDir, 'npcs.json'), JSON.stringify(seen.worlds, null, 1) + '\n')
-  return { ...stats, timeline: main.length, sidebars: out.sidebar.length, tabs: out.tab.length, npcs: seen.npcs, holograms: seen.holograms }
+  return { ...stats, timeline: main.length, sidebars: out.sidebar.length, tabs: out.tab.length, sounds: heard.heard.length, npcs: seen.npcs, holograms: seen.holograms }
 }
 
 module.exports = { decode, clock }

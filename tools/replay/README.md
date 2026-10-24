@@ -19,16 +19,16 @@ node replay.js setup <vanilla server jar>     # only for versions minecraft-data
 
 `setup` runs Mojang's data generator on a vanilla server jar (not a Paper jar; servermgr keeps
 one in `servers/<name>/cache/mojang_<version>.jar`) and writes item ids, entity type ids,
-particle ids, packet ids and map colours to `data/`. It needs a JDK (`--java <path>`, else
+particle ids, sound ids, packet ids and map colours to `data/`. It needs a JDK (`--java <path>`, else
 `JAVA_HOME`, else `java` on the path). Without it, newer recordings still decode, but item and
-entity types and map colours may be wrong, and packets that carry particles (including some
-entity metadata) don't decode: 26.2 renumbered entity types and particles.
+entity types, sounds and map colours may be wrong, and packets that carry particles (including
+some entity metadata) don't decode: 26.2 renumbered entity types and particles, and added sounds.
 
 ## Commands
 
 | | |
 |---|---|
-| `decode <rec.mcpr> [--out dir]` | `timeline.txt`, `sidebar.txt`, `tab.txt`, `gui.txt`, `npcs.txt` and `npcs.json` (below) |
+| `decode <rec.mcpr> [--out dir]` | `timeline.txt`, `sidebar.txt`, `tab.txt`, `gui.txt`, `sounds.txt`, `npcs.txt` and `npcs.json` (below) |
 | `maps <rec.mcpr> <seconds>... [--map id] [--out dir]` | every map (or one) as a PNG at those moments |
 | `item <rec.mcpr> <slot> <from s> <to s>` | name, lore and map id of items put in an inventory slot |
 | `raw <rec.mcpr> <from s> <to s> <packet>...` | decoded packets of those types as JSON, e.g. `system_chat` |
@@ -39,8 +39,13 @@ recording. Text keeps its colours as `&` codes (`&c` red, `&l` bold, `&#rrggbb`)
 show as `⟦click:run_command /instancerequeue⟧`.
 
 - **timeline.txt**: chat, action bar (when it changes in more than numbers), titles, boss bar,
-  server switches, world changes, teleports, menus opened and closed, and items appearing in the
-  inventory (hotbar slots are 36-44).
+  server switches, world changes, teleports, menus opened and closed, items appearing in the
+  inventory (hotbar slots are 36-44), and the sounds played where the player stood:
+  `[sound] block.note_block.pling (block, volume 1, pitch 0.49)`. Hypixel plays its own sounds
+  there (an NPC's voice, NEW OBJECTIVE's note, a menu's click); other players' and the world's
+  come from wherever they happen, so they're left out (within 2 blocks counts).
+- **sounds.txt**: every sound, with where it played and how far from the player. Hypixel sends
+  each sound twice; the second copy is left out of both files.
 - **sidebar.txt** and **tab.txt**: a snapshot each time they change in more than numbers, or
   every half minute while they change. The tab list is in slot order (servers fill it with fake
   players named `!A-a`, `!A-b`, ... to order it).
@@ -51,6 +56,10 @@ show as `⟦click:run_command /instancerequeue⟧`.
   numbers lists its new texts with when ("line 3 became Free Daily Reward!").
 - **npcs.json**: the same, with each NPC's `textures` property (`value` and `signature`), as
   `Npc.spawn` takes it, and times in milliseconds.
+
+Where the player is (for the sounds): Replay Mod spawns the recording player as an entity of
+their own, numbered as the complement of the login packet's entity id (the replay's camera takes
+that one), so it's that entity's position, or the last teleport's until it appears.
 
 How NPCs are told apart (`lib/entities.js`): Hypixel's are players with version 2 UUIDs that
 aren't in the tab list (real accounts are version 4), or mobs such as Jerry's villager, standing
