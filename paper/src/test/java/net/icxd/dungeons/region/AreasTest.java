@@ -59,4 +59,11 @@ class AreasTest {
         assertEquals("§eFarm", RegionType.FARM.displayName());
         assertEquals("§6Bank", RegionType.BANK.displayName());
     }
+
+    /** Each area's fanfare, as the packet had it: volume 0.3, pitch 1.4920635 (94/63). */
+    @Test
+    void theFanfareAsRecorded() {
+        assertEquals(0.3f, Areas.FOUND_VOLUME);
+        assertEquals(1.4920635f, Areas.FOUND_PITCH, 1e-6);
+    }
 }

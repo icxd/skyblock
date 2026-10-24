@@ -25,8 +25,8 @@ recorded-menu checks without it.
   collections too) and `Collections.skyBlockXp(profile)` (the tiers' "+N SkyBlock XP").
 - **What counts** (the wiki's Collections: items obtained "manually", not from merchants, the Bazaar
   or trades): a mob's drops and a mined block's, when they go straight into the inventory (dungeon
-  mobs, mining, a block broken on the player's own island) or when a player picks them up off the
-  ground. Only drops the plugin itself made are
+  mobs, mining) or when a player picks them up off the ground (a block broken on their own
+  island). Only drops the plugin itself made are
   marked collectable (an entity tag), and a marked stack never merges with an unmarked one, so what a
   player dropped, traded, bought, took from storage or got from /item or the item browser never
   counts. An enchanted item counts as what it's made of (160 Rotten Flesh). Only Normal profiles

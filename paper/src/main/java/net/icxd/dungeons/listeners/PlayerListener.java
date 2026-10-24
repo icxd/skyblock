@@ -169,6 +169,8 @@ public class PlayerListener implements Listener {
         event.setCancelled(true);
         Map<Integer, ItemStack> left = player.getInventory().addItem(builtItem);
         int leftOver = left.values().stream().mapToInt(ItemStack::getAmount).sum();
+        // Vanilla's pickup, which the cancel took away: the item flies to them and pops (the client's sound, as recorded).
+        if (leftOver < item.getAmount()) player.playPickupItemAnimation(event.getItem(), item.getAmount() - leftOver);
         if (leftOver == 0) {
             event.getItem().remove();
         } else {

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 import net.icxd.dungeons.quest.QuestProgress;
@@ -19,14 +21,17 @@ import net.kyori.adventure.title.Title;
 
 /**
  * The area a player is in, and the areas their profile has found: the first time it gets to one,
- * Hypixel says so with a title ("Village" over "NEW AREA DISCOVERED!", 2 s in, 2 s up, 2 s out) and
- * a few lines in chat on what's there, all as recorded (2026-10-24). Finding the Village starts Time
+ * Hypixel says so with a title ("Village" over "NEW AREA DISCOVERED!", 2 s in, 2 s up, 2 s out), a
+ * challenge's fanfare and a few lines in chat on what's there, all as recorded (2026-10-24). Finding the Village starts Time
  * to Strike (the boss bar went to "Talk to the Bartender" as it was found). Only areas whose lines
  * were recorded are announced. The profile keeps what it found under {@code areas}. Main thread.
  */
 public final class Areas {
     static final String KEY = "areas";
     static final String DUNGEON_HUB = "Dungeon Hub";
+    /** The fanfare: a challenge toast's, quiet and high (0.3 and 94/63, as recorded with each area). */
+    static final float FOUND_VOLUME = 0.3f;
+    static final float FOUND_PITCH = 94 / 63f;
     /** What each area's discovery says it has, as recorded. */
     static final Map<String, List<String>> FOUND = Map.of(
             "Village", List.of("Explore the area to learn more about &bSkyBlock&f.", "Visit the &6Auction House&f.",
@@ -67,6 +72,7 @@ public final class Areas {
         user.save();
         player.showTitle(Title.title(Text.line(coloured), Text.line("&6&lNEW AREA DISCOVERED!"),
                 Title.Times.times(Duration.ofSeconds(2), Duration.ofSeconds(2), Duration.ofSeconds(2))));
+        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, FOUND_VOLUME, FOUND_PITCH);
         for (String line : discovery(coloured, lines)) player.sendMessage(Text.line(line));
         if (area.equals("Village")) QuestProgress.start(player, Quests.TIME_TO_STRIKE);
     }

@@ -46,9 +46,10 @@ import net.icxd.dungeons.skill.SkillGains;
 
 /**
  * Playing on your island, as the recording shows it: you break and place what you like there (the
- * hubs refuse both, see WorldListener), and what a block drops goes straight into your inventory as
- * its SkyBlock item, counted for its collection ("COLLECTION UNLOCKED Oak Log" as the first log went
- * in); a log gives 6 Foraging XP (recorded: "+6 Foraging (6/50)" each). A placed crafting table opens
+ * hubs refuse both, see WorldListener), and what a block drops falls as its SkyBlock item, to be
+ * picked up (recorded: the log popped out and was picked up 0.6 s later, "COLLECTION UNLOCKED Oak
+ * Log" as it went in) and counted for its collection; a log gives 6 Foraging XP as it breaks
+ * (recorded: "+6 Foraging (6/50)" each). A placed crafting table opens
  * SkyBlock's ("Craft Item", recorded at 00:49.7). The portal on the rock (players bridge the gap to
  * it themselves, see {@link StarterIsland}) takes you to the Hub, and dying there (into the void)
  * brings you back to the island's spawn. The Cobblestone Minion the island starts with stays put
@@ -69,7 +70,10 @@ public final class IslandRules implements Listener {
 
     // Breaking and building
 
-    /** Its drops into their inventory, its Foraging XP for a log. Placing and breaking are let through by WorldListener. */
+    /**
+     * Its drops as SkyBlock items, which whoever picks them up collects; its Foraging XP for a log. Placing
+     * and breaking are let through by WorldListener.
+     */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
@@ -78,14 +82,10 @@ public final class IslandRules implements Listener {
         event.setExpToDrop(0);
         if (player.getGameMode() == GameMode.CREATIVE) return;
         event.setDropItems(false);
-        for (ItemStack drop : block.getDrops(player.getInventory().getItemInMainHand(), player)) give(player, VanillaItems.asSkyBlock(drop));
+        for (ItemStack drop : block.getDrops(player.getInventory().getItemInMainHand(), player)) {
+            CollectionGains.fromWorld(block.getWorld().dropItemNaturally(block.getLocation(), VanillaItems.asSkyBlock(drop)));
+        }
         if (Tag.LOGS.isTagged(block.getType())) SkillGains.give(player, Skill.FORAGING, LOG_XP);
-    }
-
-    /** A drop into their inventory, collected as it goes in; what doesn't fit lands at their feet (collected already). */
-    private static void give(Player player, ItemStack stack) {
-        CollectionGains.collect(player, stack);
-        for (ItemStack left : player.getInventory().addItem(stack).values()) player.getWorld().dropItemNaturally(player.getLocation(), left);
     }
 
     /** What falls on its own (a sapling from decaying leaves) is a SkyBlock item too. */

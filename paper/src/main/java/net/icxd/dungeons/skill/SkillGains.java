@@ -13,6 +13,7 @@ import net.icxd.dungeons.utils.Replacement;
 import net.icxd.dungeons.utils.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,6 +21,7 @@ import org.bukkit.event.Listener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.ToDoubleBiFunction;
 
 /**
@@ -129,6 +131,9 @@ public final class SkillGains implements Listener {
         Replacement shown = Replacement.forMillis(SkillText.actionBar(gain), SHOWN_MILLIS);
         session.setDefenseReplacement(shown);
         StatsRunnable.sendActionBar(player);
+        // An orb's pickup with every gain, as recorded with each "+6 Foraging" and "+2 Mining": half volume, 1.7 to 2.5.
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f,
+                1.7f + ThreadLocalRandom.current().nextFloat() * 0.8f);
         // The action bar is otherwise redrawn once a second, which would keep the XP up to a second too long.
         Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> endShown(player, shown), SHOWN_MILLIS / 50);
         if (gain.leveledUp()) {

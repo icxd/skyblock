@@ -72,7 +72,16 @@ public abstract class GUI {
             this.set(i, stack);
     }
 
+    /**
+     * Opens it, with the click Hypixel's menus make when one opens another (see {@link MenuSound});
+     * opened from the world (an NPC, a block, a command), it's silent.
+     */
     public void open(final Player player) {
+        open(player, GUI_MAP.containsKey(player.getUniqueId()) ? MenuSound.CLICK : null);
+    }
+
+    /** Opens it with this sound instead (null for none). */
+    public void open(final Player player, MenuSound sound) {
         this.beforeOpen(player);
         final Inventory inventory = Bukkit.createInventory(player, this.size, net.icxd.dungeons.utils.Text.line(this.title));
         GUIOpenEvent openEvent = new GUIOpenEvent(player, this, inventory);
@@ -84,6 +93,7 @@ public abstract class GUI {
             player.openInventory(inventory);
             GUI_MAP.remove(player.getUniqueId());
             GUI_MAP.put(player.getUniqueId(), this);
+            if (sound != null) sound.play(player);
             this.afterOpen(openEvent);
 
             if (this instanceof RefreshingGUI gui) {

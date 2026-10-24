@@ -25,8 +25,9 @@ import net.icxd.dungeons.utils.Text;
 
 /**
  * Ophelia, the Dungeon Hub's shop: a click opens her menu (see {@link Shop#OPHELIA}), where players
- * also sell. The first time a profile talks to her she says her lines first (the wiki's "First
- * Interaction"; the time between them isn't known). Where she stands is config.yml's
+ * also sell. The first time a profile talks to her she says her lines first, 2.5 s and then 2 s
+ * apart, and her shop opens 2.1 s after the last (recorded 2026-10-24). She haggles as she speaks
+ * and as her shop opens ({@link Voice#OPHELIA}). Where she stands is config.yml's
  * {@code npcs.ophelia}: its {@code at} if it has one, else on the Dungeon Hub's map where Hypixel has
  * her (see DungeonHubMap), else near the world spawn.
  * Her skin is NEU's, which has no signature; her name tag's red is her chat name's.
@@ -38,10 +39,12 @@ public final class Ophelia {
     private static final ProfileProperty SKIN = new ProfileProperty("textures",
             "e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGFhNGI4MjdhOWE4NWM0ZWZjMTQ3ZmM1OWQwZGE2ODhlYmU3ZTI2ZDI1OGI1NTNjMDQxZGEyZWQ2ZWM4YjZiOCJ9fX0=");
     static final List<String> FIRST_TALK = List.of(
-            "&e[NPC] &cOphelia&f: These &cCatacombs&f hold many &eriches&f, powerful &aitems&f and great &bexperience.",
-            "&e[NPC] &cOphelia&f: My trick? I make &6coins&f from the others' greed.",
-            "&e[NPC] &cOphelia&f: Are you interested in buying anything?");
-    private static final long BETWEEN_LINES = 30;
+            "&e[NPC] &cOphelia&f: &rThese &cCatacombs &rhold many &eriches&r, powerful &aitems &rand great &bexperience&r.",
+            "&e[NPC] &cOphelia&f: &rMy trick? I make &6coins &rfrom the others' greed.",
+            "&e[NPC] &cOphelia&f: &rAre you interested in buying anything?");
+    /** Ticks before each line (recorded at 08:24.6, 08:27.1 and 08:29.1), and before her shop opens (08:31.2). */
+    static final long[] LINE_TICKS = {0, 50, 90};
+    static final long SHOP_TICKS = 132;
 
     private static final Set<UUID> talking = new HashSet<>();
 
@@ -72,20 +75,27 @@ public final class Ophelia {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || talking.contains(player.getUniqueId())) return;
         if (!firstTime(user.profile())) {
-            new ShopMenu(Shop.OPHELIA, player).open(player);
+            openShop(player);
             return;
         }
         talking.add(player.getUniqueId());
         for (int i = 0; i < FIRST_TALK.size(); i++) {
             String line = FIRST_TALK.get(i);
-            boolean last = i == FIRST_TALK.size() - 1;
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (last) talking.remove(player.getUniqueId());
                 if (!player.isOnline()) return;
                 player.sendMessage(Text.line(line));
-                if (last) new ShopMenu(Shop.OPHELIA, player).open(player);
-            }, i * BETWEEN_LINES);
+                Voice.OPHELIA.speak(player);
+            }, LINE_TICKS[i]);
         }
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            talking.remove(player.getUniqueId());
+            if (player.isOnline()) openShop(player);
+        }, SHOP_TICKS);
+    }
+
+    private static void openShop(Player player) {
+        new ShopMenu(Shop.OPHELIA, player).open(player);
+        Voice.OPHELIA.speak(player);
     }
 
     /** Whether this profile hasn't talked to her yet; it has from now on. */

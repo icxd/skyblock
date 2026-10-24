@@ -52,10 +52,11 @@ without gravity, and the plugin makes up for both where it matters:
 - **On the island** (`IslandRules`).
   - **Breaking and building.** You can break and place anything on your own island (the hubs still
     refuse both).
-  - **Drops.** A block's drops go straight into your inventory as SkyBlock items (`VanillaItems`
-    picks the plain item of the material, so an oak log becomes `LOG`) and count for their
-    collection. The first item of a collection says "COLLECTION UNLOCKED Oak Log" (a click opens the
-    collection). A log gives 6 Foraging XP; there are no experience orbs.
+  - **Drops.** A block's drops fall as SkyBlock items (`VanillaItems` picks the plain item of the
+    material, so an oak log becomes `LOG`) for you to pick up, as on Hypixel: the recording's first
+    log popped out and was picked up 0.6 s later. They count for their collection as you pick them
+    up. The first item of a collection says "COLLECTION UNLOCKED Oak Log" (a click opens the
+    collection). A log gives 6 Foraging XP as it breaks; there are no experience orbs.
   - **Crafting.** A crafting table opens SkyBlock's Craft Item, and the inventory's grid makes
     SkyBlock items (`VanillaCrafting`).
   - **The portal** is on the rock 15 blocks south of the island, across the void. There's no
@@ -104,6 +105,17 @@ without gravity, and the plugin makes up for both where it matters:
   Community Center, Election Room, Auction House, Bazaar Alley, Bank, Farm and Dungeon Hub. Found
   areas are kept on the profile under `areas`. The Hub's area boxes (`RegionType`) are drawn around
   those places on the map.
+- **Sounds**, as recorded (the replay tool's `[sound]` lines). Hypixel's pitches come in 63rds
+  (0.492 is 31/63), so they're used as the packets had them.
+  - NEW OBJECTIVE: a note block's pling, pitch 0.49. Skill XP: an orb's pickup, volume 0.5, pitch
+    1.7 to 2.5. COLLECTION UNLOCKED: a level-up, pitch 2. A found area: the challenge toast's
+    fanfare, volume 0.3, pitch 1.49.
+  - NPC lines (`Voice`): Jerry's villager yes or hum, Ophelia's haggling (pitch 1.7 to 1.9, also as
+    her shop opens). Jerry's menu opens silently, as recorded.
+  - Menus (`MenuSound`): a lever's click as one menu opens another (the SkyBlock Menu from its item
+    too), and a page turning as the quest book opens; one opened from the world is silent.
+  - Picking up an item: vanilla's pop, which the client plays as the pickup's animation arrives
+    (every SkyBlock item pickup was silent before).
 - **No vanilla progress** (`VanillaProgress`). There are no advancements, and the recipe book learns
   nothing, so "Advancement Made!" and "New Recipe(s) Unlocked!" never pop up (Hypixel shows neither).
 
