@@ -58,9 +58,9 @@ without gravity, and the plugin makes up for both where it matters:
     collection). A log gives 6 Foraging XP; there are no experience orbs.
   - **Crafting.** A crafting table opens SkyBlock's Craft Item, and the inventory's grid makes
     SkyBlock items (`VanillaCrafting`).
-  - **The bridge and the portal.** As on Hypixel, the bridge to the portal's rock (oak planks
-    along x 7, z 16-30) builds itself under you as you walk out. The portal takes you to the Hub,
-    under its "Travel to: / Hub Island" sign.
+  - **The portal** is on the rock 15 blocks south of the island, across the void. There's no
+    bridge: you build your own, as the recording's player did with oak planks. The portal takes you
+    to the Hub, under its "Travel to: / Hub Island" sign.
   - **World rules.** No mobs spawn, and time and weather stand still. Dying puts you back at the
     island's spawn with your items. Random ticks stay on, so crops grow and leaves fall. The minion
     stands as captured and can't be taken apart.

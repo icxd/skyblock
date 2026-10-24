@@ -49,8 +49,8 @@ import net.icxd.dungeons.skill.SkillGains;
  * hubs refuse both, see WorldListener), and what a block drops goes straight into your inventory as
  * its SkyBlock item, counted for its collection ("COLLECTION UNLOCKED Oak Log" as the first log went
  * in); a log gives 6 Foraging XP (recorded: "+6 Foraging (6/50)" each). A placed crafting table opens
- * SkyBlock's ("Craft Item", recorded at 00:49.7). The bridge to the portal's rock builds itself under
- * you (see {@link StarterIsland}), the portal takes you to the Hub, and dying there (into the void)
+ * SkyBlock's ("Craft Item", recorded at 00:49.7). The portal on the rock (players bridge the gap to
+ * it themselves, see {@link StarterIsland}) takes you to the Hub, and dying there (into the void)
  * brings you back to the island's spawn. The Cobblestone Minion the island starts with stays put
  * (minions aren't here yet).
  *
@@ -146,7 +146,7 @@ public final class IslandRules implements Listener {
 
     // Getting about
 
-    /** The bridge under them, and the portal to the Hub. */
+    /** The portal to the Hub. */
     @EventHandler(ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
         if (!event.hasChangedBlock()) return;
@@ -159,13 +159,6 @@ public final class IslandRules implements Listener {
             if (last != null && now - last < PORTAL_PAUSE_MILLIS) return;
             sentAt.put(player.getUniqueId(), now);
             Hub.send(player);
-            return;
-        }
-        if (!Islands.isOwnIsland(player, world) || InventorySyncListener.frozen(player)) return;
-        int dz = event.getTo().getBlockZ() - event.getFrom().getBlockZ();
-        for (int[] at : StarterIsland.bridgeUnder(event.getTo().getBlockX(), event.getTo().getBlockY(), event.getTo().getBlockZ(), dz)) {
-            Block plank = world.getBlockAt(at[0], at[1], at[2]);
-            if (plank.getType().isAir()) plank.setType(Material.OAK_PLANKS);
         }
     }
 
