@@ -16,6 +16,7 @@ import net.icxd.dungeons.command.commands.user.ViewBossCollectionCommand;
 import net.icxd.dungeons.command.commands.user.ViewCollectionCommand;
 import net.icxd.dungeons.command.commands.user.ViewRecipeCommand;
 import net.icxd.dungeons.recipe.CraftingTable;
+import net.icxd.dungeons.recipe.VanillaCrafting;
 import net.icxd.dungeons.command.commands.admin.AddEnchantmentCommand;
 import net.icxd.dungeons.command.commands.admin.DataCommand;
 import net.icxd.dungeons.command.commands.admin.DungeonCommand;
@@ -32,6 +33,9 @@ import net.icxd.dungeons.command.commands.user.BagsCommand;
 import net.icxd.dungeons.command.commands.user.EnderChestCommand;
 import net.icxd.dungeons.command.commands.user.HexCommand;
 import net.icxd.dungeons.command.commands.user.HotmCommand;
+import net.icxd.dungeons.command.commands.user.IsCommand;
+import net.icxd.dungeons.command.commands.user.QuestsCommand;
+import net.icxd.dungeons.command.commands.user.ChaptersCommand;
 import net.icxd.dungeons.command.commands.user.LevelsCommand;
 import net.icxd.dungeons.command.commands.user.LoadoutsCommand;
 import net.icxd.dungeons.command.commands.user.PickupStashCommand;
@@ -55,6 +59,7 @@ import net.icxd.dungeons.listeners.HealthListener;
 import net.icxd.dungeons.listeners.HubProtection;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.listeners.PlayerListener;
+import net.icxd.dungeons.listeners.VanillaProgress;
 import net.icxd.dungeons.listeners.WorldListener;
 import net.icxd.dungeons.menu.SkyBlockMenuItem;
 import net.icxd.dungeons.menu.SkyBlockMenuListener;
@@ -82,6 +87,7 @@ import net.icxd.dungeons.item.ability.weapons.WeaponAbilities;
 import net.icxd.dungeons.item.enchanting.armor.ArmorEnchants;
 import net.icxd.dungeons.item.upgrade.BookOfStats;
 import net.icxd.dungeons.network.ProxyLink;
+import net.icxd.dungeons.npc.Hologram;
 import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.economy.ExpBonuses;
@@ -94,6 +100,14 @@ import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.hex.Hex;
 import net.icxd.dungeons.hex.HexListener;
+import net.icxd.dungeons.hub.DungeonHubMap;
+import net.icxd.dungeons.hub.HubMap;
+import net.icxd.dungeons.hub.MapStands;
+import net.icxd.dungeons.island.IslandArrival;
+import net.icxd.dungeons.island.IslandRules;
+import net.icxd.dungeons.island.Islands;
+import net.icxd.dungeons.island.Jerry;
+import net.icxd.dungeons.quest.QuestListener;
 import net.icxd.dungeons.storage.Bag;
 import net.icxd.dungeons.storage.Storage;
 import net.icxd.dungeons.storage.StorageListener;
@@ -119,6 +133,8 @@ public class Dungeons extends JavaPlugin {
     @Getter private static ProxyLink proxyLink;
     /** Dungeon runs, on DUNGEONS servers; null elsewhere. */
     @Getter private static RunManager runManager;
+    /** Players' islands, on ISLAND (and NONE) servers; null elsewhere. */
+    @Getter private static Islands islands;
 
     @Getter
     private static SkyBlockServer skyBlockServer;
@@ -176,6 +192,14 @@ public class Dungeons extends JavaPlugin {
                 userCollection::profileDefaults);
         userStore.start();
         proxyLink = new ProxyLink(this, userStore);
+        if (Islands.hostedOn(skyBlockServer.getServerType())) {
+            // The starter island comes from the data checkout's captured worlds (servermgr links them in as worlds/).
+            islands = Islands.start(this, skyBlockServer.getName(), mongoClient.getDatabase(Settings.DATABASE),
+                    getDataFolder().toPath().resolve("worlds"));
+            userStore.beforeRelease(islands::beforeRelease);
+            Islands.feature(new Jerry(this));
+            Islands.feature(new IslandArrival());
+        }
         if (skyBlockServer.getServerType() == ServerType.DUNGEONS) {
             runManager = new RunManager(this, skyBlockServer.getName(),
                     mongoClient.getDatabase(Settings.DATABASE).getCollection(Runs.COLLECTION), proxyLink);
@@ -188,7 +212,13 @@ public class Dungeons extends JavaPlugin {
         listen(HealthListener.class, HealthListener::new);
         listen(InventorySyncListener.class, InventorySyncListener::new);
         listen(WorldListener.class, WorldListener::new);
+        listen(VanillaProgress.class, VanillaProgress::new);
         listen(HubProtection.class, HubProtection::new);
+        listen(HubMap.class, () -> new HubMap(this));
+        listen(DungeonHubMap.class, DungeonHubMap::new);
+        listen(MapStands.class, MapStands::new);
+        listen(IslandRules.class, IslandRules::new);
+        listen(QuestListener.class, QuestListener::new);
         listen(GUIListener.class, GUIListener::new);
         listen(BlockListener.class, BlockListener::new);
         listen(MovementListener.class, MovementListener::new);
@@ -225,6 +255,7 @@ public class Dungeons extends JavaPlugin {
         listen(StorageListener.class, StorageListener::new);
         listen(CollectionGains.class, CollectionGains::new);
         listen(CraftingTable.Drags.class, CraftingTable.Drags::new);
+        listen(VanillaCrafting.class, VanillaCrafting::new);
         listen(HexListener.class, HexListener::new);
         listen(SkyBlockLevels.class, SkyBlockLevels::new);
         // What changes a kill's drops and a grant's experience orbs (STATS_EFFECTS.md): their order doesn't matter.
@@ -246,7 +277,7 @@ public class Dungeons extends JavaPlugin {
                 new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
                 new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand(),
-                new HexCommand());
+                new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {
@@ -293,8 +324,12 @@ public class Dungeons extends JavaPlugin {
     @Override
     public void onDisable() {
         Npcs.removeAll();
+        Hologram.removeAll();
         if (runManager != null) runManager.stop();
         runManager = null;
+        // Before the players' data is released: each release waits for its island's save.
+        if (islands != null) islands.stop();
+        islands = null;
         if (userStore != null) userStore.stop();
         if (mongoClient != null) mongoClient.close();
         instance = null;

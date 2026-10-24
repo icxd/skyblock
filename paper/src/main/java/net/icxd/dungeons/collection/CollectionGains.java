@@ -29,6 +29,9 @@ import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.PlayerStats;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 
 /**
  * Collections coming in. An item counts when a player first gets it from the world, as the wiki's
@@ -105,12 +108,20 @@ public final class CollectionGains implements Listener {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased() || !Collections.counts(user.mode())) return null;
         Collections.Gain gain = Collections.add(user.profile(), collectionId, amount);
+        if (gain != null && gain.before() == 0 && gain.after() > 0 && !gain.collection().boss()) unlocked(player, gain.collection());
         if (gain == null || !gain.leveledUp()) return gain;
         for (int tier = gain.oldTier() + 1; tier <= gain.newTier(); tier++) levelUp(player, gain.collection(), tier);
         // UNKNOWN: the collections' sound, taken as the skills'.
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
         user.save();
         return gain;
+    }
+
+    /** Their first of its items: "  COLLECTION UNLOCKED Oak Log", which opens the collection (recorded as the first log went in). */
+    static void unlocked(Player player, Collection collection) {
+        player.sendMessage(Component.text("  ").append(Text.line(CollectionText.unlockedLine(collection))
+                .clickEvent(ClickEvent.runCommand("/viewcollection " + collection.id()))
+                .hoverEvent(HoverEvent.showText(Text.line(CollectionText.unlockedHover(collection))))));
     }
 
     /** A tier's message, and what it gives now: skill XP (SkyBlock XP and recipes come from the tier itself). */

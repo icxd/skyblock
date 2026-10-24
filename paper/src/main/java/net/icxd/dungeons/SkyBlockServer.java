@@ -18,11 +18,23 @@ public class SkyBlockServer {
     private final String name;
     private final int port;
     private final ServerType serverType;
+    /**
+     * Which of Hypixel's maps the main world is ({@code server.map}: "hub", "dungeon_hub"), as servermgr
+     * sets it when it puts a captured map there; empty for a world of its own (a flat one), where
+     * Hypixel's places (the Hub's portals, its NPCs) aren't.
+     */
+    private final String map;
 
     public SkyBlockServer(FileConfiguration config) {
         this.name = config.getString("server.name");
         this.port = config.getInt("server.port");
         this.serverType = ServerType.valueOf(config.getString("server.type"));
+        this.map = config.getString("server.map", "");
+    }
+
+    /** Whether the main world is this captured map. */
+    public boolean hasMap(String map) {
+        return this.map.equalsIgnoreCase(map);
     }
 
     /** The world the area is in (level-name in server.properties). Dungeon runs get worlds of their own. */

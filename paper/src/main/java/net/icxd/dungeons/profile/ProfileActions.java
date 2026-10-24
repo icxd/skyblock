@@ -7,13 +7,16 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 import org.bson.Document;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.common.ServerType;
+import net.icxd.dungeons.island.Islands;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.menu.SkyBlockMenuItem;
+import net.icxd.dungeons.quest.QuestBar;
 import net.icxd.dungeons.scoreboard.ScoreboardRunnable;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
@@ -22,20 +25,38 @@ import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
 
 /**
- * Making, switching and deleting profiles. Hypixel sends you to the profile's island on another
- * server; there are no islands here, so it happens in place, on this server: your items are swapped,
- * your session (health, mana, cooldowns) starts over and you're put at spawn. It's saved like any
- * other change, and the profile you're on travels with the rest of your data. Main thread.
+ * Making, switching and deleting profiles. The switch happens here, on this server: your items are
+ * swapped and your session (health, mana, cooldowns) starts over; then, as on Hypixel, you're taken
+ * to the profile's island (on this server if it has islands, else the proxy sends you to an island
+ * server), and "Your profile was changed to" is said once you're there. It's saved like any other
+ * change, and the profile you're on travels with the rest of your data. Main thread.
  */
 public final class ProfileActions {
     private static final Random RANDOM = new Random();
+    /** On the account until said: they've changed profile, and are on their way to its island. */
+    static final String CHANGED = "profileChanged";
+    /** As PlayerListener says which profile they're on after joining. */
+    private static final long PROFILE_MESSAGE_DELAY = 3 * 20;
 
     private ProfileActions() {
     }
 
-    /** "You are playing on profile: Kiwi (Sandbox)" and its id, as Hypixel says when you join a server. */
+    /**
+     * "You are playing on profile: Kiwi (Sandbox)" and its id, as Hypixel says when you join a server;
+     * "Your profile was changed to: Tomato" after a change, as it says once you're on the new island
+     * (recorded 3.4 s after arriving there).
+     */
     public static void announce(Player player, User user) {
-        tell(player, user, "&aYou are playing on profile: &e");
+        boolean changed = user.getDocument().remove(CHANGED) != null;
+        tell(player, user, changed ? "&aYour profile was changed to: &e" : "&aYou are playing on profile: &e");
+    }
+
+    /** They've arrived on their island on this server: if that was a profile change, it's said (a moment later, as on joining). */
+    public static void arrivedOnIsland(Player player, User user) {
+        if (!user.getDocument().containsKey(CHANGED)) return;
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
+            if (player.isOnline() && User.ifLoaded(player.getUniqueId()) == user && user.getDocument().containsKey(CHANGED)) announce(player, user);
+        }, PROFILE_MESSAGE_DELAY);
     }
 
     private static void tell(Player player, User user, String text) {
@@ -61,7 +82,7 @@ public final class ProfileActions {
         if (user == null || !(Profiles.profiles(user.getDocument()).get(id) instanceof Document target) || id.equals(user.profileId())) return;
         if (!refuse(player, user, "switching")) return;
         say(player, "&7Switching to profile " + target.getString(Profiles.NAME) + "...");
-        change(player, user, id);
+        change(player, user, id, false);
     }
 
     public static void create(Player player, ProfileMode mode, String name) {
@@ -84,7 +105,7 @@ public final class ProfileActions {
         say(player, "&7Making a little bit of room for your new profile...");
         String id = UUID.randomUUID().toString();
         Profiles.create(doc, id, name, mode, Dungeons.getUserCollection().profileDefaults(), System.currentTimeMillis());
-        if (!change(player, user, id)) Profiles.profiles(doc).remove(id);
+        if (!change(player, user, id, true)) Profiles.profiles(doc).remove(id);
     }
 
     public static void delete(Player player, String id) {
@@ -120,8 +141,8 @@ public final class ProfileActions {
         return false;
     }
 
-    /** Onto profile {@code id}, here: their items, a fresh session, spawn. */
-    private static boolean change(Player player, User user, String id) {
+    /** Onto profile {@code id}, here: their items, a fresh session; then to its island. */
+    private static boolean change(Player player, User user, String id, boolean created) {
         try {
             Dungeons.getUserStore().switchProfile(player, user, id);
         } catch (StoredInventory.NewerDataException | RuntimeException e) {
@@ -138,14 +159,18 @@ public final class ProfileActions {
         SkyBlockMenuItem.give(player);
         PlayerSession.end(player.getUniqueId());
         ScoreboardRunnable.forget(player.getUniqueId());
+        // The new profile's quests are followed once they're on its island.
+        QuestBar.forget(player);
         PlayerHealth.sync(player);
         // Which commands they may use depends on the profile's mode (the Sandbox tools).
         player.updateCommands();
         player.setFallDistance(0);
         player.setFireTicks(0);
-        player.teleport(Dungeons.getSkyBlockServer().getMainWorld().getSpawnLocation());
+        user.getDocument().put(CHANGED, true);
         user.save();
-        tell(player, user, "&aYour profile was changed to: &e");
+        // Recorded right after "Making a little bit of room...", before "Sending to server mini35DV...".
+        if (created) say(player, "&7Transferring you to a new island...");
+        Islands.send(player);
         return true;
     }
 

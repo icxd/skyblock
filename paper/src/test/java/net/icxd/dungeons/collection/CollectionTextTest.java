@@ -71,4 +71,13 @@ class CollectionTextTest {
         assertEquals("  &6&lCOLLECTION LEVEL UP &eBlaze Rod &8II➜&eIII", CollectionText.levelUp(blaze, 3).get(1));
         assertEquals("&e&l" + "▬".repeat(64), CollectionText.RULE);
     }
+
+    /** 00:27.8, the first Oak Log: "  COLLECTION UNLOCKED Oak Log" and its hover. */
+    @Test
+    void collectionUnlocked() {
+        CollectionData.Collection log = new CollectionData.Collection("LOG", "Oak Log", "FORAGING", "LOG", null, 0, List.of());
+        assertEquals("&6&lCOLLECTION UNLOCKED &eOak Log", CollectionText.unlockedLine(log));
+        assertEquals("&7Collect more Oak Log to progress through your\n&7Collection and unlock rewards!\n\n&eClick to view your Oak Log Collection!",
+                CollectionText.unlockedHover(log));
+    }
 }

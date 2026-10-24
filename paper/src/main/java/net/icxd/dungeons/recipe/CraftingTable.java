@@ -3,6 +3,7 @@ package net.icxd.dungeons.recipe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.bson.Document;
 import org.bukkit.Bukkit;
@@ -68,6 +69,7 @@ public final class CraftingTable extends GUI {
     /** "The XP gained is 3% of the combined NPC sell price of the ingredients used" (the wiki's Carpentry). */
     static final double CARPENTRY_SHARE = 0.03;
     private static final Set<Integer> GRID_SLOTS = Set.of(10, 11, 12, 19, 20, 21, 28, 29, 30);
+    private static final List<BiConsumer<Player, String>> CRAFTED = new ArrayList<>();
 
     private final Player viewer;
     private Inventory inventory;
@@ -80,6 +82,11 @@ public final class CraftingTable extends GUI {
 
     public static boolean grid(int slot) {
         return GRID_SLOTS.contains(slot);
+    }
+
+    /** Adds something that hears of what's crafted here, by its SkyBlock id (Getting Started's Wooden Pickaxe). */
+    public static void onCraft(BiConsumer<Player, String> listener) {
+        CRAFTED.add(listener);
     }
 
     // What it shows
@@ -227,6 +234,7 @@ public final class CraftingTable extends GUI {
         }
         carpentry(match, times);
         refresh();
+        for (BiConsumer<Player, String> listener : CRAFTED) listener.accept(viewer, match.recipe().result());
     }
 
     /** How many of the result a stack holds: one of an unstackable item (each has its own uuid), else what its material does. */

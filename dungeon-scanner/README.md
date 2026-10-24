@@ -85,7 +85,9 @@ worlds/<time>[_name]/<n>_<area>/region/r.x.z.mca     blocks, biomes and block en
 (the main world's overworld is `overworld`): copy a capture's `region/` and `entities/` there. For
 singleplayer, make a world (Superflat, preset The Void), quit it, and copy them into
 `saves/<world>/dimensions/minecraft/overworld/`. The world's own generator makes the chunks you
-didn't walk past, so give it a void one.
+didn't walk past, so give it a void one. Pushed to the data repository's `worlds/`, the captures are
+the remake's maps: servermgr makes the Hub's and the Dungeon Hub's the hubs' worlds, and island
+servers make new islands from the starter island's (ISLANDS_QUESTS.md).
 
 Checked with a 26.2 client on a vanilla 26.2 server, saving a flat world with a sign, an item
 frame and armor stands through a trip to the Nether and back, and loading what it saved on a

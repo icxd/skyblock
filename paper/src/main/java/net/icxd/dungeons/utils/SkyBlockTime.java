@@ -41,6 +41,22 @@ public record SkyBlockTime(int year, int month, int day, int hour, int minute) {
         return twelve + ":" + (minute / 10) + "0" + (hour < 12 ? "am" : "pm");
     }
 
+    /** "3:08am": to the minute, as the Quest Log says when a quest started. */
+    public String exactClock() {
+        int twelve = hour % 12 == 0 ? 12 : hour % 12;
+        return twelve + ":" + String.format("%02d", minute) + (hour < 12 ? "am" : "pm");
+    }
+
+    /**
+     * "Winter 17th, Year 521": the season without its Early or Late and the year, as the Quest Log writes when
+     * a quest started (recorded in Late Winter, when the sidebar said "Late Winter 17th"; none of the eleven
+     * recorded starts has an Early or a Late).
+     */
+    public String seasonDate() {
+        String season = MONTHS[month].substring(MONTHS[month].lastIndexOf(' ') + 1);
+        return season + " " + day + ordinal(day) + ", Year " + year;
+    }
+
     /** Daytime is 6:00am to 7:00pm; the sidebar shows a sun then, a moon otherwise. */
     public boolean isDay() {
         return hour >= 6 && hour < 19;

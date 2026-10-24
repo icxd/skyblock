@@ -25,11 +25,15 @@ recorded-menu checks without it.
   collections too) and `Collections.skyBlockXp(profile)` (the tiers' "+N SkyBlock XP").
 - **What counts** (the wiki's Collections: items obtained "manually", not from merchants, the Bazaar
   or trades): a mob's drops and a mined block's, when they go straight into the inventory (dungeon
-  mobs, mining) or when a player picks them up off the ground. Only drops the plugin itself made are
+  mobs, mining, a block broken on the player's own island) or when a player picks them up off the
+  ground. Only drops the plugin itself made are
   marked collectable (an entity tag), and a marked stack never merges with an unmarked one, so what a
   player dropped, traded, bought, took from storage or got from /item or the item browser never
   counts. An enchanted item counts as what it's made of (160 Rotten Flesh). Only Normal profiles
   collect (`Collections.counts`).
+- **The first item** of a collection: "COLLECTION UNLOCKED Oak Log" in chat (a click opens the
+  collection, its hover says so), as recorded (2026-10-24, the first log on a new island). Not for
+  boss collections.
 - **Tier-ups**: the level-up message (the rules and header mods match on, then the old and new tier
   and the tier's rewards), the tier's Skill XP given, its stats (Obsidian's "+1☘ Mining Fortune",
   through `PlayerStats.addModifier`), its recipes unlocked; the profile is saved.

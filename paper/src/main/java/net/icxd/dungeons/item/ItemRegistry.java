@@ -111,6 +111,7 @@ public final class ItemRegistry {
     /** Drops every item. */
     static void clearData() {
         registry.clear();
+        VanillaItems.forget();
     }
 
     private static Logger log() {
