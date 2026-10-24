@@ -16,6 +16,7 @@ import org.bukkit.plugin.Plugin;
 
 import net.icxd.dungeons.npc.Hologram;
 import net.icxd.dungeons.npc.Npc;
+import net.icxd.dungeons.npc.Voice;
 import net.icxd.dungeons.quest.QuestProgress;
 import net.icxd.dungeons.quest.Quests;
 import net.icxd.dungeons.user.User;
@@ -25,8 +26,8 @@ import net.icxd.dungeons.utils.Text;
  * Jerry, on every island, where the starter island has him (9.5 100 33.5): a plains farmer villager
  * under "NEW UPDATE / Jerry / CLICK", with the portal's "Travel to: / Hub Island" over it, as recorded.
  * Talking to him the first time (or while Getting Started is at "Talk to Jerry") he says his three
- * lines, 1.5 s and then 2 s apart as recorded, and the objective is done with the last; after that
- * he opens his menu ({@link JerryMenu}).
+ * lines, 1.5 s and then 2 s apart as recorded, each in a villager's voice, and the objective is done
+ * with the last; after that he opens his menu ({@link JerryMenu}), silently as recorded.
  */
 public final class Jerry implements IslandFeature {
     public static final String ID = "JERRY";
@@ -85,6 +86,7 @@ public final class Jerry implements IslandFeature {
                 if (last) talking.remove(player.getUniqueId());
                 if (!player.isOnline()) return;
                 player.sendMessage(Text.line(line));
+                Voice.VILLAGER.speak(player);
                 if (last) QuestProgress.complete(player, Quests.GETTING_STARTED, Quests.TALK_TO_JERRY);
             }, LINE_TICKS[i]);
         }

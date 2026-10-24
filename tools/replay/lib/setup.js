@@ -4,6 +4,8 @@
 //   data/items.json       numeric item id -> item name
 //   data/entities.json    numeric entity type id -> entity type name
 //   data/particles.json   numeric particle type id -> particle type name
+//   data/sounds.json      numeric sound event id -> sound event name
+//   data/villagers.json   villager types and professions: numeric id -> name
 //   data/packets.json     the generator's packet report (ids per state)
 //   data/map-colors.json  ARGB for each packed map colour id
 //   data/version.json     which version they're for
@@ -43,6 +45,8 @@ function setup (serverJar, dataDir, java) {
     fs.writeFileSync(path.join(dataDir, 'items.json'), JSON.stringify(ids('minecraft:item')))
     fs.writeFileSync(path.join(dataDir, 'entities.json'), JSON.stringify(ids('minecraft:entity_type')))
     fs.writeFileSync(path.join(dataDir, 'particles.json'), JSON.stringify(ids('minecraft:particle_type')))
+    fs.writeFileSync(path.join(dataDir, 'sounds.json'), JSON.stringify(ids('minecraft:sound_event')))
+    fs.writeFileSync(path.join(dataDir, 'villagers.json'), JSON.stringify({ types: ids('minecraft:villager_type'), professions: ids('minecraft:villager_profession') }))
     fs.copyFileSync(path.join(reports, 'packets.json'), path.join(dataDir, 'packets.json'))
 
     console.log('Reading map colours...')

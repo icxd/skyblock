@@ -4,7 +4,6 @@ import lombok.Getter;
 import net.icxd.dungeons.common.Rank;
 import lombok.Setter;
 import net.icxd.dungeons.Dungeons;
-import net.icxd.dungeons.bank.BankTransaction;
 import net.icxd.dungeons.crimsonisle.factions.FactionTitle;
 import net.icxd.dungeons.crimsonisle.factions.FactionType;
 import net.icxd.dungeons.dwarven.Perk;
@@ -151,7 +150,7 @@ public class User {
     public Rank getRank() { return Rank.valueOf(get("rank", String.class)); }
     /** In their purse, on the profile they play on; {@link Purse} gives and takes them. */
     public double getCoins() { return Purse.coins(this); }
-    /** Older saves stored it as a double. */
+    /** Its whole coins (see {@link net.icxd.dungeons.bank.BankAccount}: the tab's "Bank: 20" for 20.5, as recorded). */
     public int getBankBalance() { return number(profileValue("bank.balance", Number.class)); }
     public int getBits() { return number(profileValue("bits", Number.class)); }
     public int getGems() { return number(get("gems", Number.class)); }
@@ -169,21 +168,6 @@ public class User {
 
     private static int number(Number n) {
         return n == null ? 0 : n.intValue();
-    }
-
-    public void withdrawBank(int amount) {
-        bank(getBankBalance() - amount, amount, BankTransaction.TransactionType.WITHDRAW);
-    }
-
-    public void depositBank(int amount) {
-        bank(getBankBalance() + amount, amount, BankTransaction.TransactionType.DEPOSIT);
-    }
-
-    private void bank(int balance, int amount, BankTransaction.TransactionType type) {
-        Document bank = profile().get("bank", Document.class);
-        bank.append("balance", balance);
-        bank.getList("transactions", Document.class).add(new BankTransaction(getPlayer(), amount, type).toDocument());
-        save();
     }
 
     /**

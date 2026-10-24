@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.bson.Document;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -117,8 +118,12 @@ public final class CollectionGains implements Listener {
         return gain;
     }
 
-    /** Their first of its items: "  COLLECTION UNLOCKED Oak Log", which opens the collection (recorded as the first log went in). */
+    /**
+     * Their first of its items: "  COLLECTION UNLOCKED Oak Log", which opens the collection, with a level-up's
+     * sound at twice its pitch (recorded as the first log went in, and the first cobblestone).
+     */
     static void unlocked(Player player, Collection collection) {
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 2);
         player.sendMessage(Component.text("  ").append(Text.line(CollectionText.unlockedLine(collection))
                 .clickEvent(ClickEvent.runCommand("/viewcollection " + collection.id()))
                 .hoverEvent(HoverEvent.showText(Text.line(CollectionText.unlockedHover(collection))))));

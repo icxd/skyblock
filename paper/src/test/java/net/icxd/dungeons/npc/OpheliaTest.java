@@ -1,5 +1,6 @@
 package net.icxd.dungeons.npc;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,9 +20,12 @@ class OpheliaTest {
         assertTrue(Ophelia.firstTime(new Document()), "another profile hasn't");
     }
 
+    /** As recorded (2026-10-24): 08:24.6, 08:27.1 and 08:29.1, her shop at 08:31.2. */
     @Test
-    void herLinesAsTheWikiHasThem() {
+    void herLinesAsRecorded() {
         assertEquals(3, Ophelia.FIRST_TALK.size());
-        assertEquals("&e[NPC] &cOphelia&f: My trick? I make &6coins&f from the others' greed.", Ophelia.FIRST_TALK.get(1));
+        assertEquals("&e[NPC] &cOphelia&f: &rMy trick? I make &6coins &rfrom the others' greed.", Ophelia.FIRST_TALK.get(1));
+        assertArrayEquals(new long[]{0, 50, 90}, Ophelia.LINE_TICKS);
+        assertEquals(132, Ophelia.SHOP_TICKS);
     }
 }

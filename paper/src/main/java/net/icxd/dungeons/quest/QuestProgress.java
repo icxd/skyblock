@@ -25,13 +25,28 @@ public final class QuestProgress {
         return user != null && Quests.current(user.profile(), quest) == objective;
     }
 
-    /** The objective they're at done, if it's this one (nothing otherwise). */
+    /** The objective they're at done, if it's this one (nothing otherwise), with what it gives (see {@link QuestRewards}). */
     public static void complete(Player player, Quest quest, int objective) {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased()) return;
-        if (Quests.complete(user.profile(), quest, objective, System.currentTimeMillis()) == null) return;
+        Quests.Step step = Quests.complete(user.profile(), quest, objective, System.currentTimeMillis());
+        if (step == null) return;
+        Quest.Reward reward = quest.objective(objective).reward();
+        if (reward != null) QuestRewards.give(player, user, quest, Quests.done(user.profile(), quest), step.completed(), reward);
         user.save();
         QuestBar.progressed(player);
+    }
+
+    /**
+     * An objective done by talking to the one whose quest it is, which starts the quest (the Banker's
+     * Saving Up). The boss bar stays on the quest it follows, as it did: starting this way isn't
+     * arriving somewhere.
+     */
+    public static void startedBy(Player player, Quest quest, int objective) {
+        User user = User.ifLoaded(player.getUniqueId());
+        if (user == null || user.isReleased()) return;
+        Quests.start(user.profile(), quest, System.currentTimeMillis());
+        complete(player, quest, objective);
     }
 
     /** A quest started by something they found (an area): no word of it but the boss bar's. */

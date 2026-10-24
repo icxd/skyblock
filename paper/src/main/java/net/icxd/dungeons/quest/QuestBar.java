@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.bson.Document;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -30,12 +32,14 @@ import net.kyori.adventure.text.event.HoverEvent;
  * log" (full, no notches; it came 0.4 s after arriving on the island) and two sidebar lines. Which
  * quest is followed is {@link Quests#follow}'s: picked again on arriving somewhere (joining, another
  * world, another area), kept while it's going otherwise. When a step of the quest being followed
- * changes the objective, NEW OBJECTIVE says the new one in chat two seconds later (recorded after
- * every step); arriving somewhere only changes the bar. Main thread.
+ * changes the objective, NEW OBJECTIVE says the new one in chat two seconds later, with a note
+ * block's pling (recorded after every step); arriving somewhere only changes the bar. Main thread.
  */
 public final class QuestBar {
     /** NEW OBJECTIVE comes this long after the step (recorded: 1.9 to 2.0 s after the bar changed). */
     static final long ANNOUNCE_DELAY_TICKS = 40;
+    /** NEW OBJECTIVE's pling, recorded at 31/63 (Hypixel's pitches come in 63rds, as 1.8 sent them). */
+    static final float ANNOUNCE_PITCH = 31 / 63f;
 
     private static final Map<UUID, Following> FOLLOWING = new HashMap<>();
 
@@ -114,6 +118,7 @@ public final class QuestBar {
             following.announcing = null;
             User user = User.ifLoaded(player.getUniqueId());
             if (!player.isOnline() || user == null || Quests.current(user.profile(), quest) != objective) return;
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS, 1, ANNOUNCE_PITCH);
             for (Component line : newObjective(quest, objective, Quests.done(user.profile(), quest))) player.sendMessage(line);
         }, ANNOUNCE_DELAY_TICKS);
     }

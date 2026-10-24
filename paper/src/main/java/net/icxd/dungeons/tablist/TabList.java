@@ -30,6 +30,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate.PlayerInfo;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.bank.BankMenus;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.dungeons.DungeonProfile;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
@@ -193,6 +194,8 @@ public class TabList {
         lines.add(new Line(Utils.color(SkyBlockLevels.tabLine(viewer)), GRAY));
         // " Bank: &60" as recorded (research coins.md 1.1); a big balance short, "1B" (as in Skyblocker's tab example).
         lines.add(new Line("§f Bank: §6" + Utils.formatNumber(user.getBankBalance()), GRAY));
+        // " Interest: &e4 Hours" (recorded; an old profile's had " &6(255)" after it, UNKNOWN what of).
+        lines.add(new Line("§f Interest: §e" + BankMenus.untilInterest(System.currentTimeMillis()), GRAY));
         lines.add(new Line("§8§1 ", GRAY));
         // The Dungeon Hub's has Dungeons where the Hub's has Skills (both recorded).
         List<String> widget = type == ServerType.DUNGEON_HUB

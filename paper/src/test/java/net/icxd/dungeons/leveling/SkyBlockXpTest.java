@@ -11,15 +11,39 @@ import java.util.Map;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
+import com.google.gson.JsonParser;
+
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.leveling.LevelingData.Category;
 import net.icxd.dungeons.leveling.LevelingData.Task;
+import net.icxd.dungeons.quest.Quests;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
 
 /** A profile's SkyBlock XP from what it has done, its level and the level's colour. */
 class SkyBlockXpTest {
+    /** Complete Objectives: the SkyBlock XP the quests' objectives gave (Saving Up's Banker, +5), named as the action bar had it. */
+    @Test
+    void objectivesCount() {
+        LevelingData data = LevelingData.parse(JsonParser.parseString("""
+                {"format": 1, "categories": [{"id": "core", "name": "&3Core Tasks", "icon": {"material": "NETHER_STAR"}, "description": [],
+                 "max": 300, "tasks": [{"id": "complete_objectives", "name": "Complete Objectives", "icon": {"material": "WRITABLE_BOOK"},
+                  "max": 212, "xp": [{"text": "Per Objective Completed", "xp": 5}]}]}]}
+                """).getAsJsonObject());
+        assertEquals(List.of(), data.problems());
+        Document profile = new Document();
+        assertEquals(0, SkyBlockXp.of(profile, data, Fixtures.NONE).of("complete_objectives"));
+        Quests.start(profile, Quests.SAVING_UP, 1000);
+        Quests.complete(profile, Quests.SAVING_UP, Quests.TALK_TO_THE_BANKER, 2000);
+        assertEquals(5, SkyBlockXp.of(profile, data, Fixtures.NONE).of("complete_objectives"));
+        Quests.complete(profile, Quests.SAVING_UP, Quests.DEPOSIT_COINS, 3000);
+        assertEquals(5, SkyBlockXp.of(profile, data, Fixtures.NONE).total());
+        Task task = data.categories().getFirst().tasks().getFirst();
+        assertEquals("Complete Objective", LevelingText.gainName(task));
+        assertEquals("&b+5 SkyBlock XP &7(Complete Objective&7)&b (5/100)", LevelingText.actionBar(5, LevelingText.gainName(task), 5));
+    }
+
     @Test
     void freshProfileHasNone() {
         SkyBlockXp.Breakdown xp = SkyBlockXp.of(new Document(), Fixtures.fixture(), Fixtures.NONE);

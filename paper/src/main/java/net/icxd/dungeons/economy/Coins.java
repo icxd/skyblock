@@ -8,6 +8,7 @@ import java.util.Locale;
 /** How Hypixel writes an amount of coins, which depends on where (research coins.md 1.1). */
 public final class Coins {
     private static final ThreadLocal<DecimalFormat> WITH_TENTHS = format("#,##0.#", RoundingMode.HALF_EVEN);
+    private static final ThreadLocal<DecimalFormat> TENTHS_UP = format("#,##0.#", RoundingMode.HALF_UP);
     private static final ThreadLocal<DecimalFormat> WHOLE = format("#,##0", RoundingMode.FLOOR);
     private static final ThreadLocal<DecimalFormat> BELOW_ONE = format("0.0", RoundingMode.FLOOR);
 
@@ -37,6 +38,16 @@ public final class Coins {
      */
     public static String sidebar(double coins) {
         return coins < 1 ? BELOW_ONE.get().format(Math.max(0, coins)) : WHOLE.get().format(coins);
+    }
+
+    /** "20", "1,234": whole coins, the rest dropped (the bank's chat lines and recent transactions: 7.5 coins say "7"). */
+    public static String whole(double coins) {
+        return WHOLE.get().format(coins);
+    }
+
+    /** "20.5", "10.3": the bank's menus, at most one decimal, a half going up (half a 20.5 purse showed "10.3"). */
+    public static String bank(double coins) {
+        return TENTHS_UP.get().format(coins);
     }
 
     /** "+5", "-1,200", "+0.3": a change, as the sidebar's "(+5)" has it. */

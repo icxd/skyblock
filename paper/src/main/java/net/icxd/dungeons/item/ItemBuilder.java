@@ -115,6 +115,16 @@ public final class ItemBuilder {
         return itemStack;
     }
 
+    /**
+     * A new one of these, this many, as if {@code viewer} owned it: the requirements they don't meet show
+     * ("Requires Farming Skill 1", as a recorded shop's ware did). For showing it, not giving it.
+     */
+    public static ItemStack shownTo(SkyBlockItem item, int amount, Player viewer) {
+        NBTTagCompound tag = newData(item);
+        tag.setString("owner", viewer.getUniqueId().toString());
+        return build(item, tag, amount, viewer);
+    }
+
     /** A new item of this kind if {@code tag} is null, else the item that data describes. */
     public static ItemStack build(SkyBlockItem item, NBTTagCompound tag) {
         return build(item, tag, (Player) null);

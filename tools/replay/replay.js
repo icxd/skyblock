@@ -8,12 +8,15 @@ const recording = require('./lib/recording')
 const { decode, clock } = require('./lib/timeline')
 const { renderMaps } = require('./lib/maps')
 const { setup } = require('./lib/setup')
+const { merge } = require('./lib/entities')
 const { text, plain } = require('./lib/text')
 
 const DATA = path.join(__dirname, 'data')
 const USAGE = `Usage:
   replay.js setup <server.jar> [--java <path>]      tables for newer versions, from a vanilla server jar
   replay.js decode <recording.mcpr> [--out <dir>]   timeline, sidebar, tab list and menus as text
+  replay.js npcs <recording.mcpr>... --area <area> --out <file>
+                                                     the NPCs of the worlds whose sidebar named <area>, as one table
   replay.js maps <recording.mcpr> <seconds>... [--map <id>] [--out <dir>]
                                                      maps as PNGs at those moments
   replay.js item <recording.mcpr> <slot> <from s> <to s>
@@ -66,7 +69,16 @@ function load (file) {
     entities = {}
     for (const entity of dec.data.entitiesArray) entities[entity.id] = entity.name
   }
-  return { rec, dec, items, entities, colors: generated ? readData('map-colors.json') : null }
+  let sounds = generated && readData('sounds.json')
+  if (generated && !sounds) console.error('  these tables are from before sounds were added: run `replay.js setup` again')
+  if (!sounds) {
+    sounds = {}
+    // minecraft-data counts from 1; the decoder gives the registry's ids, which count from 0.
+    for (const sound of dec.data.soundsArray || []) sounds[sound.id - 1] = sound.name
+  }
+  const villagers = generated && readData('villagers.json')
+  if (generated && !villagers) console.error('  these tables are from before villager kinds were added: run `replay.js setup` again')
+  return { rec, dec, items, entities, sounds, villagers: villagers || undefined, colors: generated ? readData('map-colors.json') : null }
 }
 
 function outDir (args, file, kind) {
@@ -85,9 +97,32 @@ function main (argv) {
     case 'decode': {
       const dir = outDir(args, args[0])
       if (!args[0]) break
-      const { rec, dec, items, entities } = load(args[0])
-      const stats = decode(rec, dec, { items, entities }, dir)
-      console.error(`${stats.packets} packets (${stats.errors} undecodable); ${stats.timeline} timeline entries, ${stats.sidebars} sidebars, ${stats.tabs} tab lists, ${stats.npcs} NPCs, ${stats.holograms} holograms -> ${dir}`)
+      const { rec, dec, items, entities, sounds, villagers } = load(args[0])
+      const stats = decode(rec, dec, { items, entities, sounds, villagers }, dir)
+      console.error(`${stats.packets} packets (${stats.errors} undecodable); ${stats.timeline} timeline entries, ${stats.sidebars} sidebars, ${stats.tabs} tab lists, ${stats.sounds} sounds, ${stats.npcs} NPCs, ${stats.holograms} holograms -> ${dir}`)
+      return
+    }
+    case 'npcs': {
+      const area = option(args, '--area', null)
+      const file = option(args, '--out', null)
+      if (!area || !file || !args.length) break
+      const found = []
+      for (const recordingFile of args) {
+        const { rec, dec, items, entities, sounds, villagers } = load(recordingFile)
+        const dir = outDir([], recordingFile)
+        decode(rec, dec, { items, entities, sounds, villagers }, dir)
+        for (const w of JSON.parse(fs.readFileSync(path.join(dir, 'npcs.json')))) {
+          if (w.areas.includes(area)) found.push(...w.npcs)
+        }
+      }
+      // What an NPC needs to be spawned again, as recorded: where, which way, its tags, skin, kind and hands.
+      const npcs = merge(found).map(n => ({
+        name: n.name, type: n.type, x: n.x, y: n.y, z: n.z, yaw: n.yaw, pitch: n.pitch, lines: n.lines, heights: n.heights,
+        skin: n.skin && { value: n.skin.value, signature: n.skin.signature }, villager: n.villager, equipment: n.equipment
+      }))
+      fs.mkdirSync(path.dirname(path.resolve(file)), { recursive: true })
+      fs.writeFileSync(file, JSON.stringify({ area, recordings: args.map(f => path.basename(f)), npcs }, null, 1) + '\n')
+      console.error(`${npcs.length} NPCs of the ${area} from ${args.length} recording(s) -> ${file}`)
       return
     }
     case 'maps': {

@@ -18,6 +18,10 @@ for older servers). That also sets config.yml's `server.map`, which is how the p
 server has Hypixel's map. Without the captures, a new island is a 5x5 grass platform, and the hubs
 are flat worlds without Hypixel's spawns, portals or areas.
 
+The Hub's NPCs are `npcs/hub.json` in the data checkout, which the replay tool's `npcs` command makes
+from the recordings that went there (its README); servermgr links `npcs/` into every server. Without
+it the Hub has no NPCs, and the plugin says so in its log.
+
 The captures pushed on 2026-10-24 predate the scanner saving leaves persistent and armor stands
 without gravity, and the plugin makes up for both where it matters:
 
@@ -52,10 +56,11 @@ without gravity, and the plugin makes up for both where it matters:
 - **On the island** (`IslandRules`).
   - **Breaking and building.** You can break and place anything on your own island (the hubs still
     refuse both).
-  - **Drops.** A block's drops go straight into your inventory as SkyBlock items (`VanillaItems`
-    picks the plain item of the material, so an oak log becomes `LOG`) and count for their
-    collection. The first item of a collection says "COLLECTION UNLOCKED Oak Log" (a click opens the
-    collection). A log gives 6 Foraging XP; there are no experience orbs.
+  - **Drops.** A block's drops fall as SkyBlock items (`VanillaItems` picks the plain item of the
+    material, so an oak log becomes `LOG`) for you to pick up, as on Hypixel: the recording's first
+    log popped out and was picked up 0.6 s later. They count for their collection as you pick them
+    up. The first item of a collection says "COLLECTION UNLOCKED Oak Log" (a click opens the
+    collection). A log gives 6 Foraging XP as it breaks; there are no experience orbs.
   - **Crafting.** A crafting table opens SkyBlock's Craft Item, and the inventory's grid makes
     SkyBlock items (`VanillaCrafting`).
   - **The portal** is on the rock 15 blocks south of the island, across the void. There's no
@@ -78,9 +83,10 @@ without gravity, and the plugin makes up for both where it matters:
     - Two sidebar lines under the purse.
     - NEW OBJECTIVE in chat 2 s after each step, linked to the Quest Log, with the quest's progress
       as its hover.
-  - **Which quest is followed.** The one most at home where you are: the island's on the island,
-    the Hub's in the Hub, and one that belongs anywhere elsewhere. It's picked again whenever you
-    arrive somewhere; a step keeps the quest you follow until that quest is done.
+  - **Which quest is followed.** The one most at home where you are: an area's own (Saving Up in
+    the Bank), the island's on the island, the Hub's in the Hub, and one that belongs anywhere
+    elsewhere. It's picked again whenever you arrive somewhere; a step keeps the quest you follow
+    until that quest is done.
   - **Storage.** Progress is kept on the profile under `quests.<id>` (when it started, how many
     objectives are done, when it was completed).
 - **Quest menus**, as recorded:
@@ -97,6 +103,45 @@ without gravity, and the plugin makes up for both where it matters:
   facing the portal home). Two portals work, each under its recorded "Travel to:" sign: the end
   portal north of spawn takes you to your island, and the nether portal south-west of spawn
   (x -36 to -32, z 27) to the Dungeon Hub. Vanilla's portals go nowhere.
+- **The Hub's NPCs** (`HubNpcs`): the 49 the recording passed close by, where they stood and facing
+  the way they faced, in their skins (the villagers as their kind, the Alchemist a witch), under
+  their name tags at the recorded heights, holding what they held. Four say what they said when the
+  recording's player talked to them, timed as recorded and in their voices (`HubTalk`): Elizabeth,
+  the Community Center's Clerk Seraphine, Minister Nancy and the Auction Master. The Banker has
+  his bank and the Farm Merchant his shop (below). The others don't answer a click yet.
+- **Saving Up and the Bank** (`Banker`, `bank/`), as recorded.
+  - **The Banker.** The first time, he says his three lines, timed as recorded, in a villager's
+    voice. With the last, Saving Up starts with Talk to the Banker done: OBJECTIVE COMPLETE and +5
+    SkyBlock XP, which SkyBlock Leveling counts as Complete Objectives ("+5 SkyBlock XP (Complete
+    Objective)" on the action bar 0.5 s later). The boss bar stays where it was. After that he
+    opens the Personal Bank Account, speaking as it opens.
+  - **The menus.** The Personal Bank Account has deposit, withdraw, the last 10 transactions and
+    the information, whose countdown to interest ticks every second. Bank Deposit takes the whole
+    purse, half of it, or an amount typed on the recorded sign. Bank Withdrawal takes everything,
+    half, 20%, or a typed amount.
+  - **Amounts.** Coins go in as they are and come out whole, so 20.5 deposited leaves 0.5 after
+    "Everything". The menus show a tenth (half a 20.5 purse is "10.3"); chat and the transactions
+    show whole coins ("20 coins", "1 coin").
+  - **How it goes.** Each menu opens the next with a click. A deposit or withdrawal says
+    "Depositing coins...", chimes, says what it did and opens the account again. An empty purse
+    gets "You can't deposit this little!", silently, and the menu stays open.
+  - **Saving Up's end.** The first deposit completes it: QUEST COMPLETE and +10 Coins into the
+    purse (its hover says so).
+  - **The tab list** has "Interest: 4 Hours" under the bank's balance.
+  - **Storage.** The profile's `bank`: its `balance` and its last 10 `transactions`.
+- **The Farm Merchant** (`FarmMerchant`, `Shop.FARM_MERCHANT`), as recorded. The first time, his two
+  lines, high-voiced; his shop opens 2.1 s after the last, as Ophelia's does. After that a click
+  opens it, and he speaks as it opens.
+  - **His wares**, in the recorded order and at the recorded prices: Wheat, Carrot and Potato (3 for
+    30 coins), Melon Slice (10 for 40), Sugar Cane, Pumpkin, Cocoa Beans, the two mushrooms, Sand,
+    Cactus, Enchanted Bone Meal, the Rookie Hoe and Rookie Farming Axe, and the Beginner Agronomy Sack.
+  - **Stock** (`ShopStock`): the crops and the like have 640 a day, counted in items and shown as
+    "Stock: 640 remaining". The day starts at 00:00 UTC, as the wiki says and the sell limit's does.
+  - **Locks.** The Rookie tools are "Not unlocked!" until Farming Skill 1, which the items require.
+    A ware now shows its item's unmet requirement ("Requires Farming Skill 1"), as recorded.
+  - **Every shop** (Ophelia's too) now has the recorded sale line ("You sold Cobblestone x20 for 20
+    Coins!"), the coins' chime with each sale, and "Right-click for more trading options!" on
+    wares that stack.
 - **The Dungeon Hub** (`DungeonHubMap`, with `server.map: dungeon_hub`). Players arrive where Hypixel
   put them (-28.5 121 0.5, facing west), and Ophelia stands at her recorded spot.
 - **Areas** (`Areas`). The first time a profile reaches an area, it gets the area's title (such as
@@ -104,6 +149,20 @@ without gravity, and the plugin makes up for both where it matters:
   Community Center, Election Room, Auction House, Bazaar Alley, Bank, Farm and Dungeon Hub. Found
   areas are kept on the profile under `areas`. The Hub's area boxes (`RegionType`) are drawn around
   those places on the map.
+- **Sounds**, as recorded (the replay tool's `[sound]` lines). Hypixel's pitches come in 63rds
+  (0.492 is 31/63), so they're used as the packets had them.
+  - NEW OBJECTIVE: a note block's pling, pitch 0.49. Skill XP: an orb's pickup, volume 0.5, pitch
+    1.7 to 2.5. COLLECTION UNLOCKED: a level-up, pitch 2. A found area: the challenge toast's
+    fanfare, volume 0.3, pitch 1.49.
+  - NPC lines (`Voice`): Jerry's and the Banker's villager yes or hum, Ophelia's haggling (pitch 1.7
+    to 1.9, also as her shop opens). Jerry's menu opens silently, as recorded; the Banker speaks as
+    his opens.
+  - OBJECTIVE COMPLETE and QUEST COMPLETE: a firework's launch, with a level-up when it gives
+    SkyBlock XP. The bank's deposits and withdrawals: a pling at volume 8 and the top pitch.
+  - Menus (`MenuSound`): a lever's click as one menu opens another (the SkyBlock Menu from its item
+    too), and a page turning as the quest book opens; one opened from the world is silent.
+  - Picking up an item: vanilla's pop, which the client plays as the pickup's animation arrives
+    (every SkyBlock item pickup was silent before).
 - **No vanilla progress** (`VanillaProgress`). There are no advancements, and the recipe book learns
   nothing, so "Advancement Made!" and "New Recipe(s) Unlocked!" never pop up (Hypixel shows neither).
 
@@ -119,6 +178,20 @@ without gravity, and the plugin makes up for both where it matters:
 - **The action bar** says "+6 Foraging (12%)" where Hypixel said "+6 Foraging (6/50)": that's the
   skills' existing display.
 - **The area icon** in chat is the classic ⏣; Hypixel's comes from its resource pack.
+- **The bank's other words** are this plugin's: "You can't withdraw this little!", "You don't have
+  that many coins in your purse!" (or "in the bank!"), "Your bank account is full!" and "That's not
+  a valid amount!". So are these:
+  - The countdown under an hour ("59 Minutes").
+  - Transactions older than a minute ("3 mins ago", "2 hours ago").
+  - What the sign takes (k, m and b work).
+  - A deposit past the 50 million limit (what fits goes in).
+- **"More trading options"** (buying several at once) weren't recorded, so a right-click on a ware
+  buys one trade, as a left-click does. When a ware's stock runs out, "This item is out of stock for
+  today!" is this plugin's line. The wiki says the Farm Merchant shares stock with the Windmill
+  Operator; here each shop's stock is its own (he isn't here).
+- **The bank's Go Back** clicks, as menus do. The recording's one return to the account came with
+  the Banker's voice, but that was most likely a click on him after closing the menu (a client's
+  close isn't in a recording).
 - **The welcome** is centred by the rule that gives the recorded one its 20 spaces; other name
   lengths weren't recorded.
 - **Island saves** write the whole island each time (the starter island's ~1,600 chunks come to
@@ -126,10 +199,17 @@ without gravity, and the plugin makes up for both where it matters:
 
 ## Not done (waits for)
 
-- **Saving Up**, the Banker's quest (Talk to the Banker, then Deposit Coins in the Bank; +5 SkyBlock
-  XP and +10 Coins). It's recorded, and waits for the Banker and the bank.
-- **The Hub's NPCs.** Marco, the Bartender and the rest aren't placed yet (the replay's `npcs.json`
-  says where they stand), so Marco the Artist and Time to Strike can't be finished.
+- **The bank's interest.** The countdown is right (it matched the recording's to the second, once
+  the recording PC's clock is allowed for), but nothing is paid. No recording has a season
+  starting, so its message and transaction line are unknown; the rates are in the menu (2% to 10M,
+  1% to 15M). Also missing: the vault, account upgrades, the SkyBlock Menu's Personal Bank (locked
+  until Emerald Collection VI on a new profile) and co-op members' names on transactions.
+- **The Hub's NPCs' words and menus.** The recording didn't talk to most of them, and NPCs it only
+  saw from afar came without their name tags, so they're not placed: Marco and the Bartender among
+  them, so Marco the Artist and Time to Strike can't be finished. The four that talk say it on every
+  click (UNKNOWN whether Hypixel's repeat it); the menus they'd open (Elizabeth's Community Shop, the
+  Auction House) aren't here. Nor are the Hub's holograms (election timers, the gem shop, warps),
+  apart from the portals' signs.
 - **The Dungeon Hub's other NPCs and quest.** Malik, Saul and the others aren't there either, and
   Mort only appears in runs. Finding the Dungeon Hub started a quest at "Talk to Guildford" whose
   name the recording didn't show, and the Farm's quest (Rigby's) is unknown too; neither is here.

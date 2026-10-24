@@ -38,7 +38,7 @@ import net.icxd.dungeons.utils.Text;
  * SkyBlock Leveling on this server: the data (read off the main thread when the plugin starts), each player's
  * SkyBlock XP on the profile they play on, and what it shows and gives. The XP is worked out from the profile (see
  * {@link SkyBlockXp}) and kept per player and profile for their stats, the tab list and chat; it's worked out again
- * two seconds after something that gives XP ({@link #changed}), every ten seconds anyway, and on a profile switch.
+ * half a second after something that gives XP ({@link #changed}), every ten seconds anyway, and on a profile switch.
  * A new level gives its stats (+5 Health a level, +1 Strength every fifth, through {@link PlayerStats#addModifier})
  * and the level-up message, once: the profile keeps the last level it was told of ({@code leveling.level}; a profile
  * that has none is told nothing the first time, so existing progress isn't announced). Main thread, but for what
@@ -46,10 +46,15 @@ import net.icxd.dungeons.utils.Text;
  */
 public final class SkyBlockLevels implements Listener {
     /**
-     * XP is worked out this long after what gave it: Hypixel's level-up message comes 2 seconds after (real chat
-     * logs: a skill's level-up at 23:18:59, the SkyBlock level's at 23:19:01; a Slayer reward at 12:30:27, 12:30:29).
+     * XP is worked out this long after what gave it, and the action bar shows what it gave: half a second (the
+     * recorded "+5 SkyBlock XP (Complete Objective)" came 0.5 s after Saving Up's reward, 2026-10-24).
      */
-    static final long CHECK_TICKS = 40;
+    static final long CHECK_TICKS = 10;
+    /**
+     * A level-up's message comes this much later still, 2 seconds after what gave the XP (real chat logs: a skill's
+     * level-up at 23:18:59, the SkyBlock level's at 23:19:01; a Slayer reward at 12:30:27, 12:30:29).
+     */
+    static final long ANNOUNCE_TICKS = 30;
     /** And every ten seconds for everyone, for changes nothing says (UNKNOWN on Hypixel). */
     static final long SWEEP_TICKS = 200;
     /** How long the action bar shows the XP: as long as a skill's (research skills.md 2.1); UNKNOWN for SkyBlock XP. */
@@ -183,7 +188,13 @@ public final class SkyBlockLevels implements Listener {
         snapshots.put(player.getUniqueId(), now);
         if (before != null && Objects.equals(before.profileId(), now.profileId())) showGain(player, before.xp(), now.xp());
         if (before == null || before.level() != now.level()) PlayerSession.of(player).invalidateStats();
-        if (!user.isReleased()) announce(player, user, now.level());
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
+            // Not if they've since switched profile: the level was the other one's.
+            User later = User.ifLoaded(player.getUniqueId());
+            if (player.isOnline() && later == user && !user.isReleased() && Objects.equals(user.profileId(), now.profileId())) {
+                announce(player, user, now.level());
+            }
+        }, ANNOUNCE_TICKS);
     }
 
     /** The action bar's "+20 SkyBlock XP (Skill Level Up) (34/100)" for the task that gave the most since before. */
@@ -201,7 +212,7 @@ public final class SkyBlockLevels implements Listener {
         }
         if (best == null) return;
         PlayerSession session = PlayerSession.of(player);
-        Replacement shown = Replacement.forMillis(LevelingText.actionBar(most, best.name(), now.total()), SHOWN_MILLIS);
+        Replacement shown = Replacement.forMillis(LevelingText.actionBar(most, LevelingText.gainName(best), now.total()), SHOWN_MILLIS);
         session.setDefenseReplacement(shown);
         StatsRunnable.sendActionBar(player);
         Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {

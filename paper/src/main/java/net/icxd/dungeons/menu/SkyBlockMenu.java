@@ -16,6 +16,7 @@ import net.icxd.dungeons.collection.CollectionMenus;
 import net.icxd.dungeons.collection.Collections;
 import net.icxd.dungeons.collection.CollectionsMenu;
 import net.icxd.dungeons.gui.GUI;
+import net.icxd.dungeons.gui.MenuSound;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.leveling.LevelingMenu;
 import net.icxd.dungeons.leveling.SkyBlockXp;
@@ -103,10 +104,13 @@ public final class SkyBlockMenu extends GUI {
         this.viewer = viewer;
     }
 
-    /** Opens it for them on the next tick (not from inside the click or command that asks for it). */
+    /**
+     * Opens it for them on the next tick (not from inside the click or command that asks for it), with
+     * a menu's click as Hypixel's did when its item opened it (recorded).
+     */
     public static void openLater(Player player) {
         Bukkit.getScheduler().runTask(Dungeons.getInstance(), () -> {
-            if (player.isOnline()) new SkyBlockMenu(player).open(player);
+            if (player.isOnline()) new SkyBlockMenu(player).open(player, MenuSound.CLICK);
         });
     }
 

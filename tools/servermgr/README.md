@@ -54,7 +54,8 @@ The network lives in `./network` unless you pass `--dir FOLDER` or set `SKYBLOCK
   checkout has them, its storage tables (`plugins/dungeons/storage` → `storage/`, see `tools/storage`)
   and the Hex's tables (`plugins/dungeons/hex` → `hex/`, see HEX.md), its captured maps
   (`plugins/dungeons/worlds` → `worlds/`, the dungeon scanner's `/dscan world` saves: island servers
-  make new islands from the starter island's), and
+  make new islands from the starter island's), its maps' NPCs (`plugins/dungeons/npcs` → `npcs/`,
+  made by the replay tool's `npcs`), and
   dungeon servers its captured rooms
   (`plugins/dungeons/dungeon-rooms/rooms` → `rooms/`). They come from Hypixel, so they stay in that
   private repository rather than in this one or the plugin. `deploy` adds links that are missing, so
