@@ -9,8 +9,9 @@ mongodb:
     database: 'dungeons'
 npcs:
     # Where Ophelia (the Dungeon Hub's shop) stands: blocks from the world spawn's corner, facing
-    # "yaw" (0 south, 90 west, 180 north, 270 east). For a place of her own, give "at" instead,
-    # e.g. at: {x: -49.5, y: 119.0, z: -9.5}, where Hypixel's hub has her.
+    # "yaw" (0 south, 90 west, 180 north, 270 east). On the Dungeon Hub's map (server.map:
+    # dungeon_hub) she stands where Hypixel has her instead. For a place of her own, give "at",
+    # e.g. at: {x: -49.5, y: 119.0, z: -9.5}.
     ophelia:
         from-spawn: {x: 4.5, y: 0.0, z: 0.5}
         yaw: 90.0

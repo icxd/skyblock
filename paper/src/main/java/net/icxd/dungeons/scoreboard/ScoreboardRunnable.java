@@ -6,6 +6,8 @@ import net.icxd.dungeons.SkyBlockServer;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.economy.Coins;
+import net.icxd.dungeons.island.Islands;
+import net.icxd.dungeons.quest.QuestBar;
 import net.icxd.dungeons.region.RegionType;
 import net.icxd.dungeons.session.PlayerSession;
 import net.icxd.dungeons.user.User;
@@ -93,13 +95,19 @@ public class ScoreboardRunnable implements Runnable {
         } else {
             lines.add(season);
             lines.add(clock);
-            RegionType region = PlayerSession.of(player).getRegion();
+            RegionType region = Islands.isIsland(player.getWorld()) ? RegionType.PRIVATE_ISLAND_3 : PlayerSession.of(player).getRegion();
             lines.add("&7 \u23e3 &7" + (region != null ? region : RegionType.getRegionType(player.getLocation())).displayName());
         }
         lines.add("&7");
         lines.add(coins);
         // No bits, no line (a new profile's sidebar).
         if (bitsNow > 0) lines.add(bitsLine(bitsNow, bitsChange));
+        // The objective they follow, under the purse (recorded: "Objective", "Break a log").
+        List<String> objective = QuestBar.sidebar(player);
+        if (!objective.isEmpty()) {
+            lines.add("&9");
+            lines.addAll(objective);
+        }
         lines.add("&8");
         lines.add("&ewww.hypixel.net");
         return lines;

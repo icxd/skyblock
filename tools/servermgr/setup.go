@@ -286,6 +286,9 @@ func (n *Network) createServer(o CreateOptions, progress func(string)) (*Server,
 	}
 	n.installPaperPlugins(s, progress)
 	n.linkData([]*Server{s}, progress)
+	if spec, ok := mapsByType[s.Type]; ok {
+		n.giveMap(s, spec, progress)
+	}
 
 	n.Servers = append(n.Servers, s)
 	if err := n.save(); err != nil {
@@ -350,6 +353,21 @@ func (n *Network) writePaperFiles(s *Server) error {
 		"mongodb.uri":      n.MongoURI,
 		"mongodb.database": n.MongoDatabase,
 	})
+}
+
+// giveMap puts the captured map for its type in a new server's world, if the data checkout has one.
+func (n *Network) giveMap(s *Server, spec mapSpec, progress func(string)) {
+	if n.DungeonData == "" {
+		return
+	}
+	capture, err := findCapture(n.DungeonData, spec.Area)
+	if err != nil || capture == "" {
+		progress(fmt.Sprintf("! No capture of %q in the data folder's worlds/: %s gets a flat world", spec.Area, s.Name))
+		return
+	}
+	if err := n.installMap(s, spec.Name, progress); err != nil {
+		progress(fmt.Sprintf("! %s: couldn't put the %s map in: %v", s.Name, spec.Name, err))
+	}
 }
 
 // setProperties sets keys in a .properties file (always for set, only if missing for defaults).
@@ -517,9 +535,10 @@ func (n *Network) installProxyPlugin(progress func(string)) {
 
 // optionalData: the checkout's folders of tables for parts of the plugin that run without them
 // (storage/: Accessory Powers and bag sizes; hex/: the Hex's enchantments, reforges, gemstones and
-// the like), linked into every server when the checkout has them. One it doesn't have yet is
+// the like; worlds/: captured maps, the starter island's among them), linked into every server when
+// the checkout has them. One it doesn't have yet is
 // skipped quietly: the plugin says so in its log.
-var optionalData = []string{"storage", "hex"}
+var optionalData = []string{"storage", "hex", "worlds"}
 
 // linkData links the private data checkout into servers: the item definitions (items/), the
 // collections and recipes (collections/) and the SkyBlock Leveling data (leveling/) into every

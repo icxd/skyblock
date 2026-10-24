@@ -2,16 +2,26 @@ package net.icxd.dungeons.region;
 
 import lombok.Getter;
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.hub.HubMap;
 import org.bukkit.Location;
 import org.bukkit.util.BoundingBox;
 
+/**
+ * SkyBlock's areas, as the sidebar names them, in their colours. The Hub's are boxes on its captured
+ * map (config.yml's {@code server.map: hub}), the smallest one a spot is in winning (the Bank inside
+ * the Village). Those boxes are rough: each was drawn round the buildings on the map so that every
+ * place the 2026-10-24 recording crossed into an area or out of one falls on its side of the line
+ * (into the Auction House at -28 -12, out of the Bank at -19 -35, into the Farm at 42 -69, ...).
+ * The Hub's other areas (the Mountain, the Forest, ...) have none yet: past the Village it's None,
+ * as Hypixel says in a few spots.
+ */
 @Getter
 public enum RegionType {
     PRIVATE_ISLAND_3("Your Island", "§a"),
-    VILLAGE("Village", new BoundingBox(229, 3, -194, -276, 182, 201)),
+    VILLAGE("Village", new BoundingBox(-75, 0, -75, 75, 256, 35)),
     MOUNTAIN("Mountain"),
     FOREST("Forest"),
-    FARM("Farm"),
+    FARM("Farm", new BoundingBox(38, 50, -160, 130, 120, -66), "§e"),
     RUINS("Ruins"),
     COLOSSEUM("Colosseum"),
     GRAVEYARD("Graveyard", "§c"),
@@ -20,13 +30,13 @@ public enum RegionType {
     WILDERNESS("Wilderness", "§2"),
     SANDBOX_COVE("Sandbox Cove", "§7"),
     HIGH_LEVEL("High Level", "§c"),
-    AUCTION_HOUSE("Auction House", "§6"),
+    AUCTION_HOUSE("Auction House", new BoundingBox(-50, 60, -22, -25, 100, -2), "§6"),
     AUCTION_HOUSE_LEFT_SIDE("Auction House", "§6"),
     AUCTION_HOUSE_RIGHT_SIDE("Auction House", "§6"),
     AUCTION_HOUSE_FRONT_SIDE("Auction House", "§6"),
-    BAZAAR_ALLEY("Bazaar Alley", "§e"),
+    BAZAAR_ALLEY("Bazaar Alley", new BoundingBox(-40, 60, -33, -26, 100, -23), "§e"),
     ARCHERY_RANGE("Archery Range", "§9"),
-    BANK("Bank", "§6"),
+    BANK("Bank", new BoundingBox(-40, 60, -52, -19, 100, -35), "§6"),
     BLACKSMITH("Blacksmith"),
     LIBRARY("Library"),
     THE_BARN("The Barn", "§b"),
@@ -46,7 +56,9 @@ public enum RegionType {
     DIAMOND_RESERVE("Diamond Reserve"),
     OBSIDIAN_SANCTUARY("Obsidian Sanctuary"),
     SPIDERS_DEN("Spider's Den", "§c"),
-    COMMUNITY_CENTER("Community Center"),
+    COMMUNITY_CENTER("Community Center", new BoundingBox(-12, 70, 6, 14, 110, 30)),
+    /** Under the Community Center, through its warp. */
+    ELECTION_ROOM("Election Room", new BoundingBox(-20, 40, 15, 20, 62, 55)),
     SPIDERS_DEN_HIVE("Spider's Den", "§c"),
     BLAZING_FORTRESS("Blazing Fortress", "§c"),
     DWARVEN_VILLAGE("Dwarven Village"),
@@ -115,22 +127,25 @@ public enum RegionType {
         return null;
     }
 
-    /** The region at a position in the server's main world. */
+    /** The area at a position on the Hub's map: the smallest box it's in. */
     public static RegionType getRegionType(double x, double y, double z) {
+        RegionType found = NONE;
+        double smallest = Double.MAX_VALUE;
         for (RegionType region : values()) {
             BoundingBox box = region.bounds;
             // Both corners count, as they did when regions were two corner locations.
             if (box != null && x >= box.getMinX() && x <= box.getMaxX() && y >= box.getMinY() && y <= box.getMaxY()
-                    && z >= box.getMinZ() && z <= box.getMaxZ()) {
-                return region;
+                    && z >= box.getMinZ() && z <= box.getMaxZ() && box.getVolume() < smallest) {
+                found = region;
+                smallest = box.getVolume();
             }
         }
-        return NONE;
+        return found;
     }
 
-    /** NONE outside the main world, and on servers without regions (dungeons). */
+    /** NONE outside the main world, on servers without regions (dungeons), and where the main world isn't the Hub's map. */
     public static RegionType getRegionType(Location location) {
-        if (!Dungeons.getSkyBlockServer().hasRegions() || !location.getWorld().equals(Dungeons.getSkyBlockServer().getMainWorld())) {
+        if (!Dungeons.getSkyBlockServer().hasRegions() || !HubMap.here() || !location.getWorld().equals(Dungeons.getSkyBlockServer().getMainWorld())) {
             return NONE;
         }
         return getRegionType(location.getX(), location.getY(), location.getZ());

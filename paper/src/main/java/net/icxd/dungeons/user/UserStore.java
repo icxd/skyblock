@@ -9,13 +9,18 @@ import static com.mongodb.client.model.Updates.set;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,7 +59,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * {@link #handOff} them first, so the data is saved and released before they arrive.
  *
  * <p>Writes run on one thread, in order. Documents are copied on the main thread first, since
- * that's where they change.
+ * that's where they change. A release can wait for something to finish first (see
+ * {@link #beforeRelease}): the player's island being stored, so the next server loads it as they left it.
  */
 public final class UserStore {
     private static final long POLL_MILLIS = 100;
@@ -92,6 +98,12 @@ public final class UserStore {
     private final ExecutorService writer = Executors.newSingleThreadExecutor(r -> new Thread(r, "user-saves"));
     /** Players whose data is being taken back right now. Main thread. */
     private final Set<UUID> reclaiming = new HashSet<>();
+    /** Releases not written yet (waiting for {@link #beforeRelease}), by player. */
+    private final Map<UUID, CompletableFuture<Void>> releasing = new ConcurrentHashMap<>();
+    /** How long a login here waits for this server's own release of the player to be written. */
+    private static final long WAIT_FOR_OWN_RELEASE_SECONDS = 15;
+    /** What has to be done before a player's data is released; their data is written as it was when the release began. */
+    private Function<User, CompletableFuture<Void>> beforeRelease = user -> CompletableFuture.completedFuture(null);
 
     /**
      * @param server this server's name; every server on the network needs its own
@@ -121,6 +133,14 @@ public final class UserStore {
     /** One document per running server: {@code _id} (its name), {@code type}, {@code players}, {@code seen}, {@code beat}. */
     public MongoCollection<Document> servers() {
         return servers;
+    }
+
+    /**
+     * Something to finish before a player's data is released (their island's save, see Islands), so it's
+     * done before another server can load them. Its failure doesn't stop the release. Main thread.
+     */
+    public void beforeRelease(Function<User, CompletableFuture<Void>> hook) {
+        beforeRelease = hook;
     }
 
     /** Call before players can join. */
@@ -203,11 +223,16 @@ public final class UserStore {
      */
     public User claim(UUID uuid, String name, String ip) throws HeldElsewhereException, InterruptedException {
         long start = System.currentTimeMillis();
-        // This server's own last save of the player (they may have just left) goes first.
+        // This server's own last save of the player (they may have just left) goes first, and its release if
+        // that's waiting on something.
         try {
+            CompletableFuture<Void> release = releasing.get(uuid);
+            if (release != null) release.get(WAIT_FOR_OWN_RELEASE_SECONDS, TimeUnit.SECONDS);
             writer.submit(() -> { }).get();
-        } catch (java.util.concurrent.ExecutionException e) {
+        } catch (ExecutionException e) {
             throw new IllegalStateException(e);
+        } catch (TimeoutException e) {
+            throw new HeldElsewhereException(server);
         }
         String id = uuid.toString();
         String holder = null;
@@ -451,10 +476,27 @@ public final class UserStore {
 
     private CompletableFuture<Void> release(User user) {
         user.markReleased();
-        return write(user, true);
+        CompletableFuture<Void> before;
+        try {
+            before = beforeRelease.apply(user);
+        } catch (RuntimeException e) {
+            log.log(Level.SEVERE, "Couldn't get " + user.getUuid() + "'s data ready to release; releasing it anyway", e);
+            before = CompletableFuture.completedFuture(null);
+        }
+        CompletableFuture<Void> released = write(user, true, before);
+        if (!released.isDone()) {
+            releasing.put(user.getUuid(), released);
+            released.whenComplete((done, error) -> releasing.remove(user.getUuid(), released));
+        }
+        return released;
     }
 
     private CompletableFuture<Void> write(User user, boolean release) {
+        return write(user, release, CompletableFuture.completedFuture(null));
+    }
+
+    /** Saves the document as it is now, written once {@code after} is done (whether it worked or not). */
+    private CompletableFuture<Void> write(User user, boolean release, CompletableFuture<Void> after) {
         Document doc = user.getDocument();
         if (doc == null) return CompletableFuture.completedFuture(null);
         Player player = user.getPlayer();
@@ -474,11 +516,11 @@ public final class UserStore {
             log.log(Level.SEVERE, "Couldn't save " + user.getUuid(), e);
             if (!release) return CompletableFuture.failedFuture(e);
             // Still let go of it, or they couldn't join any other server until this one restarts.
-            return CompletableFuture.runAsync(() -> users.updateOne(and(eq("uuid", user.getUuid().toString()), eq("session.server", server)),
-                    set("session", null)), writer);
+            return after.handle((done, error) -> null).thenRunAsync(() -> users.updateOne(and(eq("uuid", user.getUuid().toString()),
+                    eq("session.server", server)), set("session", null)), writer);
         }
         if (release) copy.put("session", BsonNull.VALUE);
-        return CompletableFuture.runAsync(() -> {
+        return after.handle((done, error) -> null).thenRunAsync(() -> {
             // Only while this server still holds it: after a takeover the other server's data is newer.
             UpdateResult result = users.withDocumentClass(BsonDocument.class)
                     .replaceOne(and(eq("uuid", user.getUuid().toString()), eq("session.server", server)), copy);

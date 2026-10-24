@@ -37,6 +37,19 @@ public final class CollectionText {
         return tier > 0 ? collection.name() + " " + Utils.getRomanNumeral(tier) : collection.name();
     }
 
+    /**
+     * The line when a profile gets its first of a collection's items, as recorded ("  COLLECTION UNLOCKED Oak
+     * Log", which opens the collection): its words, and the hover's.
+     */
+    static String unlockedLine(Collection collection) {
+        return "&6&lCOLLECTION UNLOCKED &e" + collection.name();
+    }
+
+    static String unlockedHover(Collection collection) {
+        return "&7Collect more " + collection.name() + " to progress through your\n&7Collection and unlock rewards!\n\n&eClick to view your "
+                + collection.name() + " Collection!";
+    }
+
     /** "&e70&6%" in progress, "&a100%" once there (the tiers' "Progress:"). */
     public static String progress(double fraction) {
         return fraction >= 1 ? "&a100%" : "&e" + SkillText.percent(fraction) + "&6%";

@@ -50,4 +50,18 @@ class SkyBlockTimeTest {
         assertEquals("7:00pm", seven.clock());
         assertFalse(seven.isDay());
     }
+
+    /** The Quest Log's "Started:" on the new profile's Getting Started (2026-10-24, 00:18.0), in Late Winter. */
+    @Test
+    void questLogStart() {
+        SkyBlockTime started = new SkyBlockTime(521, 11, 17, 3, 8);
+        assertEquals("Late Winter 17th", started.date());
+        assertEquals("Winter 17th, Year 521", started.seasonDate());
+        assertEquals("3:08am", started.exactClock());
+        assertEquals("3:00am", started.clock());
+        assertEquals("Spring 9th, Year 485", new SkyBlockTime(485, 1, 9, 4, 21).seasonDate());
+        assertEquals("Summer 1st, Year 489", new SkyBlockTime(489, 3, 1, 23, 30).seasonDate());
+        assertEquals("11:30pm", new SkyBlockTime(489, 3, 1, 23, 30).exactClock());
+        assertEquals("12:05am", new SkyBlockTime(489, 3, 1, 0, 5).exactClock());
+    }
 }

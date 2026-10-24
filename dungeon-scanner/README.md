@@ -1,8 +1,9 @@
 # Dungeon Scanner
 
-A client-side Fabric mod that saves Hypixel Catacombs rooms as schematics while you play. It
-only reads blocks the server has already sent to your client. It never sends anything or changes
-the world.
+A client-side Fabric mod that saves Hypixel Catacombs rooms as schematics while you play, and
+any world you walk through as a Minecraft world's region files (`/dscan world`, below). It only
+reads blocks the server has already sent to your client. It never sends anything or changes the
+world.
 
 For private use only. The rooms are Hypixel's builds, and a world-reading mod isn't on Hypixel's
 allowed-modifications list, so use it at your own risk.
@@ -39,6 +40,60 @@ minutes pass.
 Each room is saved once. Scanning the same room again in another run (even rotated) produces an
 identical file, and it's skipped. To collect them all you'll need many runs across floors: some
 rooms are floor-specific and the 62 regular 1x1s show up at random.
+
+## Saving a world (`/dscan world`)
+
+For maps rather than rooms: the islands and hubs to build on. It saves whatever world you walk
+through as region files that a 26.2 server or singleplayer world loads, and only what the server
+has already sent: it never asks for a chunk, changes your view distance, moves you or sends
+anything. What you walk past is what you get, so walk slowly past everything you want (name tags
+and signs only come close up), and save an island before you touch it.
+
+| Command | |
+|---|---|
+| `/dscan world start [name]` | start saving, into `worlds/<time>[_name]/` |
+| `/dscan world stop` | finish: the last world's files are written and closed (quitting the game does it too) |
+| `/dscan world status` | chunks and decorations saved so far |
+
+Hypixel puts each island and server in a world of its own; each gets its own folder, numbered and
+named after the first area the sidebar shows there (`saving-<n>` while it's being saved, and after
+a crash):
+
+```
+worlds/<time>[_name]/<n>_<area>/region/r.x.z.mca     blocks, biomes and block entities (sign text, heads' skins)
+                                entities/r.x.z.mca   item frames, paintings, unnamed armor stands, block and item displays
+                                capture.json         the areas, server id, dimension, height, times, counts and biomes
+```
+
+- A chunk is saved once, two seconds after it arrives (sign text and heads' skins can come just
+  after the chunk), or as it unloads if that's sooner. What's kept is the chunk as it arrived:
+  breaking a block afterwards doesn't change it. Decorations are kept as first seen.
+- Name tags, holograms, NPCs and mobs aren't saved; the game spawns those. The replay tool's
+  `npcs.json` has a recording's NPCs and holograms.
+- Leaves are saved persistent and armor stands without gravity, as they behave on Hypixel, whose
+  worlds don't random-tick and never move them. As the client has them, a server that ticks would
+  decay the trees (766 items dropped in a minute in the Hub, none with random ticks off) and drop
+  the stands over the void out of the world. Captures from before this have both.
+- Light isn't saved: the server works it out as it loads the chunks. Nor are heightmaps, which
+  it makes when they're missing.
+- Biomes keep the names the server sent, Hypixel's own included (`hypixel:wilderness`,
+  `hypixel:graveyard`...; `capture.json` lists them). A server without them loads those chunks
+  with its default biome and logs "Unknown registry key ... using default" for each section
+  that has one; a datapack with Hypixel's biomes would give them their colours.
+
+**Using a capture.** Paper 26 keeps each world's dimension in `<world>/dimensions/minecraft/<name>/`
+(the main world's overworld is `overworld`): copy a capture's `region/` and `entities/` there. For
+singleplayer, make a world (Superflat, preset The Void), quit it, and copy them into
+`saves/<world>/dimensions/minecraft/overworld/`. The world's own generator makes the chunks you
+didn't walk past, so give it a void one. Pushed to the data repository's `worlds/`, the captures are
+the remake's maps: servermgr makes the Hub's and the Dungeon Hub's the hubs' worlds, and island
+servers make new islands from the starter island's (ISLANDS_QUESTS.md).
+
+Checked with a 26.2 client on a vanilla 26.2 server, saving a flat world with a sign, an item
+frame and armor stands through a trip to the Nether and back, and loading what it saved on a
+fresh server: blocks and their states, the sign's text, the item frame and the unnamed armor stand
+came back, the named stand and a text display were left out, chunks left before they settled
+were saved as they unloaded, and the server lit everything.
 
 ## Output (`.minecraft/dungeon-scanner/`)
 
@@ -108,4 +163,5 @@ Room JSON example:
   and gets a fresh `.schematic`, which is identical unless the 1.8 conversion changed.
 - **Chests:** chest contents aren't saved, because the client doesn't have them.
 - **Not tested on Hypixel.** The unit tests use a fake world. If a room has no roof marker it's
-  saved unrotated, and the chat message says so.
+  saved unrotated, and the chat message says so. `/dscan world` was run in a 26.2 client on a
+  local server, not on Hypixel.

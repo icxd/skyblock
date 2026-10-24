@@ -15,7 +15,7 @@ class OpheliaTest {
         Document profile = new Document();
         assertTrue(Ophelia.firstTime(profile));
         assertFalse(Ophelia.firstTime(profile));
-        assertEquals(List.of(Ophelia.ID), profile.getList(Ophelia.TALKED, String.class));
+        assertEquals(List.of(Ophelia.ID), profile.getList(Npc.TALKED, String.class));
         assertTrue(Ophelia.firstTime(new Document()), "another profile hasn't");
     }
 

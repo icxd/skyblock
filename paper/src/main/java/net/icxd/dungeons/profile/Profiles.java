@@ -20,6 +20,7 @@ import org.bson.Document;
 import net.icxd.dungeons.common.Rank;
 import net.icxd.dungeons.economy.Coins;
 import net.icxd.dungeons.economy.Purse;
+import net.icxd.dungeons.quest.QuestProgress;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.utils.Utils;
@@ -151,10 +152,14 @@ public final class Profiles {
         }
     }
 
-    /** Adds a profile (not selected yet) with the defaults' fields. */
+    /**
+     * Adds a profile (not selected yet) with the defaults' fields. It starts as Hypixel's new profiles do,
+     * on Getting Started, to be welcomed on its island (see QuestProgress).
+     */
     public static Document create(Document doc, String id, String name, ProfileMode mode, Document defaults, long now) {
         Document profile = new Document(NAME, name).append(MODE, mode.name()).append(CREATED, new Date(now));
         fill(profile, defaults);
+        QuestProgress.newProfile(profile, now);
         profiles(doc).put(id, profile);
         return profile;
     }

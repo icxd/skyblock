@@ -32,8 +32,9 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 /**
  * Moving players between servers. Every move (ours, {@code /server}, {@code /send}, other plugins')
  * first has the old server save and release the player's data, so the new server can load it; if
- * the move then fails, the old server takes it back. New players and players kicked from a server
- * go to the emptiest hub, and players who drop out of a dungeon run go back into it.
+ * the move then fails, the old server takes it back. Players join on their private island (an
+ * island server), as on Hypixel, or the emptiest hub when there's no island server; players kicked
+ * from a server go to the emptiest hub, and players who drop out of a dungeon run go back into it.
  */
 public final class Transfers {
     private final ProxyServer proxy;
@@ -87,7 +88,9 @@ public final class Transfers {
                 event.setInitialServer(run.get());
                 return;
             }
-            directory.leastLoaded(ServerType.LOBBY, null).ifPresent(event::setInitialServer);
+            // Joining SkyBlock puts you on your island (the 2026-10-24 recording starts there, by Jerry and the portal).
+            Optional<RegisteredServer> island = directory.leastLoaded(ServerType.ISLAND, null);
+            (island.isPresent() ? island : directory.leastLoaded(ServerType.LOBBY, null)).ifPresent(event::setInitialServer);
         });
     }
 
@@ -147,7 +150,7 @@ public final class Transfers {
         return connect(player, target.get());
     }
 
-    /** A server's SEND request: a server type ({@code LOBBY}, {@code DUNGEON_HUB}) or {@code server:NAME}. */
+    /** A server's SEND request: a server type ({@code LOBBY}, {@code ISLAND}, {@code DUNGEON_HUB}) or {@code server:NAME}. */
     void sendRequested(ServerConnection from, String destination) {
         Player player = from.getPlayer();
         if (destination.startsWith("server:")) {

@@ -54,7 +54,6 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.Plugin;
@@ -77,6 +76,7 @@ import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.network.ProxyLink;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Utils;
+import net.icxd.dungeons.utils.Worlds;
 
 /**
  * The dungeon runs on this (DUNGEONS) server. The proxy writes a run to the {@code runs} collection
@@ -556,7 +556,7 @@ public final class RunManager {
     }
 
     private String newWorldName() {
-        Path dimensions = dimensionsFolder();
+        Path dimensions = Worlds.dimensionsFolder();
         for (int i = 1; ; i++) {
             String name = WORLD_PREFIX + i;
             if (!idle.contains(name) && Bukkit.getWorld(name) == null && !Files.exists(dimensions.resolve(name))) return name;
@@ -565,7 +565,7 @@ public final class RunManager {
 
     private World createWorld(String name) {
         World world = new WorldCreator(name)
-                .generator(new VoidWorld())
+                .generator(new Worlds.Void())
                 .generateStructures(false)
                 // A spawn point of our own, so making the world doesn't search for one.
                 .forcedSpawnPosition(Position.block(PastePlan.HYPIXEL_BASE, waitingY, PastePlan.HYPIXEL_BASE), 0, 0)
@@ -598,15 +598,9 @@ public final class RunManager {
         return CompletableFuture.allOf(chunks.toArray(CompletableFuture[]::new));
     }
 
-    /** Where Paper keeps the worlds: Paper 26 has them all in {@code world/dimensions/minecraft}, the main one as {@code overworld}. */
-    private static Path dimensionsFolder() {
-        Path main = Bukkit.getWorlds().get(0).getWorldPath();
-        return main.getFileName().toString().equals("overworld") ? main.getParent() : Bukkit.getWorldContainer().toPath();
-    }
-
     /** Run worlds from before are reused; ones named some other way (earlier versions) are deleted. */
     private void findRunWorlds() {
-        File[] files = dimensionsFolder().toFile().listFiles((dir, name) -> name.startsWith(WORLD_PREFIX));
+        File[] files = Worlds.dimensionsFolder().toFile().listFiles((dir, name) -> name.startsWith(WORLD_PREFIX));
         if (files == null) return;
         for (File file : files) {
             if (WORLD_NAME.matcher(file.getName()).matches()) idle.add(file.getName());
@@ -632,10 +626,6 @@ public final class RunManager {
             }
         }
         return new Location(world, x + 0.5, y, z + 0.5);
-    }
-
-    /** Nothing at all: the floor is pasted in. */
-    private static final class VoidWorld extends ChunkGenerator {
     }
 
     /** Inner, so the plugin's listener scan doesn't register a second copy. */

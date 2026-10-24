@@ -13,7 +13,7 @@ import (
 )
 
 // Server types, as the Paper plugin's config.yml calls them (common/ServerType.java).
-var serverTypes = []string{"LOBBY", "DUNGEON_HUB", "DUNGEONS", "CRIMSON_ISLE", "DWARVEN_MINES", "NONE"}
+var serverTypes = []string{"LOBBY", "DUNGEON_HUB", "DUNGEONS", "CRIMSON_ISLE", "DWARVEN_MINES", "ISLAND", "NONE"}
 
 const (
 	configFile       = "network.json"
@@ -69,6 +69,8 @@ type Server struct {
 	Build        int    `json:"build"`
 	// FirstStartDone is set once the per-type first-start commands have run.
 	FirstStartDone bool `json:"firstStartDone"`
+	// Map is the captured map its main world is ("hub", "dungeon_hub"; see maps.go), "" for its own.
+	Map string `json:"map,omitempty"`
 }
 
 var namePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,31}$`)

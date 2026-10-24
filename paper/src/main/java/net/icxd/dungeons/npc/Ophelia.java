@@ -1,6 +1,5 @@
 package net.icxd.dungeons.npc;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +17,7 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 
 import net.icxd.dungeons.OnlyOn;
 import net.icxd.dungeons.common.ServerType;
+import net.icxd.dungeons.hub.DungeonHubMap;
 import net.icxd.dungeons.shop.Shop;
 import net.icxd.dungeons.shop.ShopMenu;
 import net.icxd.dungeons.user.User;
@@ -27,7 +27,8 @@ import net.icxd.dungeons.utils.Text;
  * Ophelia, the Dungeon Hub's shop: a click opens her menu (see {@link Shop#OPHELIA}), where players
  * also sell. The first time a profile talks to her she says her lines first (the wiki's "First
  * Interaction"; the time between them isn't known). Where she stands is config.yml's
- * {@code npcs.ophelia}, near the world spawn by default (Hypixel's hub has her at -49.5, 119, -9.5).
+ * {@code npcs.ophelia}: its {@code at} if it has one, else on the Dungeon Hub's map where Hypixel has
+ * her (see DungeonHubMap), else near the world spawn.
  * Her skin is NEU's, which has no signature; her name tag's red is her chat name's.
  */
 @OnlyOn(ServerType.DUNGEON_HUB)
@@ -41,8 +42,6 @@ public final class Ophelia {
             "&e[NPC] &cOphelia&f: My trick? I make &6coins&f from the others' greed.",
             "&e[NPC] &cOphelia&f: Are you interested in buying anything?");
     private static final long BETWEEN_LINES = 30;
-    /** On the profile: the NPCs it has talked to. */
-    static final String TALKED = "talkedTo";
 
     private static final Set<UUID> talking = new HashSet<>();
 
@@ -51,7 +50,8 @@ public final class Ophelia {
 
     /** Spawns her in the main world, keeping her chunk loaded (she'd be gone with it). */
     public static Npc spawn(Plugin plugin, World world, ConfigurationSection config) {
-        Location at = where(world, config);
+        boolean placed = config != null && config.isConfigurationSection("at");
+        Location at = !placed && DungeonHubMap.here() ? DungeonHubMap.ophelia(world) : where(world, config);
         at.getChunk().addPluginChunkTicket(plugin);
         return Npc.spawn(ID, at, NAME, SKIN, player -> talk(plugin, player));
     }
@@ -90,10 +90,6 @@ public final class Ophelia {
 
     /** Whether this profile hasn't talked to her yet; it has from now on. */
     static boolean firstTime(Document profile) {
-        List<Object> talked = profile.get(TALKED) instanceof List<?> list ? new ArrayList<>(list) : new ArrayList<>();
-        if (talked.contains(ID)) return false;
-        talked.add(ID);
-        profile.put(TALKED, talked);
-        return true;
+        return Npc.firstTalk(profile, ID);
     }
 }

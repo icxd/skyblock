@@ -5,6 +5,7 @@
   "description": "Decodes Replay Mod recordings (.mcpr) into readable timelines of chat, sidebar, tab list, menus and maps.",
   "main": "replay.js",
   "bin": { "replay": "replay.js" },
+  "scripts": { "test": "node --test" },
   "engines": { "node": ">=18" },
   "dependencies": {
     "adm-zip": "^0.5.16",

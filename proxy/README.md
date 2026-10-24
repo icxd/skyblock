@@ -9,8 +9,9 @@ The Velocity side of the network. `target/skyblock-proxy-1.0-SNAPSHOT.jar` goes 
   `/send`, other plugins), the proxy asks the server the player is on to save and release their
   data, and waits for it (up to 3 s) before connecting them to the next one. If the move fails, the
   old server takes the data back and the player carries on there.
-- **Routing.** New players go to the emptiest hub (`LOBBY` server). Players kicked from a server
-  (it stopped or crashed) go to another hub. Players who drop out of a dungeon run and log back in
+- **Routing.** Players join on their private island: the emptiest island server (`ISLAND`), which
+  loads it as they log in, or the emptiest hub (`LOBBY` server) if there's none. Players kicked
+  from a server (it stopped or crashed) go to another hub. Players who drop out of a dungeon run and log back in
   go back into it. Finished runs send their players to the Dungeon Hub (`DUNGEON_HUB` server), or a
   hub if there's none.
 - **Parties**, as on Hypixel (below). They live on the proxy and follow players between servers;
@@ -57,7 +58,7 @@ online, and only the leader can start one.
 - **Proxy and servers talk** over the `skyblock:main` plugin-message channel, through a player's
   connection (`common/.../ProxyMessage.java`): `HANDOFF` / `HANDED_OFF` before a move, `RECLAIM`
   after a failed one, and `SEND` for a server to ask the proxy to move someone (a server type
-  like `DUNGEON_HUB`, or `server:NAME`). The proxy drops anything a client sends on the channel.
+  like `DUNGEON_HUB` or `ISLAND`, or `server:NAME`). The proxy drops anything a client sends on the channel.
 - **Dungeon runs** are documents in the `runs` collection (`common/.../Runs.java`). The proxy writes
   one (floor, leader, members, server) and sends the party. The dungeon server picks it up and marks
   it `running` once the floor is pasted, then `ended` a minute after everyone has left.

@@ -12,7 +12,12 @@ public enum ServerType {
     DUNGEONS("The Catacombs"),
     CRIMSON_ISLE("Crimson Isle"),
     DWARVEN_MINES("Dwarven Mines"),
-    /** For development: runs everything. */
+    /**
+     * Private islands, as Hypixel's "mini" servers host them: each profile's island is a world of its
+     * own, loaded on whichever of these servers its player is sent to.
+     */
+    ISLAND("Private Island"),
+    /** For development: runs everything (the hub in its main world, islands in worlds of their own). */
     NONE("Dev");
 
     private final String displayName;
