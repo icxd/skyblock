@@ -27,7 +27,8 @@ Commands:
   init                       set up a new network with its proxy (asks for anything not given)
       --java PATH --repo PATH --data PATH --mongo URI --database NAME --port N --accept-eula
   create NAME --type TYPE    add a Paper server behind the proxy
-      --memory 2G --start    types: LOBBY, DUNGEON_HUB, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES, NONE
+      --memory 2G --start    types: LOBBY, DUNGEON_HUB, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES, ISLAND, NONE
+  map NAME MAP|none          make a (stopped) server's world a captured map: hub, dungeon_hub
   remove NAME [--keep-files] take a (stopped) server off the network
   start|stop|restart [NAME|all]
   kill NAME                  end a server right away
@@ -110,6 +111,15 @@ func run(dir, command string, args []string) error {
 	switch command {
 	case "create":
 		return cmdCreate(n, args)
+	case "map":
+		if len(args) != 2 {
+			return errors.New("usage: servermgr map NAME MAP|none (maps: " + strings.Join(sortedMapNames(), ", ") + ")")
+		}
+		s := n.server(args[0])
+		if s == nil {
+			return fmt.Errorf("no server called %s", args[0])
+		}
+		return n.installMap(s, strings.ToLower(args[1]), say)
 	case "remove":
 		fs := flag.NewFlagSet("remove", flag.ExitOnError)
 		keep := fs.Bool("keep-files", false, "keep the server's folder")
@@ -197,7 +207,7 @@ func cmdInit(dir string, args []string) error {
 
 func cmdCreate(n *Network, args []string) error {
 	fs := flag.NewFlagSet("create", flag.ExitOnError)
-	typ := fs.String("type", "", "LOBBY, DUNGEON_HUB, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES or NONE")
+	typ := fs.String("type", "", "LOBBY, DUNGEON_HUB, DUNGEONS, CRIMSON_ISLE, DWARVEN_MINES, ISLAND or NONE")
 	memory := fs.String("memory", "2G", "heap size")
 	start := fs.Bool("start", false, "start it once it's created")
 	name, rest := firstArg(args)

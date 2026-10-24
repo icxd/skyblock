@@ -301,8 +301,9 @@ func (n *Network) firstStart(s *Server) error {
 		return nil
 	}
 	var commands []string
-	if s.Type == "DUNGEONS" || s.Type == "NONE" {
-		// Hypixel's dungeons don't random-tick; with it on, ice melts and floods rooms.
+	if s.Type == "DUNGEONS" || s.Type == "NONE" || s.Map != "" {
+		// Hypixel's dungeons don't random-tick; with it on, ice melts and floods rooms. Nor do its hubs: on a
+		// captured map, trees would drop their leaves and crops grow.
 		commands = append(commands, "gamerule random_tick_speed 0", "gamerule spawn_mobs false")
 	}
 	// Restoring inventories on join would announce vanilla advancements on every server.
