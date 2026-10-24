@@ -7,13 +7,12 @@ import java.util.function.DoubleConsumer;
 import java.util.function.Function;
 
 import org.bson.Document;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.icxd.dungeons.bank.BankAccount.Result;
 import net.icxd.dungeons.bank.BankMenus.Layout;
+import net.icxd.dungeons.economy.CoinSound;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.MenuSound;
 import net.icxd.dungeons.gui.RefreshingGUI;
@@ -26,16 +25,12 @@ import net.icxd.dungeons.utils.Text;
 
 /**
  * The bank's menus (see {@link BankMenus} for what they show), as they went in the recording: each
- * opens the next with a click, as menus do; a deposit or withdrawal says it's being made, chimes (a
- * pling, loud and high), says what it did and opens the account again, with a click. A refusal leaves
+ * opens the next with a click, as menus do; a deposit or withdrawal says it's being made, chimes
+ * ({@link CoinSound}), says what it did and opens the account again, with a click. A refusal leaves
  * the menu open, silently. The first deposit completes Saving Up. Their amounts and countdown are kept
  * up to date while they're open. Main thread.
  */
 public final class BankMenu extends GUI implements RefreshingGUI {
-    /** The chime, as recorded: a pling at volume 8 and Hypixel's highest pitch (255/63, which plays as 2). */
-    static final float CHIME_VOLUME = 8;
-    static final float CHIME_PITCH = 255 / 63f;
-
     private final Player viewer;
     private final Function<Document, Layout> layout;
     private final Map<Integer, Runnable> buttons = new HashMap<>();
@@ -106,7 +101,7 @@ public final class BankMenu extends GUI implements RefreshingGUI {
 
     private static void done(Player viewer, User user, String said) {
         user.save();
-        viewer.playSound(viewer.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS, CHIME_VOLUME, CHIME_PITCH);
+        CoinSound.play(viewer);
         viewer.sendMessage(Text.line(said));
         account(viewer, MenuSound.CLICK);
     }

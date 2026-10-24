@@ -25,11 +25,18 @@ public record Shop(String name, List<Ware> wares) {
 
     /**
      * One trade: this many of an item for all of its costs, once they've completed this Catacombs
-     * floor (0: from the start). A locked one is shown with "Not unlocked!" and can't be bought.
+     * floor (0: from the start). A locked one is shown with "Not unlocked!" and can't be bought, as
+     * isn't one whose item has a requirement they don't meet (the Farm Merchant's Rookie Hoe, until
+     * Farming Skill 1). {@code stock} is how many of the item they may buy a day (0 for no limit, see
+     * {@link ShopStock}).
      */
-    public record Ware(String item, int amount, int floor, boolean locked, List<Cost> costs) {
+    public record Ware(String item, int amount, int floor, boolean locked, List<Cost> costs, int stock) {
         public Ware {
             costs = List.copyOf(costs);
+        }
+
+        public Ware(String item, int amount, int floor, boolean locked, List<Cost> costs) {
+            this(item, amount, floor, locked, costs, 0);
         }
     }
 
@@ -100,6 +107,34 @@ public record Shop(String name, List<Ware> wares) {
             locked("MENDER_CROWN", 6, coins(5_000_000), item("MENDER_FEDORA")),
             locked("WITHER_GOGGLES", 6, coins(5_000_000), item("SHADOW_GOGGLES")),
             ware("DUNGEONBREAKER", 0, new EssenceCost(EssenceType.WITHER, 500))));
+
+    /**
+     * The Farm Merchant's, in the Hub's Farm, as recorded (2026-10-24): crops and the like, each with a
+     * day's stock of 640, then the Rookie Hoe and Rookie Farming Axe (locked until Farming Skill 1,
+     * which the items require) and the Beginner Agronomy Sack (which does nothing yet: there are no
+     * sacks).
+     */
+    public static final Shop FARM_MERCHANT = new Shop("Farm Merchant", List.of(
+            stocked("WHEAT", 3, 30),
+            stocked("CARROT_ITEM", 3, 30),
+            stocked("POTATO_ITEM", 3, 30),
+            stocked("MELON", 10, 40),
+            stocked("SUGAR_CANE", 3, 30),
+            stocked("PUMPKIN", 1, 25),
+            stocked("INK_SACK:3", 1, 5),
+            stocked("RED_MUSHROOM", 1, 25),
+            stocked("BROWN_MUSHROOM", 1, 25),
+            stocked("SAND", 2, 8),
+            stocked("CACTUS", 1, 15),
+            stocked("ENCHANTED_BONE_MEAL", 3, 6),
+            ware("ROOKIE_HOE", 0, coins(10)),
+            ware("ROOKIE_FARMING_AXE", 0, coins(10)),
+            ware("BEGINNER_AGRONOMY_SACK", 0, coins(250))));
+
+    /** This many for this many coins, with a day's stock. */
+    private static Ware stocked(String item, int amount, int coins) {
+        return new Ware(item, amount, 0, false, List.of(coins(coins)), ShopStock.DAILY);
+    }
 
     private static Ware ware(String item, int floor, Cost... costs) {
         return new Ware(item, 1, floor, false, List.of(costs));

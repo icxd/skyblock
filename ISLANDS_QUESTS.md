@@ -108,7 +108,7 @@ without gravity, and the plugin makes up for both where it matters:
   their name tags at the recorded heights, holding what they held. Four say what they said when the
   recording's player talked to them, timed as recorded and in their voices (`HubTalk`): Elizabeth,
   the Community Center's Clerk Seraphine, Minister Nancy and the Auction Master. The Banker has
-  his bank (below). The others don't answer a click yet.
+  his bank and the Farm Merchant his shop (below). The others don't answer a click yet.
 - **Saving Up and the Bank** (`Banker`, `bank/`), as recorded.
   - **The Banker.** The first time, he says his three lines, timed as recorded, in a villager's
     voice. With the last, Saving Up starts with Talk to the Banker done: OBJECTIVE COMPLETE and +5
@@ -129,6 +129,19 @@ without gravity, and the plugin makes up for both where it matters:
     purse (its hover says so).
   - **The tab list** has "Interest: 4 Hours" under the bank's balance.
   - **Storage.** The profile's `bank`: its `balance` and its last 10 `transactions`.
+- **The Farm Merchant** (`FarmMerchant`, `Shop.FARM_MERCHANT`), as recorded. The first time, his two
+  lines, high-voiced; his shop opens 2.1 s after the last, as Ophelia's does. After that a click
+  opens it, and he speaks as it opens.
+  - **His wares**, in the recorded order and at the recorded prices: Wheat, Carrot and Potato (3 for
+    30 coins), Melon Slice (10 for 40), Sugar Cane, Pumpkin, Cocoa Beans, the two mushrooms, Sand,
+    Cactus, Enchanted Bone Meal, the Rookie Hoe and Rookie Farming Axe, and the Beginner Agronomy Sack.
+  - **Stock** (`ShopStock`): the crops and the like have 640 a day, counted in items and shown as
+    "Stock: 640 remaining". The day starts at 00:00 UTC, as the wiki says and the sell limit's does.
+  - **Locks.** The Rookie tools are "Not unlocked!" until Farming Skill 1, which the items require.
+    A ware now shows its item's unmet requirement ("Requires Farming Skill 1"), as recorded.
+  - **Every shop** (Ophelia's too) now has the recorded sale line ("You sold Cobblestone x20 for 20
+    Coins!"), the coins' chime with each sale, and "Right-click for more trading options!" on
+    wares that stack.
 - **The Dungeon Hub** (`DungeonHubMap`, with `server.map: dungeon_hub`). Players arrive where Hypixel
   put them (-28.5 121 0.5, facing west), and Ophelia stands at her recorded spot.
 - **Areas** (`Areas`). The first time a profile reaches an area, it gets the area's title (such as
@@ -172,6 +185,10 @@ without gravity, and the plugin makes up for both where it matters:
   - Transactions older than a minute ("3 mins ago", "2 hours ago").
   - What the sign takes (k, m and b work).
   - A deposit past the 50 million limit (what fits goes in).
+- **"More trading options"** (buying several at once) weren't recorded, so a right-click on a ware
+  buys one trade, as a left-click does. When a ware's stock runs out, "This item is out of stock for
+  today!" is this plugin's line. The wiki says the Farm Merchant shares stock with the Windmill
+  Operator; here each shop's stock is its own (he isn't here).
 - **The bank's Go Back** clicks, as menus do. The recording's one return to the account came with
   the Banker's voice, but that was most likely a click on him after closing the menu (a client's
   close isn't in a recording).

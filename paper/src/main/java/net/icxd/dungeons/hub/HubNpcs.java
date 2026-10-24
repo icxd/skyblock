@@ -33,8 +33,8 @@ import net.icxd.dungeons.npc.NpcTable;
  * The Hub's NPCs where Hypixel has them, on its map: the data checkout's {@code npcs/hub.json} (see
  * {@link NpcTable}), each in its skin or as its kind, under its name tags, holding what it held. Those
  * whose words were recorded say them ({@link HubTalk}), the Banker his and then the bank ({@link
- * Banker}); the rest stand there for now. Their chunks are kept loaded, since an NPC goes with its
- * chunk. Main thread.
+ * Banker}), the Farm Merchant his and then his shop ({@link FarmMerchant}); the rest stand there for
+ * now. Their chunks are kept loaded, since an NPC goes with its chunk. Main thread.
  */
 @OnlyOn({ServerType.LOBBY})
 public final class HubNpcs {
@@ -57,9 +57,12 @@ public final class HubNpcs {
         for (NpcTable.Entry npc : table.npcs()) {
             Location at = new Location(world, npc.x(), npc.y(), npc.z(), npc.yaw(), npc.pitch());
             if (chunks.add(((long) at.getBlockX() >> 4) << 32 | ((at.getBlockZ() >> 4) & 0xffffffffL))) at.getChunk().addPluginChunkTicket(plugin);
-            Consumer<Player> click = npc.id().equals(Banker.ID) ? player -> Banker.click(plugin, player)
-                    : HubTalk.of(npc).<Consumer<Player>>map(talk -> player -> talk.talk(plugin, player)).orElse(player -> {
-                    });
+            Consumer<Player> click = switch (npc.id()) {
+                case Banker.ID -> player -> Banker.click(plugin, player);
+                case FarmMerchant.ID -> player -> FarmMerchant.click(plugin, player);
+                default -> HubTalk.of(npc).<Consumer<Player>>map(talk -> player -> talk.talk(plugin, player)).orElse(player -> {
+                });
+            };
             try {
                 spawn(npc, at, click);
                 spawned++;

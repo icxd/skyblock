@@ -15,6 +15,7 @@ import org.bukkit.inventory.PlayerInventory;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemLore;
+import net.icxd.dungeons.economy.CoinSound;
 import net.icxd.dungeons.economy.Coins;
 import net.icxd.dungeons.economy.Purse;
 import net.icxd.dungeons.gui.GUI;
@@ -26,8 +27,10 @@ import net.icxd.dungeons.item.cost.Cost;
 import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
+import net.icxd.dungeons.item.enums.GenericItemType;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.item.requirement.Requirement;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
@@ -44,10 +47,15 @@ import net.kyori.adventure.text.Component;
  * <p>Clicking an item in their own inventory sells the whole stack, if a shop takes it (see
  * {@link Selling}); so does putting it on the hopper. The coins go into the purse, the stack onto the
  * profile's buyback list (see {@link Buyback}), and today's sales towards the daily limit (see
- * {@link SellLimit}). Whether Hypixel sells on a plain click or only a shift-click isn't known; both
- * sell here, and what can't be sold clicks as it would anywhere. Left out, as nobody has recorded
- * them: the sell price lore Hypixel adds to their items while a shop is open, and a ware's "more
- * trading options" (buying several at once).
+ * {@link SellLimit}), with the coins' chime ({@link CoinSound}, recorded). Whether Hypixel sells on a
+ * plain click or only a shift-click isn't known; both sell here, and what can't be sold clicks as it
+ * would anywhere.
+ *
+ * <p>A ware's lore is the recorded Farm Merchant's and Ophelia's (2026-10-24): its costs, its stock if
+ * it has one ({@link ShopStock}), and "Click to trade!" (or "Not unlocked!"); one that stacks adds
+ * "Right-click for more trading options!". Those options (buying several at once) weren't recorded,
+ * so a right-click buys one trade, as a left-click does. Left out too: the sell price lore Hypixel
+ * adds to their items while a shop is open.
  */
 public final class ShopMenu extends GUI {
     static final int SELL = 49;
@@ -85,8 +93,9 @@ public final class ShopMenu extends GUI {
         }
         int pages = Math.max(1, (wares.size() + WARE_SLOTS.length - 1) / WARE_SLOTS.length);
         page = Math.clamp(page, 0, pages - 1);
+        long now = System.currentTimeMillis();
         for (int i = 0; i < WARE_SLOTS.length && page * WARE_SLOTS.length + i < wares.size(); i++) {
-            set(wareButton(WARE_SLOTS[i], wares.get(page * WARE_SLOTS.length + i)));
+            set(wareButton(WARE_SLOTS[i], wares.get(page * WARE_SLOTS.length + i), user.profile(), now));
         }
         if (page > 0) set(button(PREVIOUS, item(Material.ARROW, "&aPrevious Page", "&ePage " + page), () -> turn(-1)));
         if (page < pages - 1) set(button(NEXT, item(Material.ARROW, "&aNext Page", "&ePage " + (page + 2)), () -> turn(1)));
@@ -137,16 +146,61 @@ public final class ShopMenu extends GUI {
 
     // Buying
 
-    private GUIClickableItem wareButton(int slot, Shop.Ware ware) {
+    private GUIClickableItem wareButton(int slot, Shop.Ware ware, Document profile, long now) {
         SkyBlockItem item = ItemRegistry.get(ware.item());
-        ItemStack stack = ItemBuilder.build(item, ware.amount());
-        List<String> lore = new ArrayList<>(List.of("", "&7Cost"));
-        for (Cost cost : Shop.costs(ware, viewer)) lore.add(costLine(cost));
-        lore.add("");
-        // As the wiki shows the third tier of Ophelia's (Ophelia/UI, Floor VI and VII).
-        lore.add(ware.locked() ? "&cNot unlocked!" : "&eClick to trade!");
+        // As theirs, so a requirement they don't meet shows ("Requires Farming Skill 1", as recorded).
+        ItemStack stack = ItemBuilder.shownTo(item, ware.amount(), viewer);
+        List<String> costs = new ArrayList<>();
+        for (Cost cost : Shop.costs(ware, viewer)) costs.add(costLine(cost));
+        boolean locked = locked(ware, item);
+        int stock = ware.stock() > 0 ? ShopStock.remaining(profile, shop, ware, now) : -1;
+        boolean bulk = bulk(item.unstackable(), item.genericItemType(), item.material().getMaxStackSize());
         if (ware.amount() > 1) stack.setData(DataComponentTypes.CUSTOM_NAME, Text.line(name(item, stack) + " &8x" + ware.amount()));
-        return button(slot, withLore(stack, lore), () -> buy(ware));
+        return button(slot, withLore(stack, wareLore(costs, stock, locked, bulk)), () -> buy(ware));
+    }
+
+    /**
+     * Under the item's own lore: a blank, "&7Cost" and its costs, a blank, the stock if it has one
+     * ({@code stock} left today, -1 for none: "&7Stock", "&6640 &7remaining", a blank), then "&eClick to
+     * trade!" and for one that stacks "&eRight-click for more trading options!", or "&cNot unlocked!"
+     * (the wiki's third tier of Ophelia's, the recorded Rookie Hoe's).
+     */
+    static List<String> wareLore(List<String> costs, int stock, boolean locked, boolean bulk) {
+        List<String> lore = new ArrayList<>(List.of("", "&7Cost"));
+        lore.addAll(costs);
+        lore.add("");
+        if (stock >= 0) {
+            lore.add("&7Stock");
+            lore.add("&6" + Text.number(stock) + " &7remaining");
+            lore.add("");
+        }
+        if (locked) {
+            lore.add("&cNot unlocked!");
+        } else {
+            lore.add("&eClick to trade!");
+            if (bulk) lore.add("&eRight-click for more trading options!");
+        }
+        return lore;
+    }
+
+    /**
+     * Whether a ware's item is one Hypixel offers more of at a time: one that stacks (the recorded Flint
+     * Arrow, Superboom TNT and the Farm Merchant's crops did; the gear, a potion and a sack didn't), so not
+     * a weapon, armor, a tool or equipment, nor one the API calls unstackable.
+     */
+    static boolean bulk(boolean unstackable, GenericItemType type, int maxStack) {
+        return !unstackable && maxStack > 1 && type != GenericItemType.WEAPON && type != GenericItemType.ARMOR && type != GenericItemType.TOOL
+                && type != GenericItemType.EQUIPMENT;
+    }
+
+    /** Locked in the shop, or its item needs what they haven't done (a requirement that can't be checked yet doesn't lock it). */
+    private boolean locked(Shop.Ware ware, SkyBlockItem item) {
+        if (ware.locked()) return true;
+        if (item.requirements() == null) return false;
+        for (Requirement requirement : item.requirements().getRequirements()) {
+            if (requirement.requirement() != null && !requirement.requirement().test(viewer)) return true;
+        }
+        return false;
     }
 
     /** "&680,000 Coins", "&9Super Cleaver", "&dWither Essence &8x500", as a ware's lore lists its costs. */
@@ -166,7 +220,12 @@ public final class ShopMenu extends GUI {
     private void buy(Shop.Ware ware) {
         User user = customer();
         SkyBlockItem item = ItemRegistry.get(ware.item());
-        if (user == null || item == null || ware.locked()) return;
+        if (user == null || item == null || locked(ware, item)) return;
+        long now = System.currentTimeMillis();
+        if (!ShopStock.allows(user.profile(), shop, ware, now)) {
+            tell(Selling.OUT_OF_STOCK);
+            return;
+        }
         List<Cost> costs = Shop.costs(ware, viewer);
         for (Cost cost : costs) {
             if (cost.canPay(viewer, user)) continue;
@@ -182,8 +241,14 @@ public final class ShopMenu extends GUI {
             return;
         }
         for (Cost cost : costs) cost.pay(viewer, user);
+        ShopStock.record(user.profile(), shop, ware, now);
         viewer.getInventory().addItem(bought);
         tell(Selling.bought(name(item, bought), ware.amount()));
+        // The stock it shows is one trade less.
+        if (ware.stock() > 0) {
+            items();
+            refresh(viewer.getOpenInventory().getTopInventory());
+        }
     }
 
     // Selling and buying back
@@ -261,6 +326,7 @@ public final class ShopMenu extends GUI {
         Buyback.add(profile, new Buyback.Entry(stack.serializeAsBytes(), total, now), now);
         SellLimit.record(profile, total, now);
         Purse.add(user, total);
+        CoinSound.play(viewer);
         tell(Selling.sold(name(item, stack), amount, total));
         return true;
     }

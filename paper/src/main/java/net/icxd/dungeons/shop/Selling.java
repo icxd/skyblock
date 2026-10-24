@@ -11,10 +11,11 @@ import net.icxd.dungeons.item.enums.Soulbound;
  * {@code npc_sell_price}) for each one in the stack, fractions and all (research coins.md 2.2).
  */
 public final class Selling {
-    // Not verified: Hypixel's colours for the sale, purchase and limit lines aren't known (research
-    // coins.md 6). Their words are as SkyHanni matches them with the colours taken out; the colours are
-    // in the style of Hypixel's other purchase lines. The refusals below it are this plugin's words.
+    // The sale line is recorded (2026-10-24). Not verified: Hypixel's colours for the purchase and limit
+    // lines aren't known (research coins.md 6). Their words are as SkyHanni matches them with the colours
+    // taken out; the colours are in the style of the sale's. The refusals below it are this plugin's words.
     static final String LIMIT_REACHED = "&cYou've reached the daily limit of coins you may earn from NPC shops.";
+    static final String OUT_OF_STOCK = "&cThis item is out of stock for today!";
     static final String NOT_ENOUGH_COINS = "&cYou don't have enough coins!";
     static final String NOT_ENOUGH_ITEMS = "&cYou don't have the required items!";
     static final String NOT_ENOUGH_ESSENCE = "&cYou don't have enough essence!";
@@ -36,9 +37,12 @@ public final class Selling {
         return BigDecimal.valueOf(price).multiply(BigDecimal.valueOf(amount)).doubleValue();
     }
 
-    /** "You sold Enchanted Bone x64 for 20,480 Coins!" ("x1" for one, as Hypixel writes it). */
+    /**
+     * "&aYou sold &fCobblestone&8 x20 &afor &620 Coins&a!", as recorded ("x1" for one, as Hypixel writes
+     * it in SkyHanni's logs).
+     */
     static String sold(String name, int amount, double total) {
-        return "&aYou sold " + name + "&a x" + amount + " for &6" + Coins.format(total) + " Coins&a!";
+        return "&aYou sold " + name + "&8 x" + amount + " &afor &6" + Coins.format(total) + " Coins&a!";
     }
 
     /** "You bought Superboom TNT!", "You bought Flint Arrow x20!" */
