@@ -30,25 +30,30 @@ class WorldCaptureTest {
     board.getOrCreatePlayerScore(ScoreHolder.forNameOnly(holder), objective).display(Component.literal(text));
   }
 
+  /** Hypixel's way: a team's prefix and suffix around a holder that's only a code, often one that isn't a real one. */
+  private static void teamLine(Scoreboard board, Objective objective, String holder, int value, String prefix, String suffix) {
+    PlayerTeam team = board.addPlayerTeam("line" + value);
+    team.setPlayerPrefix(Component.literal(prefix));
+    team.setPlayerSuffix(Component.literal(suffix));
+    board.addPlayerToTeam(holder, team);
+    board.getOrCreatePlayerScore(ScoreHolder.forNameOnly(holder), objective).set(value);
+  }
+
   @Test
   void theSidebarIsReadTopToBottomFromDisplayNamesAndTeams() {
     Scoreboard board = new Scoreboard();
     Objective sidebar = board.addObjective("sb", ObjectiveCriteria.DUMMY, Component.literal("SKYBLOCK"),
         ObjectiveCriteria.RenderType.INTEGER, false, null);
     board.setDisplayObjective(DisplaySlot.SIDEBAR, sidebar);
-    line(board, sidebar, "a", 6, "10/24/26 m35DV");
+    // As on Hypixel: the server's id and the area each split around a code that isn't one.
+    teamLine(board, sidebar, "§x", 6, "§710/24/26 §8m91", "§8AA");
     line(board, sidebar, "b", 5, " 8:00am ☀");
-    // Hypixel's way: a team's prefix and suffix around a holder that's only a colour code.
-    PlayerTeam team = board.addPlayerTeam("area");
-    team.setPlayerPrefix(Component.literal(" \uE067 Your Isl"));
-    team.setPlayerSuffix(Component.literal("and"));
-    board.addPlayerToTeam("§a", team);
-    board.getOrCreatePlayerScore(ScoreHolder.forNameOnly("§a"), sidebar).set(4);
-    line(board, sidebar, "d", 3, "Purse: 0");
+    teamLine(board, sidebar, "§t", 4, " §7\uE067 §aYour Isla", "§and");
+    teamLine(board, sidebar, "§a", 3, "Purse: §6", "0");
 
     List<String> lines = WorldCapture.sidebar(board);
-    assertEquals(List.of("10/24/26 m35DV", " 8:00am ☀", " \uE067 Your Island", "Purse: 0"), lines);
+    assertEquals(List.of("10/24/26 m91AA", " 8:00am ☀", " \uE067 Your Island", "Purse: 0"), lines);
     assertEquals("Your Island", Sidebar.area(lines));
-    assertEquals("m35DV", Sidebar.server(lines));
+    assertEquals("m91AA", Sidebar.server(lines));
   }
 }

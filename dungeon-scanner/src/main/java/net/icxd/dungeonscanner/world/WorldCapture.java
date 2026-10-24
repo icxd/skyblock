@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import java.util.stream.LongStream;
 
 import org.slf4j.Logger;
@@ -87,6 +88,7 @@ public final class WorldCapture {
   private static final int SETTLE = 40;
   /** How often new decorations are written and the region files flushed. */
   private static final int FLUSH = 20 * 10;
+  private static final Pattern CODES = Pattern.compile("§.?");
 
   private final Path folder;
   private final Consumer<String> info;
@@ -342,7 +344,12 @@ public final class WorldCapture {
     if (w.server == null) w.server = Sidebar.server(lines);
   }
 
-  /** The sidebar's lines, top to bottom as the client draws them, without formatting. */
+  /**
+   * The sidebar's lines, top to bottom as the client draws them, without formatting: "§" and the
+   * character after it go, as the client skips them, codes or not. Hypixel keeps its lines apart
+   * with ones that aren't ("Your Isla§tnd", "m91§xAA"), which {@link ChatFormatting#stripFormatting}
+   * leaves in.
+   */
   static List<String> sidebar(Scoreboard board) {
     Objective objective = board.getDisplayObjective(DisplaySlot.SIDEBAR);
     if (objective == null) return List.of();
@@ -350,7 +357,7 @@ public final class WorldCapture {
         .filter(e -> !e.isHidden())
         .sorted(Comparator.comparingInt(PlayerScoreEntry::value).reversed()
             .thenComparing(PlayerScoreEntry::owner, String.CASE_INSENSITIVE_ORDER))
-        .map(e -> ChatFormatting.stripFormatting(PlayerTeam.formatNameForTeam(board.getPlayersTeam(e.owner()), e.ownerName()).getString()))
+        .map(e -> CODES.matcher(PlayerTeam.formatNameForTeam(board.getPlayersTeam(e.owner()), e.ownerName()).getString()).replaceAll(""))
         .toList();
   }
 
