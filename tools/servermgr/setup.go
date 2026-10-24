@@ -535,10 +535,10 @@ func (n *Network) installProxyPlugin(progress func(string)) {
 
 // optionalData: the checkout's folders of tables for parts of the plugin that run without them
 // (storage/: Accessory Powers and bag sizes; hex/: the Hex's enchantments, reforges, gemstones and
-// the like; worlds/: captured maps, the starter island's among them), linked into every server when
-// the checkout has them. One it doesn't have yet is
-// skipped quietly: the plugin says so in its log.
-var optionalData = []string{"storage", "hex", "worlds"}
+// the like; worlds/: captured maps, the starter island's among them; npcs/: the NPCs of a map, made
+// by the replay tool's `npcs`), linked into every server when the checkout has them. One it doesn't
+// have yet is skipped quietly: the plugin says so in its log.
+var optionalData = []string{"storage", "hex", "worlds", "npcs"}
 
 // linkData links the private data checkout into servers: the item definitions (items/), the
 // collections and recipes (collections/) and the SkyBlock Leveling data (leveling/) into every

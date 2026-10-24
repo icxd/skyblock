@@ -2,7 +2,8 @@
 // Who stands where in each world a recording visits.
 //   npcs.txt   per world: each NPC with its name tag, position, facing, skin and what it holds;
 //              the holograms that stand on their own; and the named mobs, counted by name
-//   npcs.json  the same, with each NPC's "textures" property (value and signature) to spawn it with
+//   npcs.json  the same, with each NPC's "textures" property (value and signature) to spawn it with,
+//              each name tag's height over its feet, and a villager's kind
 //
 // Hypixel's NPCs are players with version 2 UUIDs that the tab list doesn't show (real players
 // have version 4), or mobs and mannequins that stand still. Their names float above them on
@@ -55,7 +56,11 @@ const isNpcUuid = uuid => typeof uuid === 'string' && uuid[14] !== '4'
  * Follows entities through the play packets. `types` names entity type ids (from `setup`);
  * `describe` turns an item stack into { id, count, name, lore } or null.
  */
-function track (types, describe) {
+/**
+ * Follows a recording's entities. `villagers` names villager kinds ({ types, professions }: id ->
+ * name, from `setup`); without it they're numbers.
+ */
+function track (types, describe, villagers = { types: {}, professions: {} }) {
   const profiles = {}
   const worlds = []
   let world = null
@@ -114,6 +119,7 @@ function track (types, describe) {
           nameVisible: false,
           texts: [],
           vehicle: null,
+          villager: null,
           equipment: {},
           profileName: profile ? profile.name : null,
           skin: profile ? profile.skin : null
@@ -129,6 +135,10 @@ function track (types, describe) {
           else if (m.key === 3 && m.type === 'boolean') e.nameVisible = !!m.value
           else if (m.type === 'component' && e.type === 'text_display') note(e, p.t, text(m.value))
           else if (m.type === 'resolvable_profile' && m.value) e.skin = skin(m.value.properties) || e.skin
+          else if (m.type === 'villager_data' && m.value) {
+            const kind = (table, id) => table[id] || '#' + id
+            e.villager = { type: kind(villagers.types, m.value.villagerType), profession: kind(villagers.professions, m.value.villagerProfession), level: m.value.level }
+          }
         }
         if (e.name && (e.nameVisible || e.type !== 'armor_stand')) note(e, p.t, e.name)
         break
@@ -321,10 +331,13 @@ function entry (e, lineEntities, hologram) {
     uuid: e.uuid,
     name: nameOf(lines.map(plain)),
     ...out,
+    // Each line's tag over the NPC's feet; null for a name the NPC carries itself.
+    heights: lineEntities.map(x => x === e ? null : round(x.from[1] - e.from[1])),
     yaw: e.yaw,
     pitch: e.pitch,
     profileName: e.profileName || undefined,
     skin: e.skin || undefined,
+    villager: e.villager || undefined,
     equipment: Object.keys(e.equipment).length ? e.equipment : undefined
   }
 }
@@ -369,9 +382,10 @@ function write (worlds) {
     out.push(`NPCs (${w.npcs.length}):`)
     for (const n of w.npcs) {
       out.push(`  ${n.name || '?'} [${n.type}] at ${where(n)}, facing ${facing(n.yaw)} (${n.yaw}°)   ${clock(n.seen[0])} - ${clock(n.seen[1])}`)
-      out.push('      ' + n.lines.join(' / '))
+      out.push('      ' + n.lines.join(' / ') + '   (tags at ' + n.heights.map(h => h == null ? 'its own name' : (h >= 0 ? '+' : '') + h).join(', ') + ')')
       for (const c of n.changes) out.push(`      ${clock(c.t)} line ${c.line + 1} became ${c.text}`)
       if (n.skin) out.push('      ' + skinLine(n.skin))
+      if (n.villager) out.push(`      a ${n.villager.type} ${n.villager.profession}, level ${n.villager.level}`)
       if (n.equipment) out.push('      ' + wears(n.equipment))
     }
     out.push(`Holograms (${w.holograms.length}):`)
@@ -395,4 +409,4 @@ function write (worlds) {
   return out.join('\n') + '\n'
 }
 
-module.exports = { track, skin }
+module.exports = { track, skin, merge }

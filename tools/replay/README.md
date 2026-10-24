@@ -19,7 +19,7 @@ node replay.js setup <vanilla server jar>     # only for versions minecraft-data
 
 `setup` runs Mojang's data generator on a vanilla server jar (not a Paper jar; servermgr keeps
 one in `servers/<name>/cache/mojang_<version>.jar`) and writes item ids, entity type ids,
-particle ids, sound ids, packet ids and map colours to `data/`. It needs a JDK (`--java <path>`, else
+particle ids, sound ids, villager kinds, packet ids and map colours to `data/`. It needs a JDK (`--java <path>`, else
 `JAVA_HOME`, else `java` on the path). Without it, newer recordings still decode, but item and
 entity types, sounds and map colours may be wrong, and packets that carry particles (including
 some entity metadata) don't decode: 26.2 renumbered entity types and particles, and added sounds.
@@ -29,6 +29,7 @@ some entity metadata) don't decode: 26.2 renumbered entity types and particles, 
 | | |
 |---|---|
 | `decode <rec.mcpr> [--out dir]` | `timeline.txt`, `sidebar.txt`, `tab.txt`, `gui.txt`, `sounds.txt`, `npcs.txt` and `npcs.json` (below) |
+| `npcs <rec.mcpr>... --area <area> --out <file>` | the NPCs of every world whose sidebar named the area, merged across recordings, with what spawning them again needs: the plugin's `npcs/<map>.json` in the data checkout (below) |
 | `maps <rec.mcpr> <seconds>... [--map id] [--out dir]` | every map (or one) as a PNG at those moments |
 | `item <rec.mcpr> <slot> <from s> <to s>` | name, lore and map id of items put in an inventory slot |
 | `raw <rec.mcpr> <from s> <to s> <packet>...` | decoded packets of those types as JSON, e.g. `system_chat` |
@@ -55,7 +56,17 @@ show as `⟦click:run_command /instancerequeue⟧`.
   stand on their own; and the named mobs, counted by name. A line that changes in more than
   numbers lists its new texts with when ("line 3 became Free Daily Reward!").
 - **npcs.json**: the same, with each NPC's `textures` property (`value` and `signature`), as
-  `Npc.spawn` takes it, and times in milliseconds.
+  `Npc.spawn` takes it, each name tag's height over its feet (`heights`, as the lines go), a
+  villager's kind, and times in milliseconds.
+
+The Hub's NPCs for the plugin are made from the recordings that went there:
+
+```
+node replay.js npcs ../../../skyblock-dungeon-data/2026_10_24_10_56_23_1.mcpr --area Village --out ../../../skyblock-dungeon-data/npcs/hub.json
+```
+
+Name more recordings to add the NPCs they passed close by (an NPC is the same one in two
+recordings when its type, spot and skin are).
 
 Where the player is (for the sounds): Replay Mod spawns the recording player as an entity of
 their own, numbered as the complement of the login packet's entity id (the replay's camera takes

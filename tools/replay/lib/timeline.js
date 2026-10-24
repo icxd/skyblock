@@ -15,7 +15,7 @@ const { packets } = require('./recording')
 const { track } = require('./entities')
 const { collect, describe: describeSound } = require('./sounds')
 
-function decode (recording, dec, { items, entities, sounds = {} }, outDir) {
+function decode (recording, dec, { items, entities, sounds = {}, villagers }, outDir) {
   const out = { main: [], sidebar: [], tab: [], gui: [] }
   const numbersAside = s => plain(s).replace(/[\d,.]+/g, '#')
 
@@ -30,7 +30,7 @@ function decode (recording, dec, { items, entities, sounds = {} }, outDir) {
     return { id: items[item.itemId] || '#' + item.itemId, count: item.itemCount, name, lore }
   }
   const describe = x => x.id + ' x' + x.count + ' ' + (x.name || '') + (x.lore.length ? '\n      ' + x.lore.join('\n      ') : '')
-  const npcs = track(entities, itemInfo)
+  const npcs = track(entities, itemInfo, villagers)
 
   // The recording player: Replay Mod spawns them as an entity of their own, numbered as the
   // complement of the login packet's id (which the replay's camera takes), so where they are is

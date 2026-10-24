@@ -55,6 +55,7 @@ test('an NPC is a v2 player standing still under its name tags, named by the lin
   assert.strictEqual(npc.name, 'Biblio')
   assert.strictEqual(npc.type, 'player')
   assert.deepStrictEqual(npc.lines, ['&a&l⚑ GUIDES', 'Biblio', '&e&lCLICK'])
+  assert.deepStrictEqual(npc.heights, [0.66, 0.28, -0.06])
   assert.deepStrictEqual([npc.x, npc.y, npc.z, npc.yaw], [8.5, 75, 10.5, -90])
   assert.deepStrictEqual(npc.skin, { value: npc.skin.value, signature: 'sig', url: 'http://textures.minecraft.net/texture/abc', slim: true })
   assert.match(r.text, /Biblio \[player\] at 8\.5 75 10\.5, facing east/)
@@ -191,4 +192,19 @@ test("an entity's position follows its moves, and is gone with it", () => {
   assert.deepStrictEqual(npcs.positionOf(7), [8.5, 100, 7])
   at(300, 'entity_destroy', { entityIds: [7] })
   assert.strictEqual(npcs.positionOf(7), null)
+})
+
+test("a villager NPC's kind is named from the tables", () => {
+  const npcs = track(TYPES, () => null, { types: { 2: 'plains' }, professions: { 5: 'farmer' } })
+  const at = (t, name, params) => npcs.handle({ t, state: 'play', name, params })
+  at(0, 'login', {})
+  at(100, 'spawn_entity', { entityId: 1, objectUUID: '00000000-0000-4000-8000-000000000001', type: 140, x: 6.5, y: 79, z: 19.5, yaw: 96, pitch: 0 })
+  at(100, 'entity_metadata', { entityId: 1, metadata: [{ key: 18, type: 'villager_data', value: { villagerType: 2, villagerProfession: 5, level: 1 } }] })
+  at(100, 'spawn_entity', { entityId: 2, objectUUID: '00000000-0000-4000-8000-000000000002', type: 5, x: 6.5, y: 79.09, z: 19.5, yaw: 0, pitch: 0 })
+  at(100, 'entity_metadata', { entityId: 2, metadata: [{ key: 2, type: 'optional_component', value: 'Mayor Jerry' }, { key: 3, type: 'boolean', value: true }] })
+  at(5000, 'keep_alive', {})
+  const npc = npcs.report().worlds[0].npcs[0]
+  assert.strictEqual(npc.name, 'Mayor Jerry')
+  assert.deepStrictEqual(npc.villager, { type: 'plains', profession: 'farmer', level: 1 })
+  assert.deepStrictEqual(npc.heights, [0.09])
 })

@@ -102,6 +102,7 @@ import net.icxd.dungeons.hex.Hex;
 import net.icxd.dungeons.hex.HexListener;
 import net.icxd.dungeons.hub.DungeonHubMap;
 import net.icxd.dungeons.hub.HubMap;
+import net.icxd.dungeons.hub.HubNpcs;
 import net.icxd.dungeons.hub.MapStands;
 import net.icxd.dungeons.island.IslandArrival;
 import net.icxd.dungeons.island.IslandRules;
@@ -266,6 +267,13 @@ public class Dungeons extends JavaPlugin {
                 Ophelia.spawn(this, skyBlockServer.getMainWorld(), getConfig().getConfigurationSection("npcs.ophelia"));
             } catch (RuntimeException e) {
                 getLogger().log(java.util.logging.Level.SEVERE, "Couldn't spawn Ophelia", e);
+            }
+        }
+        if (skyBlockServer.runs(HubNpcs.class)) {
+            try {
+                HubNpcs.spawn(this);
+            } catch (RuntimeException e) {
+                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't spawn the Hub's NPCs", e);
             }
         }
 

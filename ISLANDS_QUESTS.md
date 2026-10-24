@@ -18,6 +18,10 @@ for older servers). That also sets config.yml's `server.map`, which is how the p
 server has Hypixel's map. Without the captures, a new island is a 5x5 grass platform, and the hubs
 are flat worlds without Hypixel's spawns, portals or areas.
 
+The Hub's NPCs are `npcs/hub.json` in the data checkout, which the replay tool's `npcs` command makes
+from the recordings that went there (its README); servermgr links `npcs/` into every server. Without
+it the Hub has no NPCs, and the plugin says so in its log.
+
 The captures pushed on 2026-10-24 predate the scanner saving leaves persistent and armor stands
 without gravity, and the plugin makes up for both where it matters:
 
@@ -98,6 +102,12 @@ without gravity, and the plugin makes up for both where it matters:
   facing the portal home). Two portals work, each under its recorded "Travel to:" sign: the end
   portal north of spawn takes you to your island, and the nether portal south-west of spawn
   (x -36 to -32, z 27) to the Dungeon Hub. Vanilla's portals go nowhere.
+- **The Hub's NPCs** (`HubNpcs`): the 49 the recording passed close by, where they stood and facing
+  the way they faced, in their skins (the villagers as their kind, the Alchemist a witch), under
+  their name tags at the recorded heights, holding what they held. Four say what they said when the
+  recording's player talked to them, timed as recorded and in their voices (`HubTalk`): Elizabeth,
+  the Community Center's Clerk Seraphine, Minister Nancy and the Auction Master. The others don't
+  answer a click yet.
 - **The Dungeon Hub** (`DungeonHubMap`, with `server.map: dungeon_hub`). Players arrive where Hypixel
   put them (-28.5 121 0.5, facing west), and Ophelia stands at her recorded spot.
 - **Areas** (`Areas`). The first time a profile reaches an area, it gets the area's title (such as
@@ -140,8 +150,12 @@ without gravity, and the plugin makes up for both where it matters:
 
 - **Saving Up**, the Banker's quest (Talk to the Banker, then Deposit Coins in the Bank; +5 SkyBlock
   XP and +10 Coins). It's recorded, and waits for the Banker and the bank.
-- **The Hub's NPCs.** Marco, the Bartender and the rest aren't placed yet (the replay's `npcs.json`
-  says where they stand), so Marco the Artist and Time to Strike can't be finished.
+- **The Hub's NPCs' words and menus.** The recording didn't talk to most of them, and NPCs it only
+  saw from afar came without their name tags, so they're not placed: Marco and the Bartender among
+  them, so Marco the Artist and Time to Strike can't be finished. The four that talk say it on every
+  click (UNKNOWN whether Hypixel's repeat it); the menus they'd open (Elizabeth's Community Shop, the
+  Auction House) aren't here. Nor are the Hub's holograms (election timers, the gem shop, warps),
+  apart from the portals' signs.
 - **The Dungeon Hub's other NPCs and quest.** Malik, Saul and the others aren't there either, and
   Mort only appears in runs. Finding the Dungeon Hub started a quest at "Talk to Guildford" whose
   name the recording didn't show, and the Farm's quest (Rigby's) is unknown too; neither is here.
