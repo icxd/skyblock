@@ -66,7 +66,10 @@ node replay.js npcs ../../../skyblock-dungeon-data/2026_10_24_10_56_23_1.mcpr --
 ```
 
 Name more recordings to add the NPCs they passed close by (an NPC is the same one in two
-recordings when its type, spot and skin are).
+recordings when its type, spot and skin are). `npcs` needs `setup`'s tables for the recordings'
+version and stops without them: with another version's ids, villagers came out as vindicators
+and the Alchemist (a witch) as a wither. A server servermgr made keeps the jar `setup` takes in
+`servers/<name>/cache/mojang_<version>.jar`.
 
 Where the player is (for the sounds): Replay Mod spawns the recording player as an entity of
 their own, numbered as the complement of the login packet's entity id (the replay's camera takes

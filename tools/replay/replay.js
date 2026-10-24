@@ -47,7 +47,7 @@ function load (file) {
   const dec = recording.decoders(m, generated && readData('particles.json'))
   console.error(`${path.basename(file)}: Minecraft ${m.mcversion} (protocol ${m.protocol}), ${clock(m.duration || 0)} long, ${m.serverName || '?'}; decoding as ${dec.version}${dec.notes ? ' (' + dec.notes + ')' : ''}`)
   if (!generated && dec.version !== m.mcversion) {
-    console.error(`  no tables for ${m.mcversion}: run \`replay.js setup\` with a ${m.mcversion} server jar for correct item ids, entity types and map colours`)
+    console.error(`  no tables for ${m.mcversion}: run \`replay.js setup\` with a ${m.mcversion} server jar for correct item ids, entity types, villager kinds and map colours`)
   }
   // The packet ids must be the same as the decoding version's, or everything is off.
   const report = generated && readData('packets.json')
@@ -59,12 +59,15 @@ function load (file) {
     }
   }
   let items = generated && readData('items.json')
+  // Whether the ids that name things (items, entity types, villager kinds) are this version's own.
+  let complete = Boolean(items)
   if (!items) {
     items = {}
     for (const item of dec.data.itemsArray) items[item.id] = item.name
   }
   let entities = generated && readData('entities.json')
   if (generated && !entities) console.error('  these tables are from before entity types were added: run `replay.js setup` again')
+  complete = complete && Boolean(entities)
   if (!entities) {
     entities = {}
     for (const entity of dec.data.entitiesArray) entities[entity.id] = entity.name
@@ -78,7 +81,8 @@ function load (file) {
   }
   const villagers = generated && readData('villagers.json')
   if (generated && !villagers) console.error('  these tables are from before villager kinds were added: run `replay.js setup` again')
-  return { rec, dec, items, entities, sounds, villagers: villagers || undefined, colors: generated ? readData('map-colors.json') : null }
+  complete = complete && Boolean(villagers)
+  return { rec, dec, items, entities, sounds, villagers: villagers || undefined, colors: generated ? readData('map-colors.json') : null, complete }
 }
 
 function outDir (args, file, kind) {
@@ -108,7 +112,13 @@ function main (argv) {
       if (!area || !file || !args.length) break
       const found = []
       for (const recordingFile of args) {
-        const { rec, dec, items, entities, sounds, villagers } = load(recordingFile)
+        const { rec, dec, items, entities, sounds, villagers, complete } = load(recordingFile)
+        // The plugin spawns what this writes: with another version's ids, the Hub's Alchemist (a witch) came out a wither.
+        if (!complete) {
+          const v = rec.meta.mcversion
+          throw new Error(`npcs needs ${v}'s own tables, or entity types, items and villager kinds come out wrong. Run \`node replay.js setup <${v} server jar>\` first: ` +
+            `servermgr's servers keep one in servers/<name>/cache/mojang_${v}.jar`)
+        }
         const dir = outDir([], recordingFile)
         decode(rec, dec, { items, entities, sounds, villagers }, dir)
         for (const w of JSON.parse(fs.readFileSync(path.join(dir, 'npcs.json')))) {
