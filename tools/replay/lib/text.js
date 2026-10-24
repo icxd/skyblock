@@ -51,4 +51,10 @@ function plain (s) {
   return s.replace(/[&§](#[0-9a-f]{6}|.)/gi, '')
 }
 
-module.exports = { text, plain, simplify }
+/** Time since the recording started, as mm:ss.s. */
+function clock (ms) {
+  const s = ms / 1000
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + (s % 60).toFixed(1).padStart(4, '0')
+}
+
+module.exports = { text, plain, simplify, clock }

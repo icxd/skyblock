@@ -5,18 +5,14 @@
 //   sidebar.txt   the sidebar each time it settles into something new (numbers aside)
 //   tab.txt       the tab list the same way, in slot order
 //   gui.txt       every menu's contents: slots, item names and lore
+//   npcs.txt      the NPCs and holograms of each world (see entities.js), and npcs.json
 const fs = require('fs')
 const path = require('path')
-const { text, plain } = require('./text')
+const { text, plain, clock } = require('./text')
 const { packets } = require('./recording')
+const { track } = require('./entities')
 
-/** Time since the recording started, as mm:ss.s. */
-function clock (ms) {
-  const s = ms / 1000
-  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + (s % 60).toFixed(1).padStart(4, '0')
-}
-
-function decode (recording, dec, items, outDir) {
+function decode (recording, dec, { items, entities }, outDir) {
   const out = { main: [], sidebar: [], tab: [], gui: [] }
   const numbersAside = s => plain(s).replace(/[\d,.]+/g, '#')
 
@@ -31,6 +27,7 @@ function decode (recording, dec, items, outDir) {
     return { id: items[item.itemId] || '#' + item.itemId, count: item.itemCount, name, lore }
   }
   const describe = x => x.id + ' x' + x.count + ' ' + (x.name || '') + (x.lore.length ? '\n      ' + x.lore.join('\n      ') : '')
+  const npcs = track(entities, itemInfo)
 
   // Scoreboard: objectives, scores, teams (sidebar lines are team prefix + holder + suffix, or the
   // score's own display name).
@@ -78,6 +75,7 @@ function decode (recording, dec, items, outDir) {
       if (kind === 'sidebar') {
         out.sidebar.push(clock(s.pending.t) + '\n' + s.pending.text)
         out.main.push({ t: s.pending.t, line: '[sidebar] changed (see sidebar.txt)' })
+        npcs.area(s.pending.text)
       } else {
         out.tab.push('\n===== ' + clock(s.pending.t) + '\n' + s.pending.text)
       }
@@ -115,6 +113,7 @@ function decode (recording, dec, items, outDir) {
     if (p.state === 'configuration' && name === 'finish_configuration') continue
     if (p.state === 'play' && name === 'start_configuration') log('[server] switching servers')
     if (p.state !== 'play') continue
+    npcs.handle(p)
 
     switch (name) {
       case 'system_chat': {
@@ -250,7 +249,10 @@ function decode (recording, dec, items, outDir) {
   fs.writeFileSync(path.join(outDir, 'sidebar.txt'), out.sidebar.join('\n\n') + '\n')
   fs.writeFileSync(path.join(outDir, 'tab.txt'), out.tab.join('\n') + '\n')
   fs.writeFileSync(path.join(outDir, 'gui.txt'), out.gui.join('\n') + '\n')
-  return { ...stats, timeline: main.length, sidebars: out.sidebar.length, tabs: out.tab.length }
+  const seen = npcs.report()
+  fs.writeFileSync(path.join(outDir, 'npcs.txt'), seen.text)
+  fs.writeFileSync(path.join(outDir, 'npcs.json'), JSON.stringify(seen.worlds, null, 1) + '\n')
+  return { ...stats, timeline: main.length, sidebars: out.sidebar.length, tabs: out.tab.length, npcs: seen.npcs, holograms: seen.holograms }
 }
 
 module.exports = { decode, clock }

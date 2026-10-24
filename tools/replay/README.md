@@ -18,15 +18,17 @@ node replay.js setup <vanilla server jar>     # only for versions minecraft-data
 ```
 
 `setup` runs Mojang's data generator on a vanilla server jar (not a Paper jar; servermgr keeps
-one in `servers/<name>/cache/mojang_<version>.jar`) and writes item ids, packet ids and map
-colours to `data/`. It needs a JDK (`--java <path>`, else `JAVA_HOME`, else `java` on the path).
-Without it, newer recordings still decode, but item types and map colours may be wrong.
+one in `servers/<name>/cache/mojang_<version>.jar`) and writes item ids, entity type ids,
+particle ids, packet ids and map colours to `data/`. It needs a JDK (`--java <path>`, else
+`JAVA_HOME`, else `java` on the path). Without it, newer recordings still decode, but item and
+entity types and map colours may be wrong, and packets that carry particles (including some
+entity metadata) don't decode: 26.2 renumbered entity types and particles.
 
 ## Commands
 
 | | |
 |---|---|
-| `decode <rec.mcpr> [--out dir]` | `timeline.txt`, `sidebar.txt`, `tab.txt` and `gui.txt` (below) |
+| `decode <rec.mcpr> [--out dir]` | `timeline.txt`, `sidebar.txt`, `tab.txt`, `gui.txt`, `npcs.txt` and `npcs.json` (below) |
 | `maps <rec.mcpr> <seconds>... [--map id] [--out dir]` | every map (or one) as a PNG at those moments |
 | `item <rec.mcpr> <slot> <from s> <to s>` | name, lore and map id of items put in an inventory slot |
 | `raw <rec.mcpr> <from s> <to s> <packet>...` | decoded packets of those types as JSON, e.g. `system_chat` |
@@ -43,6 +45,20 @@ show as `⟦click:run_command /instancerequeue⟧`.
   every half minute while they change. The tab list is in slot order (servers fill it with fake
   players named `!A-a`, `!A-b`, ... to order it).
 - **gui.txt**: every menu's contents, slot by slot, and changes while it's open.
+- **npcs.txt**: for each world visited (named by the sidebar's server id and area), its NPCs
+  with their name tag lines, position, facing, skin and what they hold; the holograms that
+  stand on their own; and the named mobs, counted by name. A line that changes in more than
+  numbers lists its new texts with when ("line 3 became Free Daily Reward!").
+- **npcs.json**: the same, with each NPC's `textures` property (`value` and `signature`), as
+  `Npc.spawn` takes it, and times in milliseconds.
+
+How NPCs are told apart (`lib/entities.js`): Hypixel's are players with version 2 UUIDs that
+aren't in the tab list (real accounts are version 4), or mobs such as Jerry's villager, standing
+still under their name tags: invisible armor stands in their column (text displays count too).
+The name is the line above "CLICK", since a header like "⚑ GUIDES" can stand above it. Anything
+that's hurt, dies, walks off or wears a level or health tag is a mob. Name tags are only sent near
+the player, so an NPC passed at a distance comes out under "Players with no name tag", along with
+dungeon mobs nobody fought. Damage numbers and holograms gone within 1.5 s are left out.
 
 Find a map's id with `item` (the `map id` of the map item), then render it with `maps`.
 
@@ -51,9 +67,16 @@ Find a map's id with `item` (the `map id` of the map item), then render it with 
 The Minecraft version comes from the recording. When minecraft-data doesn't know it yet, the
 packet layouts of an older version are used with the differences patched in
 (`lib/recording.js`, `PATCHES`). For 26.2 that's 26.1's layouts: packet ids are the same (checked
-against the 26.2 packet report), and only the team packet changed. Undecodable packets are
-skipped; `scan` lists them (entity metadata and particles are the known ones, which the decoder
-doesn't use).
+against the 26.2 packet report), and only the team packet changed; entity metadata's serializer
+ids are the same too (checked against the 26.2 jar). Registry ids that moved come from `setup`:
+item and entity types, and particles, which the decoder patches in. Undecodable packets are
+skipped; `scan` lists them.
+
+Item components from number 78 (`lock`) on moved by one in 26.2 (`sulfur_cube_content` came
+before them), so an item with one of those (a lock, container loot, a mob variant...) may decode
+wrong. No item in the September 2026 recordings has one: the highest they use is 72.
+
+`npm test` runs the tests (Node's own test runner).
 
 ## Recordings are private
 

@@ -43,8 +43,12 @@ function open (file) {
   return { meta: fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile)) : {}, packets: fs.readFileSync(file) }
 }
 
-/** Decoders for the recording's version: { version, notes, data, byState }. */
-function decoders (meta) {
+/**
+ * Decoders for the recording's version: { version, notes, data, byState }. `particles` (numeric
+ * particle type id -> name, from `setup`) replaces the decoding version's particle ids, which
+ * newer versions renumber: particles, and entity metadata that carries them, then decode.
+ */
+function decoders (meta, particles) {
   let version = meta.mcversion
   let notes = ''
   let data = version && minecraftData(version)
@@ -62,6 +66,7 @@ function decoders (meta) {
       notes = `protocol ${meta.protocol} is unknown; decoding as ${version}, which may be wrong`
     }
   }
+  if (particles) data.protocol.types.Particle[1][0].type[1].mappings = particles
   const make = state => createDeserializer({ state, isServer: false, version, noErrorLogging: true })
   return { version, notes, data, byState: { login: make('login'), configuration: make('configuration'), play: make('play') } }
 }

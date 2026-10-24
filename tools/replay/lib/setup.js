@@ -2,6 +2,8 @@
 // `replay.js setup <server jar>`: tables minecraft-data doesn't have for newer versions, made
 // from a vanilla server jar with Mojang's data generator. Nothing from the jar is committed.
 //   data/items.json       numeric item id -> item name
+//   data/entities.json    numeric entity type id -> entity type name
+//   data/particles.json   numeric particle type id -> particle type name
 //   data/packets.json     the generator's packet report (ids per state)
 //   data/map-colors.json  ARGB for each packed map colour id
 //   data/version.json     which version they're for
@@ -33,9 +35,14 @@ function setup (serverJar, dataDir, java) {
 
     fs.mkdirSync(dataDir, { recursive: true })
     const registries = JSON.parse(fs.readFileSync(path.join(reports, 'registries.json')))
-    const items = {}
-    for (const [name, e] of Object.entries(registries['minecraft:item'].entries)) items[e.protocol_id] = name.replace('minecraft:', '')
-    fs.writeFileSync(path.join(dataDir, 'items.json'), JSON.stringify(items))
+    const ids = registry => {
+      const out = {}
+      for (const [name, e] of Object.entries(registries[registry].entries)) out[e.protocol_id] = name.replace('minecraft:', '')
+      return out
+    }
+    fs.writeFileSync(path.join(dataDir, 'items.json'), JSON.stringify(ids('minecraft:item')))
+    fs.writeFileSync(path.join(dataDir, 'entities.json'), JSON.stringify(ids('minecraft:entity_type')))
+    fs.writeFileSync(path.join(dataDir, 'particles.json'), JSON.stringify(ids('minecraft:particle_type')))
     fs.copyFileSync(path.join(reports, 'packets.json'), path.join(dataDir, 'packets.json'))
 
     console.log('Reading map colours...')

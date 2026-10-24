@@ -38,13 +38,13 @@ function readData (file) {
 /** Opens a recording and its decoders, saying what it is and warning about what might be off. */
 function load (file) {
   const rec = recording.open(file)
-  const dec = recording.decoders(rec.meta)
   const m = rec.meta
-  console.error(`${path.basename(file)}: Minecraft ${m.mcversion} (protocol ${m.protocol}), ${clock(m.duration || 0)} long, ${m.serverName || '?'}; decoding as ${dec.version}${dec.notes ? ' (' + dec.notes + ')' : ''}`)
   const version = readData('version.json')
   const generated = version && version.version === m.mcversion
+  const dec = recording.decoders(m, generated && readData('particles.json'))
+  console.error(`${path.basename(file)}: Minecraft ${m.mcversion} (protocol ${m.protocol}), ${clock(m.duration || 0)} long, ${m.serverName || '?'}; decoding as ${dec.version}${dec.notes ? ' (' + dec.notes + ')' : ''}`)
   if (!generated && dec.version !== m.mcversion) {
-    console.error(`  no tables for ${m.mcversion}: run \`replay.js setup\` with a ${m.mcversion} server jar for correct item ids and map colours`)
+    console.error(`  no tables for ${m.mcversion}: run \`replay.js setup\` with a ${m.mcversion} server jar for correct item ids, entity types and map colours`)
   }
   // The packet ids must be the same as the decoding version's, or everything is off.
   const report = generated && readData('packets.json')
@@ -60,7 +60,13 @@ function load (file) {
     items = {}
     for (const item of dec.data.itemsArray) items[item.id] = item.name
   }
-  return { rec, dec, items, colors: generated ? readData('map-colors.json') : null }
+  let entities = generated && readData('entities.json')
+  if (generated && !entities) console.error('  these tables are from before entity types were added: run `replay.js setup` again')
+  if (!entities) {
+    entities = {}
+    for (const entity of dec.data.entitiesArray) entities[entity.id] = entity.name
+  }
+  return { rec, dec, items, entities, colors: generated ? readData('map-colors.json') : null }
 }
 
 function outDir (args, file, kind) {
@@ -79,9 +85,9 @@ function main (argv) {
     case 'decode': {
       const dir = outDir(args, args[0])
       if (!args[0]) break
-      const { rec, dec, items } = load(args[0])
-      const stats = decode(rec, dec, items, dir)
-      console.error(`${stats.packets} packets (${stats.errors} undecodable); ${stats.timeline} timeline entries, ${stats.sidebars} sidebars, ${stats.tabs} tab lists -> ${dir}`)
+      const { rec, dec, items, entities } = load(args[0])
+      const stats = decode(rec, dec, { items, entities }, dir)
+      console.error(`${stats.packets} packets (${stats.errors} undecodable); ${stats.timeline} timeline entries, ${stats.sidebars} sidebars, ${stats.tabs} tab lists, ${stats.npcs} NPCs, ${stats.holograms} holograms -> ${dir}`)
       return
     }
     case 'maps': {
