@@ -22,6 +22,8 @@ public enum YoinkPart {
     COLLECTIONS("Collections", Material.PAINTING, "Every collection's count.", "collection"),
     DUNGEONS("Dungeons", Material.WITHER_SKELETON_SKULL, "Catacombs and class XP, floors and essence.", "dungeons"),
     MINING("Heart of the Mountain", Material.PRISMARINE_SHARD, "HotM XP, tokens, perks and powder.", "mining_core"),
+    CRIMSON_ISLE("Crimson Isle", Material.NETHERRACK, "Your Mage and Barbarian reputation and the Kuudra tiers you've beaten.",
+            "nether_island_player_data"),
     MINIONS("Crafted Minions", Material.COBBLESTONE, "Which minion tiers you've crafted.", "player_data.crafted_generators");
 
     private final String title;

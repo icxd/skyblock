@@ -18,8 +18,21 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
   - Skill Level Up: every level of the non-cosmetic skills (5 to 10, 10 to 25, 20 to 50, 30 to 60).
   - Catacombs Level Up (20 a level to 39, 40 to 50, none past), Class Level Up (4 a level, each class).
   - Complete Dungeons: each floor's first completion (Entrance to VII: 20/20/20/20/20/30/30/30, Master: 50).
-  - Collections: tiers reached, through `LevelingSources` (none until the collections code is wired in:
-    `SkyBlockLevels.sources(...)` with `collectionTiers` and `collectionTier` from `Collections.tier(...)`).
+  - Collections: tiers reached, through `LevelingSources` (`Dungeons` gives it `Collections.tier`). Boss
+    collections' tiers aren't milestones here (UNKNOWN whether Hypixel counts them).
+  - Boss Collections: the SkyBlock XP the boss collections' own tiers give ("+15 SkyBlock XP" at Bonzo I; all of
+    them add up to the task's 1,015), `Collections.skyBlockXp(profile, true)`.
+  - Accessory Bag: 1 a point of the most Accessory Power the bag has had (`highestAccessoryPower` on the profile,
+    as the API's `highest_magical_power`), so taking accessories out takes none back; worked out without dungeons'
+    doubling. The wiki says only "per Accessory Power you have"; that it never goes down, as a task's XP doesn't,
+    is this plugin's reading.
+  - Craft Minions: each minion tier crafted once, its tier's line (Tier I +1 to Tier XII +24), from
+    `minions.craftedMinions` ("WHEAT_12", as the API's `crafted_generators`). Nothing crafts minions here yet,
+    so only /yoinkprofile brings any.
+  - Defeat Kuudra: each tier up to the highest beaten (`crimsonIsle.kuudra.highest`, 1 for Basic to 5 for
+    Infernal: a tier opens once the one before it is beaten). Mage and Barbarian Reputation: each title reached
+    (Friendly 1,000, Trusted 3,000, Honored 6,000, Hero 12,000, as `FactionTitle` and NEU have them). There's
+    no Crimson Isle here, so only /yoinkprofile brings these.
   - Complete Objectives: the SkyBlock XP quests' objectives gave as their reward (`Quests.skyBlockXp`: Saving Up's
     "Talk to the Banker", +5, as recorded; Getting Started's gave none).
   - Every task is capped at what the data says it's worth.
@@ -68,10 +81,9 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
 
 ## Later, and what it waits for
 
-- The other XP tasks: Museum, Fairy Souls, Accessory Bag and its upgrades, Pet Score, minions, bank upgrades, fast
-  travel, events, essence shops, Slayer, Bestiary, Kuudra, HOTM/HOTF, the Garden, Rift, consumables... each when
-  its system exists (a `LevelingSources` method, or a task id in `SkyBlockXp.of`).
-- Collections: wire `LevelingSources` to the collections code (the guide's collection parts count then too).
+- The other XP tasks: Museum, Fairy Souls, Accessory Bag upgrades, Pet Score, crafting minions in play, bank
+  upgrades, fast travel, events, essence shops, Slayer, Bestiary, HOTM/HOTF, the Garden, Rift, consumables... each
+  when its system exists (a `LevelingSources` method, or a task id in `SkyBlockXp.of`).
 - Level rankings (Hypixel's Global Ranking lines) need a ranking across profiles.
 - Feature rewards (Community Shop, Garden, Wardrobe, Bazaar, Auction limits...) and the Book of Progression's
   bonuses are shown, not given: their systems don't exist.

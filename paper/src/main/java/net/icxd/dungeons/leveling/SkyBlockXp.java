@@ -2,10 +2,16 @@ package net.icxd.dungeons.leveling;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.bson.Document;
 
+import net.icxd.dungeons.crimsonisle.factions.FactionTitle;
+import net.icxd.dungeons.crimsonisle.factions.FactionType;
 import net.icxd.dungeons.dungeons.DungeonClass;
 import net.icxd.dungeons.dungeons.DungeonLevels;
 import net.icxd.dungeons.dungeons.DungeonProfile;
@@ -16,13 +22,15 @@ import net.icxd.dungeons.leveling.LevelingData.Unlock;
 import net.icxd.dungeons.quest.Quests;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
+import net.icxd.dungeons.utils.Utils;
 
 /**
  * A profile's SkyBlock XP, worked out from what it has done, as Hypixel does it (the wiki's SkyBlock Levels: tasks
  * "can only be completed once"; the XP isn't a counter). Each task's XP comes from the leveling data's XP for it and
  * what the plugin keeps of the profile: its skill levels, its Catacombs and class levels, its floors completed (a
- * floor's first completion), and its collection tiers (from {@link LevelingSources}). The other tasks (Museum,
- * Slayer, Bestiary...) have no system here yet, so they give none. A level is every 100 XP. No server needed.
+ * floor's first completion), its collection and boss collection tiers and its Accessory Power (from {@link
+ * LevelingSources}), the minion tiers it crafted, the Kuudra tiers it beat and its factions' reputation. The other tasks (Museum, Slayer,
+ * Bestiary...) have no system here yet, so they give none. A level is every 100 XP. No server needed.
  */
 public final class SkyBlockXp {
     /** "The player gains 1 SkyBlock Level for every 100 SkyBlock XP they have" (the wiki's SkyBlock Levels). */
@@ -42,6 +50,14 @@ public final class SkyBlockXp {
     static final String DUNGEONS = "complete_dungeons";
     static final String COLLECTIONS = "collections";
     static final String OBJECTIVES = "complete_objectives";
+    static final String ACCESSORY_BAG = "accessory_bag";
+    static final String BOSS_COLLECTIONS = "boss_collections";
+    static final String CRAFT_MINIONS = "craft_minions";
+    static final String DEFEAT_KUUDRA = "defeat_kuudra";
+    static final String MAGE_REPUTATION = "mage_reputation";
+    static final String BARBARIAN_REPUTATION = "barbarian_reputation";
+    /** Kuudra's tiers in the order they're unlocked, as the data has them (see {@link #kuudra}). */
+    private static final int KUUDRA_TIERS = 5;
 
     private SkyBlockXp() {
     }
@@ -83,6 +99,12 @@ public final class SkyBlockXp {
                     case CLASSES -> classes(profile, task);
                     case DUNGEONS -> completions(profile, task, tasks);
                     case COLLECTIONS -> sources.collectionTiers(profile) * task.xpEach();
+                    case BOSS_COLLECTIONS -> sources.bossCollectionXp(profile);
+                    case ACCESSORY_BAG -> sources.accessoryPower(profile) * task.xpEach();
+                    case CRAFT_MINIONS -> minions(profile, task);
+                    case DEFEAT_KUUDRA -> kuudra(profile, task, tasks);
+                    case MAGE_REPUTATION -> reputation(profile, FactionType.MAGE, task, tasks);
+                    case BARBARIAN_REPUTATION -> reputation(profile, FactionType.BARBARIAN, task, tasks);
                     case OBJECTIVES -> Quests.skyBlockXp(profile);
                     default -> 0;
                 };
@@ -106,6 +128,70 @@ public final class SkyBlockXp {
     private static int classes(Document profile, Task task) {
         int xp = 0;
         for (DungeonClass dungeonClass : DungeonClass.values()) xp += levels(task, DungeonLevels.level(DungeonProfile.classXp(profile, dungeonClass)));
+        return xp;
+    }
+
+    /**
+     * Each minion tier crafted once: its tier's line ("Tier XII", +24). The profile keeps them as the API's
+     * {@code crafted_generators} do ("WHEAT_12": the minion, its tier).
+     */
+    static int minions(Document profile, Task task) {
+        int xp = 0;
+        for (String crafted : craftedMinions(profile)) {
+            int split = crafted.lastIndexOf('_');
+            int tier;
+            try {
+                tier = split < 0 ? 0 : Integer.parseInt(crafted.substring(split + 1));
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            if (tier >= 1) xp += task.xpFor("Tier " + Utils.getRomanNumeral(tier));
+        }
+        return xp;
+    }
+
+    /** The minion tiers crafted on the profile ({@code minions.craftedMinions}), each once. */
+    static Set<String> craftedMinions(Document profile) {
+        Set<String> crafted = new LinkedHashSet<>();
+        if (profile.get("minions") instanceof Document minions && minions.get("craftedMinions") instanceof List<?> list) {
+            for (Object tier : list) if (tier instanceof String s) crafted.add(s);
+        }
+        return crafted;
+    }
+
+    /**
+     * Each Kuudra tier defeated once: its part's XP (kept in {@code tasks} too, for the menus). A tier opens once the
+     * one before it is beaten, so the highest beaten ({@code crimsonIsle.kuudra.highest}, 1 for Basic to 5 for
+     * Infernal) means every one up to it.
+     */
+    private static int kuudra(Document profile, Task task, Map<String, Integer> tasks) {
+        int highest = profile.get("crimsonIsle") instanceof Document isle && isle.get("kuudra") instanceof Document kuudra
+                && kuudra.get("highest") instanceof Number n ? n.intValue() : 0;
+        int xp = 0;
+        for (int i = 0; i < task.tasks().size() && i < Math.min(highest, KUUDRA_TIERS); i++) {
+            Task part = task.tasks().get(i);
+            if (part.xpEach() > 0) tasks.put(part.id(), part.xpEach());
+            xp += part.xpEach();
+        }
+        return xp;
+    }
+
+    /**
+     * Each of a faction's titles reached: its part's XP ("Friendly Status" at 1,000 reputation to "Hero Status" at
+     * 12,000, as FactionTitle has them), kept in {@code tasks} too. The profile keeps both factions' reputation
+     * ({@code crimsonIsle.factions.mage.reputation}), whichever one it picked.
+     */
+    private static int reputation(Document profile, FactionType faction, Task task, Map<String, Integer> tasks) {
+        int reputation = profile.get("crimsonIsle") instanceof Document isle && isle.get("factions") instanceof Document factions
+                && factions.get(faction.name().toLowerCase(Locale.ROOT)) instanceof Document of && of.get("reputation") instanceof Number n ? n.intValue() : 0;
+        int xp = 0;
+        for (Task part : task.tasks()) {
+            for (FactionTitle title : FactionTitle.values()) {
+                if (!part.name().equals(title.getName() + " Status") || reputation < title.getReputation()) continue;
+                if (part.xpEach() > 0) tasks.put(part.id(), part.xpEach());
+                xp += part.xpEach();
+            }
+        }
         return xp;
     }
 

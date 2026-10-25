@@ -114,6 +114,7 @@ import net.icxd.dungeons.island.IslandRules;
 import net.icxd.dungeons.island.Islands;
 import net.icxd.dungeons.island.Jerry;
 import net.icxd.dungeons.quest.QuestListener;
+import net.icxd.dungeons.storage.AccessoryBag;
 import net.icxd.dungeons.storage.Bag;
 import net.icxd.dungeons.storage.Storage;
 import net.icxd.dungeons.storage.StorageListener;
@@ -175,8 +176,9 @@ public class Dungeons extends JavaPlugin {
             User user = User.ifLoaded(player.getUniqueId());
             return user == null ? 0 : Collections.count(user.profile(), item);
         });
-        // SkyBlock Leveling's Collections task and the guide's collection tasks. Whether boss collections'
-        // tiers count as collection milestones there is UNKNOWN: they don't.
+        // SkyBlock Leveling's Collections task and the guide's collection tasks (whether boss collections' tiers
+        // count as collection milestones there is UNKNOWN: they don't), its Boss Collections task (their tiers'
+        // own SkyBlock XP) and its Accessory Bag task.
         SkyBlockLevels.sources(new LevelingSources() {
             @Override
             public int collectionTiers(Document profile) {
@@ -190,6 +192,16 @@ public class Dungeons extends JavaPlugin {
             @Override
             public int collectionTier(Document profile, String collection) {
                 return Collections.tier(profile, collection);
+            }
+
+            @Override
+            public int bossCollectionXp(Document profile) {
+                return Collections.skyBlockXp(profile, true);
+            }
+
+            @Override
+            public int accessoryPower(Document profile) {
+                return AccessoryBag.highestPower(profile);
             }
         });
         // SkyBlock Leveling's tasks and rewards, from the same data (leveling/leveling.json), read off the main thread.

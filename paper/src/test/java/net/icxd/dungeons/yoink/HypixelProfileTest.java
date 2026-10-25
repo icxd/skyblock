@@ -57,9 +57,11 @@ class HypixelProfileTest {
         HypixelProfile banana = banana();
         assertTrue(YoinkPart.INVENTORY.available(banana));
         assertTrue(YoinkPart.MINING.available(banana));
+        assertTrue(YoinkPart.CRIMSON_ISLE.available(banana));
         HypixelProfile strawberry = HypixelProfile.of(answer(), PLAYER).get(1);
         assertFalse(YoinkPart.INVENTORY.available(strawberry), "its inventory API is off");
         assertTrue(YoinkPart.COINS.available(strawberry));
+        assertFalse(YoinkPart.CRIMSON_ISLE.available(strawberry), "it's never been to the Crimson Isle");
         assertEquals(55172425.5, banana.at("player_data.experience.SKILL_COMBAT").getAsDouble());
         assertNull(banana.at("player_data.nothing.here"));
     }

@@ -54,7 +54,8 @@ Each part replaces that part of the profile you play on:
 - **Backpacks**: each in the same slot (Hypixel's 0 is slot 1), its icon being the backpack itself, with
   its contents.
 - **Accessory Bag**: the bag's contents, the selected power (Hypixel's "silky" is the tables' "Silky"),
-  and Stats Tuning. Tuning comes from slot 0's `walk_speed`, `critical_damage` and the rest.
+  Stats Tuning, and the most Accessory Power the bag has had (`highest_magical_power`, which SkyBlock XP counts;
+  the bag here only raises it). Tuning comes from slot 0's `walk_speed`, `critical_damage` and the rest.
 - **Other Bags**: the Potion Bag, the Fishing Bag and the Sack of Sacks.
 - **Coins**: the purse, and the bank when the API has it.
 - **Skills**: each skill's XP, `SKILL_COMBAT` and the rest.
@@ -64,6 +65,10 @@ Each part replaces that part of the profile you play on:
 - **Heart of the Mountain**: tokens left to spend, HotM XP, powder (Mithril, Gemstone and Glacite), and the
   levels of the four perks here. Hypixel's node ids are `mining_speed`, `mining_fortune`, `titanium_insanium`
   and `forge_time`, per SkyCrypt's `constants/hotm.js`; levels are capped at each perk's most here.
+- **Crimson Isle**: Mage and Barbarian reputation (`mages_reputation`, `barbarians_reputation`) and the highest
+  Kuudra tier beaten (the last of `kuudra_completed_tiers`' `none`, `hot`, `burning`, `fiery` and `infernal` with
+  a completion; the keys are NEU's profile viewer's). Both count for SkyBlock XP. Not the faction picked: the
+  tab list's lines for a faction aren't finished (its progress bar).
 - **Crafted Minions**: the minion tiers crafted.
 
 **Items** (`HypixelItems`). The API's items are base64 of gzipped Minecraft 1.8 NBT, read by `Nbt`. Each

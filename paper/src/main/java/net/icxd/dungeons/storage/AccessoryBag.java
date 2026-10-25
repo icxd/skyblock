@@ -19,6 +19,7 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.enums.SpecificItemType;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.stats.ItemStats;
@@ -37,6 +38,11 @@ import net.icxd.dungeons.user.User;
 public final class AccessoryBag {
     /** The profile's selected power, by name (see StorageTables#power). */
     public static final String SELECTED_POWER = "selectedPower";
+    /**
+     * The most Accessory Power the profile's bag has had, outside dungeons (a dungeon accessory's doubles there):
+     * what SkyBlock XP counts, which never goes down, as Hypixel's API keeps {@code highest_magical_power}.
+     */
+    public static final String HIGHEST_POWER = "highestAccessoryPower";
     /** How often what's in their inventory is looked at again. */
     private static final long INVENTORY_MILLIS = 1_000;
 
@@ -83,6 +89,11 @@ public final class AccessoryBag {
      */
     public static int accessoryPower(Player player) {
         return state(player).power;
+    }
+
+    /** The most Accessory Power the profile's bag has had (see {@link #HIGHEST_POWER}). */
+    public static int highestPower(Document profile) {
+        return profile != null && profile.get(HIGHEST_POWER) instanceof Number n ? Math.max(0, n.intValue()) : 0;
     }
 
     /** Their selected power; null for none (or one the tables don't have). */
@@ -158,6 +169,11 @@ public final class AccessoryBag {
         StorageTables tables = StorageTables.get();
         List<Accessories.Held> bag = state.bag.stream().map(Entry::held).toList();
         state.power = Accessories.power(bag, Accessories.counted(bag, tables), state.inDungeon, tables);
+        int outside = state.inDungeon ? Accessories.power(bag, Accessories.counted(bag, tables), false, tables) : state.power;
+        if (outside > highestPower(profile)) {
+            profile.put(HIGHEST_POWER, outside);
+            SkyBlockLevels.changed(player);
+        }
 
         List<Entry> all = new ArrayList<>(state.bag);
         all.addAll(entries(player.getInventory().getStorageContents()));

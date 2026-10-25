@@ -101,6 +101,16 @@
        "forge_time": 20
       }
      },
+     "nether_island_player_data": {
+      "selected_faction": "mages",
+      "mages_reputation": 3500.0,
+      "barbarians_reputation": -200.0,
+      "kuudra_completed_tiers": {
+       "none": 12,
+       "hot": 3,
+       "highest_wave_hot": 4
+      }
+     },
      "accessory_bag_storage": {
       "selected_power": "silky",
       "tuning": {

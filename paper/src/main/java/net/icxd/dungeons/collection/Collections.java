@@ -89,9 +89,15 @@ public final class Collections {
 
     /** The SkyBlock XP the profile's collection tiers give, as their rewards say ("+4 SkyBlock XP"). */
     public static int skyBlockXp(Document profile) {
+        return skyBlockXp(profile, false) + skyBlockXp(profile, true);
+    }
+
+    /** The SkyBlock XP the boss collections' tiers give ("+15 SkyBlock XP", Bonzo I), or the others'. */
+    public static int skyBlockXp(Document profile, boolean bosses) {
         int xp = 0;
         for (Map.Entry<String, Integer> e : unlockedTiers(profile).entrySet()) {
             Collection collection = data.collection(e.getKey());
+            if (collection.boss() != bosses) continue;
             for (int n = 1; n <= e.getValue(); n++) {
                 for (Reward reward : collection.tier(n).rewards()) if (reward.type() == Reward.Type.SKYBLOCK_XP) xp += (int) reward.amount();
             }

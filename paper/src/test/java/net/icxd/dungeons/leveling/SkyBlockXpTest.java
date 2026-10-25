@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,106 @@ class SkyBlockXpTest {
         Task task = data.categories().getFirst().tasks().getFirst();
         assertEquals("Complete Objective", LevelingText.gainName(task));
         assertEquals("&b+5 SkyBlock XP &7(Complete Objective&7)&b (5/100)", LevelingText.actionBar(5, LevelingText.gainName(task), 5));
+    }
+
+    /**
+     * The Accessory Bag (its most Accessory Power), Boss Collections (their tiers' own SkyBlock XP), Craft Minions
+     * (each tier once, by its line) and Defeat Kuudra (each tier up to the highest beaten), on the recorded shapes.
+     */
+    @Test
+    void bagBossesMinionsAndKuudra() {
+        LevelingData data = LevelingData.parse(JsonParser.parseString("""
+                {"format": 1, "categories": [{"id": "core", "name": "&3Core Tasks", "icon": {"material": "NETHER_STAR"}, "description": [],
+                 "max": 9000, "tasks": [
+                  {"id": "accessory_bag", "name": "Accessory Bag", "icon": {"material": "NETHER_STAR"}, "max": 2121,
+                   "xp": [{"text": "Per &6Accessory Power&7", "xp": 1}]},
+                  {"id": "craft_minions", "name": "Craft Minions", "icon": {"material": "NETHER_STAR"}, "max": 3164, "xp": [
+                     {"text": "Tier I", "xp": 1},
+                     {"text": "Tier II", "xp": 1},
+                     {"text": "Tier III", "xp": 1},
+                     {"text": "Tier IV", "xp": 1},
+                     {"text": "Tier V", "xp": 1},
+                     {"text": "Tier VI", "xp": 1},
+                     {"text": "Tier VII", "xp": 2},
+                     {"text": "Tier VIII", "xp": 3},
+                     {"text": "Tier IX", "xp": 4},
+                     {"text": "Tier X", "xp": 6},
+                     {"text": "Tier XI", "xp": 12},
+                     {"text": "Tier XII", "xp": 24}]}]},
+                 {"id": "slaying", "name": "&3Slaying Tasks", "icon": {"material": "GOLDEN_SWORD"}, "description": [], "max": 2000, "tasks": [
+                  {"id": "boss_collections", "name": "Boss Collections", "icon": {"material": "GOLDEN_SWORD"}, "max": 1015, "xp": [{"text": "Varies"}]},
+                  {"id": "defeat_kuudra", "name": "Defeat Kuudra", "icon": {"material": "GOLDEN_SWORD"}, "max": 300, "tasks": [
+                   {"id": "defeat_kuudra.basic_tier", "name": "Basic Tier", "icon": {"material": "GOLDEN_SWORD"}, "max": 20, "xp": [{"text": "", "xp": 20}]},
+                   {"id": "defeat_kuudra.hot_tier", "name": "Hot Tier", "icon": {"material": "GOLDEN_SWORD"}, "max": 40, "xp": [{"text": "", "xp": 40}]},
+                   {"id": "defeat_kuudra.burning_tier", "name": "Burning Tier", "icon": {"material": "GOLDEN_SWORD"}, "max": 60, "xp": [{"text": "", "xp": 60}]},
+                   {"id": "defeat_kuudra.fiery_tier", "name": "Fiery Tier", "icon": {"material": "GOLDEN_SWORD"}, "max": 80, "xp": [{"text": "", "xp": 80}]},
+                   {"id": "defeat_kuudra.infernal_tier", "name": "Infernal Tier", "icon": {"material": "GOLDEN_SWORD"}, "max": 100, "xp": [{"text": "", "xp": 100}]}]}]}]}
+                """).getAsJsonObject());
+        assertEquals(List.of(), data.problems());
+        Document profile = new Document();
+        profile.put("minions", new Document("craftedMinions", List.of("WHEAT_1", "WHEAT_2", "WHEAT_12", "COBBLESTONE_11", "WHEAT_1", "NOT_A_TIER", "WHEAT_0")));
+        profile.put("crimsonIsle", new Document("kuudra", new Document("highest", 3)));
+        LevelingSources sources = new LevelingSources() {
+            @Override
+            public int bossCollectionXp(Document p) {
+                return 145;
+            }
+
+            @Override
+            public int accessoryPower(Document p) {
+                return 250;
+            }
+        };
+        SkyBlockXp.Breakdown xp = SkyBlockXp.of(profile, data, sources);
+        assertEquals(250, xp.of("accessory_bag"));
+        // Tier I twice is one: 1 + 1 + 24 (XII) + 12 (XI).
+        assertEquals(38, xp.of("craft_minions"));
+        assertEquals(145, xp.of("boss_collections"));
+        // Basic, Hot and Burning.
+        assertEquals(120, xp.of("defeat_kuudra"));
+        assertEquals(60, xp.of("defeat_kuudra.burning_tier"));
+        assertEquals(0, xp.of("defeat_kuudra.fiery_tier"));
+        assertEquals(250 + 38 + 145 + 120, xp.total());
+        // Capped at what it's worth; nothing kept, nothing given.
+        assertEquals(2121, SkyBlockXp.of(profile, data, new LevelingSources() {
+            @Override
+            public int accessoryPower(Document p) {
+                return 5000;
+            }
+        }).of("accessory_bag"));
+        assertEquals(0, SkyBlockXp.of(new Document(), data, Fixtures.NONE).total());
+    }
+
+    /** The recorded data's Accessory Bag, Craft Minions, Boss Collections and Defeat Kuudra. */
+    @Test
+    void recordedBagBossesMinionsKuudraAndReputation() {
+        LevelingData data = Fixtures.recorded();
+        assertEquals(2121, data.task("accessory_bag").max());
+        assertEquals(3164, data.task("craft_minions").max());
+        assertEquals(1015, data.task("boss_collections").max());
+        assertEquals(300, data.task("defeat_kuudra").max());
+        // One minion's twelve tiers: 1 x 6 + 2 + 3 + 4 + 6 + 12 + 24.
+        List<String> wheat = new ArrayList<>();
+        for (int tier = 1; tier <= 12; tier++) wheat.add("WHEAT_" + tier);
+        Document profile = new Document("minions", new Document("craftedMinions", wheat));
+        assertEquals(57, SkyBlockXp.of(profile, data, Fixtures.NONE).of("craft_minions"));
+        profile.put("crimsonIsle", new Document("kuudra", new Document("highest", 5)));
+        assertEquals(300, SkyBlockXp.of(profile, data, Fixtures.NONE).of("defeat_kuudra"));
+
+        // Either faction's titles: Mage Friendly and Trusted (5 + 10) at 3,500; Barbarian Hero, every title.
+        assertEquals(75, data.task("mage_reputation").max());
+        profile.put("crimsonIsle", new Document("factions", new Document("mage", new Document("reputation", 3500))
+                .append("barbarian", new Document("reputation", 12000))));
+        SkyBlockXp.Breakdown xp = SkyBlockXp.of(profile, data, Fixtures.NONE);
+        assertEquals(15, xp.of("mage_reputation"));
+        assertEquals(10, xp.of("mage_reputation.trusted_status"));
+        assertEquals(0, xp.of("mage_reputation.honored_status"));
+        assertEquals(75, xp.of("barbarian_reputation"));
+        // Below Friendly (or hostile) is none.
+        profile.put("crimsonIsle", new Document("factions", new Document("mage", new Document("reputation", 999))
+                .append("barbarian", new Document("reputation", -3000))));
+        xp = SkyBlockXp.of(profile, data, Fixtures.NONE);
+        assertEquals(0, xp.of("mage_reputation") + xp.of("barbarian_reputation"));
     }
 
     @Test
