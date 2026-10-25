@@ -90,6 +90,10 @@ public final class ItemBuilder {
     private static final Set<Stat> NOT_SCALED = EnumSet.of(Stat.HEALTH_REGEN, Stat.VITALITY, Stat.MENDING, Stat.SWING_RANGE);
 
     private static final String MASTER_STARS = "➊➋➌➍➎";
+    /** Hypixel's key, true once the item has been donated to a Museum: it's Co-op Soulbound from then on. */
+    public static final String DONATED_MUSEUM = "donated_museum";
+    /** Hypixel's key: when the item was made, in milliseconds (the Museum's "Created"). */
+    public static final String CREATED = "timestamp";
 
     private ItemBuilder() {
     }
@@ -176,8 +180,18 @@ public final class ItemBuilder {
     }
 
     /**
+     * Whether it's soulbound: as its kind is, or Co-op once it's been donated to a Museum (Hypixel's {@code
+     * donated_museum}, recorded: "&8&l* &8Co-op Soulbound &8&l*" over a donated Undead Sword's rarity line).
+     */
+    public static Soulbound soulbound(SkyBlockItem item, NBTTagCompound tag) {
+        if (item.soulbound() != Soulbound.NONE) return item.soulbound();
+        return tag != null && tag.getBoolean(DONATED_MUSEUM) ? Soulbound.COOP : Soulbound.NONE;
+    }
+
+    /**
      * What every new item starts with, plus what its behaviour adds (see {@link ItemBehaviour#nbt}). Its rarity
-     * and soulbound are written as they always were, but what shows is the item's own (see {@link #rarity}).
+     * and soulbound are written as they always were, but what shows is the item's own (see {@link #rarity}): its
+     * soulbound, or Co-op once donated ({@link #DONATED_MUSEUM}).
      */
     public static NBTTagCompound newData(SkyBlockItem item) {
         NBTTagCompound tag = new NBTTagCompound();
@@ -213,7 +227,10 @@ public final class ItemBuilder {
         if (extra != null) {
             for (String key : extra.keySet()) tag.set(key, extra.get(key));
         }
-        if (item.unstackable()) tag.setString("uuid", UUID.randomUUID().toString());
+        if (item.unstackable()) {
+            tag.setString("uuid", UUID.randomUUID().toString());
+            tag.setLong(CREATED, System.currentTimeMillis());
+        }
         return tag;
     }
 
@@ -329,8 +346,9 @@ public final class ItemBuilder {
         List<String> footer = new ArrayList<>();
         if (item.reforgeable() && reforge == null) footer.add("&8This item can be reforged!");
         footer.addAll(requirementLines(item, owner));
-        if (item.soulbound() != Soulbound.NONE) {
-            footer.add("&8&l* &8" + (item.soulbound() == Soulbound.COOP ? "Co-op " : "") + "Soulbound &8&l*");
+        Soulbound soulbound = soulbound(item, tag);
+        if (soulbound != Soulbound.NONE) {
+            footer.add("&8&l* &8" + (soulbound == Soulbound.COOP ? "Co-op " : "") + "Soulbound &8&l*");
         }
         if (!lore.isEmpty()) lore.add("");
         lore.addAll(footer);

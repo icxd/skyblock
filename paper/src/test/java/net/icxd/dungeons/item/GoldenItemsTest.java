@@ -49,8 +49,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Hex's table, -Dhex.dir); without them, this is skipped.
  */
 class GoldenItemsTest {
-    /** Data that's random on every new item. */
-    private static final List<String> RANDOM = List.of("attribute_1", "attribute_1_level", "attribute_2", "attribute_2_level", "uuid");
+    /** Data that's different on every new item: random, or when it was made. */
+    private static final List<String> RANDOM = List.of("attribute_1", "attribute_1_level", "attribute_2", "attribute_2_level", "uuid", "timestamp");
 
     @AfterEach
     void noItems() {

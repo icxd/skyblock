@@ -27,4 +27,9 @@ public interface LevelingSources {
     default int accessoryPower(Document profile) {
         return 0;
     }
+
+    /** The SkyBlock XP the profile's Museum gives (its donations): the Museum Donations task. */
+    default int museumXp(Document profile) {
+        return 0;
+    }
 }

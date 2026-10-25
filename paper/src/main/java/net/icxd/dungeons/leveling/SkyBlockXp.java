@@ -32,7 +32,8 @@ import net.icxd.dungeons.utils.Utils;
  * what the plugin keeps of the profile: its skill levels, its Catacombs and class levels, its floors completed (a
  * floor's first completion), its collection and boss collection tiers and its Accessory Power (from {@link
  * LevelingSources}), its Fairy Soul exchanges, Jacobus's upgrades to its Accessory Bag, the minion tiers it crafted,
- * the Kuudra tiers it beat and its factions' reputation. The other tasks (Museum, Slayer, Bestiary...) have no system here yet, so they give none. A
+ * the Kuudra tiers it beat, its factions' reputation and its Museum's donations (from {@link LevelingSources}). The
+ * other tasks (Slayer, Bestiary...) have no system here yet, so they give none. A
  * level is every 100 XP. No server needed.
  */
 public final class SkyBlockXp {
@@ -61,6 +62,7 @@ public final class SkyBlockXp {
     static final String DEFEAT_KUUDRA = "defeat_kuudra";
     static final String MAGE_REPUTATION = "mage_reputation";
     static final String BARBARIAN_REPUTATION = "barbarian_reputation";
+    static final String MUSEUM_DONATIONS = "museum_donations";
     /** Kuudra's tiers in the order they're unlocked, as the data has them (see {@link #kuudra}). */
     private static final int KUUDRA_TIERS = 5;
 
@@ -114,6 +116,8 @@ public final class SkyBlockXp {
                     case MAGE_REPUTATION -> reputation(profile, FactionType.MAGE, task, tasks);
                     case BARBARIAN_REPUTATION -> reputation(profile, FactionType.BARBARIAN, task, tasks);
                     case OBJECTIVES -> Quests.skyBlockXp(profile);
+                    // Each entry's own XP, once it counts (see Museum).
+                    case MUSEUM_DONATIONS -> sources.museumXp(profile);
                     default -> 0;
                 };
                 // No more than the task is worth (a data file with no most for it caps nothing).

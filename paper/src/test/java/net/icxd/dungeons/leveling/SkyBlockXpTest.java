@@ -173,6 +173,22 @@ class SkyBlockXpTest {
         assertEquals(14, SkyBlockXp.of(profile, data, Fixtures.NONE).of("accessory_bag_upgrades"));
     }
 
+    /** "Gain XP by progressing your Museum!": what its donations give (see Museum), up to the Museum's 3,646. */
+    @Test
+    void museumDonations() {
+        LevelingData data = Fixtures.recorded();
+        assertEquals(3646, data.task("museum_donations").max());
+        LevelingSources museum = new LevelingSources() {
+            @Override
+            public int museumXp(Document profile) {
+                return profile.getInteger("museumXp", 0);
+            }
+        };
+        assertEquals(0, SkyBlockXp.of(new Document(), data, museum).of("museum_donations"));
+        assertEquals(42, SkyBlockXp.of(new Document("museumXp", 42), data, museum).of("museum_donations"));
+        assertEquals(3646, SkyBlockXp.of(new Document("museumXp", 9000), data, museum).of("museum_donations"));
+    }
+
     @Test
     void freshProfileHasNone() {
         SkyBlockXp.Breakdown xp = SkyBlockXp.of(new Document(), Fixtures.fixture(), Fixtures.NONE);

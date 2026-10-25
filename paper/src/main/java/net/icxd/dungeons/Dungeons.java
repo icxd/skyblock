@@ -82,6 +82,7 @@ import net.icxd.dungeons.item.ability.weapons.WeaponEvents;
 import net.icxd.dungeons.item.ability.weapons.WeaponPassives;
 import net.icxd.dungeons.mob.Essences;
 import net.icxd.dungeons.mob.Mobs;
+import net.icxd.dungeons.museum.Museum;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
 import net.icxd.dungeons.item.bonus.SetBonuses;
@@ -169,6 +170,8 @@ public class Dungeons extends JavaPlugin {
         CollectionFiles.load(this);
         // The Hex: its item is saved with the inventory, its tables (hex/) are read off the main thread.
         Hex.start(this);
+        // What the Museum takes (museum/), read off the main thread.
+        Museum.start(this);
         // What counts collections: the bags' sizes and unlocks, and the set bonuses that count collected items.
         Bag.setCollections(Collections::tier);
         // Aurora Armor's Arcane Energy stacks for Homing Missiles, and Hollow Armor's Spirit stacks for the Hollow Wand.
@@ -180,7 +183,7 @@ public class Dungeons extends JavaPlugin {
         });
         // SkyBlock Leveling's Collections task and the guide's collection tasks (whether boss collections' tiers
         // count as collection milestones there is UNKNOWN: they don't), its Boss Collections task (their tiers'
-        // own SkyBlock XP) and its Accessory Bag task.
+        // own SkyBlock XP), its Accessory Bag task and its Museum Donations task.
         SkyBlockLevels.sources(new LevelingSources() {
             @Override
             public int collectionTiers(Document profile) {
@@ -204,6 +207,11 @@ public class Dungeons extends JavaPlugin {
             @Override
             public int accessoryPower(Document profile) {
                 return AccessoryBag.highestPower(profile);
+            }
+
+            @Override
+            public int museumXp(Document profile) {
+                return Museum.xp(profile);
             }
         });
         // SkyBlock Leveling's tasks and rewards, from the same data (leveling/leveling.json), read off the main thread.

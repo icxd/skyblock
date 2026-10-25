@@ -113,8 +113,9 @@ requirement lines go by the skills and floors just yoinked, and saved. You can r
   Potions aren't either: this plugin's `POTION` is a Water Bottle. What's in the Quiver, an unknown
   backpack, or a backpack slot past 18 is listed as not brought over.
 - **Not copied.** Skins and dyes: an item looks as its kind does here. The rest of `ExtraAttributes` isn't
-  copied: drill parts, `timestamp`, `originTag`, Soul Eater's count (its key can't be stored here) and the
-  rest.
+  copied: drill parts, `originTag`, Soul Eater's count (its key can't be stored here), an older item's
+  `timestamp` in words, and the rest. A newer item's `timestamp` (in milliseconds: the Museum's "Created") and
+  `donated_museum` (it's Co-op Soulbound, see MUSEUM.md) are kept.
 - **No sacks.** There is nowhere to keep sacks' contents here (see STORAGE.md), so there's no Sacks part.
 - **Bags past capacity.** A bag with more items than its capacity here keeps them, but they're hidden until
   the collection that gives the capacity is reached (see StorageDocument).
@@ -129,5 +130,6 @@ requirement lines go by the skills and floors just yoinked, and saved. You can r
 ## Later
 
 - Pets (with `petInfo`), when there are pets: the pet menu and `pets_data.pets`.
-- Sacks, slayers, fairy souls, the museum, and the rest of the profile this plugin doesn't keep yet.
+- Sacks, slayers, the Museum's donations (the museum API, `/v2/skyblock/museum`), and the rest of the profile
+  this plugin doesn't keep yet.
 - Skins and dyes, when items here can have their own.
