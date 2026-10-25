@@ -17,4 +17,19 @@ public interface LevelingSources {
     default int collectionTier(Document profile, String collection) {
         return 0;
     }
+
+    /** The SkyBlock XP the profile's boss collection tiers give ("+15 SkyBlock XP" a tier): the Boss Collections task. */
+    default int bossCollectionXp(Document profile) {
+        return 0;
+    }
+
+    /** The most Accessory Power the profile's Accessory Bag has had: the Accessory Bag task. */
+    default int accessoryPower(Document profile) {
+        return 0;
+    }
+
+    /** The SkyBlock XP the profile's Museum gives (its donations): the Museum Donations task. */
+    default int museumXp(Document profile) {
+        return 0;
+    }
 }

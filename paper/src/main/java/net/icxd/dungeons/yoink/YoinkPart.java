@@ -15,14 +15,17 @@ public enum YoinkPart {
     WARDROBE("Wardrobe", Material.LEATHER_CHESTPLATE, "Your wardrobe's armor sets.", "inventory.wardrobe_contents"),
     ENDER_CHEST("Ender Chest", Material.ENDER_CHEST, "Your ender chest's pages.", "inventory.ender_chest_contents"),
     BACKPACKS("Backpacks", Material.BROWN_DYE, "Your backpacks and what's in them.", "inventory.backpack_contents"),
-    ACCESSORIES("Accessory Bag", Material.ITEM_FRAME, "Your accessories, power and tuning.", "inventory.bag_contents.talisman_bag"),
+    ACCESSORIES("Accessory Bag", Material.ITEM_FRAME, "Your accessories, power, tuning and Jacobus's upgrades.", "inventory.bag_contents.talisman_bag"),
     BAGS("Other Bags", Material.CAULDRON, "Your Potion Bag, Fishing Bag and Sack of Sacks.", "inventory.bag_contents"),
     COINS("Coins", Material.GOLD_INGOT, "Your purse and bank.", "currencies"),
     SKILLS("Skills", Material.DIAMOND_SWORD, "Every skill's XP.", "player_data.experience"),
     COLLECTIONS("Collections", Material.PAINTING, "Every collection's count.", "collection"),
     DUNGEONS("Dungeons", Material.WITHER_SKELETON_SKULL, "Catacombs and class XP, floors and essence.", "dungeons"),
     MINING("Heart of the Mountain", Material.PRISMARINE_SHARD, "HotM XP, tokens, perks and powder.", "mining_core"),
-    MINIONS("Crafted Minions", Material.COBBLESTONE, "Which minion tiers you've crafted.", "player_data.crafted_generators");
+    CRIMSON_ISLE("Crimson Isle", Material.NETHERRACK, "Your Mage and Barbarian reputation and the Kuudra tiers you've beaten.",
+            "nether_island_player_data"),
+    MINIONS("Crafted Minions", Material.COBBLESTONE, "Which minion tiers you've crafted.", "player_data.crafted_generators"),
+    FAIRY_SOULS("Fairy Souls", Material.PINK_DYE, "How many you've found and given to Tia.", "fairy_soul");
 
     private final String title;
     private final Material icon;

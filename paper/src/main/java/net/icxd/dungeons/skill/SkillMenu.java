@@ -18,7 +18,8 @@ import java.util.List;
  * snakes through the top four rows, nine columns of it at a time, scrolled with the arrows and
  * re-centred with the nether star. The path is a strip of columns: column 0 holds the skill's own
  * item at the bottom, then each ten levels take four columns, up the second and down the fourth.
- * Opening it puts the level in progress in the fifth column. Only Combat's was recorded; the other
+ * Opening it puts the level in progress in the fifth column (the Museum Milestones' menu is the same
+ * path, see MilestonesMenu). Only Combat's was recorded; the other
  * skills' are made the same way (their items too, which is UNKNOWN), and Combat's Bestiary and Slayer
  * items are Combat's only. Main thread.
  */
@@ -44,7 +45,7 @@ public final class SkillMenu extends GUI {
     // Where levels go
 
     /** A level's column on the strip. */
-    static int column(int level) {
+    public static int column(int level) {
         int block = (level - 1) / 10, k = (level - 1) % 10, c = 1 + 4 * block;
         return switch (k) {
             case 0 -> c;
@@ -55,7 +56,7 @@ public final class SkillMenu extends GUI {
     }
 
     /** A level's row (0 at the top). */
-    static int row(int level) {
+    public static int row(int level) {
         int k = (level - 1) % 10;
         return switch (k) {
             case 0, 1, 9 -> 3;
@@ -66,25 +67,25 @@ public final class SkillMenu extends GUI {
     }
 
     /** The furthest the view scrolls for a skill with this many levels (16 for 60). */
-    static int maxOffset(int levels) {
+    public static int maxOffset(int levels) {
         int last = 0;
         for (int level = 1; level <= levels; level++) last = Math.max(last, column(level));
         return Math.max(0, last + 1 - COLUMNS);
     }
 
     /** The view that puts this level in the fifth column, as far as the strip allows. */
-    static int centred(int level, int levels) {
+    public static int centred(int level, int levels) {
         return Math.max(0, Math.min(column(level) - CENTRE, maxOffset(levels)));
     }
 
     /** The slot for this spot on the strip in this view; -1 if it's out of view. */
-    static int slot(int row, int column, int offset) {
+    public static int slot(int row, int column, int offset) {
         int shown = column - offset;
         return shown < 0 || shown >= COLUMNS ? -1 : row * COLUMNS + shown;
     }
 
     /** The level's slot in this view; -1 if it's out of view. */
-    static int levelSlot(int level, int offset) {
+    public static int levelSlot(int level, int offset) {
         return slot(row(level), column(level), offset);
     }
 

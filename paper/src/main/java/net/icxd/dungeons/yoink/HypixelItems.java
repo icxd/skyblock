@@ -32,7 +32,8 @@ import net.icxd.dungeons.rune.Rune;
 /**
  * Hypixel's items as the API gives them, made into this plugin's: the item of the same SkyBlock id, with what was done
  * to it written the way this plugin keeps it (ItemBuilder's data): its reforge, stars, books, enchantments, gems, a
- * Necron's blade's scrolls, attributes, the Grand Searing rune, the other modifiers, and its uuid. Its skin and dye
+ * Necron's blade's scrolls, attributes, the Grand Searing rune, the other modifiers, its uuid, when it was made and
+ * whether it was donated to a Museum (it's Co-op Soulbound). Its skin and dye
  * aren't kept (an item here looks as its kind does). What has no item here is left out and counted by id, and so are
  * pets (there are none here) and potions (this plugin's Potion is a Water Bottle); the SkyBlock Menu is this plugin's
  * own. Plain data until {@link #stack}, which needs the server.
@@ -127,6 +128,12 @@ final class HypixelItems {
     static NBTTagCompound data(SkyBlockItem kind, Map<String, Object> extra, UUID owner, Left left) {
         NBTTagCompound tag = ItemBuilder.newData(kind);
         if (tag.hasKey("uuid") && Nbt.string(extra, "uuid") instanceof String uuid && !uuid.isBlank()) tag.setString("uuid", uuid);
+        // When it was made (newer items say so in milliseconds; older ones' dates in words aren't kept), and whether
+        // it's been donated to its Museum: Co-op Soulbound here too.
+        if (tag.hasKey(ItemBuilder.CREATED) && extra.get(ItemBuilder.CREATED) instanceof Number made && made.longValue() > 0) {
+            tag.setLong(ItemBuilder.CREATED, made.longValue());
+        }
+        if (Nbt.integer(extra, ItemBuilder.DONATED_MUSEUM, 0) > 0) tag.setBoolean(ItemBuilder.DONATED_MUSEUM, true);
         if (owner != null && kind.isOwnable()) tag.setString("owner", owner.toString());
         if (Nbt.string(extra, "modifier") instanceof String reforge) tag.setString("reforge", reforge);
         if (Nbt.integer(extra, "rarity_upgrades", 0) > 0) tag.setBoolean("recombobulated", true);

@@ -3,6 +3,7 @@ package net.icxd.dungeons.storage;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -70,6 +71,11 @@ public final class Storage {
     /** A bag's first page. */
     public static void openBag(Player player, Bag bag) {
         BagMenu.open(player, bag, 0);
+    }
+
+    /** A bag's first page, its Go Back leading to the menu it was opened from ("&7To Accessory Bag Upgrades"). */
+    public static void openBag(Player player, Bag bag, String backTo, Consumer<Player> back) {
+        BagMenu.open(player, bag, 0, new BagMenu.Back(backTo, back));
     }
 
     public static void openLoadouts(Player player) {

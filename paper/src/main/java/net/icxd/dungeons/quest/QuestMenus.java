@@ -10,12 +10,14 @@ import java.util.TreeSet;
 import org.bson.Document;
 import org.bukkit.Material;
 
+import net.icxd.dungeons.fairysouls.FairySouls;
 import net.icxd.dungeons.menu.Icon;
 
 /**
  * What the quest menus show, slot by slot, as data so they can be checked without a server; as
  * recorded on a new profile (2026-10-24: Quests & Chapters at 00:14.7, Chapters at 00:15.6, the Quest
- * Log at 00:18.2) and an old one (2026-09-27: the Quest Log with 21 quests and Completed Quests).
+ * Log at 00:18.2) and an old one (2026-09-27: the Quest Log with 21 quests and Completed Quests, the Fairy Souls
+ * Guide).
  */
 public final class QuestMenus {
     public static final String QUESTS_AND_CHAPTERS = "Quests & Chapters";
@@ -33,9 +35,39 @@ public final class QuestMenus {
     static final int COMPLETED = 50;
     /** Where the Quest Log lists quests: the four middle rows, inside the glass. */
     static final int[] QUEST_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43};
-    /** Hypixel counts 289 Fairy Souls; finding them isn't here yet, so none are found. */
-    static final int FAIRY_SOULS = 289;
-    static final String FAIRY_SOUL_HEAD = "299ea120bd83d0c81a3c4627f5bce1b12fb03bcb57779c63dcc77e3f4ae8a793";
+    /** The Quest Log's first entry, the Fairy Souls, opens the guide. */
+    static final int FAIRY_SOULS_SLOT = 10;
+    public static final String FAIRY_SOULS_GUIDE = "Fairy Souls Guide";
+    /**
+     * The guide's islands as recorded (2026-09-27, 05:35.4), in its order, each with how many souls it has and its
+     * head, and NEU's key for it where the table has one (the Rift's and the miscellaneous souls aren't in it).
+     */
+    static final List<GuideIsland> GUIDE = List.of(
+            new GuideIsland(10, "Miscellaneous", null, 17, "41b830eb4082acec836bc835e40a11282bb51193315f91184337e8d3555583"),
+            new GuideIsland(11, "The Rift", null, 1, "f26192609d6c46ade73e807fc40dbc3a1a1afbb456ae165785b0fe834dd1cb57"),
+            new GuideIsland(12, "Safari", "safari", 4, "c1e3157115a3f206e5df5301e685ebb4a6a9627ebdaa09b21d500d85315485c4"),
+            new GuideIsland(13, "Deep Caverns", "mining_2", 21, "74213dc6dc4b1641defd333f4a4732cc714dd677718fa10f140a6939c12aa32b"),
+            new GuideIsland(14, "Jerry's Workshop", "winter", 5, "6dd663136cafa11806fdbca6b596afd85166b4ec02142c8d5ac8941d89ab7"),
+            new GuideIsland(15, "The Park", "foraging_1", 12, "a221f813dacee0fef8c59f76894dbb26415478d9ddfc44c2e708a6d3b7549b"),
+            new GuideIsland(16, "Dwarven Mines", "mining_3", 15, "6b20b23c1aa2be0270f016b4c90d6ee6b8330a17cfef87869d6ad60b2ffbf3b5"),
+            new GuideIsland(19, "Hub", "hub", 80, "d7cc6687423d0570d556ac53e0676cb563bbdd9717cd8269bdebed6f6d4e7bf8"),
+            new GuideIsland(20, "Gold Mine", "mining_1", 12, "d8573ed917444316b0b28dd9927fd68e56f6625fcfa73ad80b8770d5139891b1"),
+            new GuideIsland(21, "Dungeon Hub", "dungeon_hub", 7, "9b56895b9659896ad647f58599238af532d46db9c1b0389b8bbeb70999dab33d"),
+            new GuideIsland(22, "Crimson Isle", "crimson_isle", 29, "64457b2d7acf522d1912f0d6c6139440ba9d333a6bf61a2e9440e7fb3788939e"),
+            new GuideIsland(23, "The End", "combat_3", 12, "1cab25554cc4fb74518073f0a96c59905c014e5cf638420e46f3ec47f1cfae68"),
+            new GuideIsland(24, "Lotus Atoll", "lotus_atoll", 6, "67bfd7f90468e5c6ac14ca14bfad982f90770d0a9efa1df9f66f91a05c81fef7"),
+            new GuideIsland(25, "The Farming Islands", "farming_1", 20, "4d3a6bd98ac1833c664c4909ff8d2dc62ce887bdcf3cc5b3848651ae5af6b"),
+            new GuideIsland(28, "Torrhus Canyon", "foraging_3", 12, "d9a143ba380c167f976fd5f42397feb6aa46b602d3331df7c99b49aaf4a3e6e3"),
+            new GuideIsland(29, "Spider's Den", "combat_1", 19, "2ff708485e8630e6a54da44c995461619d378dfcf5cf714bc22a069a386a3df2"),
+            new GuideIsland(30, "Backwater Bayou", "fishing_1", 5, "1c0cd33590f64d346d98cdd01606938742e715dda6737353306a44f81c8ba426"),
+            new GuideIsland(31, "Moonglade Marsh", "foraging_2", 12, "a211ac81698c229d8ef2fae89f62a6a961b30d8b82b97161863090e90bff02a5"));
+    /** The miscellaneous souls' kinds, as recorded: totals, not what's found (the wiki's Fairy Souls). */
+    static final List<String> MISCELLANEOUS = List.of(" &7Dungeons: &d9", " &7Fishing: &d4", " &7Garden: &d2", " &7Placeable: &d1",
+            " &7Glacite Mineshafts: &d1");
+
+    /** A Fairy Souls Guide island: its slot, name, key in the souls table (null for none), souls and head. */
+    record GuideIsland(int slot, String name, String key, int souls, String texture) {
+    }
 
     /** A menu: its items by slot, and where its glass is. */
     public record Layout(Map<Integer, Icon> icons, Set<Integer> glass) {
@@ -92,7 +124,7 @@ public final class QuestMenus {
         Map<Integer, Icon> icons = new LinkedHashMap<>();
         icons.put(HEADER, new Icon(Material.WRITABLE_BOOK, "&aQuest Log", "&8/quests", "", "&7View your active quests, progress,", "&7and rewards."));
         List<Icon> entries = new ArrayList<>();
-        entries.add(fairySouls());
+        entries.add(fairySouls(profile));
         for (Quest quest : Quests.active(profile)) entries.add(new Icon(quest.icon(), "&e" + quest.name(), QuestText.logLore(profile, quest)));
         list(icons, entries);
         icons.put(JOURNALS, new Icon(Material.WRITTEN_BOOK, "&aDungeon Journals", "&7Mysterious books written during the", "&7Ancient Era.", "",
@@ -122,10 +154,35 @@ public final class QuestMenus {
         return new Layout(icons, border(icons.keySet()));
     }
 
-    /** "&eFind all Fairy Souls": " &c✖ &eFound: &70/&d289", as recorded with none found. */
-    static Icon fairySouls() {
-        return new Icon(Material.PLAYER_HEAD, "&eFind all Fairy Souls", List.of("", " &c✖ &eFound: &70/&d" + FAIRY_SOULS, "",
-                "&7Forever ongoing quest...", "", "&eClick to view details!"), FAIRY_SOUL_HEAD);
+    /**
+     * "&eFind all Fairy Souls": " &c✖ &eFound: &70/&d289" as recorded with none found, and " &c✖ &eFound: &d246&7/&d289"
+     * with 246. With every one found, a tick (UNKNOWN: never recorded).
+     */
+    static Icon fairySouls(Document profile) {
+        int found = FairySouls.found(profile);
+        String mark = found >= FairySouls.TOTAL ? " &a✔" : " &c✖";
+        String count = (found == 0 ? "&70" : "&d" + found + "&7") + "/&d" + FairySouls.TOTAL;
+        return new Icon(Material.PLAYER_HEAD, "&eFind all Fairy Souls", List.of("", mark + " &eFound: " + count, "", "&7Forever ongoing quest...", "",
+                "&eClick to view details!"), FairySouls.HEAD);
+    }
+
+    /**
+     * The Fairy Souls Guide (the Quest Log's Fairy Souls), as recorded: each island's head with how many of its souls
+     * the profile has found ("&7Fairy Souls: &e5&7/&d17"), glass everywhere else. Souls found where this plugin can't
+     * say which (see FairySouls) are on no island; the miscellaneous ones are never found here.
+     */
+    public static Layout fairySoulsGuide(Document profile) {
+        Map<Integer, Icon> icons = new LinkedHashMap<>();
+        for (GuideIsland island : GUIDE) {
+            int found = island.key() == null ? 0 : FairySouls.found(profile, island.key());
+            List<String> lore = new ArrayList<>();
+            lore.add("&7Fairy Souls: &e" + found + "&7/&d" + island.souls());
+            if (island.key() == null && island.name().equals("Miscellaneous")) lore.addAll(MISCELLANEOUS);
+            icons.put(island.slot(), new Icon(Material.PLAYER_HEAD, "&d" + island.name(), lore, island.texture()));
+        }
+        icons.put(BACK, back("&7To Quest Log"));
+        icons.put(CLOSE, close());
+        return new Layout(icons, everythingBut(icons.keySet()));
     }
 
     private static void list(Map<Integer, Icon> icons, List<Icon> entries) {

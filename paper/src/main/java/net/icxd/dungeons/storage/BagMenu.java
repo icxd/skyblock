@@ -3,6 +3,7 @@ package net.icxd.dungeons.storage;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.bson.Document;
 import org.bson.types.Binary;
@@ -22,7 +23,8 @@ import net.icxd.dungeons.utils.Text;
  * the Accessory Bag's "Need more room?", the Fishing Bag's Use Baits From Bag and the Sack of Sacks' Insert
  * inventory (those two only show: there's no fishing or sacks here yet). The Accessory Bag has a page for
  * each 45 slots, with Previous and Next Page in the bottom corners and "(1/2)" in its title. Only what the
- * bag holds goes in (see {@link Bag#accepts}). Main thread.
+ * bag holds goes in (see {@link Bag#accepts}). Opened from Jacobus's shortcut, its Go Back leads back to his menu, as
+ * recorded (2026-10-25, 00:55.9). Main thread.
  */
 final class BagMenu extends ItemPage {
     static final int GO_BACK = 3;
@@ -31,21 +33,32 @@ final class BagMenu extends ItemPage {
     static final int PREVIOUS = 0;
     static final int NEXT = 8;
 
+    /** Where its Go Back leads: Your Bags, or the menu it was opened from ("To Accessory Bag Upgrades", Jacobus's). */
+    record Back(String to, Consumer<Player> open) {
+        static final Back YOUR_BAGS = new Back("&7To Your Bags", viewer -> new YourBagsMenu(viewer).open(viewer));
+    }
+
     private final Bag bag;
     private final int page;
     private final int pages;
     private final int capacity;
+    private final Back back;
 
-    private BagMenu(Player viewer, Document profile, Bag bag, int page, int capacity) {
+    private BagMenu(Player viewer, Document profile, Bag bag, int page, int capacity, Back back) {
         super(title(bag, page, capacity), size(page, capacity), viewer, profile, EnderChestMenu.range(0, Bag.slotsOn(page, capacity)));
         this.bag = bag;
         this.page = page;
         this.pages = Bag.pages(capacity);
         this.capacity = capacity;
+        this.back = back;
     }
 
     /** Opens a page of a bag (from 0); a locked one says so (UNKNOWN: what Hypixel says). */
     static void open(Player viewer, Bag bag, int page) {
+        open(viewer, bag, page, Back.YOUR_BAGS);
+    }
+
+    static void open(Player viewer, Bag bag, int page, Back back) {
         User user = User.ifLoaded(viewer.getUniqueId());
         if (user == null) return;
         int capacity = bag.capacity(user.profile(), StorageTables.get());
@@ -54,7 +67,7 @@ final class BagMenu extends ItemPage {
             viewer.sendMessage(Text.line(requirement == null ? "&cYou haven't unlocked this bag yet!" : requirement));
             return;
         }
-        new BagMenu(viewer, user.profile(), bag, Math.clamp(page, 0, Bag.pages(capacity) - 1), capacity).open(viewer);
+        new BagMenu(viewer, user.profile(), bag, Math.clamp(page, 0, Bag.pages(capacity) - 1), capacity, back).open(viewer);
     }
 
     /** "Accessory Bag", or "Accessory Bag (1/2)" with more pages. */
@@ -73,14 +86,14 @@ final class BagMenu extends ItemPage {
         getItems().clear();
         int bottom = getSize() - 9;
         for (int slot = Bag.slotsOn(page, capacity); slot < getSize(); slot++) set(slot, filler());
-        for (Map.Entry<Integer, Icon> e : bottomRow(bag, page, pages).entrySet()) {
+        for (Map.Entry<Integer, Icon> e : bottomRow(bag, page, pages, back.to()).entrySet()) {
             int slot = bottom + e.getKey();
             ItemStack stack = e.getValue().stack();
             switch (e.getKey()) {
-                case GO_BACK -> set(GUIClickableItem.button(slot, stack, viewer, () -> new YourBagsMenu(viewer).open(viewer)));
+                case GO_BACK -> set(GUIClickableItem.button(slot, stack, viewer, () -> back.open().accept(viewer)));
                 case CLOSE -> set(GUIClickableItem.close(slot));
-                case PREVIOUS -> set(GUIClickableItem.button(slot, stack, viewer, () -> open(viewer, bag, page - 1)));
-                case NEXT -> set(GUIClickableItem.button(slot, stack, viewer, () -> open(viewer, bag, page + 1)));
+                case PREVIOUS -> set(GUIClickableItem.button(slot, stack, viewer, () -> open(viewer, bag, page - 1, back)));
+                case NEXT -> set(GUIClickableItem.button(slot, stack, viewer, () -> open(viewer, bag, page + 1, back)));
                 default -> set(slot, stack);
             }
         }
@@ -88,9 +101,13 @@ final class BagMenu extends ItemPage {
 
     /** The bottom row's buttons, by column (the rest is glass). */
     static Map<Integer, Icon> bottomRow(Bag bag, int page, int pages) {
+        return bottomRow(bag, page, pages, Back.YOUR_BAGS.to());
+    }
+
+    static Map<Integer, Icon> bottomRow(Bag bag, int page, int pages, String backTo) {
         Map<Integer, Icon> row = new LinkedHashMap<>();
         if (page > 0) row.put(PREVIOUS, new Icon(Material.ARROW, "&aPrevious Page", "&ePage " + page));
-        row.put(GO_BACK, new Icon(Material.ARROW, "&aGo Back", "&7To Your Bags"));
+        row.put(GO_BACK, new Icon(Material.ARROW, "&aGo Back", backTo));
         row.put(CLOSE, new Icon(Material.BARRIER, "&cClose"));
         switch (bag) {
             case ACCESSORY_BAG -> row.put(EXTRA, new Icon(Material.REDSTONE_TORCH, "&aNeed more room?", "&7You can expand your Accessory Bag",

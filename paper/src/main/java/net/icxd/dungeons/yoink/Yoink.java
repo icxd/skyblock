@@ -37,6 +37,7 @@ import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
 import net.icxd.dungeons.economy.Coins;
 import net.icxd.dungeons.economy.Purse;
+import net.icxd.dungeons.fairysouls.FairySouls;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.cost.essence.EssenceType;
 import net.icxd.dungeons.listeners.InventorySyncListener;
@@ -44,6 +45,7 @@ import net.icxd.dungeons.menu.SkyBlockMenuItem;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.storage.AccessoryBag;
 import net.icxd.dungeons.storage.Bag;
+import net.icxd.dungeons.storage.BagUpgrades;
 import net.icxd.dungeons.storage.StatsTuning;
 import net.icxd.dungeons.storage.Storage;
 import net.icxd.dungeons.storage.StorageDocument;
@@ -75,6 +77,9 @@ public final class Yoink {
             Perk.TITANIUM_INSANIUM, "titanium_insanium", Perk.QUICK_FORGE, "forge_time");
     /** Powder.CAP. */
     private static final long MOST_POWDER = 2_000_000_000L;
+    /** Kuudra's tiers by the API's keys in {@code kuudra_completed_tiers} (NEU's CrimsonIslePage), easiest first. */
+    private static final List<String> KUUDRA_TIERS = List.of("none", "hot", "burning", "fiery", "infernal");
+    private static final List<String> KUUDRA_NAMES = List.of("Basic", "Hot", "Burning", "Fiery", "Infernal");
     private static final Set<YoinkPart> STORED = EnumSet.of(YoinkPart.EQUIPMENT, YoinkPart.WARDROBE, YoinkPart.ENDER_CHEST,
             YoinkPart.BACKPACKS, YoinkPart.ACCESSORIES, YoinkPart.BAGS);
     private static final int SHOWN_LEFT = 12;
@@ -202,7 +207,9 @@ public final class Yoink {
                     case COLLECTIONS -> collections(profile);
                     case DUNGEONS -> dungeons(profile);
                     case MINING -> mining(profile);
+                    case CRIMSON_ISLE -> crimsonIsle(profile);
                     case MINIONS -> minions(profile);
+                    case FAIRY_SOULS -> fairySouls(profile);
                     default -> writes.get(part).accept(profile, storage);
                 }
             } catch (RuntimeException e) {
@@ -348,6 +355,8 @@ public final class Yoink {
         JsonObject bag = HypixelProfile.object(from.member(), "accessory_bag_storage");
         StorageTables.Power power = power(bag != null && bag.get("selected_power") instanceof JsonElement e && e.isJsonPrimitive() ? e.getAsString() : null);
         JsonObject tuning = HypixelProfile.object(HypixelProfile.object(bag, "tuning"), "slot_0");
+        int highest = (int) Math.max(0, number(bag, "highest_magical_power"));
+        int upgrades = (int) number(bag, "bag_upgrades_purchased");
         Document points = new Document();
         int total = 0;
         for (Map.Entry<String, String> stat : TUNING.entrySet()) {
@@ -357,12 +366,17 @@ public final class Yoink {
         }
         writes.put(YoinkPart.ACCESSORIES, (profile, storage) -> {
             storage.put(Bag.ACCESSORY_BAG.key(), stored);
+            // The most Accessory Power their bag has had, as the API keeps it; the bag here can only raise it.
+            if (highest > 0) profile.put(AccessoryBag.HIGHEST_POWER, highest);
+            else profile.remove(AccessoryBag.HIGHEST_POWER);
+            // Jacobus's (NEU's profile viewer reads bag_upgrades_purchased for their SkyBlock XP).
+            BagUpgrades.bought(profile, upgrades);
             if (power == null) profile.remove(AccessoryBag.SELECTED_POWER);
             else profile.put(AccessoryBag.SELECTED_POWER, power.name());
             profile.put(StatsTuning.FIELD, points);
         });
         done.put(YoinkPart.ACCESSORIES, "Accessory Bag: " + count(accessories, "accessory") + ", " + (power == null ? "no power" : power.name())
-                + ", " + plural(total, "tuning point"));
+                + ", " + plural(total, "tuning point") + ", " + plural(Math.clamp(upgrades, 0, BagUpgrades.MOST), "upgrade") + " from Jacobus");
     }
 
     /** A power by Hypixel's id ("silky"), as the tables name it ("Silky"); null for none or one the tables haven't. */
@@ -526,6 +540,28 @@ public final class Yoink {
                 + Text.number(powder.getInteger(PowderType.GEMSTONE.name())) + " Gemstone Powder");
     }
 
+    /**
+     * Both factions' reputation and the highest Kuudra tier beaten (1 for Basic to 5 for Infernal: one opens once the
+     * one before it is beaten). Not the faction they picked: the tab list's lines for one aren't finished.
+     */
+    private void crimsonIsle(Document profile) {
+        JsonObject nether = HypixelProfile.object(from.member(), "nether_island_player_data");
+        Document isle = profile.get("crimsonIsle") instanceof Document d ? d : new Document();
+        Document factions = isle.get("factions") instanceof Document d ? d : new Document();
+        int mage = (int) number(nether, "mages_reputation");
+        int barbarian = (int) number(nether, "barbarians_reputation");
+        factions.put("mage", new Document("reputation", mage));
+        factions.put("barbarian", new Document("reputation", barbarian));
+        isle.put("factions", factions);
+        JsonObject completed = HypixelProfile.object(nether, "kuudra_completed_tiers");
+        int highest = 0;
+        for (int i = 0; i < KUUDRA_TIERS.size(); i++) if (number(completed, KUUDRA_TIERS.get(i)) > 0) highest = i + 1;
+        isle.put("kuudra", new Document("highest", highest));
+        profile.put("crimsonIsle", isle);
+        done.put(YoinkPart.CRIMSON_ISLE, "Crimson Isle: &5" + Text.number(mage) + " Mage &7and &c" + Text.number(barbarian)
+                + " Barbarian &7reputation, " + (highest == 0 ? "no Kuudra tier beaten" : "Kuudra beaten up to " + KUUDRA_NAMES.get(highest - 1)));
+    }
+
     private void minions(Document profile) {
         JsonElement crafted = from.at("player_data.crafted_generators");
         List<String> tiers = new ArrayList<>();
@@ -534,6 +570,15 @@ public final class Yoink {
         minions.put("craftedMinions", tiers);
         profile.put("minions", minions);
         done.put(YoinkPart.MINIONS, "Crafted Minions: " + tiers.size());
+    }
+
+    /** How many were found and given to Tia. The API doesn't say which, so none of this map's count as found (FairySouls). */
+    private void fairySouls(Document profile) {
+        JsonObject souls = HypixelProfile.object(from.member(), "fairy_soul");
+        int collected = (int) number(souls, "total_collected");
+        int exchanges = (int) number(souls, "fairy_exchanges");
+        FairySouls.yoinked(profile, collected, exchanges);
+        done.put(YoinkPart.FAIRY_SOULS, "Fairy Souls: &d" + Text.number(collected) + " &7found, " + plural(exchanges, "exchange") + " with Tia");
     }
 
     private static double number(JsonObject in, String key) {

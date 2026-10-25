@@ -81,7 +81,7 @@ public enum Bag {
         return displayName;
     }
 
-    String texture() {
+    public String texture() {
         return texture;
     }
 
@@ -89,9 +89,19 @@ public enum Bag {
         return description;
     }
 
-    /** How many slots it has for this profile; 0 while it's locked. A Sandbox profile's Accessory Bag has them all. */
+    /**
+     * How many slots it has for this profile; 0 while it's locked. The Accessory Bag's has Jacobus's upgrades too
+     * (see {@link BagUpgrades}); a Sandbox profile's has them all.
+     */
     public int capacity(Document profile, StorageTables tables) {
         if (this == ACCESSORY_BAG && Profiles.mode(profile) == ProfileMode.SANDBOX) return ACCESSORY_BAG_MOST;
+        int slots = fromCollection(profile, tables);
+        // Jacobus's upgrades add to a bag that's open (the Accessory Bag always is).
+        return this == ACCESSORY_BAG && slots > 0 ? slots + BagUpgrades.slots(profile) : slots;
+    }
+
+    /** Its slots from its collection (and the Accessory Bag's 9 to start with); 0 while it's locked. */
+    public int fromCollection(Document profile, StorageTables tables) {
         StorageTables.BagSize size = tables.bag(name());
         if (size == null) return this == ACCESSORY_BAG ? ACCESSORY_BAG_BASE : 0;
         return size.at(size.collection() == null ? 0 : collections.tier(profile, size.collection()));

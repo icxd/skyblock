@@ -28,8 +28,9 @@ the player's data is loaded, while their items are frozen (a hand-off) or while 
 
 **Requirements** (`HexRequirements`). A Sandbox profile needs nothing. A Normal profile needs:
 - Museum Milestone 8 (`museumMilestone`) and, for `/hex`, the Cookie Buff (`boosterCookie`). Both return
-  true for now, because neither the Museum nor the Cookie Buff exists (the owner's precedent: "all can be
-  unlocked for now since the NPCs are missing"). Each is one named method that can be switched on later.
+  true for now: the Cookie Buff doesn't exist, and the Museum (MUSEUM.md) came later, so its milestone isn't
+  asked for yet (the owner's precedent: "all can be unlocked for now since the NPCs are missing"). Each is one
+  named method that can be switched on later (`Museum.milestone(Museum.xp(profile)) >= 8`).
 - Carpentry 20 for Books and Modifiers, and Carpentry 25 for Item Upgrades and Gemstones, checked with
   `carpentry(player, level)`. A category the player doesn't have the level for keeps its button, but its
   last line is the plugin's requirement line (`&4❣ &cRequires &aCarpentry Skill 20&c.`) in place of

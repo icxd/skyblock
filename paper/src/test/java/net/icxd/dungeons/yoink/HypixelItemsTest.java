@@ -19,8 +19,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.ItemRegistry;
 import net.icxd.dungeons.item.enchanting.FakeEnchantments;
+import net.icxd.dungeons.item.enums.Soulbound;
 import net.icxd.dungeons.item.gemstone.Gem;
 import net.icxd.dungeons.item.gemstone.GemSlots;
 import net.icxd.dungeons.item.gemstone.GemstoneQuality;
@@ -81,6 +83,17 @@ class HypixelItemsTest {
         return out;
     }
 
+    /** Donated to its Museum on Hypixel (its {@code donated_museum}): Co-op Soulbound here; a date in words isn't read. */
+    @Test
+    void donatedToItsMuseum() {
+        Map<String, Object> extra = new LinkedHashMap<>(Map.of("donated_museum", (byte) 1, "timestamp", "1/2/21 3:45 PM"));
+        NBTTagCompound tag = HypixelItems.data(ItemRegistry.get("ASPECT_OF_THE_END"), extra, ME, new HypixelItems.Left());
+        assertTrue(tag.getBoolean("donated_museum"));
+        assertTrue(tag.getLong("timestamp") > 1700000000000L, "made here, now");
+        assertEquals(Soulbound.COOP, ItemBuilder.soulbound(ItemRegistry.get("ASPECT_OF_THE_END"), tag));
+        assertEquals(Soulbound.NONE, ItemBuilder.soulbound(ItemRegistry.get("ASPECT_OF_THE_END"), new NBTTagCompound()));
+    }
+
     @Test
     void whatWasDoneToThem() throws IOException {
         HypixelItems.Left left = new HypixelItems.Left();
@@ -98,7 +111,8 @@ class HypixelItemsTest {
         assertTrue(tag.getBoolean("art_of_war"));
         assertEquals(4, tag.getInt(ItemModifiers.TUNERS));
         assertEquals(List.of("sharpness 6", "wise 3", "critical 6"), enchantments(tag), "an ultimate without its ultimate_");
-        assertFalse(tag.hasKey("timestamp"));
+        assertEquals(1700000000000L, tag.getLong("timestamp"), "when it was made, the Museum's Created");
+        assertFalse(tag.getBoolean("donated_museum"));
 
         NBTTagCompound blade = inventory.get(1).tag();
         assertEquals(8, blade.getInt("upgrade_count"));

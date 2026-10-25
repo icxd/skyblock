@@ -12,6 +12,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -521,6 +522,8 @@ public final class WeaponPassives implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onClassAbility(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) return;
+        // Denied: the click was an NPC's (see Npcs), or their data is on its way to another server.
+        if (event.useItemInHand() == Event.Result.DENY) return;
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         NBTTagCompound tag = ItemNBT.read(event.getPlayer().getInventory().getItemInMainHand());
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));

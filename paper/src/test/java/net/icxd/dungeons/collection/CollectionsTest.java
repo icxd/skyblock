@@ -122,8 +122,10 @@ class CollectionsTest {
         Collections.add(profile, "ROTTEN_FLESH", 10);
         Collections.add(profile, "CATACOMBS_1", 25);
         assertEquals(Map.of("BLAZE_ROD", 2, "CATACOMBS_1", 1), Collections.unlockedTiers(profile));
-        // Blaze Rod I and II's 4 each, Bonzo I's 15.
+        // Blaze Rod I and II's 4 each, Bonzo I's 15: the boss collections' for the Boss Collections task.
         assertEquals(23, Collections.skyBlockXp(profile));
+        assertEquals(15, Collections.skyBlockXp(profile, true));
+        assertEquals(8, Collections.skyBlockXp(profile, false));
         assertEquals(2, Collections.found(profile, Collections.data().category("COMBAT")));
         assertEquals(List.of(2, 3), List.of(Collections.foundOfAll(profile)[0], Collections.foundOfAll(profile)[1]));
         assertEquals(1, Collections.bossesFound(profile)[0]);

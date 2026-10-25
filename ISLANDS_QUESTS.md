@@ -99,7 +99,7 @@ without gravity, and the plugin makes up for both where it matters:
 - **Quest menus**, as recorded:
   - Quests & Chapters, from the SkyBlock Menu's Quests.
   - Chapters (`/chapters`).
-  - The Quest Log (`/quests`, `/questlog`): the Fairy Souls, then the quests going, each with its
+  - The Quest Log (`/quests`, `/questlog`): the Fairy Souls (FAIRY_SOULS.md), then the quests going, each with its
     progress and when it started (SkyBlock's date and time). Completed Quests appears there once a
     quest is done.
 - **Jerry** (`Jerry`). He's on every island, where the starter island has him: a plains farmer
@@ -116,7 +116,21 @@ without gravity, and the plugin makes up for both where it matters:
   recording's player talked to them, timed as recorded and in their voices (`HubTalk`): Elizabeth,
   the Community Center's Clerk Seraphine, Minister Nancy and the Auction Master. The Banker has
   his bank, the Farm Merchant his shop, and Marco and the Bartender their quests (below). The others
-  don't answer a click yet.
+  don't answer a click yet, but Jacobus (below), and Tia the Fairy, who isn't in the recordings
+  (FAIRY_SOULS.md). A click on an NPC (or a Fairy Soul) is theirs alone: the game sends a right click
+  on most NPCs on as the held item's use too, so the item does nothing that tick (`Npcs`: an Aspect of
+  the End doesn't teleport, nor a Hyperion cast Wither Impact).
+- **Jacobus** (`Jacobus`, `JacobusMenu`, `storage/BagUpgrades`), as recorded (2026-10-25, 00:52.7):
+  a click has him say a line, in a villager's voice at 0.7, and 0.8 s later his menu, Accessory Bag
+  Upgrades, opens. Each upgrade is 2 more Accessory Bag slots for coins from the purse, 99 at most, at
+  the wiki's prices (1,500,000 for the first, then 5M, 8M, 12M and 20M; 1,761,500,000 in all), and +2
+  SkyBlock XP. The 5th also gives the Jacobus Register (into the inventory, or the stash). The profile
+  keeps them as `accessoryBagUpgrades`. The menu's Accessory Bag Shortcut opens the bag, whose Go Back
+  says "To Accessory Bag Upgrades" and comes back, as recorded. Elizabeth's slots are +0 (no Community
+  Shop here). UNKNOWN: which of his nine lines he says (one at random), the slots-from-Jacobus line,
+  "Click to purchase!", what a purchase says or sounds like (nothing), how the Register comes, and
+  the menu once all 99 are bought (a click says the wiki's "You have reached the maximum amount of
+  Jacobus upgrades!").
 - **Saving Up and the Bank** (`Banker`, `bank/`), as recorded.
   - **The Banker.** Saving Up starts with the Village. While it's at Talk to the Banker, he says
     his three lines, timed as recorded, in a villager's voice (again if you left before the last).
@@ -343,5 +357,4 @@ without gravity, and the plugin makes up for both where it matters:
 - **The Community Center's warp** down to the Election Room.
 - **Island features:** Jerry's menu items, Island Properties, visits, guests and co-ops (an island
   is only ever on one server, its owner's), and minions (the starter minion stands still).
-- **Fairy Souls** (always 0/289), and the Chapters, which have the recorded layout and nothing in
-  them.
+- **The Chapters**, which have the recorded layout and nothing in them.

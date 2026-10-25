@@ -78,6 +78,12 @@ public final class LevelingData {
             for (Step step : steps) if (step.xp() > 0) return step.xp();
             return 0;
         }
+
+        /** The XP of its line with this text ("Tier XII" of Craft Minions'), 0 for none. */
+        int xpFor(String text) {
+            for (Step step : steps) if (step.text().equals(text) && step.xp() > 0) return step.xp();
+            return 0;
+        }
     }
 
     /** A category of Ways to Level Up as Hypixel shows it: its item, and the XP its tasks are worth together. */

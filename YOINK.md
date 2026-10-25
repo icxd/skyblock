@@ -54,7 +54,9 @@ Each part replaces that part of the profile you play on:
 - **Backpacks**: each in the same slot (Hypixel's 0 is slot 1), its icon being the backpack itself, with
   its contents.
 - **Accessory Bag**: the bag's contents, the selected power (Hypixel's "silky" is the tables' "Silky"),
-  and Stats Tuning. Tuning comes from slot 0's `walk_speed`, `critical_damage` and the rest.
+  Stats Tuning, the most Accessory Power the bag has had (`highest_magical_power`, which SkyBlock XP counts;
+  the bag here only raises it), and Jacobus's upgrades (`bag_upgrades_purchased`, NEU's profile viewer's key).
+  Tuning comes from slot 0's `walk_speed`, `critical_damage` and the rest.
 - **Other Bags**: the Potion Bag, the Fishing Bag and the Sack of Sacks.
 - **Coins**: the purse, and the bank when the API has it.
 - **Skills**: each skill's XP, `SKILL_COMBAT` and the rest.
@@ -64,7 +66,13 @@ Each part replaces that part of the profile you play on:
 - **Heart of the Mountain**: tokens left to spend, HotM XP, powder (Mithril, Gemstone and Glacite), and the
   levels of the four perks here. Hypixel's node ids are `mining_speed`, `mining_fortune`, `titanium_insanium`
   and `forge_time`, per SkyCrypt's `constants/hotm.js`; levels are capped at each perk's most here.
+- **Crimson Isle**: Mage and Barbarian reputation (`mages_reputation`, `barbarians_reputation`) and the highest
+  Kuudra tier beaten (the last of `kuudra_completed_tiers`' `none`, `hot`, `burning`, `fiery` and `infernal` with
+  a completion; the keys are NEU's profile viewer's). Both count for SkyBlock XP. Not the faction picked: the
+  tab list's lines for a faction aren't finished (its progress bar).
 - **Crafted Minions**: the minion tiers crafted.
+- **Fairy Souls**: how many were found and given to Tia (`fairy_soul.total_collected`, `fairy_exchanges`). The
+  API doesn't say which, so here they're on no island and the Hub's can be found again (FAIRY_SOULS.md).
 
 **Items** (`HypixelItems`). The API's items are base64 of gzipped Minecraft 1.8 NBT, read by `Nbt`. Each
 becomes the item of the same SkyBlock id (`ExtraAttributes.id`), with what was done to it written the way
@@ -105,8 +113,9 @@ requirement lines go by the skills and floors just yoinked, and saved. You can r
   Potions aren't either: this plugin's `POTION` is a Water Bottle. What's in the Quiver, an unknown
   backpack, or a backpack slot past 18 is listed as not brought over.
 - **Not copied.** Skins and dyes: an item looks as its kind does here. The rest of `ExtraAttributes` isn't
-  copied: drill parts, `timestamp`, `originTag`, Soul Eater's count (its key can't be stored here) and the
-  rest.
+  copied: drill parts, `originTag`, Soul Eater's count (its key can't be stored here), an older item's
+  `timestamp` in words, and the rest. A newer item's `timestamp` (in milliseconds: the Museum's "Created") and
+  `donated_museum` (it's Co-op Soulbound, see MUSEUM.md) are kept.
 - **No sacks.** There is nowhere to keep sacks' contents here (see STORAGE.md), so there's no Sacks part.
 - **Bags past capacity.** A bag with more items than its capacity here keeps them, but they're hidden until
   the collection that gives the capacity is reached (see StorageDocument).
@@ -121,5 +130,6 @@ requirement lines go by the skills and floors just yoinked, and saved. You can r
 ## Later
 
 - Pets (with `petInfo`), when there are pets: the pet menu and `pets_data.pets`.
-- Sacks, slayers, fairy souls, the museum, and the rest of the profile this plugin doesn't keep yet.
+- Sacks, slayers, the Museum's donations (the museum API, `/v2/skyblock/museum`), and the rest of the profile
+  this plugin doesn't keep yet.
 - Skins and dyes, when items here can have their own.

@@ -28,6 +28,7 @@ import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.item.ItemCost;
 import net.icxd.dungeons.item.enums.GenericItemType;
+import net.icxd.dungeons.item.enums.Soulbound;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.requirement.Requirement;
@@ -302,12 +303,12 @@ public final class ShopMenu extends GUI {
         top.setItem(SELL, get(SELL).stack());
     }
 
-    /** The SkyBlock item a shop would take this stack as; null if it wouldn't. */
+    /** The SkyBlock item a shop would take this stack as; null if it wouldn't (one donated to a Museum is soulbound). */
     private static SkyBlockItem sellable(ItemStack stack) {
         if (stack == null || stack.isEmpty() || StoredInventory.isNotSaved(stack)) return null;
         NBTTagCompound tag = ItemNBT.read(stack);
         SkyBlockItem item = tag == null ? null : ItemRegistry.get(tag.getString("id"));
-        return Selling.sellable(item) ? item : null;
+        return Selling.sellable(item) && ItemBuilder.soulbound(item, tag) == Soulbound.NONE ? item : null;
     }
 
     /** Sells the stack, which the caller then takes away. @return false if it wasn't sold */
