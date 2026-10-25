@@ -14,6 +14,7 @@ import net.icxd.dungeons.economy.Coins;
 import net.icxd.dungeons.gui.GUI;
 import net.icxd.dungeons.gui.MenuSound;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
+import net.icxd.dungeons.menu.Icon;
 import net.icxd.dungeons.user.User;
 
 /**
@@ -31,6 +32,15 @@ public final class YoinkMenus {
     /** The menu of their profiles. */
     public static void profiles(Player viewer, String owner, List<HypixelProfile> profiles) {
         new Profiles(viewer, owner, profiles).open(viewer, null);
+    }
+
+    /** A menu item with only its name and lore, as Hypixel's are (no sword's attack damage under it). */
+    private static ItemStack icon(Material material, String name, String... lore) {
+        return new Icon(material, name, lore).stack();
+    }
+
+    private static ItemStack icon(Material material, String name, List<String> lore) {
+        return new Icon(material, name, lore).stack();
     }
 
     private static final class Profiles extends GUI {
@@ -70,7 +80,7 @@ public final class YoinkMenus {
             lore.add("");
             lore.add("&eClick to choose what to yoink!");
             Material material = profile.selected() ? Material.EMERALD_BLOCK : Material.GRASS_BLOCK;
-            return item(material, "&eProfile: &a" + (profile.name() == null ? "?" : profile.name()), lore);
+            return icon(material, "&eProfile: &a" + (profile.name() == null ? "?" : profile.name()), lore);
         }
     }
 
@@ -97,7 +107,7 @@ public final class YoinkMenus {
             for (int i = 0; i < parts.length && i < PART_SLOTS.length; i++) {
                 YoinkPart part = parts[i];
                 if (!part.available(profile)) {
-                    set(PART_SLOTS[i], item(part.icon(), "&c" + part.title(), "&7" + part.description(), "",
+                    set(PART_SLOTS[i], icon(part.icon(), "&c" + part.title(), "&7" + part.description(), "",
                             "&cNot in the API: its API setting is off."));
                     continue;
                 }
@@ -108,13 +118,13 @@ public final class YoinkMenus {
             }
             List<YoinkPart> available = YoinkPart.available(profile, List.of(parts));
             boolean all = !available.isEmpty() && picked.containsAll(available);
-            set(GUIClickableItem.button(47, item(all ? Material.LIME_DYE : Material.GRAY_DYE, all ? "&aEverything" : "&7Everything",
+            set(GUIClickableItem.button(47, icon(all ? Material.LIME_DYE : Material.GRAY_DYE, all ? "&aEverything" : "&7Everything",
                     all ? "&eClick to pick nothing." : "&eClick to pick all of it."), viewer, () -> {
                 if (all) picked.clear();
                 else picked.addAll(available);
                 reopen();
             }));
-            set(GUIClickableItem.button(48, item(Material.ARROW, "&aGo Back", "&7To " + owner + "'s profiles"), viewer,
+            set(GUIClickableItem.button(48, icon(Material.ARROW, "&aGo Back", "&7To " + owner + "'s profiles"), viewer,
                     () -> new Profiles(viewer, owner, profiles).open(viewer, MenuSound.CLICK)));
             set(GUIClickableItem.button(49, yoinkItem(), viewer, () -> {
                 if (picked.isEmpty()) return;
@@ -138,18 +148,18 @@ public final class YoinkMenus {
                 lore.add("&8 nothing picked yet");
                 lore.add("");
                 lore.add("&cPick what to yoink first!");
-                return item(Material.GRAY_TERRACOTTA, "&7Yoink!", lore);
+                return icon(Material.GRAY_TERRACOTTA, "&7Yoink!", lore);
             }
             for (YoinkPart part : YoinkPart.values()) if (picked.contains(part)) lore.add("&8 - &f" + part.title());
             lore.add("");
             lore.add("&cThese replace yours!");
             lore.add("&eClick to yoink!");
-            return item(Material.LIME_TERRACOTTA, "&aYoink!", lore);
+            return icon(Material.LIME_TERRACOTTA, "&aYoink!", lore);
         }
 
         /** A part: what it brings, and whether it's picked (with a glint). */
         static ItemStack partItem(YoinkPart part, boolean picked) {
-            ItemStack item = item(part.icon(), (picked ? "&a" : "&e") + part.title(), "&7" + part.description(), "&7Replaces yours.", "",
+            ItemStack item = icon(part.icon(), (picked ? "&a" : "&e") + part.title(), "&7" + part.description(), "&7Replaces yours.", "",
                     picked ? "&aWill be yoinked!" : "&8Not picked", picked ? "&eClick to leave it." : "&eClick to yoink it!");
             if (picked) item.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
             return item;

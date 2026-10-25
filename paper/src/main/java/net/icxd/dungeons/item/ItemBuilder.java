@@ -179,7 +179,7 @@ public final class ItemBuilder {
      * What every new item starts with, plus what its behaviour adds (see {@link ItemBehaviour#nbt}). Its rarity
      * and soulbound are written as they always were, but what shows is the item's own (see {@link #rarity}).
      */
-    static NBTTagCompound newData(SkyBlockItem item) {
+    public static NBTTagCompound newData(SkyBlockItem item) {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setString("id", item.id());
         tag.setString("name", item.name());

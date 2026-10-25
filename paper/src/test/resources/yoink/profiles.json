@@ -98,7 +98,7 @@
        "mining_speed": 50,
        "mining_fortune": 50,
        "titanium_insanium": 50,
-       "quick_forge": 20
+       "forge_time": 20
       }
      },
      "accessory_bag_storage": {
@@ -106,7 +106,8 @@
       "tuning": {
        "slot_0": {
         "health": 3,
-        "crit_damage": 10
+        "critical_damage": 10,
+        "walk_speed": 2
        }
       },
       "highest_magical_power": 900
@@ -118,7 +119,7 @@
       },
       "inv_armor": {
        "type": 0,
-       "data": "H4sIAAAAAAAC/43R3WrCMBQH8FNrtS2KCGPs0rtdbIPNgTDvtCsq1Dpmdy1Ze1YDbVLSdB8PsefYe+zJFmcRLzrWi0A+zkl+/GMDWKBRGwCaDWjQSLvSwHB4waRmgy5JbEPPfZeCTKQU9LmQmJu7Ouj4rvO48jfT1SpY69AtsliQCDcJvmKirjPAhnZE8ywhHyY0fZIi9L+/Rj6GgrPzfDDlXOYWND0u0FQNmhrQgNY9SUmMv/Od57Kmp1d6PHc2W/izuqSTY5KHcUxZXEN1UVPVL1XO3F0HD94kcKtcJhghT7gAa3h7M74bjkfXFdTTY6qzxVyqU4n/Yz9rYrsldu56Szeohpopj+gLRQFtwkKKTNrQQRZuCZOpWuU62JngEkNJOdv16NCKBX+T2/IHDFEwVGXG8mm9cNSm6gCbHCw6WClhZJNxvv+0iijOVBST/fODQyRzJNHfYegAP0pnM8btAgAA"
+       "data": "H4sIAAAAAAAC/42R3U7CMBTHzxiD0WiM315y54WaKCYkcjdgAZLxEZjhktTtOJqwdumKHw/hc/gePpkFlECCcRdN2/S0/f3+hwCUwGAEAPI5yLHQuDHAaog5VwYBU9GIwIH7piR1lJLsaa4wtRd1cDToj93hZNzx23qq9/v+yIT9eRJJGuJkhi84049aQKAYsjSZ0Xcb8j0aIxx+fVZ7GEjBL9NyXQiVliDvCYm2vmDoATkoNGlMI1yuF1TXGalOt6g8t9Xq9FpZwU42wTyMIsajDGxXGdnOt9gabXfkDzzHd3fR2WAFYiYklCr3d7WHSq16S8CSc46pLm8NnV5zMnKdobbT5SbssDnbtGlMMVX6VOH/Ph8ZfY63fNqu13X93S52LEL2zFBCkfKAIVcE9pAHU8pVrHfaiSRSKAwUE3xxx4RCJMWrmv606lfd6j6OOo2lMgFC10QmlGLK6SQRYtXdHYFc6ECc1ffldTBtpOHfkehgvwHbkocIIgMAAA=="
       },
       "equipment_contents": {
        "type": 0,
@@ -130,9 +131,9 @@
       },
       "wardrobe_contents": {
        "type": 0,
-       "data": "H4sIAAAAAAAC/43QzUrDQBAA4EnTtEloKQURjz0IHlTQCgV7a2NoC2kqNp7LmozpQrIbNht/HsLn8D18Mre2liIRsrCH2ZnZ+RgbwAKN2gBwWoMajbQPDQyHF0xqNuiSxDZ03DcpyEhKQZ8Kibm5qYO27zoPC381db25G+jQLrJYkAhXCb5gov4zTDBTHtFnigKahIUUmbShhSxcEyZTFeU62JngEkNJOdv06NCIBX+V600ANhiiYKjKjPnjcuaoR9UBNtlbdLBSwsgq4/xnJqh0M6J5lpB3E+o+SRFOvj4Ho+34no+h4Ows702RRBbUPS7QVI2aulCDxh1JSYxqyu/ZLuW84lK6u6U4U3cZ3HujwC1fjBHyhAuw+jfXw9v+cHBVwj5W7D3XWWMuVVbi/2j4g76oiO7s0J47mcz8ybKMXOI7OvR5GMeUxXl13WVFXWunGy8WQVVa95A25lxWcsE3JN7p6A0DAAA="
+       "data": "H4sIAAAAAAAC/42Q3WrCMBSAT63VWiZj/7v0YrCLbbA5EOZdrcUK9Qft8FKy9qwGbCJp3M9D7Dn2HnuyRWVOh4MGQjg5OTnfdyyAEmjUAoCLHORopH1oYDh8zqRmgS5JbMG++yYFsaUU9GkuMTUX7+Co3xu5g/GoHXjq8Fy/4wY6lOezWJAIx1N8wan61TDBTHhEnykKKBIWUmTSgj1k4YQwmago1cGaCS4xlJSzRY0OhVjwVzlZBGCBIeYM1TOj8zhsO+pSVYBF1kQ6lBLCyHjG+bInqHQxoulsSt5NyHdJgnD+9VmzV+0rXQwFZ5dpxUMSlSDvc4GmKtTUhhwUmiQhMaouP2s1mquMoznbGo3jucOg79uBu3s8RsinXECpen9Xf6jWa7e/vuXWwO42x0PXHrS7raX3DrNTZbY2ciaYSpWV+L8X/PG6zuh1suXlu62WohrustpBebxJ6WMcUxan2RlvMjIebjE2er0gK+DBJmCDc5mJDr4B9ocDAEIDAAA="
       },
-      "wardrobe_equipped_slot": -1,
+      "wardrobe_equipped_slot": 2,
       "backpack_contents": {
        "0": {
         "type": 0,

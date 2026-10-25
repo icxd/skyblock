@@ -38,13 +38,13 @@ class HypixelApiTest {
         }
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/mojang/", exchange -> {
-            String name = exchange.getRequestURI().getPath().substring("/mojang/".length());
-            asked.add(name);
-            if (name.equalsIgnoreCase("technoblade")) {
+            // name/<name>, or <id>
+            String path = exchange.getRequestURI().getPath().substring("/mojang/".length());
+            asked.add(path);
+            if (path.equalsIgnoreCase("name/technoblade") || path.equals(HypixelProfileTest.PLAYER)) {
                 respond(exchange, 200, "{\"id\":\"" + HypixelProfileTest.PLAYER + "\",\"name\":\"Technoblade\"}");
             } else {
-                respond(exchange, 404, "{\"path\":\"/minecraft/profile/lookup/name/" + name + "\",\"errorMessage\":\"Couldn't find any profile with name "
-                        + name + "\"}");
+                respond(exchange, 404, "{\"path\":\"/minecraft/profile/lookup/" + path + "\",\"error\":\"NOT_FOUND\",\"errorMessage\":\"Not Found\"}");
             }
         });
         server.createContext("/hypixel/skyblock/profiles", exchange -> {
@@ -89,13 +89,16 @@ class HypixelApiTest {
     @Test
     void namesToIds() {
         HypixelApi api = api("good");
-        assertEquals(new HypixelApi.Player(HypixelProfileTest.PLAYER, "Technoblade"), api.player("technoblade").join());
+        HypixelApi.Player techno = new HypixelApi.Player(HypixelProfileTest.PLAYER, "Technoblade");
+        assertEquals(techno, api.player("technoblade").join());
         assertEquals("&cThere's no player called Nobody_Here!", failure(api.player("Nobody_Here")));
-        assertEquals(List.of("technoblade", "Nobody_Here"), asked);
-        // An id needs no lookup; a name can't be anything else.
-        assertEquals(HypixelProfileTest.PLAYER, api.player("B876EC32-E396-476B-A115-8438D83C67D4").join().id());
+        // An id is looked up for its name, with or without its dashes.
+        assertEquals(techno, api.player("B876EC32-E396-476B-A115-8438D83C67D4").join());
+        assertEquals("&cThere's no player with the id 00000000000000000000000000000b16!", failure(api.player("00000000000000000000000000000b16")));
+        assertEquals(List.of("name/technoblade", "name/Nobody_Here", HypixelProfileTest.PLAYER, "00000000000000000000000000000b16"), asked);
+        // What can't be either isn't asked.
         assertEquals("&cnot a name! isn't a Minecraft name!", failure(api.player("not a name!")));
-        assertEquals(2, asked.size());
+        assertEquals(4, asked.size());
     }
 
     @Test

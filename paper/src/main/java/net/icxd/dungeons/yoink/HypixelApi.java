@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
@@ -25,7 +26,8 @@ import com.google.gson.JsonParser;
  */
 public final class HypixelApi {
     static final String HYPIXEL = "https://api.hypixel.net/v2/";
-    static final String MOJANG = "https://api.minecraftservices.com/minecraft/profile/lookup/name/";
+    /** Mojang's lookup: {@code name/<name>} or {@code <id>}, each answering {@code {id, name}}. */
+    static final String MOJANG = "https://api.minecraftservices.com/minecraft/profile/lookup/";
     /** A Minecraft name: 1 to 16 letters, digits and underscores. */
     private static final Pattern NAME = Pattern.compile("\\w{1,16}");
     /** An id with or without its dashes. */
@@ -68,17 +70,19 @@ public final class HypixelApi {
     public record Player(String id, String name) {
     }
 
-    /** Who has this name (or this id, as it is). */
+    /** Who has this name, or this id (with or without its dashes). */
     public CompletableFuture<Player> player(String nameOrId) {
         String query = nameOrId == null ? "" : nameOrId.trim();
-        if (ID.matcher(query).matches()) return CompletableFuture.completedFuture(new Player(query.replace("-", "").toLowerCase(), query));
-        if (!NAME.matcher(query).matches()) return CompletableFuture.failedFuture(new Failed("&c" + query + " isn't a Minecraft name!"));
-        HttpRequest request = HttpRequest.newBuilder(URI.create(mojang + URLEncoder.encode(query, StandardCharsets.UTF_8))).timeout(TIMEOUT).GET().build();
+        boolean id = ID.matcher(query).matches();
+        if (!id && !NAME.matcher(query).matches()) return CompletableFuture.failedFuture(new Failed("&c" + query + " isn't a Minecraft name!"));
+        String path = id ? query.replace("-", "").toLowerCase(Locale.ROOT) : "name/" + URLEncoder.encode(query, StandardCharsets.UTF_8);
+        String none = id ? "&cThere's no player with the id " + query + "!" : "&cThere's no player called " + query + "!";
+        HttpRequest request = HttpRequest.newBuilder(URI.create(mojang + path)).timeout(TIMEOUT).GET().build();
         return send(request).thenApply(response -> {
-            if (response.statusCode() == 404 || response.statusCode() == 204) throw new Failed("&cThere's no player called " + query + "!");
+            if (response.statusCode() == 404 || response.statusCode() == 204) throw new Failed(none);
             if (response.statusCode() != 200) throw new Failed("&cCouldn't look up " + query + " (Mojang said " + response.statusCode() + ")!");
             JsonObject body = json(response.body(), "Mojang");
-            if (!body.has("id")) throw new Failed("&cThere's no player called " + query + "!");
+            if (!body.has("id")) throw new Failed(none);
             return new Player(body.get("id").getAsString(), body.has("name") ? body.get("name").getAsString() : query);
         });
     }
