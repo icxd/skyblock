@@ -117,7 +117,9 @@ without gravity, and the plugin makes up for both where it matters:
   the Community Center's Clerk Seraphine, Minister Nancy and the Auction Master. The Banker has
   his bank, the Farm Merchant his shop, and Marco and the Bartender their quests (below). The others
   don't answer a click yet, but Jacobus (below), and Tia the Fairy, who isn't in the recordings
-  (FAIRY_SOULS.md).
+  (FAIRY_SOULS.md). A click on an NPC (or a Fairy Soul) is theirs alone: the game sends a right click
+  on most NPCs on as the held item's use too, so the item does nothing that tick (`Npcs`: an Aspect of
+  the End doesn't teleport, nor a Hyperion cast Wither Impact).
 - **Jacobus** (`Jacobus`, `JacobusMenu`, `storage/BagUpgrades`), as recorded (2026-10-25, 00:52.7):
   a click has him say a line, in a villager's voice at 0.7, and 0.8 s later his menu, Accessory Bag
   Upgrades, opens. Each upgrade is 2 more Accessory Bag slots for coins from the purse, 99 at most, at

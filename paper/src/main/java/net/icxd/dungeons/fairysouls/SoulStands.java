@@ -30,6 +30,7 @@ import net.icxd.dungeons.hub.DungeonHubMap;
 import net.icxd.dungeons.hub.HubMap;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.npc.NpcTable;
+import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
 
@@ -108,6 +109,7 @@ public final class SoulStands implements Listener {
     }
 
     static void click(Player player, Soul soul) {
+        Npcs.clicked(player);
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased() || InventorySyncListener.frozen(player)) return;
         player.sendMessage(Text.line(FairySouls.find(user.profile(), soul) ? FOUND : ALREADY));
