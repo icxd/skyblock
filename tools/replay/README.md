@@ -28,7 +28,7 @@ some entity metadata) don't decode: 26.2 renumbered entity types and particles, 
 
 | | |
 |---|---|
-| `decode <rec.mcpr> [--out dir]` | `timeline.txt`, `sidebar.txt`, `tab.txt`, `gui.txt`, `sounds.txt`, `npcs.txt` and `npcs.json` (below) |
+| `decode <rec.mcpr> [--out dir]` | `timeline.txt`, `sidebar.txt`, `tab.txt`, `gui.txt`, `sounds.txt`, `positions.txt`, `npcs.txt` and `npcs.json` (below) |
 | `npcs <rec.mcpr>... --area <area> --out <file>` | the NPCs of every world whose sidebar named the area, merged across recordings, with what spawning them again needs: the plugin's `npcs/<map>.json` in the data checkout (below) |
 | `maps <rec.mcpr> <seconds>... [--map id] [--out dir]` | every map (or one) as a PNG at those moments |
 | `item <rec.mcpr> <slot> <from s> <to s>` | name, lore and map id of items put in an inventory slot |
@@ -47,6 +47,9 @@ show as `⟦click:run_command /instancerequeue⟧`.
   come from wherever they happen, so they're left out (within 2 blocks counts).
 - **sounds.txt**: every sound, with where it played and how far from the player. Hypixel sends
   each sound twice; the second copy is left out of both files.
+- **positions.txt**: where the player was, a line each time they're a block or more from the last
+  (and `[world]` as they log in to one): for where they crossed into an area, or stood to pick
+  something.
 - **sidebar.txt** and **tab.txt**: a snapshot each time they change in more than numbers, or
   every half minute while they change. The tab list is in slot order (servers fill it with fake
   players named `!A-a`, `!A-b`, ... to order it).
@@ -57,7 +60,9 @@ show as `⟦click:run_command /instancerequeue⟧`.
   numbers lists its new texts with when ("line 3 became Free Daily Reward!").
 - **npcs.json**: the same, with each NPC's `textures` property (`value` and `signature`), as
   `Npc.spawn` takes it, each name tag's height over its feet (`heights`, as the lines go), a
-  villager's kind, and times in milliseconds.
+  villager's kind, and times in milliseconds. Each named mob also has its name tag's `lines`, what
+  it wore (`equipment`, if anything) and `seen`: where each one was first seen and when it came and
+  went, in seconds (`[x, y, z, came, went]`), which is where a kind spawns (the Graveyard's zombies).
 
 The Hub's NPCs for the plugin are made from the recordings that went there:
 

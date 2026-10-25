@@ -272,8 +272,12 @@ function sortOut (w) {
     else if (lines.length) {
       const name = nameOf(lines.map(plain)) || plain(lines[0])
       const key = numbersAside(name) + '|' + b.type
-      const m = mobs.get(key) || { name, type: b.type, count: 0 }
+      // Its tags as first sent (with their colours), and where each one was first seen, when, and when it
+      // went (in seconds): where mobs spawn, for those that spawned in view, and how many there were at once.
+      const m = mobs.get(key) || { name, type: b.type, count: 0, lines, seen: [] }
+      if (!m.equipment && Object.keys(b.equipment).length) m.equipment = b.equipment
       m.count++
+      m.seen.push([round(b.from[0]), round(b.from[1]), round(b.from[2]), round(b.t / 1000), round(b.gone / 1000)])
       mobs.set(key, m)
     }
   }
