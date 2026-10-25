@@ -106,6 +106,9 @@ class MuseumMenusTest {
                 "&7donating this item.", "", "&7Reward: &b+1 SkyBlock XP"), MuseumText.missing(DATA.entry("DOJO_WHITE_BELT")));
         assertEquals(List.of("&7Click on an armor piece in your", "&7inventory that belongs to this armor", "&7set to donate the full set to your",
                 "&9Museum&7.", "", "&7Reward: &b+1 SkyBlock XP"), MuseumText.missing(DATA.entry("CELESTE")));
+        // Counted by its higher tier: it can still go in, so it says how, with its reward done.
+        assertEquals(List.of("&7Click on this item in your inventory to", "&7add it to your &9Museum&7!", "", "&7Donating a &eYellow Belt &7will count as",
+                "&7donating this item.", "", "&7Reward: &b+1 SkyBlock XP &a✔"), MuseumText.credited(DATA.entry("DOJO_WHITE_BELT")));
         Entry sword = DATA.entry("UNDEAD_SWORD");
         // As recorded, less its value and its Atrium slot (neither is here).
         assertEquals(List.of(MuseumText.RULE, "&7Donated: &bOct 24, 2026", "&7Created: &aOct 24, 2026", "&7Reward: &b+1 SkyBlock XP &a✔", "",

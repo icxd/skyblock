@@ -32,16 +32,16 @@ import net.icxd.dungeons.utils.Text;
  * their inventory, with a Museum menu open, asks to donate it ({@link ConfirmDonationMenu}); confirming takes it (an
  * armor set's every piece, from their inventory), marks it Co-op Soulbound, keeps it, says so with the XP it gave, plays
  * the coin chime and a level-up, and opens the menu it came from again. A click on a donated item in its category's
- * page gives it back, at once: it still counts. What's refused, and what it says then, is UNKNOWN (never recorded):
- * an item the Museum doesn't take, one it already has, one a higher tier of already counts for, a set without all its
- * pieces, a retrieval with no room. Main thread.
+ * page gives it back, at once: it still counts. A lower tier can still go in once its higher tier has (the owner tried
+ * it on Hypixel, 2026-10-25); it already counted, so it gives no more XP. What's refused, and what it says then, is
+ * UNKNOWN (never recorded): an item the Museum doesn't take, one it already has, a set without all its pieces, a
+ * retrieval with no room. Main thread.
  */
 final class MuseumDonations {
     static final String RETRIEVED = "&7It still counts towards your &3Museum&7 progress, but not towards your &6total item value&7.";
     // UNKNOWN (never recorded): Hypixel's words for these.
     static final String CANT = "&cYou can't donate this item to your Museum!";
     static final String ALREADY = "&cYou have already donated this item to your Museum!";
-    static final String COUNTED = "&cA higher tier of this item already counts towards your Museum!";
     static final String NOT_ALL = "&cYou need every piece of this armor set in your inventory to donate it!";
     static final String FULL = "&cYour inventory is full!";
     static final String UNREADABLE = "&cThis item can't be retrieved right now.";
@@ -62,8 +62,9 @@ final class MuseumDonations {
 
     /**
      * What clicking slot {@code clicked} would donate, given the SkyBlock id of what each inventory slot holds (null for
-     * nothing, or what isn't kept). The first of the item's entries (a piece can be in two sets) that's missing or
-     * retrieved, with every piece there; a set takes the clicked item for its piece and the first other for each other.
+     * nothing, or what isn't kept). The first of the item's entries (a piece can be in two sets) that isn't in the
+     * Museum (missing, retrieved, or counted only by its higher tier), with every piece there; a set takes the clicked
+     * item for its piece and the first other for each other.
      */
     static Outcome plan(String[] ids, int clicked, Document profile, MuseumData data) {
         String id = clicked >= 0 && clicked < ids.length ? ids[clicked] : null;
@@ -73,10 +74,6 @@ final class MuseumDonations {
         for (Entry entry : entries) {
             Museum.Donation donation = Museum.donation(profile, entry.id());
             if (donation != null && !donation.retrieved()) continue;
-            if (donation == null && Museum.credited(profile, data, entry)) {
-                if (!NOT_ALL.equals(refusal)) refusal = COUNTED;
-                continue;
-            }
             List<Integer> slots = slots(ids, clicked, entry);
             if (slots == null) {
                 refusal = NOT_ALL;

@@ -121,16 +121,28 @@ class MuseumTest {
     }
 
     @Test
-    void alreadyDonatedCountedOrRetrieved() {
+    void alreadyDonatedOrRetrieved() {
         Document profile = new Document();
-        String[] ids = inventory(0, "UNDEAD_SWORD", 1, "DOJO_WHITE_BELT");
+        String[] ids = inventory(0, "UNDEAD_SWORD");
         donate(profile, "UNDEAD_SWORD");
         assertEquals(MuseumDonations.ALREADY, MuseumDonations.plan(ids, 0, profile, DATA).refusal());
         // Retrieved, it can go back.
         Museum.retrieved(profile, "UNDEAD_SWORD");
         assertEquals(List.of(0), MuseumDonations.plan(ids, 0, profile, DATA).plan().slots());
+        assertEquals(Arrays.asList(ids), Arrays.asList(inventory(0, "UNDEAD_SWORD")), "nothing changed");
+    }
+
+    /** As the owner found on Hypixel (2026-10-25): a lower tier still goes in after its higher tier, for no more XP. */
+    @Test
+    void aLowerTierAfterItsHigherTier() {
+        Document profile = new Document();
         donate(profile, "DOJO_YELLOW_BELT");
-        assertEquals(MuseumDonations.COUNTED, MuseumDonations.plan(ids, 1, profile, DATA).refusal());
-        assertEquals(Arrays.asList(ids), Arrays.asList(inventory(0, "UNDEAD_SWORD", 1, "DOJO_WHITE_BELT")), "nothing changed");
+        assertTrue(Museum.credited(profile, DATA, DATA.entry("DOJO_WHITE_BELT")));
+        int xp = Museum.xp(profile, DATA);
+        Plan plan = MuseumDonations.plan(inventory(1, "DOJO_WHITE_BELT"), 1, profile, DATA).plan();
+        assertEquals(new Plan(DATA.entry("DOJO_WHITE_BELT"), 1, List.of(1)), plan);
+        donate(profile, "DOJO_WHITE_BELT");
+        assertFalse(Museum.credited(profile, DATA, DATA.entry("DOJO_WHITE_BELT")), "donated now");
+        assertEquals(xp, Museum.xp(profile, DATA));
     }
 }

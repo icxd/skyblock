@@ -46,15 +46,18 @@ says so, and Madame Goldsworth says the wiki's "&cThis Museum is temporarily dis
   retrieved one can be donated again.
 - **What counts**: an entry once donated, retrieved or not, or once a higher tier that counts as it is. Its XP is the
   SkyBlock XP task Museum Donations (3,646 at most), shown on the action bar as "+1 SkyBlock XP (Museum Donations)".
+- **A lower tier after its higher tier**: it can still be donated (the owner tried it on Hypixel, 2026-10-25). It
+  already counted, so it gives no more XP.
 - **Museum Milestones**: the 40 on a skill menu's path (scrolling, Re-Center), red past the next, yellow for the next
   with its progress, "You can't claim this reward!" until reached.
 - **/yoinkprofile**: items keep Hypixel's `donated_museum` (Co-op Soulbound) and `timestamp` (Created).
 
 ## Approximated (UNKNOWN)
 
-- What a refused click says: an item the Museum doesn't take, one already donated, one a higher tier already counts
-  for, an armor set without every piece in the inventory, a retrieval with a full inventory.
-- How an entry that counts only by its higher tier shows (lime dye, its tier's lines, the reward ticked).
+- What a refused click says: an item the Museum doesn't take, one already donated, an armor set without every piece
+  in the inventory, a retrieval with a full inventory.
+- How an entry that counts only by its higher tier shows (lime dye, a missing entry's lines with the reward ticked),
+  and the chat line when it's donated after its higher tier (no XP in it).
 - Which piece a donated set shows (its helmet), and a set's name in the chat lines (in its first piece's colour).
 - With Extra Details off, which lines stay (all but the dates). Whether the sort and the toggle are kept, and per
   what. The sort's ties (the menus' order), and a sort going back to the first page.
