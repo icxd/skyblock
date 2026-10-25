@@ -27,6 +27,9 @@ import net.icxd.dungeons.item.gemstone.GemstoneType;
 import net.icxd.dungeons.item.modifier.ItemModifiers;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.nbt.NBTTagList;
+import net.icxd.dungeons.pet.OwnedPet;
+import net.icxd.dungeons.pet.PetItems;
+import net.icxd.dungeons.pet.Pets;
 import net.icxd.dungeons.rune.Rune;
 
 /**
@@ -34,9 +37,9 @@ import net.icxd.dungeons.rune.Rune;
  * to it written the way this plugin keeps it (ItemBuilder's data): its reforge, stars, books, enchantments, gems, a
  * Necron's blade's scrolls, attributes, the Grand Searing rune, the other modifiers, its uuid, when it was made and
  * whether it was donated to a Museum (it's Co-op Soulbound). Its skin and dye
- * aren't kept (an item here looks as its kind does). What has no item here is left out and counted by id, and so are
- * pets (there are none here) and potions (this plugin's Potion is a Water Bottle); the SkyBlock Menu is this plugin's
- * own. Plain data until {@link #stack}, which needs the server.
+ * aren't kept (an item here looks as its kind does). A pet is the pet its {@code petInfo} says (see PetItems). What has
+ * no item here is left out and counted by id, and so are pets the pets data doesn't have and potions (this plugin's
+ * Potion is a Water Bottle); the SkyBlock Menu is this plugin's own. Plain data until {@link #stack}, which needs the server.
  *
  * <p>The API's items are Minecraft 1.8's NBT ({@code {id, Count, Damage, tag: {ExtraAttributes: {...}, display}}}, an
  * empty slot an empty compound), and what an {@code ExtraAttributes} key means is as NEU and Skyblocker read it.
@@ -100,9 +103,15 @@ final class HypixelItems {
             return null;
         }
         if (id.equals(SKYBLOCK_MENU)) return null;
-        if (id.equals("PET")) {
-            left.item(pet(extra) + " Pet", amount);
-            return null;
+        if (id.equals(PetItems.ID)) {
+            // As the pet it is (a pet the data doesn't have is left out, by its type).
+            OwnedPet pet = OwnedPet.fromPetInfo(Nbt.string(extra, PetItems.HYPIXEL_PET_INFO), Nbt.string(extra, "uuid"));
+            SkyBlockItem kind = ItemRegistry.get(PetItems.ID);
+            if (pet == null || kind == null || Pets.data().pet(pet.type()) == null) {
+                left.item(pet(extra) + " Pet", amount);
+                return null;
+            }
+            return new Item(kind, PetItems.data(kind, pet), 1);
         }
         SkyBlockItem kind = id.equals("POTION") ? null : ItemRegistry.get(id);
         if (kind == null) {

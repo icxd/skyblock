@@ -8,6 +8,7 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
 import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
+import net.icxd.dungeons.pet.Pets;
 import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.user.User;
 import org.bukkit.entity.Player;
@@ -34,7 +35,7 @@ public final class PlayerStats {
     /**
      * The base, the armor they wear, what they hold (unless its stats only count when worn or
      * equipped, see {@link SkyBlockItem#statsWhenHeld()}), their skill levels' bonuses (see
-     * {@link Skills#stats}), their Heart of the Mountain perks, and then what the modifiers (see
+     * {@link Skills#stats}), their pets' (see {@link Pets#stats}), their Heart of the Mountain perks, and then what the modifiers (see
      * {@link #addModifier}) make of them; in a dungeon run, its blessings on top of all that (they
      * multiply what the rest adds up to, the class's stats included: the order is UNKNOWN).
      */
@@ -49,6 +50,8 @@ public final class PlayerStats {
         User user = User.ifLoaded(player.getUniqueId());
         if (user != null) {
             stats.add(Skills.stats(user.profile()));
+            // The summoned pet's and its held item's, and the Pet Score's Magic Find.
+            stats.add(Pets.stats(user.profile()));
             for (Perk perk : Perk.values()) {
                 Integer level = user.profileValue("dwarvenMines.hotm.tree." + perk.name(), Integer.class);
                 if (level != null && level > 0) stats.add(perk.getStats().apply(level));

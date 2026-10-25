@@ -63,6 +63,7 @@ public final class SkyBlockXp {
     static final String MAGE_REPUTATION = "mage_reputation";
     static final String BARBARIAN_REPUTATION = "barbarian_reputation";
     static final String MUSEUM_DONATIONS = "museum_donations";
+    static final String PET_SCORE = "pet_score";
     /** Kuudra's tiers in the order they're unlocked, as the data has them (see {@link #kuudra}). */
     private static final int KUUDRA_TIERS = 5;
 
@@ -118,6 +119,8 @@ public final class SkyBlockXp {
                     case OBJECTIVES -> Quests.skyBlockXp(profile);
                     // Each entry's own XP, once it counts (see Museum).
                     case MUSEUM_DONATIONS -> sources.museumXp(profile);
+                    // "Per Pet Score": the highest it's had (removing a pet doesn't take any back, recorded).
+                    case PET_SCORE -> sources.petScore(profile) * task.xpEach();
                     default -> 0;
                 };
                 // No more than the task is worth (a data file with no most for it caps nothing).

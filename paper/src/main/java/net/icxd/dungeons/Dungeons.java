@@ -21,6 +21,7 @@ import net.icxd.dungeons.recipe.VanillaCrafting;
 import net.icxd.dungeons.command.commands.admin.AddEnchantmentCommand;
 import net.icxd.dungeons.command.commands.admin.DataCommand;
 import net.icxd.dungeons.command.commands.admin.DungeonCommand;
+import net.icxd.dungeons.command.commands.admin.GivePetCommand;
 import net.icxd.dungeons.command.commands.admin.ItemCommand;
 import net.icxd.dungeons.command.commands.admin.NBTCommand;
 import net.icxd.dungeons.command.commands.admin.PlayerDataCommand;
@@ -40,6 +41,7 @@ import net.icxd.dungeons.command.commands.user.ChaptersCommand;
 import net.icxd.dungeons.command.commands.user.ClaimItemCommand;
 import net.icxd.dungeons.command.commands.user.LevelsCommand;
 import net.icxd.dungeons.command.commands.user.LoadoutsCommand;
+import net.icxd.dungeons.command.commands.user.PetsCommand;
 import net.icxd.dungeons.command.commands.user.PickupStashCommand;
 import net.icxd.dungeons.command.commands.user.ProfilesCommand;
 import net.icxd.dungeons.command.commands.user.SacksCommand;
@@ -96,6 +98,9 @@ import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
+import net.icxd.dungeons.pet.PetFollowers;
+import net.icxd.dungeons.pet.PetListener;
+import net.icxd.dungeons.pet.Pets;
 import net.icxd.dungeons.profile.SandboxDrops;
 import net.icxd.dungeons.profile.SandboxStorage;
 import net.icxd.dungeons.rune.RuneRunnable;
@@ -172,6 +177,8 @@ public class Dungeons extends JavaPlugin {
         Hex.start(this);
         // What the Museum takes (museum/), read off the main thread.
         Museum.start(this);
+        // The pets (pets/), read off the main thread; summoned ones follow their owners.
+        Pets.start(this);
         // What counts collections: the bags' sizes and unlocks, and the set bonuses that count collected items.
         Bag.setCollections(Collections::tier);
         // Aurora Armor's Arcane Energy stacks for Homing Missiles, and Hollow Armor's Spirit stacks for the Hollow Wand.
@@ -212,6 +219,11 @@ public class Dungeons extends JavaPlugin {
             @Override
             public int museumXp(Document profile) {
                 return Museum.xp(profile);
+            }
+
+            @Override
+            public int petScore(Document profile) {
+                return Pets.bestScore(profile);
             }
         });
         // SkyBlock Leveling's tasks and rewards, from the same data (leveling/leveling.json), read off the main thread.
@@ -278,6 +290,7 @@ public class Dungeons extends JavaPlugin {
         listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
+        listen(PetListener.class, PetListener::new);
         listen(UtilityListener.class, UtilityListener::new);
         listen(Activations.class, Activations::new);
         // What weapons' enchantments and reforges do in a fight (ENCHANTS_WEAPONS.md).
@@ -334,7 +347,7 @@ public class Dungeons extends JavaPlugin {
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
                 new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand(),
                 new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand(), new ClaimItemCommand(),
-                new YoinkProfileCommand());
+                new YoinkProfileCommand(), new PetsCommand(), new GivePetCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {
@@ -387,6 +400,7 @@ public class Dungeons extends JavaPlugin {
         flowerGarden = null;
         Npcs.removeAll();
         Hologram.removeAll();
+        PetFollowers.removeAll();
         if (runManager != null) runManager.stop();
         runManager = null;
         // Before the players' data is released: each release waits for its island's save.

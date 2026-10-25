@@ -35,6 +35,17 @@ public final class SkillGains implements Listener {
     /** The XP part of the action bar stays about 2 seconds after the last gain (research skills.md 2.1). */
     static final long SHOWN_MILLIS = 2_000;
     private static final List<ToDoubleBiFunction<Player, SkyBlockMobDeathEvent>> KILL_WISDOM = new ArrayList<>();
+    private static final List<GainListener> GAINED = new ArrayList<>();
+
+    /** What else a skill's XP gives (the summoned pet's XP, see PetXp): told the skill and its XP before Wisdom. */
+    @FunctionalInterface
+    public interface GainListener {
+        void gained(Player player, Skill skill, double base);
+    }
+
+    public static void addGainListener(GainListener listener) {
+        GAINED.add(listener);
+    }
 
     /**
      * Adds Combat Wisdom one kill has on top of the killer's own (the Reaper Falchion's "Gain +45☯ Combat Wisdom
@@ -115,7 +126,7 @@ public final class SkillGains implements Listener {
     /** {@link #give(Player, Skill, double)} with {@code extraWisdom} more of that skill's Wisdom for this gain alone. */
     public static Skills.Gain give(Player player, Skill skill, double amount, double extraWisdom) {
         if (!(amount > 0)) return null;
-        return giveFlat(player, skill, withWisdom(amount, PlayerSession.of(player).stats().get(wisdom(skill)) + extraWisdom));
+        return add(player, skill, withWisdom(amount, PlayerSession.of(player).stats().get(wisdom(skill)) + extraWisdom), amount, true);
     }
 
     /**
@@ -123,19 +134,24 @@ public final class SkillGains implements Listener {
      * XP": UNKNOWN whether Wisdom counts for those; it doesn't here, as before).
      */
     public static Skills.Gain giveFlat(Player player, Skill skill, double amount) {
+        return add(player, skill, amount, amount, true);
+    }
+
+    /**
+     * Gives a player skill XP that isn't shown as it comes in (a pet's Taming XP: the recording's action bar never
+     * showed any), with no Wisdom; its levels are said and paid as every gain's.
+     */
+    public static Skills.Gain giveQuietly(Player player, Skill skill, double amount) {
+        return add(player, skill, amount, amount, false);
+    }
+
+    /** {@code amount} into the skill; {@code base}, the XP before Wisdom, to what else a gain gives (see {@link #addGainListener}). */
+    private static Skills.Gain add(Player player, Skill skill, double amount, double base, boolean shownAsGained) {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased() || !(amount > 0)) return null;
         Skills.Gain gain = Skills.add(user.profile(), skill, amount);
-        PlayerSession session = PlayerSession.of(player);
-        session.setLastSkill(skill);
-        Replacement shown = Replacement.forMillis(SkillText.actionBar(gain), SHOWN_MILLIS);
-        session.setDefenseReplacement(shown);
-        StatsRunnable.sendActionBar(player);
-        // An orb's pickup with every gain, as recorded with each "+6 Foraging" and "+2 Mining": half volume, 1.7 to 2.5.
-        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f,
-                1.7f + ThreadLocalRandom.current().nextFloat() * 0.8f);
-        // The action bar is otherwise redrawn once a second, which would keep the XP up to a second too long.
-        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> endShown(player, shown), SHOWN_MILLIS / 50);
+        if (shownAsGained) show(player, skill, gain);
+        for (GainListener listener : GAINED) listener.gained(player, skill, base);
         if (gain.leveledUp()) {
             for (int level = gain.oldLevel() + 1; level <= gain.newLevel(); level++) {
                 for (String line : SkillText.levelUp(skill, level)) player.sendMessage(Text.line(line));
@@ -146,6 +162,20 @@ public final class SkillGains implements Listener {
             SkyBlockLevels.changed(player);
         }
         return gain;
+    }
+
+    /** A gain on the action bar (in Defense's place, for 2 seconds), the tab list's skill, and an orb's pickup. */
+    private static void show(Player player, Skill skill, Skills.Gain gain) {
+        PlayerSession session = PlayerSession.of(player);
+        session.setLastSkill(skill);
+        Replacement shown = Replacement.forMillis(SkillText.actionBar(gain), SHOWN_MILLIS);
+        session.setDefenseReplacement(shown);
+        StatsRunnable.sendActionBar(player);
+        // An orb's pickup with every gain, as recorded with each "+6 Foraging" and "+2 Mining": half volume, 1.7 to 2.5.
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f,
+                1.7f + ThreadLocalRandom.current().nextFloat() * 0.8f);
+        // The action bar is otherwise redrawn once a second, which would keep the XP up to a second too long.
+        Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> endShown(player, shown), SHOWN_MILLIS / 50);
     }
 
     /**

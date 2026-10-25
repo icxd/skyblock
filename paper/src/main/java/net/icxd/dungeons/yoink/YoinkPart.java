@@ -25,7 +25,8 @@ public enum YoinkPart {
     CRIMSON_ISLE("Crimson Isle", Material.NETHERRACK, "Your Mage and Barbarian reputation and the Kuudra tiers you've beaten.",
             "nether_island_player_data"),
     MINIONS("Crafted Minions", Material.COBBLESTONE, "Which minion tiers you've crafted.", "player_data.crafted_generators"),
-    FAIRY_SOULS("Fairy Souls", Material.PINK_DYE, "How many you've found and given to Tia.", "fairy_soul");
+    FAIRY_SOULS("Fairy Souls", Material.PINK_DYE, "How many you've found and given to Tia.", "fairy_soul"),
+    PETS("Pets", Material.BONE, "Your Pets menu: each pet's XP, held item and candy, and the one out.", "pets_data.pets");
 
     private final String title;
     private final Material icon;

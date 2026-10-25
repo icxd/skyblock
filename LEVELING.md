@@ -39,6 +39,9 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
     "Talk to the Banker", +5, as recorded; Getting Started's gave none).
   - Museum Donations: each Museum entry's own XP once it counts, donated or counted by a higher tier (see
     MUSEUM.md; 3,646 at most). The recorded donation said "+1 SkyBlock XP (Museum Donations) (96/100)".
+  - Pet Score: 3 a point of the highest Pet Score the profile has had (see PETS.md; 1,527 at most). Taking a pet
+    out of the menu lowers the score, not the XP: the recorded re-added Bee gave "+3 SkyBlock XP (Pet Score)
+    (94/100)", not 6.
   - Every task is capped at what the data says it's worth.
 - **Cached per player and profile** (`SkyBlockLevels`): worked out again 0.5 s after something that gives XP (a skill
   level-up in `SkillGains`, a run's rewards in `DungeonRun`, a quest's reward: the action bar's gain came 0.5 s after
@@ -85,7 +88,7 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
 
 ## Later, and what it waits for
 
-- The other XP tasks: Pet Score, crafting minions in play, bank upgrades, fast travel, events, essence
+- The other XP tasks: crafting minions in play, bank upgrades, fast travel, events, essence
   shops, Slayer, Bestiary, HOTM/HOTF, the Garden, Rift, consumables... each when its system exists (a
   `LevelingSources` method, or a task id in `SkyBlockXp.of`).
 - Level rankings (Hypixel's Global Ranking lines) need a ranking across profiles.

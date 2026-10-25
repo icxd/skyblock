@@ -73,6 +73,9 @@ Each part replaces that part of the profile you play on:
 - **Crafted Minions**: the minion tiers crafted.
 - **Fairy Souls**: how many were found and given to Tia (`fairy_soul.total_collected`, `fairy_exchanges`). The
   API doesn't say which, so here they're on no island and the Hub's can be found again (FAIRY_SOULS.md).
+- **Pets**: the Pets menu's pets (`pets_data.pets`: each one's type, rarity, XP, held item, candy and skin) in place
+  of yours, and the one out (`active`); the highest Pet Score goes up to theirs if it's higher (PETS.md). A pet the
+  pets data doesn't have is listed as not brought over.
 
 **Items** (`HypixelItems`). The API's items are base64 of gzipped Minecraft 1.8 NBT, read by `Nbt`. Each
 becomes the item of the same SkyBlock id (`ExtraAttributes.id`), with what was done to it written the way
@@ -109,8 +112,9 @@ requirement lines go by the skills and floors just yoinked, and saved. You can r
 
 ## Approximated (UNKNOWN in the code)
 
-- **Left out.** Pets aren't brought over: there are no pets here, so they're listed as "ENDER_DRAGON Pet".
-  Potions aren't either: this plugin's `POTION` is a Water Bottle. What's in the Quiver, an unknown
+- **Pet items.** A pet item (in the inventory, storage, anywhere) becomes the pet its `petInfo` says; one the pets
+  data doesn't have is listed as "ENDER_DRAGON Pet". Skins are kept but not shown yet (PETS.md).
+- **Left out.** Potions aren't brought over: this plugin's `POTION` is a Water Bottle. What's in the Quiver, an unknown
   backpack, or a backpack slot past 18 is listed as not brought over.
 - **Not copied.** Skins and dyes: an item looks as its kind does here. The rest of `ExtraAttributes` isn't
   copied: drill parts, `originTag`, Soul Eater's count (its key can't be stored here), an older item's
@@ -129,7 +133,6 @@ requirement lines go by the skills and floors just yoinked, and saved. You can r
 
 ## Later
 
-- Pets (with `petInfo`), when there are pets: the pet menu and `pets_data.pets`.
 - Sacks, slayers, the Museum's donations (the museum API, `/v2/skyblock/museum`), and the rest of the profile
   this plugin doesn't keep yet.
 - Skins and dyes, when items here can have their own.
