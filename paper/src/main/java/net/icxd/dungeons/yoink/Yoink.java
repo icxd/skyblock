@@ -26,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -42,6 +43,10 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.cost.essence.EssenceType;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.menu.SkyBlockMenuItem;
+import net.icxd.dungeons.pet.OwnedPet;
+import net.icxd.dungeons.pet.PetFollowers;
+import net.icxd.dungeons.pet.PetText;
+import net.icxd.dungeons.pet.Pets;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.storage.AccessoryBag;
 import net.icxd.dungeons.storage.Bag;
@@ -210,6 +215,7 @@ public final class Yoink {
                     case CRIMSON_ISLE -> crimsonIsle(profile);
                     case MINIONS -> minions(profile);
                     case FAIRY_SOULS -> fairySouls(profile);
+                    case PETS -> pets(online, profile);
                     default -> writes.get(part).accept(profile, storage);
                 }
             } catch (RuntimeException e) {
@@ -579,6 +585,35 @@ public final class Yoink {
         int exchanges = (int) number(souls, "fairy_exchanges");
         FairySouls.yoinked(profile, collected, exchanges);
         done.put(YoinkPart.FAIRY_SOULS, "Fairy Souls: &d" + Text.number(collected) + " &7found, " + plural(exchanges, "exchange") + " with Tia");
+    }
+
+    /**
+     * The Pets menu's pets, as the API lists them, in place of theirs, and the one out; a pet the pets data doesn't
+     * have is left out (counted by type). Their highest Pet Score goes up to this one's if it's higher.
+     */
+    private void pets(Player online, Document profile) {
+        JsonElement list = from.at("pets_data.pets");
+        List<OwnedPet> pets = new ArrayList<>();
+        String active = null;
+        int unknown = 0;
+        for (JsonElement element : list != null && list.isJsonArray() ? list.getAsJsonArray() : new JsonArray()) {
+            if (!element.isJsonObject()) continue;
+            OwnedPet pet = OwnedPet.fromPetInfo(element.toString(), null);
+            if (pet == null || Pets.data().pet(pet.type()) == null) {
+                left.item((pet == null ? "PET" : pet.type()) + " Pet", 1);
+                unknown++;
+                continue;
+            }
+            pets.add(pet);
+            JsonElement out = element.getAsJsonObject().get("active");
+            if (out != null && out.isJsonPrimitive() && out.getAsBoolean()) active = pet.uuid();
+        }
+        Pets.yoinked(profile, pets, active);
+        PetFollowers.refresh(online);
+        OwnedPet summoned = Pets.active(profile);
+        done.put(YoinkPart.PETS, "Pets: " + plural(pets.size(), "pet") + (unknown > 0 ? " &8(" + unknown + " this plugin doesn't have)" : "")
+                + (summoned == null ? "" : "&7, " + PetText.colored(summoned, Pets.data()) + " &7out") + "&7, Pet Score &b"
+                + Pets.score(profile, Pets.data()));
     }
 
     private static double number(JsonObject in, String key) {

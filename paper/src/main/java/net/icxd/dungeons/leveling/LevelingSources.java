@@ -32,4 +32,9 @@ public interface LevelingSources {
     default int museumXp(Document profile) {
         return 0;
     }
+
+    /** The highest Pet Score the profile has had: the Pet Score task (so much XP a point). */
+    default int petScore(Document profile) {
+        return 0;
+    }
 }

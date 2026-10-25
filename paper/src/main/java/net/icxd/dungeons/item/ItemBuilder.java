@@ -145,10 +145,13 @@ public final class ItemBuilder {
         ItemNBT nbt = ItemNBT.of(new ItemStack(item.material()));
         nbt.setTag(tag);
         ItemStack stack = nbt.toItemStack();
-        if (item.material() == Material.PLAYER_HEAD && item.skin() != null) Utils.skull(stack, item.skin());
+        // An item shown its own way (a pet), or as items are.
+        ItemBehaviour.Shown shown = ItemBehaviours.of(item).shown(item, tag);
+        String skin = shown != null && shown.skin() != null ? shown.skin() : item.skin();
+        if (item.material() == Material.PLAYER_HEAD && skin != null) Utils.skull(stack, skin);
 
-        stack.setData(DataComponentTypes.CUSTOM_NAME, Text.line(name(item, tag)));
-        stack.setData(DataComponentTypes.LORE, ItemLore.lore(Text.lines(lore(item, tag, holder))));
+        stack.setData(DataComponentTypes.CUSTOM_NAME, Text.line(shown != null ? shown.name() : name(item, tag)));
+        stack.setData(DataComponentTypes.LORE, ItemLore.lore(Text.lines(shown != null ? shown.lore() : lore(item, tag, holder))));
         stack.setData(DataComponentTypes.UNBREAKABLE);
         stack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().addHiddenComponents(Hidden.COMPONENTS).build());
         if (item.color() != null) stack.setData(DataComponentTypes.DYED_COLOR, DyedItemColor.dyedItemColor(item.color()));

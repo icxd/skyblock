@@ -26,6 +26,11 @@ public final class ItemBehaviours {
     private ItemBehaviours() {
     }
 
+    /** Gives an item its behaviour from elsewhere in the plugin (the PET item's, which the pets keep). */
+    public static void register(String id, ItemBehaviour behaviour) {
+        BY_ID.put(id.toUpperCase(Locale.ROOT), behaviour);
+    }
+
     public static ItemBehaviour of(SkyBlockItem item) {
         return BY_ID.getOrDefault(item.id().toUpperCase(Locale.ROOT), NONE);
     }

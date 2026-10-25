@@ -20,6 +20,7 @@ import net.icxd.dungeons.gui.MenuSound;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.leveling.LevelingMenu;
 import net.icxd.dungeons.leveling.SkyBlockXp;
+import net.icxd.dungeons.pet.PetsMenu;
 import net.icxd.dungeons.profile.ProfileManagementMenu;
 import net.icxd.dungeons.profile.Profiles;
 import net.icxd.dungeons.quest.QuestMenu;
@@ -44,10 +45,10 @@ import net.icxd.dungeons.utils.Text;
  * The SkyBlock Menu ({@code /sbmenu}, or the nether star in hotbar slot 9), as recorded on Hypixel
  * (the SkyBlock Menu tour, 2026-09-27: Banana's at 00:18.2 and the new profile Lemon's at 04:29.1).
  * What this plugin has is filled in: the stats, the skill average, the SkyBlock level, the profiles,
- * the date, and the collections and recipes found. What it doesn't have yet (pets, the bank's banker,
- * fast travel) is shown as Lemon's menu showed it, a profile with none of it; the Booster Cookie, which
+ * the date, the collections and recipes found, and the pets (as recorded 2026-10-25). What it doesn't have yet (the
+ * bank's banker, fast travel) is shown as Lemon's menu showed it, a profile with none of it; the Booster Cookie, which
  * Lemon's didn't have, is left out, and so are the calendar's events. Stats & Equipment, Your Skills,
- * SkyBlock Leveling, Quests & Chapters, Storage, Your Bags, Loadouts, Collections, the Recipe Book, the Crafting Table and
+ * SkyBlock Leveling, Quests & Chapters, Storage, Your Bags, Pets, Loadouts, Collections, the Recipe Book, the Crafting Table and
  * Profile Management open; the rest do nothing yet. Stat icons are the classic symbols (Hypixel's are its resource pack's
  * glyphs). Main thread.
  */
@@ -88,12 +89,20 @@ public final class SkyBlockMenu extends GUI {
      * collections they've found and recipes they've unlocked, of how many.
      */
     record View(Stats stats, double skillAverage, int skyBlockXp, int profiles, int profileSlots, String profileName, SkyBlockTime time,
-                int collectionsFound, int collections, int recipesUnlocked, int recipes) {
+                int collectionsFound, int collections, int recipesUnlocked, int recipes, Icon pets) {
+        /** Without pets (see {@link PetsMenu#skyBlockMenuIcon}). */
+        View(Stats stats, double skillAverage, int skyBlockXp, int profiles, int profileSlots, String profileName, SkyBlockTime time,
+             int collectionsFound, int collections, int recipesUnlocked, int recipes) {
+            this(stats, skillAverage, skyBlockXp, profiles, profileSlots, profileName, time, collectionsFound, collections, recipesUnlocked,
+                    recipes, null);
+        }
+
         static View of(Player player, User user) {
             int[] found = Collections.foundOfAll(user.profile());
             return new View(PlayerSession.of(player).stats(), Skills.average(user.profile()), user.getSkyBlockXp(),
                     Profiles.ordered(user.getDocument()).size(), Profiles.slots(user.getRank()), user.profileName(), SkyBlockTime.now(),
-                    found[0], found[1], Recipes.unlocked(user.profile(), Recipes.data().book()), Recipes.data().book().size());
+                    found[0], found[1], Recipes.unlocked(user.profile(), Recipes.data().book()), Recipes.data().book().size(),
+                    PetsMenu.skyBlockMenuIcon(user.profile()));
         }
     }
 
@@ -140,6 +149,10 @@ public final class SkyBlockMenu extends GUI {
                 case RECIPES -> set(GUIClickableItem.button(slot, stack, viewer, () -> new RecipeBook(viewer).open(viewer)));
                 case CRAFTING -> set(GUIClickableItem.button(slot, stack, viewer, () -> new CraftingTable(viewer).open(viewer)));
                 case QUESTS -> set(GUIClickableItem.button(slot, stack, viewer, () -> QuestMenu.questsAndChapters(viewer)));
+                case PETS -> set(GUIClickableItem.button(slot, stack, viewer, () -> {
+                    User now = User.ifLoaded(viewer.getUniqueId());
+                    if (now != null && PetsMenu.skyBlockMenuIcon(now.profile()) != null) PetsMenu.show(viewer, 1, MenuSound.CLICK);
+                }));
                 default -> set(slot, stack);
             }
         }
@@ -165,8 +178,9 @@ public final class SkyBlockMenu extends GUI {
                 "&7here.", "", "&8Also accessible via /storage", "", "&eClick to view!"));
         icons.put(BAGS, new Icon(Material.PLAYER_HEAD, "&aYour Bags", List.of("&7Different bags allow you to store",
                 "&7many different items inside!", "", "&8Also accessible via /bags", "", "&eClick to open!"), BAGS_HEAD));
-        // No pets yet.
-        icons.put(PETS, new Icon(Material.GRAY_DYE, "&cPets", "&7View and manage all of your Pets.", "", "&cFind your first pet to unlock!"));
+        // With none yet, locked (as Lemon's menu was).
+        icons.put(PETS, view.pets() != null ? view.pets()
+                : new Icon(Material.GRAY_DYE, "&cPets", "&7View and manage all of your Pets.", "", "&cFind your first pet to unlock!"));
         icons.put(CRAFTING, new Icon(Material.CRAFTING_TABLE, "&aCrafting Table", "&7Opens the crafting grid.", "",
                 "&8Also accessible via /craft", "", "&eClick to open!"));
         icons.put(LOADOUTS, new Icon(Material.BARREL, "&aLoadouts", "&7View and edit preset armor and", "&7equipment sets with other settings to",

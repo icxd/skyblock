@@ -30,6 +30,18 @@ public interface ItemBehaviour {
         return blocks;
     }
 
+    /**
+     * Its whole name and lore, and its head's skin, for an item that isn't shown as items are (a pet: "&7[Lvl 1] &fBee",
+     * its stats and abilities at its level); null, as for most, for the usual.
+     */
+    default Shown shown(SkyBlockItem item, NBTTagCompound tag) {
+        return null;
+    }
+
+    /** See {@link #shown}: the name and lore in {@code &} codes, and the head's skin (the base64 textures value; null: the item's). */
+    record Shown(String name, List<String> lore, String skin) {
+    }
+
     /** What holding it does to the holder's finished stats (everything else already in them); nothing unless it says. */
     default void whileHeld(Stats stats) {
     }
