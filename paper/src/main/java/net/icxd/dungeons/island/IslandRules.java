@@ -83,7 +83,8 @@ public final class IslandRules implements Listener {
         if (player.getGameMode() == GameMode.CREATIVE) return;
         event.setDropItems(false);
         for (ItemStack drop : block.getDrops(player.getInventory().getItemInMainHand(), player)) {
-            CollectionGains.fromWorld(block.getWorld().dropItemNaturally(block.getLocation(), VanillaItems.asSkyBlock(drop)));
+            // From the block's middle, as vanilla drops them (from its corner, they'd start in the blocks round it).
+            CollectionGains.fromWorld(block.getWorld().dropItemNaturally(block.getLocation().toCenterLocation(), VanillaItems.asSkyBlock(drop)));
         }
         if (Tag.LOGS.isTagged(block.getType())) SkillGains.give(player, Skill.FORAGING, LOG_XP);
     }

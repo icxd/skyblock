@@ -39,7 +39,8 @@ import net.icxd.dungeons.user.User;
  * The hubs and islands are the map as it's built: players look around, they don't use or change it,
  * as on Hypixel. No doors, trapdoors, levers, buttons, containers, beds or pressure plates, no item
  * frames or armor stands, no buckets, bone meal, fire, or a tool's work on a block (an axe stripping
- * a log, a hoe tilling). Placing and breaking are refused everywhere (see WorldListener).
+ * a log, a hoe tilling). Placing and breaking are refused everywhere (see WorldListener), but for
+ * the Hub's flower beds, whose flowers are picked (FlowerGarden lets a left click on one through).
  *
  * <p>Only the block's own use is refused, never the item's: a right click on a block still casts
  * the held item's ability. NPCs and SkyBlock mobs are the plugin's, and handle their own clicks.

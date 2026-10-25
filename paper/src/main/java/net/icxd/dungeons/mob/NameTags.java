@@ -17,8 +17,19 @@ public final class NameTags {
 
     /** The Hub's: "[Lv75] Magma Cube 1M/1M❤", and a boss's framed in ﴾ ﴿. */
     public static String hub(int level, String name, double health, double maxHealth, boolean boss) {
-        String tag = "&8[&7Lv" + level + "&8] &c" + name + " &a" + Utils.formatNumber(shown(health)) + "&f/&a" + Utils.formatNumber(maxHealth)
-                + "&c❤";
+        return hub(level, List.of(), name, health, maxHealth, boss);
+    }
+
+    /**
+     * The Hub's with its mob types' symbols after the level, as recorded on the Graveyard's
+     * ("[Lv1] ༕ Graveyard Zombie 100/100❤", 2026-10-25: Hypixel's symbol is its resource pack's, so the
+     * classic one here, as a dungeon mob's).
+     */
+    public static String hub(int level, List<MobType> types, String name, double health, double maxHealth, boolean boss) {
+        StringBuilder symbols = new StringBuilder();
+        for (MobType type : types) if (!type.symbol().isEmpty()) symbols.append('&').append(type.color()).append(type.symbol());
+        String tag = "&8[&7Lv" + level + "&8] " + (symbols.isEmpty() ? "" : symbols + " ") + "&c" + name + " &a" + Utils.formatNumber(shown(health))
+                + "&f/&a" + Utils.formatNumber(maxHealth) + "&c❤";
         return boss ? "&e﴾ " + tag + " &e﴿" : tag;
     }
 

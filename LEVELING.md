@@ -41,7 +41,9 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
   (UNKNOWN: a skill's). The profile keeps the last level it was told of (`leveling.level`); a profile without one is
   told nothing the first time, so progress from before this existed isn't announced.
 - **Action bar**: "+20 SkyBlock XP (Skill Level Up) (34/100)" in place of Defense for 2 s, for the task that gave the
-  most (UNKNOWN how Hypixel shows two). Complete Objectives is "Complete Objective" there, as recorded.
+  most; on a tie, the later in the menu's order, as recorded (2026-10-25: a Combat level-up's +5 and an objective's
+  +5 at once said "+5 SkyBlock XP (Complete Objective) (10/100)"). Complete Objectives is "Complete Objective" there,
+  as recorded.
 - **Colours**: every 40 levels, gray to dark red at 480 (the recorded Prefix Color rewards, NEU's `sblevel_colours`).
 - **Chat**: "[88] ♦ [MVP+] Name: text" (a real chat log's order), for viewers with SkyBlock Levels in Chat on (the
   switch in SkyBlock Leveling, saved on the account as `settings.levelsInChat`).

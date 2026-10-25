@@ -66,6 +66,16 @@ class NameTagsTest {
     }
 
     /**
+     * The Hub's Graveyard, recorded 2026-10-25: &8[&7Lv1&8] &2<U+E084> &cGraveyard Zombie&r &a100&f/&a100&c❤ (its
+     * "&r" left out, which shows the same) and [Lv2] Zombie Villager 120/120❤.
+     */
+    @Test
+    void graveyard() {
+        assertEquals("&8[&7Lv1&8] &2༕ &cGraveyard Zombie &a100&f/&a100&c❤", tag(MobKinds.GRAVEYARD_ZOMBIE, SpawnOptions.NONE, 100));
+        assertEquals("&8[&7Lv2&8] &2༕ &cZombie Villager &a120&f/&a120&c❤", tag(MobKinds.ZOMBIE_VILLAGER, SpawnOptions.NONE, 120));
+    }
+
+    /**
      * &e<U+E07B>&5<U+E073> &6✯ &c&d&lLost Adventurer &a130k&c❤ (Lv90; 182k once its room opened at x1.4) and
      * &e<U+E07B>&6<U+E083> &6✯ &c&d&lAngry Archaeologist &a12,750&c❤ (Lv80 at x1.5).
      */

@@ -11,20 +11,26 @@ import org.bukkit.util.BoundingBox;
  * map (config.yml's {@code server.map: hub}), the smallest one a spot is in winning (the Bank inside
  * the Village). Those boxes are rough: each was drawn round the buildings on the map so that every
  * place the 2026-10-24 recording crossed into an area or out of one falls on its side of the line
- * (into the Auction House at -28 -12, out of the Bank at -19 -35, into the Farm at 42 -69, ...).
- * The Hub's other areas (the Mountain, the Forest, ...) have none yet: past the Village it's None,
- * as Hypixel says in a few spots.
+ * (into the Auction House at -28 -12, out of the Bank at -19 -35, into the Farm at 42 -69, ...),
+ * and the 2026-10-25 recordings' (the Flower House, the Combat Settlement, the Graveyard). The Hub's
+ * other areas (the Mountain, the Forest, ...) have none yet: past them it's None, as Hypixel says in a
+ * few spots.
  */
 @Getter
 public enum RegionType {
     PRIVATE_ISLAND_3("Your Island", "§a"),
     VILLAGE("Village", new BoundingBox(-75, 0, -75, 75, 256, 35)),
+    /** The Village east of the first box, round the Flower House and its flower beds (the sidebar says Village there too). */
+    VILLAGE_EAST("Village", new BoundingBox(76, 60, -12, 100, 100, 26)),
+    FLOWER_HOUSE("Flower House", new BoundingBox(87, 60, -4, 100, 100, 11)),
+    COMBAT_SETTLEMENT("Combat Settlement", new BoundingBox(-75, 60, -96, -33, 100, -60), "§c"),
     MOUNTAIN("Mountain"),
     FOREST("Forest"),
     FARM("Farm", new BoundingBox(38, 50, -160, 130, 120, -66), "§e"),
     RUINS("Ruins"),
     COLOSSEUM("Colosseum"),
-    GRAVEYARD("Graveyard", "§c"),
+    /** To z -94, so that Pat (its NPC) is in it; the Combat Settlement, the smaller, keeps the overlap. */
+    GRAVEYARD("Graveyard", new BoundingBox(-200, 50, -220, -60, 120, -94), "§c"),
     COAL_MINE("Coal Mine"),
     COAL_MINE_CAVES("Coal Mine"),
     WILDERNESS("Wilderness", "§2"),
@@ -117,6 +123,11 @@ public enum RegionType {
     /** Its name in its colour, as the sidebar and action bar show it. */
     public String displayName() {
         return color + name;
+    }
+
+    /** Whether it's the same area as that one, by the name the sidebar gives it (the Village's two boxes are one). */
+    public boolean sameArea(RegionType other) {
+        return other != null && name != null && name.equals(other.name);
     }
 
     public static RegionType getType(String string) {

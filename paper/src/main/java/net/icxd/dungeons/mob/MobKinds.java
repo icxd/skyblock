@@ -31,8 +31,9 @@ import static net.icxd.dungeons.mob.MobType.WITHER;
 /**
  * Every kind of SkyBlock mob there is (research mobs.md 3): the Entrance's, from the wiki's mob pages
  * (hypixelskyblock.minecraft.wiki, 2026 values, which the recorded health matches) and the recordings
- * (entity, gear and dye colours, movement speed attributes, Combat XP where the wiki's is wrong), and
- * the Hub's two test mobs. Coins are the wiki's base per kill; drops the wiki's, as item ids.
+ * (entity, gear and dye colours, movement speed attributes, Combat XP where the wiki's is wrong), the
+ * Hub's Graveyard's, and the Hub's two test mobs. Coins are the wiki's base per kill; drops the wiki's,
+ * as item ids.
  *
  * <p>Magic resistance: "10% for melee mobs, 30% for ranged mobs, and 50-80% for magic mobs" (the wiki's
  * Catacombs Mobs), and the Crypt Lurker's 10%, the Souleater's and Dreadlord's 50% from their pages.
@@ -206,6 +207,32 @@ public final class MobKinds {
             .variant(null, 200, 50_000_000, 4_000, 0, 4_000, 1_000).orbs(5_000)
             .build();
 
+    /** Vanilla's undyed leather. */
+    private static final int LEATHER = 0xA06540;
+
+    /**
+     * The Hub's Graveyard's (see {@code hub.Graveyard}): its zombies, and at night zombie villagers in
+     * leather armor. Level and health as their recorded tags had them (2026-10-25: "[Lv1] Graveyard
+     * Zombie 100/100❤", "[Lv2] Zombie Villager 120/120❤"), Combat XP as recorded with each kill (5);
+     * damage, coins, orbs and drops the wiki's mob pages'. Their speed is vanilla's (the recorded
+     * attributes didn't decode).
+     */
+    public static final MobKind GRAVEYARD_ZOMBIE = MobKind.builder("GRAVEYARD_ZOMBIE", "Graveyard Zombie", EntityType.ZOMBIE)
+            .types(UNDEAD).style(NameStyle.HUB).behaviour(Behaviours::melee)
+            .variant(null, 1, 100, 20, 0, 5, 1, graveyardDrops()).orbs(1)
+            .build();
+
+    /** The wiki: "spawns in the Graveyard at night (8pm-6am)", "wearing Leather Armor" (its colour UNKNOWN: vanilla's). */
+    public static final MobKind ZOMBIE_VILLAGER = MobKind.builder("ZOMBIE_VILLAGER", "Zombie Villager", EntityType.ZOMBIE_VILLAGER)
+            .types(UNDEAD).style(NameStyle.HUB).behaviour(Behaviours::melee).gear(Gear.leather(null, LEATHER, LEATHER, LEATHER, LEATHER))
+            .variant(null, 2, 120, 24, 0, 5, 1, graveyardDrops()).orbs(2)
+            .build();
+
+    /** Both kinds': Rotten Flesh always, then Poisonous Potato 2%, Potato and Carrot 1% each. */
+    private static MobDrop[] graveyardDrops() {
+        return new MobDrop[]{drop("ROTTEN_FLESH", C, 100), drop("POISONOUS_POTATO", U, 2), drop("POTATO_ITEM", R, 1), drop("CARROT_ITEM", R, 1)};
+    }
+
     /**
      * A secret (research secrets_puzzles.md 1.4, 1.9): the wiki's Bat (Catacombs), 100 health, no damage, 100
      * Combat XP and a coin, a 1% Beating Heart; the same on every floor (Master Mode's hits for 1 and gives 150
@@ -233,6 +260,8 @@ public final class MobKinds {
         BY_ID.put(SECRET_BAT.id(), SECRET_BAT);
         BY_ID.put(MAGMA_CUBE.id(), MAGMA_CUBE);
         BY_ID.put(BLADESOUL.id(), BLADESOUL);
+        BY_ID.put(GRAVEYARD_ZOMBIE.id(), GRAVEYARD_ZOMBIE);
+        BY_ID.put(ZOMBIE_VILLAGER.id(), ZOMBIE_VILLAGER);
     }
 
     private MobKinds() {

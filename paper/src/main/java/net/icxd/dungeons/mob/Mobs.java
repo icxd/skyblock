@@ -10,6 +10,7 @@ import net.icxd.dungeons.combat.HitKind;
 import net.icxd.dungeons.combat.MobDebuffs;
 import net.icxd.dungeons.combat.PlayerDamage;
 import net.icxd.dungeons.common.DungeonFloor;
+import net.icxd.dungeons.dungeons.instance.DungeonMobs;
 import net.icxd.dungeons.dungeons.instance.DungeonRun;
 import net.icxd.dungeons.dungeons.instance.RunManager;
 import net.icxd.dungeons.economy.ExpOrbs;
@@ -38,6 +39,9 @@ import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityCombustByBlockEvent;
+import org.bukkit.event.entity.EntityCombustByEntityEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -330,9 +334,9 @@ public final class Mobs implements Listener {
      * Each drop rolls on its own: what changes a kill's drops by how it was made puts its factor on each (see {@link
      * DropChance}), then Magic Find raises the chance of the rare ones (see {@link MobDrop#withMagicFind}); Pet Luck
      * would raise a pet's, but no mob drops a pet yet. Past 100% it drops again ({@link #copies}). A dungeon mob's go
-     * straight into the killer's inventory, as recorded on Hypixel (into their item stash if there's no room), and
-     * only the rare ones are announced (the recorded 5% armor drops had no chat line); other mobs' land
-     * on the ground, and each is announced.
+     * straight into the killer's inventory, as recorded on Hypixel (into their item stash if there's no room); other
+     * mobs' land on the ground. Only the rare ones are announced (the recorded 5% armor drops had no chat line, nor did
+     * the Graveyard's Rotten Flesh and Poisonous Potato, 100% and 2%; its 1% Potato had one).
      */
     private static void drop(List<MobDrop> drops, boolean dungeon, Location at, Player killer, KillingBlow blow) {
         Stats stats = PlayerSession.of(killer).stats();
@@ -352,7 +356,7 @@ public final class Mobs implements Listener {
                 } else {
                     CollectionGains.fromWorld(at.getWorld().dropItemNaturally(at, stack));
                 }
-                if (announced(dungeon, drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
+                if (announced(drop.type())) killer.sendMessage(dropMessage(drop.type(), item.rarity().getColor(), item.name(), magicFind));
             }
         }
     }
@@ -386,9 +390,9 @@ public final class Mobs implements Listener {
     }
 
     /**
-     * "§6§lRARE DROP! §9Beating Heart §b(+0% ✯ Magic Find)": a RARE DROP! is gold (as SkyHanni has the
-     * dungeon one for a Beating Heart, and every other mob drop's); a CRAZY RARE or INSANE one is in its
-     * drop type's colour.
+     * "§6§lRARE DROP! §fPotato §b(+7 ✯ Magic Find)", as recorded (2026-10-25; the star is Hypixel's sprite, the
+     * classic ✯ here): a RARE DROP! is gold (as SkyHanni has the dungeon one for a Beating Heart, and every other mob
+     * drop's); a CRAZY RARE or INSANE one is in its drop type's colour.
      */
     static String dropMessage(MobDropType type, String itemColor, String itemName, double magicFind) {
         String line = switch (type) {
@@ -396,16 +400,12 @@ public final class Mobs implements Listener {
             case CRAZY_RARE -> "§" + type.getColor() + "§lCRAZY RARE DROP! ";
             default -> "§6§lRARE DROP! ";
         };
-        return Utils.color(line + itemColor + itemName + " &b(+" + Utils.round(magicFind, 0) + "% ✯ Magic Find)");
+        return Utils.color(line + itemColor + itemName + " &b(+" + Utils.round(magicFind, 0) + " ✯ Magic Find)");
     }
 
-    /** Whether a drop this rare from this mob gets a "RARE DROP!" line: a dungeon mob's only past Occasional. */
-    static boolean announced(SkyBlockMob type, MobDropType drop) {
-        return announced(type.dropsToInventory(), drop);
-    }
-
-    private static boolean announced(boolean dungeon, MobDropType drop) {
-        return !dungeon || drop.ordinal() > MobDropType.OCCASIONAL.ordinal();
+    /** Whether a drop this rare gets a "RARE DROP!" line: only past Occasional, from any mob. */
+    static boolean announced(MobDropType drop) {
+        return drop.ordinal() > MobDropType.OCCASIONAL.ordinal();
     }
 
     /** It, its name tag and its passenger, gone. */
@@ -508,6 +508,17 @@ public final class Mobs implements Listener {
         event.setDroppedExp(0);
         remove(live);
         died(live, null, event.getEntity().getLocation(), null);
+    }
+
+    /**
+     * Daylight doesn't burn them (nor the dungeons' own, the Watcher), as it doesn't Hypixel's: since 26.2 a zombie's
+     * or a skeleton's own setting no longer stops it (the entity type's tag decides), so it's refused here. A fire
+     * they're set on (a hit, lava) still burns.
+     */
+    @EventHandler
+    public void onCombust(EntityCombustEvent event) {
+        if (event instanceof EntityCombustByEntityEvent || event instanceof EntityCombustByBlockEvent) return;
+        if (of(event.getEntity()) != null || DungeonMobs.of(event.getEntity()) != null) event.setCancelled(true);
     }
 
     /** Their wither skulls don't blow up the world. */

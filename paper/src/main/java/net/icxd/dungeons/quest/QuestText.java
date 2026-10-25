@@ -5,7 +5,10 @@ import java.util.List;
 
 import org.bson.Document;
 
+import net.icxd.dungeons.item.ItemRegistry;
+import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.quest.Quest.Objective;
+import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.utils.SkyBlockTime;
 import net.icxd.dungeons.utils.Text;
 
@@ -19,14 +22,50 @@ public final class QuestText {
     private QuestText() {
     }
 
-    /** "&fObjective: &eBreak a log". */
-    public static String bossBar(Objective objective) {
-        return "&fObjective: &e" + objective.text();
+    /** "&fObjective: &eBreak a log", "&fObjective: &eKill Zombies  &7(&e0&7/&a10&7)": with what it has counted, as recorded. */
+    public static String bossBar(Objective objective, double progress) {
+        String counted = counted(objective.goal(), progress);
+        return "&fObjective: &e" + objective.text() + (counted.isEmpty() ? "" : "  " + counted);
     }
 
-    /** The sidebar's two lines, between the purse and the address: "&fObjective", then the objective. */
-    public static List<String> sidebar(Objective objective) {
-        return List.of("&fObjective", "&e" + objective.text());
+    /**
+     * The sidebar's lines, between the purse and the address: "&fObjective", the objective, and under
+     * it what it has counted ("  &7(&e0&7/&a10&7)") or what to bring ("&f Rose Red &8x5"), as recorded.
+     */
+    public static List<String> sidebar(Objective objective, double progress) {
+        List<String> lines = new ArrayList<>(List.of("&fObjective", "&e" + objective.text()));
+        Quest.Goal goal = objective.goal();
+        if (goal != null && goal.kind() == Quest.Goal.Kind.ITEMS) lines.add(itemLine(goal));
+        else if (goal != null) lines.add("  " + counted(goal, progress));
+        return lines;
+    }
+
+    /** "&7(&e3&7/&a10&7)" for a count, "&8(&b150&8/&350 XP&8)" for a skill's XP; nothing for what to bring, or no goal. */
+    static String counted(Quest.Goal goal, double progress) {
+        if (goal == null) return "";
+        return switch (goal.kind()) {
+            case COUNT -> "&7(&e" + whole(progress) + "&7/&a" + goal.target() + "&7)";
+            case SKILL_XP -> "&8(&b" + whole(progress) + "&8/&3" + goal.target() + " XP&8)";
+            case ITEMS -> "";
+        };
+    }
+
+    /** How full the boss bar is: what's counted of the goal (full for one with nothing to count). */
+    public static float fill(Quest.Goal goal, double progress) {
+        if (goal == null || goal.kind() == Quest.Goal.Kind.ITEMS) return 1f;
+        return (float) Math.clamp(progress / goal.target(), 0, 1);
+    }
+
+    /** "&f Rose Red &8x5": the item in its rarity's colour (white while the item data isn't there). */
+    static String itemLine(Quest.Goal goal) {
+        SkyBlockItem item = ItemRegistry.get(goal.item());
+        String name = item == null ? goal.item() : item.name();
+        String color = item == null ? "&f" : item.rarity().getColor().replace('§', '&');
+        return color + " " + name + " &8x" + goal.target();
+    }
+
+    private static String whole(double value) {
+        return Long.toString((long) Math.floor(value));
     }
 
     /**
@@ -55,6 +94,37 @@ public final class QuestText {
     }
 
     /**
+     * The Quest Log's progress: as {@link #progress}, each objective that counts with its count, as
+     * recorded (2026-10-25): done in white, " &a✔ &fKill Zombies. (&b10&f/&b10&f)"; the one they're at in
+     * yellow, " &c✖ &eExplore the Hub. (&b2&e/&b13&e)"; a skill's XP as it is now, even once done ("Reach
+     * Combat Level I. (&b165&f/&b50&f)").
+     */
+    static List<String> logProgress(Document profile, Quest quest) {
+        int done = Quests.done(profile, quest);
+        List<String> lines = progress(quest, done);
+        for (int i = 0; i < lines.size(); i++) {
+            Quest.Goal goal = quest.objective(i).goal();
+            if (goal == null || goal.kind() == Quest.Goal.Kind.ITEMS) continue;
+            double value = goal.kind() == Quest.Goal.Kind.SKILL_XP ? Skills.xp(profile, goal.skill())
+                    : i < done ? goal.target() : Quests.count(profile, quest);
+            String color = i < done ? "&f" : "&e";
+            lines.set(i, lines.get(i) + " (&b" + whole(value) + color + "/&b" + goal.target() + color + ")");
+        }
+        return lines;
+    }
+
+    /** What an objective that counts has counted: Time to Strike's zombies, or a skill's XP now (0 for one that doesn't count). */
+    public static double progress(Document profile, Quest quest, int objective) {
+        Quest.Goal goal = objective < 0 ? null : quest.objective(objective).goal();
+        if (goal == null) return 0;
+        return switch (goal.kind()) {
+            case COUNT -> Quests.count(profile, quest);
+            case SKILL_XP -> Skills.xp(profile, goal.skill());
+            case ITEMS -> goal.target();
+        };
+    }
+
+    /**
      * NEW OBJECTIVE, as it came two seconds after each step (blank, "  &6&lNEW OBJECTIVE", "  &f" and the
      * objective, blank). The two middle lines take you to the Quest Log, with the quest's progress as
      * their hover, for objectives that are linked.
@@ -70,7 +140,7 @@ public final class QuestText {
     public static List<String> logLore(Document profile, Quest quest) {
         List<String> lore = new ArrayList<>();
         lore.add("");
-        lore.addAll(progress(quest, Quests.done(profile, quest)));
+        lore.addAll(logProgress(profile, quest));
         lore.add("");
         lore.add("&7Started:");
         SkyBlockTime started = SkyBlockTime.at(Quests.startedAt(profile, quest));

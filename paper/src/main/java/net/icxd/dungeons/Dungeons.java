@@ -36,6 +36,7 @@ import net.icxd.dungeons.command.commands.user.HotmCommand;
 import net.icxd.dungeons.command.commands.user.IsCommand;
 import net.icxd.dungeons.command.commands.user.QuestsCommand;
 import net.icxd.dungeons.command.commands.user.ChaptersCommand;
+import net.icxd.dungeons.command.commands.user.ClaimItemCommand;
 import net.icxd.dungeons.command.commands.user.LevelsCommand;
 import net.icxd.dungeons.command.commands.user.LoadoutsCommand;
 import net.icxd.dungeons.command.commands.user.PickupStashCommand;
@@ -101,6 +102,8 @@ import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.hex.Hex;
 import net.icxd.dungeons.hex.HexListener;
 import net.icxd.dungeons.hub.DungeonHubMap;
+import net.icxd.dungeons.hub.FlowerGarden;
+import net.icxd.dungeons.hub.Graveyard;
 import net.icxd.dungeons.hub.HubMap;
 import net.icxd.dungeons.hub.HubNpcs;
 import net.icxd.dungeons.hub.MapStands;
@@ -118,6 +121,7 @@ import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.user.UserStore;
 import org.bson.Document;
 import org.bukkit.Bukkit;
+import org.bukkit.GameRules;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -136,6 +140,8 @@ public class Dungeons extends JavaPlugin {
     @Getter private static RunManager runManager;
     /** Players' islands, on ISLAND (and NONE) servers; null elsewhere. */
     @Getter private static Islands islands;
+    /** The Hub's flower beds, whose picked flowers grow back as it stops; null off the Hub. */
+    private static FlowerGarden flowerGarden;
 
     @Getter
     private static SkyBlockServer skyBlockServer;
@@ -188,6 +194,9 @@ public class Dungeons extends JavaPlugin {
         SkyBlockLevels.start(this);
 
         skyBlockServer = new SkyBlockServer(getConfig());
+        // Nobody drops their items by dying in SkyBlock (a death costs coins: DeathCoins); islands and runs set
+        // it on their own worlds too. On the Hub, the Graveyard's zombies can kill.
+        skyBlockServer.getMainWorld().setGameRule(GameRules.KEEP_INVENTORY, true);
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
                 mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection::defaultDocument,
                 userCollection::profileDefaults);
@@ -220,6 +229,8 @@ public class Dungeons extends JavaPlugin {
         listen(MapStands.class, MapStands::new);
         listen(IslandRules.class, IslandRules::new);
         listen(QuestListener.class, QuestListener::new);
+        flowerGarden = listen(FlowerGarden.class, () -> new FlowerGarden(this));
+        listen(Graveyard.class, () -> new Graveyard(this));
         listen(GUIListener.class, GUIListener::new);
         listen(BlockListener.class, BlockListener::new);
         listen(MovementListener.class, MovementListener::new);
@@ -285,7 +296,7 @@ public class Dungeons extends JavaPlugin {
                 new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
                 new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand(),
-                new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand());
+                new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand(), new ClaimItemCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {
@@ -319,18 +330,23 @@ public class Dungeons extends JavaPlugin {
         }
     }
 
-    /** Registers a listener, if it runs on this kind of server (see {@link OnlyOn}). */
-    private <T extends Listener> void listen(Class<T> type, java.util.function.Supplier<T> listener) {
-        if (!skyBlockServer.runs(type)) return;
+    /** Registers a listener, if it runs on this kind of server (see {@link OnlyOn}); it, or null if it doesn't or failed. */
+    private <T extends Listener> T listen(Class<T> type, java.util.function.Supplier<T> listener) {
+        if (!skyBlockServer.runs(type)) return null;
         try {
-            getServer().getPluginManager().registerEvents(listener.get(), this);
+            T made = listener.get();
+            getServer().getPluginManager().registerEvents(made, this);
+            return made;
         } catch (RuntimeException e) {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't register " + type.getSimpleName(), e);
+            return null;
         }
     }
 
     @Override
     public void onDisable() {
+        if (flowerGarden != null) flowerGarden.regrowAll();
+        flowerGarden = null;
         Npcs.removeAll();
         Hologram.removeAll();
         if (runManager != null) runManager.stop();

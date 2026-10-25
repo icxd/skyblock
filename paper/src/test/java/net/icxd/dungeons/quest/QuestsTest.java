@@ -12,6 +12,8 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 import net.icxd.dungeons.quest.Place.Island;
+import net.icxd.dungeons.skill.Skill;
+import net.icxd.dungeons.skill.Skills;
 
 class QuestsTest {
     private static final Place ISLAND = new Place(Island.PRIVATE_ISLAND, null);
@@ -19,6 +21,7 @@ class QuestsTest {
     private static final Place VILLAGE = new Place(Island.HUB, "Village");
     private static final Place DUNGEON_HUB = new Place(Island.DUNGEON_HUB, "Dungeon Hub");
     private static final Place BANK = new Place(Island.HUB, "Bank");
+    private static final Place FLOWER_HOUSE = new Place(Island.HUB, "Flower House");
 
     @Test
     void gettingStartedGoesStepByStepAndLeadsToMarco() {
@@ -93,8 +96,9 @@ class QuestsTest {
     }
 
     /**
-     * The recording's Saving Up: the Banker starts it with its first objective done (+5 SkyBlock XP), the
-     * boss bar staying on the Bartender; in the Bank it's followed, and the first deposit completes it.
+     * The recordings' Saving Up: started with the Village (10-25), and not followed at its first objective,
+     * even in the Bank (10-25); the Banker does that one (+5 SkyBlock XP), the boss bar staying on the
+     * Bartender; in the Bank the deposit is followed, and the first completes it.
      */
     @Test
     void savingUp() {
@@ -102,6 +106,7 @@ class QuestsTest {
         Quests.start(profile, Quests.TIME_TO_STRIKE, 1000);
         assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, BANK, null, true));
         assertTrue(Quests.start(profile, Quests.SAVING_UP, 2000));
+        assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, BANK, null, true), "not at Talk to the Banker");
         assertFalse(Quests.complete(profile, Quests.SAVING_UP, Quests.TALK_TO_THE_BANKER, 2000).completed());
         assertEquals(5, Quests.skyBlockXp(profile));
         assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, BANK, Quests.TIME_TO_STRIKE, false));
@@ -116,6 +121,91 @@ class QuestsTest {
         // Done, so the bar goes back to the Bartender.
         assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, BANK, Quests.SAVING_UP, false));
         assertSame(Quests.SAVING_UP, Quests.byId("SAVING_UP"));
+    }
+
+    /**
+     * 10-25: Marco's is followed most in the Flower House (over the Bartender's, 00:43.8 and 01:08.3), the
+     * Bartender's elsewhere in the Hub (00:51.7), and Marco's anywhere with nothing more at home there.
+     */
+    @Test
+    void marcoInTheFlowerHouse() {
+        Document profile = new Document();
+        Quests.start(profile, Quests.MARCO_THE_ARTIST, 1000);
+        Quests.start(profile, Quests.TIME_TO_STRIKE, 2000);
+        assertSame(Quests.MARCO_THE_ARTIST, Quests.best(profile, FLOWER_HOUSE));
+        assertSame(Quests.TIME_TO_STRIKE, Quests.best(profile, VILLAGE));
+        assertSame(Quests.MARCO_THE_ARTIST, Quests.best(profile, DUNGEON_HUB));
+        assertSame(Quests.MARCO_THE_ARTIST, Quests.best(profile, ISLAND));
+        // Going on with Marco's in the Flower House keeps it there.
+        Quests.complete(profile, Quests.MARCO_THE_ARTIST, Quests.TALK_TO_MARCO, 3000);
+        assertSame(Quests.MARCO_THE_ARTIST, Quests.follow(profile, FLOWER_HOUSE, Quests.MARCO_THE_ARTIST, false));
+        // Done (01:17.7): the Bartender's.
+        assertTrue(Quests.complete(profile, Quests.MARCO_THE_ARTIST, Quests.GIVE_ROSE_RED, 4000).completed());
+        assertSame(Quests.TIME_TO_STRIKE, Quests.follow(profile, FLOWER_HOUSE, Quests.MARCO_THE_ARTIST, false));
+    }
+
+    @Test
+    void homes() {
+        Home flowerHouse = Home.in(Island.HUB, "Flower House").orAnywhere();
+        assertEquals(3, flowerHouse.score(FLOWER_HOUSE));
+        assertEquals(1, flowerHouse.score(VILLAGE));
+        assertEquals(1, flowerHouse.score(ISLAND));
+        assertEquals(2, Home.on(Island.HUB).score(VILLAGE));
+        assertEquals(0, Home.on(Island.HUB).score(ISLAND));
+        assertEquals(0, Home.nowhere().score(BANK));
+        assertEquals(1, Home.anywhere().score(BANK));
+        // An objective's own home comes before its quest's.
+        Document profile = new Document();
+        Quests.start(profile, Quests.SAVING_UP, 1000);
+        assertEquals(Home.nowhere(), Quests.home(profile, Quests.SAVING_UP));
+        Quests.complete(profile, Quests.SAVING_UP, Quests.TALK_TO_THE_BANKER, 2000);
+        assertEquals(Home.in(Island.HUB, "Bank"), Quests.home(profile, Quests.SAVING_UP));
+    }
+
+    /** Time to Strike's ten zombies (02:21.7 to 03:00.2): counted only at "Kill Zombies", to ten, then done. */
+    @Test
+    void killingZombies() {
+        Document profile = new Document();
+        Quests.start(profile, Quests.TIME_TO_STRIKE, 1000);
+        assertEquals(-1, Quests.addCount(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES, 1), "not there yet");
+        assertEquals(-1, Quests.addCount(profile, Quests.TIME_TO_STRIKE, Quests.TALK_TO_THE_BARTENDER, 1), "it doesn't count");
+        Quests.complete(profile, Quests.TIME_TO_STRIKE, Quests.TALK_TO_THE_BARTENDER, 2000);
+        assertEquals(1, Quests.addCount(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES, 1));
+        assertEquals(9, Quests.addCount(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES, 8));
+        assertEquals(10, Quests.addCount(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES, 5), "no more than ten");
+        assertEquals(10, Quests.count(profile, Quests.TIME_TO_STRIKE));
+        assertEquals(10.0, QuestText.progress(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES));
+        Quests.complete(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES, 3000);
+        assertEquals(0, Quests.count(profile, Quests.TIME_TO_STRIKE), "the next one counts from nothing");
+        assertEquals(-1, Quests.addCount(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES, 1));
+        assertEquals(5, Quests.skyBlockXp(profile));
+    }
+
+    /**
+     * "Reach Combat Level I" (50 Combat XP): reached already at 150 as it came (03:30.8), so not said as new,
+     * and done without a word as they next arrived somewhere (03:44.0), "Travel to the Spider's Den" next.
+     */
+    @Test
+    void reachingCombatLevelOne() {
+        Document profile = new Document();
+        Quests.start(profile, Quests.TIME_TO_STRIKE, 1000);
+        for (int step = Quests.TALK_TO_THE_BARTENDER; step < Quests.REACH_COMBAT_I; step++) Quests.complete(profile, Quests.TIME_TO_STRIKE, step, 2000);
+        Skills.add(profile, Skill.COMBAT, 45);
+        assertFalse(Quests.reached(profile, Quests.TIME_TO_STRIKE, Quests.REACH_COMBAT_I));
+        assertFalse(Quests.reachGoals(profile, 3000));
+        assertEquals(Quests.REACH_COMBAT_I, Quests.current(profile, Quests.TIME_TO_STRIKE));
+        Skills.add(profile, Skill.COMBAT, 105);
+        assertTrue(Quests.reached(profile, Quests.TIME_TO_STRIKE, Quests.REACH_COMBAT_I));
+        assertEquals(150.0, QuestText.progress(profile, Quests.TIME_TO_STRIKE, Quests.REACH_COMBAT_I));
+        assertTrue(Quests.reachGoals(profile, 4000));
+        assertEquals(Quests.TRAVEL_TO_SPIDERS_DEN, Quests.current(profile, Quests.TIME_TO_STRIKE));
+        assertFalse(Quests.reachGoals(profile, 5000), "nothing more to reach");
+        assertFalse(Quests.reached(profile, Quests.TIME_TO_STRIKE, Quests.KILL_ZOMBIES), "a count isn't reached this way");
+    }
+
+    @Test
+    void theVillageStartsTheHubsQuests() {
+        assertEquals(List.of(Quests.MARCO_THE_ARTIST, Quests.TIME_TO_STRIKE, Quests.SAVING_UP), Quests.HUB);
     }
 
     @Test

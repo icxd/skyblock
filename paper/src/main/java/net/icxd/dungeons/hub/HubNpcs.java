@@ -33,8 +33,9 @@ import net.icxd.dungeons.npc.NpcTable;
  * The Hub's NPCs where Hypixel has them, on its map: the data checkout's {@code npcs/hub.json} (see
  * {@link NpcTable}), each in its skin or as its kind, under its name tags, holding what it held. Those
  * whose words were recorded say them ({@link HubTalk}), the Banker his and then the bank ({@link
- * Banker}), the Farm Merchant his and then his shop ({@link FarmMerchant}); the rest stand there for
- * now. Their chunks are kept loaded, since an NPC goes with its chunk. Main thread.
+ * Banker}), the Farm Merchant his and then his shop ({@link FarmMerchant}), Marco and the Bartender
+ * theirs for their quests ({@link Marco}, {@link Bartender}); the rest stand there for now. Their
+ * chunks are kept loaded, since an NPC goes with its chunk. Main thread.
  */
 @OnlyOn({ServerType.LOBBY})
 public final class HubNpcs {
@@ -60,6 +61,8 @@ public final class HubNpcs {
             Consumer<Player> click = switch (npc.id()) {
                 case Banker.ID -> player -> Banker.click(plugin, player);
                 case FarmMerchant.ID -> player -> FarmMerchant.click(plugin, player);
+                case Marco.ID -> player -> Marco.click(plugin, player);
+                case Bartender.ID -> player -> Bartender.click(plugin, player);
                 default -> HubTalk.of(npc).<Consumer<Player>>map(talk -> player -> talk.talk(plugin, player)).orElse(player -> {
                 });
             };

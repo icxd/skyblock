@@ -313,7 +313,7 @@ public final class AccessoryEffects implements Listener {
             stats.add(Stat.DAMAGE, AccessoryText.after(s.bluetooth, "Deal", 0));
         }
         if (s.mine != null && on(ServerType.DWARVEN_MINES)) stats.add(AccessoryText.stats(s.mine));
-        if (s.village != null && PlayerSession.of(player).getRegion() == RegionType.VILLAGE) {
+        if (s.village != null && RegionType.VILLAGE.sameArea(PlayerSession.of(player).getRegion())) {
             stats.add(Stat.SPEED, AccessoryText.after(s.village, "by", 0));
         }
         if (s.gravity) {

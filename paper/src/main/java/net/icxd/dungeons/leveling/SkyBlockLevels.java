@@ -178,7 +178,9 @@ public final class SkyBlockLevels implements Listener {
 
     /**
      * Works out their XP again: the action bar shows what a task gave since the last time (the most, if several
-     * did: UNKNOWN how Hypixel shows two at once), and a level they haven't been told of gets its message.
+     * did; on a tie the later in SkyBlock Leveling's order, as a Combat level-up's +5 and an objective's +5 at once
+     * said "+5 SkyBlock XP (Complete Objective) (10/100)", recorded 2026-10-25), and a level they haven't been told
+     * of gets its message.
      */
     static void check(Player player) {
         User user = User.ifLoaded(player.getUniqueId());
@@ -204,7 +206,7 @@ public final class SkyBlockLevels implements Listener {
         for (Category category : data.categories()) {
             for (Task task : category.tasks()) {
                 int gained = now.of(task.id()) - before.of(task.id());
-                if (gained > most) {
+                if (gained > 0 && gained >= most) {
                     most = gained;
                     best = task;
                 }

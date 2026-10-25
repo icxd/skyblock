@@ -22,8 +22,8 @@ public class WorldListener implements Listener {
     }
 
     /**
-     * Nothing is broken for real, but on a player's own island (IslandRules gives them its drops);
-     * mining (BlockListener) works off arm swings.
+     * Nothing is broken for real, but on a player's own island (IslandRules gives them its drops) and
+     * the Hub's flower beds (FlowerGarden picks them); mining (BlockListener) works off arm swings.
      */
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
