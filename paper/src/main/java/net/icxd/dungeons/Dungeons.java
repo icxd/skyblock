@@ -9,6 +9,7 @@ import net.icxd.dungeons.collection.CollectionFiles;
 import net.icxd.dungeons.collection.CollectionGains;
 import net.icxd.dungeons.collection.Collections;
 import net.icxd.dungeons.command.commands.admin.SetCollectionCommand;
+import net.icxd.dungeons.command.commands.admin.YoinkProfileCommand;
 import net.icxd.dungeons.command.commands.user.CollectionCommand;
 import net.icxd.dungeons.command.commands.user.CraftCommand;
 import net.icxd.dungeons.command.commands.user.RecipesCommand;
@@ -296,7 +297,8 @@ public class Dungeons extends JavaPlugin {
                 new EnderChestCommand(), new BackpackCommand(), new BagsCommand(), new SacksCommand(), new LoadoutsCommand(),
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
                 new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand(),
-                new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand(), new ClaimItemCommand());
+                new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand(), new ClaimItemCommand(),
+                new YoinkProfileCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {

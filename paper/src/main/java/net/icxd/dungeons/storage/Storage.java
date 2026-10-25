@@ -76,6 +76,15 @@ public final class Storage {
         new LoadoutsMenu(player, 0).open(player);
     }
 
+    /**
+     * Their storage, power or tuning was written other than through its menus (/yoinkprofile): the Accessory Bag and
+     * the equipment they wear are read again.
+     */
+    public static void changed(Player player) {
+        AccessoryBag.changed(player);
+        Equipment.forget(player.getUniqueId());
+    }
+
     /** They've left: what's kept of them here goes. */
     static void forget(UUID player) {
         AccessoryBag.forget(player);
