@@ -9,6 +9,7 @@ import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -158,7 +159,10 @@ public final class QuestBar {
     public static List<String> sidebar(Player player) {
         Following following = FOLLOWING.get(player.getUniqueId());
         if (following == null || following.quest == null || following.objective < 0) return List.of();
-        return QuestText.sidebar(following.quest.objective(following.objective), following.progress);
+        Quest.Objective objective = following.quest.objective(following.objective);
+        Location at = player.getLocation();
+        String arrow = QuestText.arrow(objective.target(), place(player).island(), at.getX(), at.getZ(), at.getYaw());
+        return QuestText.sidebar(objective, following.progress, arrow);
     }
 
     /** Gone, or on another profile: they follow nothing till they arrive somewhere again. */

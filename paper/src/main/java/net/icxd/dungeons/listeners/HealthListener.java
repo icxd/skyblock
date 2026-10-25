@@ -53,7 +53,10 @@ public class HealthListener implements Listener {
                 || cause == EntityDamageEvent.DamageCause.LAVA;
         DamageIndicators.show(player, amount, fire ? '6' : '7');
         boolean always = cause == EntityDamageEvent.DamageCause.VOID || cause == EntityDamageEvent.DamageCause.KILL;
-        double left = PlayerHealth.get(player) - (always ? amount : Absorption.absorb(player, amount));
+        // The void kills at once, as Hypixel's does (UNKNOWN: its own rule; its 1.8 vanilla took 4 a tick below y -64).
+        // Vanilla's void damage here only chips at a big health.
+        double left = cause == EntityDamageEvent.DamageCause.VOID ? 0
+                : PlayerHealth.get(player) - (always ? amount : Absorption.absorb(player, amount));
         if (left > 0) {
             event.setDamage(0);
             PlayerHealth.set(player, left);
@@ -81,10 +84,14 @@ public class HealthListener implements Listener {
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
-        if (!afterDeath(event.getRespawnReason())) return;
-        PlayerHealth.refill(event.getPlayer());
-        Absorption.clear(event.getPlayer());
-        PlayerSession session = PlayerSession.of(event.getPlayer());
+        if (afterDeath(event.getRespawnReason())) revived(event.getPlayer());
+    }
+
+    /** Back after a death: full health, no absorption, half their mana (a respawn's, or a death called off: Deaths). */
+    public static void revived(Player player) {
+        PlayerHealth.refill(player);
+        Absorption.clear(player);
+        PlayerSession session = PlayerSession.of(player);
         session.setMana(respawnMana(session.maxMana()));
     }
 

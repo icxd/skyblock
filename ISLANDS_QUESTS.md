@@ -221,8 +221,54 @@ without gravity, and the plugin makes up for both where it matters:
     recorded Combat level-up and objective (+5 each) said "(Complete Objective) (10/100)".
 - **No vanilla progress** (`VanillaProgress`). There are no advancements, and the recipe book learns
   nothing, so "Advancement Made!" and "New Recipe(s) Unlocked!" never pop up (Hypixel shows neither).
+- **The sidebar's arrow** (`QuestText.arrow`). The "Objective" line has an arrow toward the
+  objective's place while you're on its island: "Objective ⬉". It's bold yellow, and bold green
+  within 50 blocks. It's one of eight, the nearest to the way from where you face, and it shows again
+  each second with the sidebar.
+  - **How it was read.** Fitted to about 300 recorded arrows (2026-10-24 and 10-25) against where the
+    player stood and faced: their entity's look packets, read with `tools/replay`'s decoder.
+  - **Which objectives.** Here only Time to Strike's have one: the Bartender (both times), the
+    Graveyard (Kill Zombies) and the Spider's Den. None of Getting Started's, Marco's, Saving Up's or
+    the Librarian's showed one. Farmer Rigby's did, and his quest isn't here.
+- **Deaths** (`combat/Deaths`) are as on Hypixel: no death screen and no respawn. The death is called
+  off, as a dungeon run's is.
+  - **Where you come back.** On the next tick you're at the island's spawn: the Hub's, the Dungeon
+    Hub's or the island's ("Upon dying, the Player is returned to the island's spawn", the wiki's
+    Death). You keep your items and come back with full health and half your mana. Fire, the fall and
+    an open menu don't carry over.
+  - **What chat says.** You see "☠ You were killed by Graveyard Zombie.", and the others in your world
+    see "☠ Tester was killed by Graveyard Zombie." (the shape of SkyHanni's `PlayerDeathManager`
+    pattern). The other reasons are "☠ You fell into the void." and the dungeon reasons without "and
+    became a ghost", such as "☠ You burnt to death.". The coins line follows.
+  - **The void** kills at once. Before, vanilla's void damage only chipped at it (about 50 a second
+    off 1,223 health in the test).
+  - **Coins.** A fall into the void costs no coins only on a private island without a mob's hit ("Falls
+    in the void on a Private Island or The Garden, without being hit by a mob", the wiki's Coins).
+    Before, it cost nothing anywhere.
+  - **Tested live:** `/kill`, the void on an island and off one, and the Graveyard's zombies.
+  - A vanilla death that still happens, in a run's world before or after it runs, respawns at once
+    with no vanilla death line.
 
 ## Approximated (UNKNOWN)
+
+- **The arrow's targets.**
+  - **The Bartender's** is his NPC: the fit lands on him, and his arrows turned green at 50 blocks to
+    within a few tenths of a block.
+  - **Kill Zombies'** (-104, -122) and **the Spider's Den's** (-144, -188) are where their arrows fit
+    best, not known points. Kill Zombies' is the Graveyard's north-east, not its middle (20 of 21
+    arrows fit). No recording went to the Spider's Den (all 187 arrows fit, colour too).
+  - **The fit.** The arrow's sector fits the bearing within the second's turning (about 23° rms).
+- **Deaths.**
+  - **The wording.** Only the kill line's shape is known (SkyHanni's pattern). The other reasons are
+    the dungeon ones without "and became a ghost", plus "You fell into the void" (the old wiki's
+    Death). A fall is "You died", or for the others "fell to their death with help from" a mob that
+    hit them in the 5 seconds before.
+  - **The killer's colour.** It's the red of its name tag. SkyHanni's example has Ashfang in dark
+    grey bold, so a mob's own colour may differ.
+  - **The coins line** ("You died and lost N coins!") is unknown and comes after the death line.
+  - **No sound** plays but the hit's.
+  - **The void.** Hypixel's 1.8 took 4 health a tick below y -64; whether SkyBlock kills at once is
+    its own rule.
 
 - **The Hub's area boxes are rough.** Each is drawn so that every point where the recordings
   crossed into or out of an area falls on the correct side, give or take the block or two Hypixel's
@@ -287,12 +333,8 @@ without gravity, and the plugin makes up for both where it matters:
   the Spider's Den" is where Time to Strike stops. The Hub's other quests (Carpentry, the Foraging
   and Fishing tutorials, Safety First, First Harvest, the Auctioneer's, Hub Explorer, Time to Mine,
   Library Card) aren't here either.
-- **The sidebar's arrow.** Hypixel's "Objective" line has an arrow pointing to the objective's
-  place (yellow, then green when near: "Objective ⬉"). It's not here.
 - **The Spray Can** is only an item: its menu (the Ink Manager and Spray Selector) and spraying
   your island's walls aren't here, nor is Marco's Canvas Room.
-- **A death in the Hub** shows vanilla's death screen. Hypixel's has none: it puts you back at
-  the spawn at once.
 - **The Dungeon Hub's other NPCs and quest.** Malik, Saul and the others aren't there either, and
   Mort only appears in runs. Finding the Dungeon Hub started a quest at "Talk to Guildford" whose
   name the recording didn't show, and the Farm's quest (Rigby's) is unknown too; neither is here.

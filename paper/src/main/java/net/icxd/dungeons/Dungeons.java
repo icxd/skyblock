@@ -51,6 +51,7 @@ import net.icxd.dungeons.command.commands.user.StatsCommand;
 import net.icxd.dungeons.command.commands.user.StorageCommand;
 import net.icxd.dungeons.command.commands.user.ToggleReadyUpCommand;
 import net.icxd.dungeons.command.commands.user.ViewStashCommand;
+import net.icxd.dungeons.combat.Deaths;
 import net.icxd.dungeons.economy.DeathCoins;
 import net.icxd.dungeons.economy.KillCoins;
 import net.icxd.dungeons.gui.GUIListener;
@@ -196,8 +197,11 @@ public class Dungeons extends JavaPlugin {
 
         skyBlockServer = new SkyBlockServer(getConfig());
         // Nobody drops their items by dying in SkyBlock (a death costs coins: DeathCoins); islands and runs set
-        // it on their own worlds too. On the Hub, the Graveyard's zombies can kill.
+        // it on their own worlds too. On the Hub, the Graveyard's zombies can kill. Deaths are called off (Deaths):
+        // one that isn't respawns at once, without vanilla's death screen or its line.
         skyBlockServer.getMainWorld().setGameRule(GameRules.KEEP_INVENTORY, true);
+        skyBlockServer.getMainWorld().setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        skyBlockServer.getMainWorld().setGameRule(GameRules.SHOW_DEATH_MESSAGES, false);
         userStore = new UserStore(this, skyBlockServer.getName(), skyBlockServer.getServerType().name(), userCollection.get(),
                 mongoClient.getDatabase(Settings.DATABASE).getCollection("servers"), userCollection::defaultDocument,
                 userCollection::profileDefaults);
@@ -245,6 +249,7 @@ public class Dungeons extends JavaPlugin {
         listen(SkillGains.class, SkillGains::new);
         listen(KillCoins.class, KillCoins::new);
         listen(DeathCoins.class, DeathCoins::new);
+        listen(Deaths.class, () -> new Deaths(this));
         listen(BookOfStats.class, BookOfStats::new);
         listen(Essences.class, Essences::new);
         listen(Npcs.class, Npcs::new);

@@ -70,6 +70,26 @@ class DeathTextTest {
     }
 
     @Test
+    void outsideADungeon() {
+        // SkyHanni's PlayerDeathManager, "§c ☠ §r§7§r§.(?<name>.+)§r§7 (?<reason>.+)", here without its resets.
+        Pattern seen = Pattern.compile("&c ☠ &7&.(?<name>.+)&r&7 (?<reason>.+)");
+        String other = DeathText.outsideDeath(DeathText.Reason.KILLED_BY, "Ashfang", false, "&bZeroHazel");
+        assertEquals("&c ☠ &7&bZeroHazel&r&7 was killed by &cAshfang&r&7&7.", other);
+        assertTrue(seen.matcher(other).matches());
+        assertEquals(" ☠ ZeroHazel was killed by Ashfang.", plain(other));
+        assertEquals(" ☠ You were killed by Graveyard Zombie.",
+                plain(DeathText.outsideDeath(DeathText.Reason.KILLED_BY, "Graveyard Zombie", true, null)));
+        assertEquals("&c ☠ &7You fell into the void&7.", DeathText.outsideDeath(DeathText.Reason.VOID, null, true, null));
+        assertEquals(" ☠ Bob fell into the void.", plain(DeathText.outsideDeath(DeathText.Reason.VOID, null, false, "&7Bob")));
+        assertEquals(" ☠ You died to a mob.", plain(DeathText.outsideDeath(DeathText.Reason.KILLED_BY, null, true, null)));
+        // Out of the world is the void here, a deep hole in a dungeon; a hit is a kill either way, and there are no traps.
+        assertEquals(DeathText.Reason.VOID, DeathText.outside("out_of_world", false, true));
+        assertEquals(DeathText.Reason.KILLED_BY, DeathText.outside("generic", true, false));
+        assertEquals(DeathText.Reason.BURNT, DeathText.outside("lava", false, false));
+        assertEquals(DeathText.Reason.FELL_WITH_HELP, DeathText.outside("fall", false, true));
+    }
+
+    @Test
     void reviveAndReconnect() {
         // Skytils' "^§r§a ❣ §r§7(?:§.)+(?<username>\w+)§r§a was revived" and BetterMap's "&r&a ❣ &r${info} was revived${*}!&r".
         assertTrue(Pattern.compile("&a ❣ &7(?:&.)+(?<username>\\w+)&r&a was revived.*!").matcher(DeathText.revived("&bAlice")).matches());

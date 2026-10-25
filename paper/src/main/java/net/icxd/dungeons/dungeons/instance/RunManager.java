@@ -578,6 +578,8 @@ public final class RunManager {
         world.setGameRule(GameRules.SHOW_ADVANCEMENT_MESSAGES, false);
         world.setGameRule(GameRules.MOB_GRIEFING, false);
         world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.SHOW_DEATH_MESSAGES, false);
         world.setTime(6000);
         return world;
     }

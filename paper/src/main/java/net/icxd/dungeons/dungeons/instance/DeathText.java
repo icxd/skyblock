@@ -1,13 +1,22 @@
 package net.icxd.dungeons.dungeons.instance;
 
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+
+import net.icxd.dungeons.mob.Mobs;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+
 /**
- * Hypixel's chat lines for deaths and revives in a dungeon. No recording has one: these are the
- * legacy-coloured shapes the mods match (Skytils' {@code DungeonListener} death, reconnect and revive
- * patterns, BetterMap's, SkyHanni's list of death reasons and its fairy lines; research critic.md 3.1).
+ * Hypixel's chat lines for deaths and revives in a dungeon, and for deaths outside one (see combat's Deaths). No
+ * recording has one: these are the legacy-coloured shapes the mods match (Skytils' {@code DungeonListener} death,
+ * reconnect and revive patterns, BetterMap's, SkyHanni's list of death reasons, its fairy lines and its
+ * {@code PlayerDeathManager}; research critic.md 3.1).
  */
-final class DeathText {
+public final class DeathText {
     /** Why someone died: how Hypixel words it for yourself and for someone else. */
-    enum Reason {
+    public enum Reason {
         KILLED_BY("You were killed by ", " was killed by "),
         CRUSHED("You were crushed", " was crushed"),
         SUFFOCATED("You suffocated", " suffocated"),
@@ -15,6 +24,11 @@ final class DeathText {
         TRAP("You died to a trap", " died to a trap"),
         MOB("You died to a mob", " died to a mob"),
         BURNT("You burnt to death", " burnt to death"),
+        /**
+         * Out of the world, outside a dungeon (in one it's a deep hole). UNKNOWN: the words; the old wiki's Death
+         * lists "fell into the void".
+         */
+        VOID("You fell into the void", " fell into the void"),
         /** Only others see it ("Someone fell to their death with help from Someone"); yourself: UNKNOWN, "You died". */
         FELL_WITH_HELP("You died", " fell to their death with help from "),
         /** Only others see it: the player is gone. */
@@ -57,6 +71,43 @@ final class DeathText {
             // "generic" (a SkyBlock death with no hit to blame), drowning, cactus, /kill...
             default -> Reason.OTHER;
         };
+    }
+
+    /** {@link #reason} outside a dungeon, which has no traps: out of the world is the void, not a deep hole. */
+    public static Reason outside(String damageType, boolean hitNow, boolean hitLately) {
+        Reason reason = reason(damageType, hitNow, false, hitLately);
+        return reason == Reason.DEEP_HOLE ? Reason.VOID : reason;
+    }
+
+    /**
+     * Outside a dungeon: "&c ☠ &7You were killed by &cZombie&r&7&7." for the one who died, and for the others
+     * "&c ☠ &7&bAlice&r&7 was killed by &cZombie&r&7&7.", as SkyHanni's {@code PlayerDeathManager} has one
+     * ("§c ☠ §r§7§r§bZeroHazel§r§7 was killed by §r§8§lAshfang§r§7§r§7."). The killer is in the red a mob's name
+     * has over it (UNKNOWN: that one's Ashfang's dark grey bold); without one, a kill is a mob's.
+     */
+    public static String outsideDeath(Reason reason, String killer, boolean self, String name) {
+        Reason words = reason;
+        if (reason.namesKiller() && killer == null) words = reason == Reason.KILLED_BY ? Reason.MOB : Reason.OTHER;
+        String by = words.namesKiller() ? "&c" + killer + "&r&7" : "";
+        String what = self ? words.self + by : name + "&r&7" + words.other + by;
+        return "&c ☠ &7" + what + "&7.";
+    }
+
+    /**
+     * "Zombie Grunt": a SkyBlock mob's name, the Blood Room's undead's ("Revoker") or the Watcher's,
+     * else what the entity is called; null for nobody.
+     */
+    public static String killer(Entity killer) {
+        if (killer instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) killer = shooter;
+        if (killer == null) return null;
+        Mobs.Live mob = Mobs.of(killer);
+        if (mob != null && !mob.type().getName().isEmpty()) return mob.type().getName().replaceAll("[&§].", "");
+        // Their bodies are nameless mannequins and zombies: the name is on a stand over them.
+        DungeonMobs.Mob dungeonMob = DungeonMobs.of(killer);
+        if (dungeonMob instanceof Undead undead) return undead.type.displayName;
+        if (dungeonMob instanceof Watcher) return "The Watcher";
+        if (killer.customName() != null) return PlainTextComponentSerializer.plainText().serialize(killer.customName());
+        return killer instanceof LivingEntity && !(killer instanceof Player) ? null : killer.getName();
     }
 
     /**

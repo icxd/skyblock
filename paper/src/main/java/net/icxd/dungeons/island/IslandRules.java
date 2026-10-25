@@ -173,7 +173,8 @@ public final class IslandRules implements Listener {
         if (Islands.isIsland(event.getFrom().getWorld())) event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    /** A death that isn't called off (Deaths calls them off): its respawn is at the island's spawn. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getPlayer();
         if (Islands.isOwnIsland(player, player.getWorld())) diedOnIsland.add(player.getUniqueId());

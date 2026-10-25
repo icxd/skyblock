@@ -18,6 +18,10 @@ public final class QuestText {
     static final String RULE = "&e&l" + "▬".repeat(64);
     /** Where Hypixel's centred chat lines are centred (see {@link #centered}). */
     private static final int CHAT_MIDDLE = 160;
+    /** The sidebar's arrows, a step of 45 degrees each, clockwise from straight ahead (see {@link #arrow}). */
+    private static final String[] ARROWS = {"⬆", "⬈", "➡", "⬊", "⬇", "⬋", "⬅", "⬉"};
+    /** How near the target turns the arrow green, in blocks. */
+    static final double NEAR = 50;
 
     private QuestText() {
     }
@@ -33,11 +37,35 @@ public final class QuestText {
      * it what it has counted ("  &7(&e0&7/&a10&7)") or what to bring ("&f Rose Red &8x5"), as recorded.
      */
     public static List<String> sidebar(Objective objective, double progress) {
-        List<String> lines = new ArrayList<>(List.of("&fObjective", "&e" + objective.text()));
+        return sidebar(objective, progress, "");
+    }
+
+    /** {@link #sidebar(Objective, double)} with its arrow after "Objective" ("&fObjective &e&l⬉"); none for "". */
+    public static List<String> sidebar(Objective objective, double progress, String arrow) {
+        List<String> lines = new ArrayList<>(List.of("&fObjective" + (arrow.isEmpty() ? "" : " " + arrow), "&e" + objective.text()));
         Quest.Goal goal = objective.goal();
         if (goal != null && goal.kind() == Quest.Goal.Kind.ITEMS) lines.add(itemLine(goal));
         else if (goal != null) lines.add("  " + counted(goal, progress));
         return lines;
+    }
+
+    /**
+     * The arrow after "Objective": which way its target is from where they face, in eighths, clockwise from
+     * straight ahead ("⬆", "⬈" ahead to the right, "➡" ... "⬉"), bold yellow, and bold green within 50
+     * blocks ("&e&l⬉", "&a&l⬆"); none off the target's island, or with no target. As the recordings had
+     * it (2026-10-24 and 10-25, about 300 arrows): the arrow fits the bearing from where the player faced
+     * to the four of a sector, as nearly as a second's turning lets it, and turned green at 50 blocks from
+     * the Bartender. The sidebar shows it again each second.
+     */
+    public static String arrow(Quest.Target target, Place.Island here, double x, double z, float yaw) {
+        if (target == null || target.island() != here) return "";
+        double dx = target.x() - x;
+        double dz = target.z() - z;
+        // The yaw that faces it (0 south, 90 west), then how far to turn: right is more.
+        double toward = Math.toDegrees(Math.atan2(-dx, dz));
+        double turn = ((toward - yaw) % 360 + 540) % 360 - 180;
+        int step = Math.floorMod((int) Math.round(turn / 45), ARROWS.length);
+        return (Math.hypot(dx, dz) <= NEAR ? "&a&l" : "&e&l") + ARROWS[step];
     }
 
     /** "&7(&e3&7/&a10&7)" for a count, "&8(&b150&8/&350 XP&8)" for a skill's XP; nothing for what to bring, or no goal. */

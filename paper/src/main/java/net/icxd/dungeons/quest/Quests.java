@@ -12,6 +12,7 @@ import net.icxd.dungeons.quest.Place.Island;
 import net.icxd.dungeons.quest.Quest.Goal;
 import net.icxd.dungeons.quest.Quest.Objective;
 import net.icxd.dungeons.quest.Quest.Reward;
+import net.icxd.dungeons.quest.Quest.Target;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
 
@@ -33,6 +34,17 @@ import net.icxd.dungeons.skill.Skills;
  */
 public final class Quests {
     public static final String KEY = "quests";
+
+    /**
+     * Where the Hub's sidebar arrows point (see QuestText#arrow), fitted to the recorded arrows. Here only
+     * Time to Strike's objectives had them (Farmer Rigby's quest, not here, had one too); Getting
+     * Started's, Marco's and Saving Up's had none. The Bartender is where the recorded NPC table has him.
+     */
+    static final Target BARTENDER = new Target(Island.HUB, -40.5, -72.5);
+    /** UNKNOWN: the point in the Graveyard's north-east the arrows fit best (20 of 21), not its middle. */
+    static final Target GRAVEYARD = new Target(Island.HUB, -104, -122);
+    /** UNKNOWN: where the arrows fit best (all 187, their colour too); no recording went there. */
+    static final Target SPIDERS_DEN = new Target(Island.HUB, -144, -188);
 
     public static final Quest GETTING_STARTED = new Quest("GETTING_STARTED", "Getting Started", Material.PAPER, Home.on(Island.PRIVATE_ISLAND),
             List.of(new Objective("Break a log", true), new Objective("Craft a workbench", true), new Objective("Craft a Wooden Pickaxe", true),
@@ -64,11 +76,11 @@ public final class Quests {
      * which isn't here, so it stops there.
      */
     public static final Quest TIME_TO_STRIKE = new Quest("TIME_TO_STRIKE", "Time to Strike", Material.PAPER, Home.on(Island.HUB),
-            List.of(new Objective("Talk to the Bartender", true, Reward.item("bartender:UNDEAD_SWORD")),
-                    new Objective("Kill Zombies", true, Reward.skyBlockXp(5).andSkillXp(Skill.COMBAT, 100)).counting(Goal.count(10)),
-                    new Objective("Talk to the Bartender", true, Reward.coins(100)),
+            List.of(new Objective("Talk to the Bartender", true, Reward.item("bartender:UNDEAD_SWORD")).toward(BARTENDER),
+                    new Objective("Kill Zombies", true, Reward.skyBlockXp(5).andSkillXp(Skill.COMBAT, 100)).counting(Goal.count(10)).toward(GRAVEYARD),
+                    new Objective("Talk to the Bartender", true, Reward.coins(100)).toward(BARTENDER),
                     new Objective("Reach Combat Level I", true).counting(Goal.skillXp(Skill.COMBAT, 50)),
-                    new Objective("Travel to the Spider's Den", true)),
+                    new Objective("Travel to the Spider's Den", true).toward(SPIDERS_DEN)),
             null);
     public static final int TALK_TO_THE_BARTENDER = 0;
     public static final int KILL_ZOMBIES = 1;
