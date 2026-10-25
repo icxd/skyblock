@@ -116,13 +116,12 @@ final class MuseumText {
     }
 
     /**
-     * An entry that counts only by its higher tier's donation: UNKNOWN on Hypixel (never recorded). Its higher tier's
-     * lines and its reward, done.
+     * An entry that counts only by its higher tier's donation: a missing one's lines with its reward done (it can still
+     * be donated, as on Hypixel). How Hypixel shows it is UNKNOWN (never recorded).
      */
     static List<String> credited(Entry entry) {
-        List<String> lore = new ArrayList<>(entry.parentLines());
-        lore.add("");
-        lore.add(reward(entry, true));
+        List<String> lore = new ArrayList<>(missing(entry));
+        lore.set(lore.size() - 1, reward(entry, true));
         return lore;
     }
 
