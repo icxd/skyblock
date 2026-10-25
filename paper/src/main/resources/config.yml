@@ -15,3 +15,9 @@ npcs:
     ophelia:
         from-spawn: {x: 4.5, y: 0.0, z: 0.5}
         yaw: 90.0
+hypixel:
+    # A Hypixel API key (developer.hypixel.net), for /yoinkprofile, which copies a real SkyBlock
+    # profile onto yours. Left empty, the HYPIXEL_API_KEY environment variable is used.
+    api-key: ''
+    # Where Hypixel's API is; only to point /yoinkprofile at a stand-in to test with.
+    api-url: 'https://api.hypixel.net/v2/'

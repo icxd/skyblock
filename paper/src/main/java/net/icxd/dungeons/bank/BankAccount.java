@@ -73,6 +73,11 @@ public final class BankAccount {
         return bank;
     }
 
+    /** Sets what's in it, with no transaction (/yoinkprofile's copy of a real profile's bank). */
+    public static void setBalance(Document profile, double balance) {
+        bank(profile).put("balance", balance);
+    }
+
     /** What's in it (a new profile's was saved as a whole 0). */
     public static double balance(Document profile) {
         return profile != null && profile.get(KEY) instanceof Document bank && bank.get("balance") instanceof Number n ? n.doubleValue() : 0;

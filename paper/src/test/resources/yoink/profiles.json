@@ -1,0 +1,202 @@
+{
+ "success": true,
+ "profiles": [
+  {
+   "profile_id": "aaaa1111-0000-0000-0000-000000000000",
+   "cute_name": "Strawberry",
+   "selected": false,
+   "members": {
+    "b876ec32e396476ba1158438d83c67d4": {
+     "currencies": {
+      "coin_purse": 5.0
+     }
+    }
+   }
+  },
+  {
+   "profile_id": "bbbb2222-0000-0000-0000-000000000000",
+   "cute_name": "Banana",
+   "selected": true,
+   "game_mode": "ironman",
+   "members": {
+    "b876ec32e396476ba1158438d83c67d4": {
+     "player_id": "b876ec32e396476ba1158438d83c67d4",
+     "profile": {
+      "first_join": 1600000000000
+     },
+     "currencies": {
+      "coin_purse": 123456.7,
+      "motes_purse": 0,
+      "essence": {
+       "WITHER": {
+        "current": 1500
+       },
+       "UNDEAD": {
+        "current": 20
+       }
+      }
+     },
+     "leveling": {
+      "experience": 25080
+     },
+     "player_data": {
+      "experience": {
+       "SKILL_COMBAT": 55172425.5,
+       "SKILL_MINING": 1000000.0,
+       "SKILL_FORAGING": 12.0,
+       "SKILL_RUNECRAFTING": 300.0,
+       "SKILL_SOCIAL": 9000.0
+      },
+      "crafted_generators": [
+       "WHEAT_1",
+       "WHEAT_2",
+       "COBBLESTONE_1"
+      ]
+     },
+     "collection": {
+      "LOG": 12345,
+      "COBBLESTONE": 500000,
+      "ENDER_STONE": 1000
+     },
+     "dungeons": {
+      "dungeon_types": {
+       "catacombs": {
+        "experience": 569809640.0,
+        "highest_tier_completed": 7
+       },
+       "master_catacombs": {
+        "highest_tier_completed": 5
+       }
+      },
+      "player_classes": {
+       "healer": {
+        "experience": 1000.0
+       },
+       "mage": {
+        "experience": 2000.0
+       },
+       "berserk": {
+        "experience": 300.0
+       },
+       "archer": {
+        "experience": 40.0
+       },
+       "tank": {
+        "experience": 5.0
+       }
+      },
+      "selected_dungeon_class": "mage"
+     },
+     "mining_core": {
+      "experience": 1500000.0,
+      "tokens": 20,
+      "tokens_spent": 15,
+      "powder_mithril": 100000,
+      "powder_gemstone": 2000,
+      "powder_glacite": 30,
+      "nodes": {
+       "mining_speed": 50,
+       "mining_fortune": 50,
+       "titanium_insanium": 50,
+       "quick_forge": 20
+      }
+     },
+     "accessory_bag_storage": {
+      "selected_power": "silky",
+      "tuning": {
+       "slot_0": {
+        "health": 3,
+        "crit_damage": 10
+       }
+      },
+      "highest_magical_power": 900
+     },
+     "inventory": {
+      "inv_contents": {
+       "type": 0,
+       "data": "H4sIAAAAAAAC/5VUQW7TQBT9qUPqmkKh6g4WVsSSoFAoSKxq4ikJcuLIiYgQQqOpM0ksbI+ZGdNGiBMA4gKIbSSOkQsgcQQk7sF32lQVLQW+bMl6M57/3vvPtgDWoBRZAHBrBVaiYelyCS41RJ7qkgWGZmMLNsihlszRWkb7uebKLPbBdafXJY0+9fdov0ko6bgmlPMcV27dPa7aNlbtHlbtPlZt51SZYCZiGI0iLqEy4VJEoQEbkslIT2mejSUbcoWsSgZcmwhNM6GZFjQsmCG8jjCTmooRPWDyBEbO6zwNJyzVCU+1MmBNTZjMUq6KwyoGXMljHSVMc3oQKY6YYYAZYtcoZHGxBQzY1HnKhxRFpyqJlIpEiivlMqzhq1xplmTY6v23nxMAC1aHkcpiNkX5HZZwuDGfPWguBNmOyniobTGy9YTbJB2uQdkTkpsFVbxhBSouS9iYL57/x36z+bxLgpbfOXF9+7gucr3Qf+QtjfkbXgg2T0/CPIiQqeRI9Crbj+JiGCqUIo4Lyuh5q931/B62pb1G4HsebPaajusP6MAJuktsa9DCSAS012wRzz1GLSiPeYLsrZ7T7TZbAaF1WEUNe5giC8yG337s9GndhNXXOSs6g7nnOQOP9HpLjaVDMGF9uZPieVB5WuQwQL55GovwFc5NxUIrc+Ho6V4nHeBMSM6E4tJvwVmF82O4YYCFedCK7gvxCjPyvQKbeHKSYWZwV7LPND3Mdj/twqLOpqU2nw0Hx6bbzWnGJb5pI/jj89fT13wW/vjy4e/5MZf52f3L50s6jabT6ROXui2n7Xfcc8htzWeMHDmF7NyIJeJfMvzxHzNsdEkfx51x3UpHAnbfVjUaUH1kV/FvgvlxA+eJ36netqsaw1ngHnmCS07wvAD5YYbY9k59UXfq785RcHM+e/jCexPbd+v1l2jrA/wIubRdycYi/bMS42hcR3qgtNRjXKxnq+P3qUMD4ni01SdtSp6R4BxS1nw2ak+V5nJ6kZl/rl9yxan/tgUAAA=="
+      },
+      "inv_armor": {
+       "type": 0,
+       "data": "H4sIAAAAAAAC/43R3WrCMBQH8FNrtS2KCGPs0rtdbIPNgTDvtCsq1Dpmdy1Ze1YDbVLSdB8PsefYe+zJFmcRLzrWi0A+zkl+/GMDWKBRGwCaDWjQSLvSwHB4waRmgy5JbEPPfZeCTKQU9LmQmJu7Ouj4rvO48jfT1SpY69AtsliQCDcJvmKirjPAhnZE8ywhHyY0fZIi9L+/Rj6GgrPzfDDlXOYWND0u0FQNmhrQgNY9SUmMv/Od57Kmp1d6PHc2W/izuqSTY5KHcUxZXEN1UVPVL1XO3F0HD94kcKtcJhghT7gAa3h7M74bjkfXFdTTY6qzxVyqU4n/Yz9rYrsldu56Szeohpopj+gLRQFtwkKKTNrQQRZuCZOpWuU62JngEkNJOdv16NCKBX+T2/IHDFEwVGXG8mm9cNSm6gCbHCw6WClhZJNxvv+0iijOVBST/fODQyRzJNHfYegAP0pnM8btAgAA"
+      },
+      "equipment_contents": {
+       "type": 0,
+       "data": "H4sIAAAAAAAC/yWMwQrCMBAF38aocS/9phJzMsaLd1lpKAFrJd2CfoT/bIsDcxuGgQOoMABrYEpHX8LWj/NTibFR6RlNeGuVVrWW+6x5cmuH5nyJ15BuKfhTbH0AY9+V6fWQj4NNMuR1beNYs1vutAiD3VEG6TP+/ADTE/Y9fgAAAA=="
+      },
+      "ender_chest_contents": {
+       "type": 0,
+       "data": "H4sIAAAAAAAC/63OQQrCMBQE0EmtmmYjggfwKJYmoKBx48qNfE2oAZtK+wt6Iu/hyaxbl9KB2Q3MU0AGERSAY4IkOCEFxkXdRV4pjJhKhZl5cEM5cxPOHftWfneYG1usc3sw+qQ3+W5vNRSmLrT3Gz0lUkuVx+L9IhMvV4rs3VIHquroMqTbuvGy/xR9kWCiqaLS44/8oJcDoDEE8AMGM9RxWQEAAA=="
+      },
+      "wardrobe_contents": {
+       "type": 0,
+       "data": "H4sIAAAAAAAC/43QzUrDQBAA4EnTtEloKQURjz0IHlTQCgV7a2NoC2kqNp7LmozpQrIbNht/HsLn8D18Mre2liIRsrCH2ZnZ+RgbwAKN2gBwWoMajbQPDQyHF0xqNuiSxDZ03DcpyEhKQZ8Kibm5qYO27zoPC381db25G+jQLrJYkAhXCb5gov4zTDBTHtFnigKahIUUmbShhSxcEyZTFeU62JngEkNJOdv06NCIBX+V600ANhiiYKjKjPnjcuaoR9UBNtlbdLBSwsgq4/xnJqh0M6J5lpB3E+o+SRFOvj4Ho+34no+h4Ows702RRBbUPS7QVI2aulCDxh1JSYxqyu/ZLuW84lK6u6U4U3cZ3HujwC1fjBHyhAuw+jfXw9v+cHBVwj5W7D3XWWMuVVbi/2j4g76oiO7s0J47mcz8ybKMXOI7OvR5GMeUxXl13WVFXWunGy8WQVVa95A25lxWcsE3JN7p6A0DAAA="
+      },
+      "wardrobe_equipped_slot": -1,
+      "backpack_contents": {
+       "0": {
+        "type": 0,
+        "data": "H4sIAAAAAAAC/32NQQrCMBQFX2rVNBsR3LnxKIYmoKBx416+TagBm0r7C3oi7+HJrBdwYHYDo4ACIioA6wxZ9EIKTMt2SLxVmDDVCgv75I40cxevA4de/josrSt32p2tuZi9Pp6cgcLcx/5xp5dE7qgJWH3eZFN1o8TBb0ykpk2+QH5ouyDHpxhFhpmhhuqAv3wB3pHUEKsAAAA="
+       }
+      },
+      "backpack_icons": {
+       "0": {
+        "type": 0,
+        "data": "H4sIAAAAAAAC/xXMuw6CQBBG4X8W1HUKfSZAGrxgY23GsCGbcMsyJPIQvrNs8XUnh4EjyDMAMjC+oR9hV4zLoMRIVFrGufxqkEw1+M+ibraxw6l63fP6nWfF9bkB49D4eepktUgf0rt4Tm9jcDbONzDYX6SX1iEB/iXvWdl6AAAA"
+       }
+      },
+      "bag_contents": {
+       "talisman_bag": {
+        "type": 0,
+        "data": "H4sIAAAAAAAC/5WOUQqCQBiEZ9VyW6jOtJiCYBom+Ci/7CYLmbGuUN2hO6cPHcCBYV6Gb0YAOzAjMKcHzyj2ZdhEw/RwTMB31Akc45ezJJ2zpp2cHvnSw74usqSpZJZezzKHQKjM+LzTmyPIqdcLOMgGq/nMZrPhYXuinjoNH+u2DpeijstGllWayKji4P2gzM1oi7A1H7JWrz3w1w/nJAHzAQEAAA=="
+       },
+       "potion_bag": {
+        "type": 0,
+        "data": "H4sIAAAAAAAC/+NiYOBkYMzkYgDRcAAANMinnhYAAAA="
+       },
+       "fishing_bag": {
+        "type": 0,
+        "data": "H4sIAAAAAAAC/+NiYOBkYMzkYgDRcAAANMinnhYAAAA="
+       },
+       "sacks_bag": {
+        "type": 0,
+        "data": "H4sIAAAAAAAC/+NiYOBkYMzkYgDRcAAANMinnhYAAAA="
+       },
+       "quiver": {
+        "type": 0,
+        "data": "H4sIAAAAAAAC/+NiYOBkYMzkYgDRcAAANMinnhYAAAA="
+       }
+      },
+      "sacks_counts": {
+       "ENCHANTED_DIAMOND": 3,
+       "LOG": 1200
+      }
+     }
+    },
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": {
+     "player_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "currencies": {
+      "coin_purse": 1.0
+     }
+    }
+   },
+   "banking": {
+    "balance": 1000000000.5
+   }
+  },
+  {
+   "profile_id": "cccc3333-0000-0000-0000-000000000000",
+   "cute_name": "Kiwi",
+   "selected": false,
+   "members": {
+    "b876ec32e396476ba1158438d83c67d4": {
+     "profile": {
+      "deletion_notice": {
+       "timestamp": 1
+      }
+     }
+    }
+   }
+  }
+ ]
+}
