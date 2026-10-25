@@ -4,7 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -29,9 +28,7 @@ import org.bukkit.plugin.Plugin;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import net.icxd.dungeons.combat.LastHit;
 import net.icxd.dungeons.combat.PlayerDamage;
-import net.icxd.dungeons.mob.Mobs;
 import net.icxd.dungeons.session.PlayerHealth;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 /**
  * Deaths in a run (they make ghosts, see {@link Ghosts}), what ghosts can't do, the Fairy Room's
@@ -85,7 +82,7 @@ final class GhostEvents implements Listener {
         boolean trap = now != null && now.by() == null && now.kind() == PlayerDamage.Kind.MAX_HEALTH;
         DeathText.Reason reason = DeathText.reason(type, now != null, trap, lately != null && lately.by() != null);
         Entity killer = now != null ? now.by() : lately != null ? lately.by() : event.getDamageSource().getCausingEntity();
-        String name = killerName(killer);
+        String name = DeathText.killer(killer);
         LastHit.forget(player.getUniqueId());
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (player.isOnline() && manager.runOf(player) == run && run.phase() == DungeonRun.Phase.RUNNING) {
@@ -94,23 +91,6 @@ final class GhostEvents implements Listener {
                 player.setInvulnerable(false);
             }
         });
-    }
-
-    /**
-     * "Zombie Grunt": a SkyBlock mob's name, the Blood Room's undead's ("Revoker") or the Watcher's,
-     * else what the entity is called; null for nobody.
-     */
-    private static String killerName(Entity killer) {
-        if (killer instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) killer = shooter;
-        if (killer == null) return null;
-        Mobs.Live mob = Mobs.of(killer);
-        if (mob != null && !mob.type().getName().isEmpty()) return mob.type().getName().replaceAll("[&§].", "");
-        // Their bodies are nameless mannequins and zombies: the name is on a stand over them.
-        DungeonMobs.Mob dungeonMob = DungeonMobs.of(killer);
-        if (dungeonMob instanceof Undead undead) return undead.type.displayName;
-        if (dungeonMob instanceof Watcher) return "The Watcher";
-        if (killer.customName() != null) return PlainTextComponentSerializer.plainText().serialize(killer.customName());
-        return killer instanceof LivingEntity && !(killer instanceof Player) ? null : killer.getName();
     }
 
     /**

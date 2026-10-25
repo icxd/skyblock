@@ -9,7 +9,6 @@ import java.util.function.ToDoubleFunction;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -19,6 +18,7 @@ import net.icxd.dungeons.combat.Combat;
 import net.icxd.dungeons.combat.HitKind;
 import net.icxd.dungeons.combat.LastHit;
 import net.icxd.dungeons.dungeons.instance.RunManager;
+import net.icxd.dungeons.island.Islands;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.profile.ProfileMode;
 import net.icxd.dungeons.user.User;
@@ -29,8 +29,8 @@ import net.icxd.dungeons.utils.Text;
  * half, "splitting coins into decimals rather than rounding" (the wiki's Coins), and the chat line says how much
  * was lost, rounded down ("If the player dies with 5 in the purse, it will say that the player lost 2"). Not in the
  * Catacombs, where a death makes a ghost instead; not on a Sandbox profile (the owner's rule); and not for a fall
- * into the void with no mob behind it ("a player who walks off their Private Island will not lose any coins ...
- * but a player knocked off the island by a Zombie will lose coins", the wiki's Coins).
+ * into the void on a private island with no mob behind it ("Falls in the void on a Private Island or The Garden,
+ * without being hit by a mob", the wiki's Coins: anywhere else the void costs them, and there's no Garden here).
  *
  * <p>What saves coins (the Bank enchantment, a Piggy Bank) adds a share through {@link #addSaver}: shares add up,
  * as "Wearing two pieces with Bank V saves all of the player's coins" (the wiki's Death), to at most all of them.
@@ -82,15 +82,15 @@ public final class DeathCoins implements Listener {
         SAVERS.add((player, losing) -> saver.applyAsDouble(player));
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onDeath(PlayerDeathEvent event) {
+    /** A death outside a run (see combat's Deaths, which calls the death off): what it costs, said in chat. */
+    public static void died(PlayerDeathEvent event) {
         Player player = event.getPlayer();
         if (InventorySyncListener.frozen(player) || RunManager.inRun(player)) return;
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased() || user.mode() == ProfileMode.SANDBOX) return;
         EntityDamageEvent cause = player.getLastDamageCause();
         boolean intoTheVoid = cause != null && cause.getCause() == EntityDamageEvent.DamageCause.VOID;
-        if (intoTheVoid && LastHit.within(player, KNOCKED_OFF_MILLIS) == null) return;
+        if (intoTheVoid && Islands.isIsland(player.getWorld()) && LastHit.within(player, KNOCKED_OFF_MILLIS) == null) return;
 
         boolean cursed = CURSED.remove(player.getUniqueId());
         double coins = Purse.coins(user);

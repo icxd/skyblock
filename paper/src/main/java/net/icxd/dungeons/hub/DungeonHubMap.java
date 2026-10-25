@@ -34,7 +34,8 @@ public final class DungeonHubMap implements Listener {
         if (here()) Dungeons.getSkyBlockServer().getMainWorld().setSpawnLocation(spawn(Dungeons.getSkyBlockServer().getMainWorld()));
     }
 
-    static Location spawn(World world) {
+    /** Where players arrive, and come back to after dying. */
+    public static Location spawn(World world) {
         return new Location(world, SPAWN[0], SPAWN[1], SPAWN[2], SPAWN_YAW, 0);
     }
 
