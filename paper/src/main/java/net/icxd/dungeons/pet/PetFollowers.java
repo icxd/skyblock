@@ -17,7 +17,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.EulerAngle;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
@@ -28,11 +27,14 @@ import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 
 /**
- * Summoned pets in the world, as recorded (2026-10-25, a Bee summoned at 02:31.8): an invisible marker armor stand
- * with arms holding the pet's head in its right hand (the arm at -45°, -135°, 0°), and over it another with the name,
- * "&8[&7Lv1&8] &aBee" (0.406 to its right, 0.0625 back and 1.4375 up). Others see "Bea's Bee" (recorded, Bea's pet in
- * the Hub): a second name stand, shown to them and not to its owner. Each viewer's Pets menu settings say which they
- * see (see {@link Pets.Visibility}, and the name tags' toggle).
+ * Summoned pets in the world: a small invisible marker armor stand wearing the pet's head, and just over it another
+ * with the name, "&8[&7Lv1&8] &aBee". Hypixel's (recorded 2026-10-25, a Bee summoned at 02:31.8) is a full-size stand
+ * holding the head in its right hand, with the name 1.4375 over it; a small one wearing it looks nicer. The name can't
+ * be the small stand's own: a marker's shows half a block over its feet, under the head, and one that isn't a marker
+ * has a hitbox, which would take the hits and arrows meant for mobs. So it's on a marker stand as high over it as the
+ * small stand is tall, where its own name would be. Others see "Bea's Bee" (recorded, Bea's pet in the Hub): a second
+ * name stand, shown to them and not to its owner. Each viewer's Pets menu settings say which they see (see
+ * {@link Pets.Visibility}, and the name tags' toggle).
  *
  * <p>Each tick the pet goes after its owner, faster the farther it is (recorded: about 0.47 x distance^0.575 blocks every
  * 3 ticks), stopping short of them, facing them, 0.75 over their feet; standing near them it bobs 0.55 up and down
@@ -41,10 +43,8 @@ import net.icxd.dungeons.utils.Utils;
  * gone), which also covers joins, profile switches and yoinks. None are saved with the world. Main thread.
  */
 public final class PetFollowers {
-    /** The name stand's place by the holder, at yaw 0 (facing +z): its right (-x), back (-z) and up (recorded). */
-    static final double NAME_RIGHT = 0.40625;
-    static final double NAME_BACK = 0.0625;
-    static final double NAME_UP = 1.4375;
+    /** How far over the holder its name stand is: a small armor stand's height, where its own name would show. */
+    static final double NAME_UP = 0.9875;
     /** Over the owner's feet, and how far it bobs (recorded: 71.17 to 72.30 over a player at 71). */
     static final double HEIGHT = 0.75;
     static final double BOB = 0.55;
@@ -156,9 +156,8 @@ public final class PetFollowers {
         if (variant != null && variant.texture() != null) Utils.skull(head, Utils.texture(variant.texture()));
         ArmorStand holder = at.getWorld().spawn(at, ArmorStand.class, stand -> {
             prop(stand);
-            stand.setArms(true);
-            stand.setRightArmPose(new EulerAngle(Math.toRadians(-45), Math.toRadians(-135), 0));
-            stand.getEquipment().setItemInMainHand(head);
+            stand.setSmall(true);
+            stand.getEquipment().setHelmet(head);
         });
         ArmorStand ownName = name(nameSpot(at), PetText.floating(pet, data, null));
         ArmorStand othersName = name(nameSpot(at), PetText.floating(pet, data, owner.getName()));
@@ -191,12 +190,9 @@ public final class PetFollowers {
         return at;
     }
 
-    /** Where its name stand is: to the holder's right, a little back, up. */
+    /** Where its name stand is: right over the holder's head. */
     static Location nameSpot(Location holder) {
-        double yaw = Math.toRadians(holder.getYaw());
-        double rightX = -Math.cos(yaw), rightZ = -Math.sin(yaw);
-        double backX = Math.sin(yaw), backZ = -Math.cos(yaw);
-        Location at = holder.clone().add(NAME_RIGHT * rightX + NAME_BACK * backX, NAME_UP, NAME_RIGHT * rightZ + NAME_BACK * backZ);
+        Location at = holder.clone().add(0, NAME_UP, 0);
         at.setYaw(0);
         at.setPitch(0);
         return at;
