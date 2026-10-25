@@ -76,7 +76,9 @@ test('real players, and mobs that are hurt or walk off, are not NPCs', () => {
     s.wait(5000)
   })
   assert.strictEqual(r.npcs, 0)
-  assert.deepStrictEqual(r.worlds[0].mobs, [{ name: 'Zombie Grunt', type: 'zombie', count: 2 }])
+  // Where each was first seen, and when (in seconds), for where mobs spawn.
+  assert.deepStrictEqual(r.worlds[0].mobs, [{ name: 'Zombie Grunt', type: 'zombie', count: 2, lines: ['Zombie Grunt'],
+    seen: [[20, 70, 20, 0.5, 6], [40, 70, 40, 0.8, 6]] }])
   assert.strictEqual(r.holograms, 0)
 })
 

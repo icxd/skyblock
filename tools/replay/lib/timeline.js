@@ -16,7 +16,7 @@ const { track } = require('./entities')
 const { collect, describe: describeSound } = require('./sounds')
 
 function decode (recording, dec, { items, entities, sounds = {}, villagers }, outDir) {
-  const out = { main: [], sidebar: [], tab: [], gui: [] }
+  const out = { main: [], sidebar: [], tab: [], gui: [], positions: [] }
   const numbersAside = s => plain(s).replace(/[\d,.]+/g, '#')
 
   const itemInfo = item => {
@@ -115,10 +115,22 @@ function decode (recording, dec, { items, entities, sounds = {}, villagers }, ou
     out.main.push({ t, line: `[inv] slot ${slot} = ${plain(key)}` })
   }
 
+  // Where the player went, a line each time they're a block or more from the last one (for where
+  // an area starts: what the sidebar named against where they stood).
+  let lastPos = null
+  const notePosition = t => {
+    const pos = playerPos()
+    // A relative teleport before any other leaves it at 0 0 0 for a moment.
+    if (!pos || pos.every(v => v === 0) || (lastPos && Math.hypot(pos[0] - lastPos[0], pos[1] - lastPos[1], pos[2] - lastPos[2]) < 1)) return
+    lastPos = pos
+    out.positions.push(clock(t) + '  ' + pos.map(v => (+v).toFixed(1)).join(' '))
+  }
+
   for (const p of packets(recording, dec)) {
     stats.packets++
     flush('sidebar', p.t)
     flush('tab', p.t)
+    if (!p.error) notePosition(p.t)
     if (p.error) {
       stats.errors++
       continue
@@ -161,6 +173,8 @@ function decode (recording, dec, { items, entities, sounds = {}, villagers }, ou
         if (name === 'login') {
           self = -d.entityId - 1
           selfPos = null
+          lastPos = null
+          out.positions.push(clock(t) + '  [world]')
         }
         const w = d.worldState || {}
         log(`[world] ${name}: ${w.name || d.worldName} (${w.gamemode ?? ''})`)
@@ -277,6 +291,7 @@ function decode (recording, dec, { items, entities, sounds = {}, villagers }, ou
   fs.writeFileSync(path.join(outDir, 'sidebar.txt'), out.sidebar.join('\n\n') + '\n')
   fs.writeFileSync(path.join(outDir, 'tab.txt'), out.tab.join('\n') + '\n')
   fs.writeFileSync(path.join(outDir, 'gui.txt'), out.gui.join('\n') + '\n')
+  fs.writeFileSync(path.join(outDir, 'positions.txt'), out.positions.join('\n') + '\n')
   const where = s => !s.pos ? '' : ' at ' + s.pos.map(v => Math.round(v * 10) / 10).join(' ') +
     (s.distance == null ? '' : s.atPlayer ? ', at the player' : ', ' + Math.round(s.distance) + ' blocks away')
   fs.writeFileSync(path.join(outDir, 'sounds.txt'), heard.heard.map(s => clock(s.t) + '  ' + s.name + ' (' + describeSound(s) + ')' + where(s)).join('\n') + '\n')

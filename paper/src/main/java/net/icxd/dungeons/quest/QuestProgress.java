@@ -1,5 +1,7 @@
 package net.icxd.dungeons.quest;
 
+import java.util.List;
+
 import org.bson.Document;
 import org.bukkit.entity.Player;
 
@@ -51,9 +53,35 @@ public final class QuestProgress {
 
     /** A quest started by something they found (an area): no word of it but the boss bar's. */
     public static void start(Player player, Quest quest) {
+        startAll(player, List.of(quest));
+    }
+
+    /** Quests started together by something they found (the Village starts the Hub's), as {@link #start}. */
+    public static void startAll(Player player, List<Quest> quests) {
         User user = User.ifLoaded(player.getUniqueId());
-        if (user == null || user.isReleased() || !Quests.start(user.profile(), quest, System.currentTimeMillis())) return;
+        if (user == null || user.isReleased()) return;
+        long now = System.currentTimeMillis();
+        boolean any = false;
+        for (Quest quest : quests) any |= Quests.start(user.profile(), quest, now);
+        if (!any) return;
         user.save();
         QuestBar.moved(player);
+    }
+
+    /**
+     * Counts this many more for the objective they're at, if it's this one and it counts (Time to Strike's
+     * zombies): done once it reaches its goal, with what it gives; till then the boss bar shows the count.
+     */
+    public static void count(Player player, Quest quest, int objective, int more) {
+        User user = User.ifLoaded(player.getUniqueId());
+        if (user == null || user.isReleased()) return;
+        int now = Quests.addCount(user.profile(), quest, objective, more);
+        if (now < 0) return;
+        if (now >= quest.objective(objective).goal().target()) {
+            complete(player, quest, objective);
+            return;
+        }
+        user.save();
+        QuestBar.counted(player);
     }
 }

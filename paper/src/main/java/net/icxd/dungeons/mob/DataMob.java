@@ -153,7 +153,8 @@ public final class DataMob implements SkyBlockMob {
     @Override
     public String nameTag(double health) {
         return switch (kind.style()) {
-            case HUB, BOSS -> NameTags.hub(variant.level(), kind.name(), health, maxHealth, isBoss());
+            case HUB -> NameTags.hub(variant.level(), kind.types(), kind.name(), health, maxHealth, isBoss());
+            case BOSS -> NameTags.hub(variant.level(), kind.name(), health, maxHealth, isBoss());
             default -> NameTags.dungeon(kind.style(), kind.types(), kind.name(), variant.level(), options.starred(), options.modifier(), health,
                     maxHealth);
         };

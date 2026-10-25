@@ -7,9 +7,12 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
+import net.icxd.dungeons.collection.PrivateData;
+import net.icxd.dungeons.skill.Skill;
+import net.icxd.dungeons.skill.Skills;
 import net.icxd.dungeons.utils.SkyBlockTime;
 
-/** Against the recording (2026-10-24): the chat, the boss bar, the sidebar and the Quest Log as Hypixel wrote them. */
+/** Against the recordings (2026-10-24 and 10-25): the chat, the boss bar, the sidebar and the Quest Log as Hypixel wrote them. */
 class QuestTextTest {
     @Test
     void theWelcome() {
@@ -40,8 +43,50 @@ class QuestTextTest {
     @Test
     void theBossBarAndSidebar() {
         Quest.Objective log = Quests.GETTING_STARTED.objective(Quests.BREAK_A_LOG);
-        assertEquals("&fObjective: &eBreak a log", QuestText.bossBar(log));
-        assertEquals(List.of("&fObjective", "&eBreak a log"), QuestText.sidebar(log));
+        assertEquals("&fObjective: &eBreak a log", QuestText.bossBar(log, 0));
+        assertEquals(List.of("&fObjective", "&eBreak a log"), QuestText.sidebar(log, 0));
+    }
+
+    /** 10-25: what an objective counts, on the bar (02:21.7, 03:30.8) and the sidebar, and how full the bar is. */
+    @Test
+    void countedObjectives() {
+        Quest.Objective zombies = Quests.TIME_TO_STRIKE.objective(Quests.KILL_ZOMBIES);
+        Quest.Objective combat = Quests.TIME_TO_STRIKE.objective(Quests.REACH_COMBAT_I);
+        Quest.Objective dye = Quests.MARCO_THE_ARTIST.objective(Quests.GIVE_ROSE_RED);
+        assertEquals("&fObjective: &eKill Zombies  &7(&e0&7/&a10&7)", QuestText.bossBar(zombies, 0));
+        assertEquals("&fObjective: &eReach Combat Level I  &8(&b150&8/&350 XP&8)", QuestText.bossBar(combat, 150));
+        assertEquals("&fObjective: &eGive Rose Red Dye to Marco", QuestText.bossBar(dye, 5));
+        assertEquals(List.of("&fObjective", "&eKill Zombies", "  &7(&e0&7/&a10&7)"), QuestText.sidebar(zombies, 0));
+        assertEquals(0.1f, QuestText.fill(zombies.goal(), 1));
+        assertEquals(1f, QuestText.fill(combat.goal(), 150));
+        assertEquals(1f, QuestText.fill(dye.goal(), 5));
+        assertEquals(1f, QuestText.fill(null, 0));
+    }
+
+    /** 00:44.7: what Marco wants, under the objective, in its rarity's colour. */
+    @Test
+    void whatToBring() {
+        PrivateData.load();
+        try {
+            assertEquals(List.of("&fObjective", "&eGive Rose Red Dye to Marco", "&f Rose Red &8x5"),
+                    QuestText.sidebar(Quests.MARCO_THE_ARTIST.objective(Quests.GIVE_ROSE_RED), 5));
+        } finally {
+            PrivateData.unload();
+        }
+    }
+
+    /** 04:17.9: Time to Strike in the Quest Log, its counts done (Combat's XP as it is now, 165). */
+    @Test
+    void theLogCountsThem() {
+        Document profile = new Document();
+        long started = SkyBlockTime.EPOCH + 520 * SkyBlockTime.YEAR_MS + 11 * SkyBlockTime.MONTH_MS + 21 * SkyBlockTime.DAY_MS
+                + (17 * 60 + 16) * SkyBlockTime.DAY_MS / (24 * 60) + 1;
+        Quests.start(profile, Quests.TIME_TO_STRIKE, started);
+        for (int step = Quests.TALK_TO_THE_BARTENDER; step <= Quests.REACH_COMBAT_I; step++) Quests.complete(profile, Quests.TIME_TO_STRIKE, step, started);
+        Skills.add(profile, Skill.COMBAT, 165);
+        assertEquals(List.of("", " &a✔ &fTalk to the Bartender.", " &a✔ &fKill Zombies. (&b10&f/&b10&f)", " &a✔ &fTalk to the Bartender.",
+                " &a✔ &fReach Combat Level I. (&b165&f/&b50&f)", " &c✖ &eTravel to the Spider's Den.", "", "&7Started:",
+                "  &fWinter 22nd, Year 521", "  &75:16pm"), QuestText.logLore(profile, Quests.TIME_TO_STRIKE));
     }
 
     @Test

@@ -40,25 +40,27 @@ class MobDeathTest {
         assertNull(event.mob());
     }
 
-    /** Dungeon drops go to the inventory silently unless they're rare (the recorded 5% armor pieces had no chat line). */
+    /**
+     * Only the rare ones get a line, from any mob: the recorded 5% dungeon armor pieces had none, nor did the
+     * Graveyard's Rotten Flesh and Poisonous Potato (100% and 2%); its 1% Potato had one (2026-10-25, 07:13.6).
+     */
     @Test
     void announced() {
-        DataMob grunt = MobsTest.mob("ZOMBIE_GRUNT");
-        assertTrue(grunt.dropsToInventory());
-        assertFalse(Mobs.announced(grunt, MobDropType.OCCASIONAL));
-        assertFalse(Mobs.announced(grunt, MobDropType.COMMON));
-        assertTrue(Mobs.announced(grunt, MobDropType.VERY_RARE));
-        DataMob cube = MobsTest.mob("MAGMA_CUBE");
-        assertFalse(cube.dropsToInventory());
-        assertTrue(Mobs.announced(cube, MobDropType.COMMON));
+        assertTrue(MobsTest.mob("ZOMBIE_GRUNT").dropsToInventory());
+        assertFalse(MobsTest.mob("GRAVEYARD_ZOMBIE").dropsToInventory());
+        assertFalse(Mobs.announced(MobDropType.COMMON));
+        assertFalse(Mobs.announced(MobDropType.OCCASIONAL));
+        assertTrue(Mobs.announced(MobDropType.RARE));
+        assertTrue(Mobs.announced(MobDropType.VERY_RARE));
+        assertTrue(Mobs.announced(MobDropType.RNGESUS_INCARNATE));
     }
 
-    /** SkyHanni's recorded dungeon line: "§6§lRARE DROP! §r§9Beating Heart §r§b(...)", gold whatever the drop's tier. */
+    /** The recorded Potato (with 7 Magic Find; the star was Hypixel's sprite), gold whatever the drop's tier. */
     @Test
     void dropMessage() {
-        assertEquals("§6§lRARE DROP! §9Beating Heart §b(+0% ✯ Magic Find)", Mobs.dropMessage(MobDropType.VERY_RARE, "§9", "Beating Heart", 0));
-        assertEquals("§6§lRARE DROP! §5Diamond Atom §b(+25% ✯ Magic Find)", Mobs.dropMessage(MobDropType.RARE, "§5", "Diamond Atom", 25));
-        assertEquals("§d§lCRAZY RARE DROP! §6Test §b(+0% ✯ Magic Find)", Mobs.dropMessage(MobDropType.CRAZY_RARE, "§6", "Test", 0));
-        assertEquals("§c§lINSANE DROP! §6Test §b(+0% ✯ Magic Find)", Mobs.dropMessage(MobDropType.RNGESUS_INCARNATE, "§6", "Test", 0));
+        assertEquals("§6§lRARE DROP! §fPotato §b(+7 ✯ Magic Find)", Mobs.dropMessage(MobDropType.RARE, "§f", "Potato", 7));
+        assertEquals("§6§lRARE DROP! §9Beating Heart §b(+0 ✯ Magic Find)", Mobs.dropMessage(MobDropType.VERY_RARE, "§9", "Beating Heart", 0));
+        assertEquals("§d§lCRAZY RARE DROP! §6Test §b(+0 ✯ Magic Find)", Mobs.dropMessage(MobDropType.CRAZY_RARE, "§6", "Test", 0));
+        assertEquals("§c§lINSANE DROP! §6Test §b(+0 ✯ Magic Find)", Mobs.dropMessage(MobDropType.RNGESUS_INCARNATE, "§6", "Test", 0));
     }
 }

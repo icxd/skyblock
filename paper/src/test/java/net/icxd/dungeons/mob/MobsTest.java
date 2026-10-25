@@ -16,11 +16,11 @@ class MobsTest {
         return kind == null ? null : new DataMob(kind, kind.firstVariant(), SpawnOptions.NONE);
     }
 
-    /** The Hub's style, as the two test mobs have always had it. */
+    /** The Hub's style, its types' symbols after the level as the Graveyard's recorded tags had them (see NameTagsTest). */
     @Test
     void nameTags() {
-        assertEquals("&8[&7Lv75&8] &cMagma Cube &a1M&f/&a1M&c❤", Mobs.nameTag(mob("MAGMA_CUBE"), 1_000_000));
-        assertEquals("&8[&7Lv75&8] &cMagma Cube &a0&f/&a1M&c❤", Mobs.nameTag(mob("magma_cube"), -5));
+        assertEquals("&8[&7Lv75&8] &a⚂&4♨ &cMagma Cube &a1M&f/&a1M&c❤", Mobs.nameTag(mob("MAGMA_CUBE"), 1_000_000));
+        assertEquals("&8[&7Lv75&8] &a⚂&4♨ &cMagma Cube &a0&f/&a1M&c❤", Mobs.nameTag(mob("magma_cube"), -5));
         assertEquals("&e﴾ &8[&7Lv200&8] &c&8&lBladesoul &a50M&f/&a50M&c❤ &e﴿", Mobs.nameTag(mob("BLADESOUL"), 50_000_000));
     }
 
@@ -29,8 +29,8 @@ class MobsTest {
         assertNotNull(mob("BLADESOUL"));
         assertNotNull(mob("zombie_grunt"));
         assertNull(Mobs.kind("NOT_A_MOB"));
-        // The Entrance's eleven, the Watcher's undeads, the secret bat and the Hub's two.
-        assertEquals(15, Mobs.registry().size());
+        // The Entrance's eleven, the Watcher's undeads, the secret bat and the Hub's four.
+        assertEquals(17, Mobs.registry().size());
         assertTrue(Mobs.registry().keySet().containsAll(List.of("MAGMA_CUBE", "BLADESOUL", "ZOMBIE_GRUNT", "ANGRY_ARCHAEOLOGIST")));
         // A dungeon kind comes at its Entrance's first level; the Hub's as they are.
         assertEquals(40, mob("ZOMBIE_GRUNT").getLevel());

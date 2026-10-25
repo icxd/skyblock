@@ -9,7 +9,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
-/** Against the recording (2026-10-24): where it crossed from one area into another, and what finding one said. */
+/** Against the recordings (2026-10-24 and 10-25): where they crossed from one area into another, and what finding one said. */
 class AreasTest {
     private static String at(double x, double y, double z) {
         return RegionType.getRegionType(x, y, z).getName();
@@ -39,6 +39,26 @@ class AreasTest {
         assertEquals("None", at(500, 70, 500));
     }
 
+    /** 10-25's: the Flower House and the Village round it, the Combat Settlement, the Graveyard. */
+    @Test
+    void theHubsOtherCrossings() {
+        assertEquals("Flower House", at(88.0, 76.1, 6.3));
+        assertEquals("Village", at(86.7, 75, -0.8));
+        assertEquals("Flower House", at(87.7, 76.8, 5.9));
+        assertEquals("Village", at(84.0, 76.3, 6.0));
+        assertEquals("Combat Settlement", at(-34.1, 70.6, -62.6));
+        assertEquals("Village", at(-32.0, 70.5, -59.1));
+        assertEquals("Graveyard", at(-69.9, 71.3, -97.8));
+        assertEquals("Combat Settlement", at(-64.2, 69.7, -91.7));
+        // Marco, the Bartender and Pat where they stand; the Village's two boxes are one area.
+        assertEquals("Flower House", at(90.5, 76, 3.5));
+        assertEquals("Combat Settlement", at(-40.5, 69, -72.5));
+        assertEquals("Graveyard", at(-87.5, 73, -94.5));
+        assertTrue(RegionType.VILLAGE.sameArea(RegionType.VILLAGE_EAST));
+        assertFalse(RegionType.VILLAGE.sameArea(RegionType.FLOWER_HOUSE));
+        assertFalse(RegionType.VILLAGE.sameArea(null));
+    }
+
     @Test
     void eachAreaIsFoundOnce() {
         Document profile = new Document();
@@ -58,6 +78,24 @@ class AreasTest {
         assertEquals(List.of("Talk to the Banker.", "Store your coins to keep them safe.", "Earn interest on your coins."), Areas.FOUND.get("Bank"));
         assertEquals("§eFarm", RegionType.FARM.displayName());
         assertEquals("§6Bank", RegionType.BANK.displayName());
+    }
+
+    /** 10-25, 02:01.3: a thing too long for one line goes on under itself. */
+    @Test
+    void theCombatSettlementsLines() {
+        assertEquals(List.of("", " &6&lNEW AREA DISCOVERED!", "  &7⏣ &cCombat Settlement", "",
+                "&7   ■ &fBuy Combat Tools from the &cWeaponsmith &fand &cRosetta&f.",
+                "&7   ■ &fTalk to &cJax &fat the &3Archery Range &fto learn about bows and",
+                "   &farrows.",
+                "&7   ■ &fLearn about &3Enchanting &fat the &3Library&f.",
+                "&7   ■ &fTalk to &cMaxwell &fat the &6Thaumaturgist &fto learn about",
+                "   &6Accessory Power&f.",
+                ""), Areas.discovery(RegionType.COMBAT_SETTLEMENT.displayName().replace('§', '&'), Areas.FOUND.get("Combat Settlement")));
+        assertEquals(List.of("Talk to Marco about &aSpray Cans&f.", "Gather flowers."), Areas.FOUND.get("Flower House"));
+        assertEquals(List.of("Fight Zombies.", "Travel to the &cSpider's Den&f.", "Talk to &7Pat&f.", "Investigate the Catacombs."),
+                Areas.FOUND.get("Graveyard"));
+        assertEquals("§bFlower House", RegionType.FLOWER_HOUSE.displayName());
+        assertEquals("§cGraveyard", RegionType.GRAVEYARD.displayName());
     }
 
     /** Each area's fanfare, as the packet had it: volume 0.3, pitch 1.4920635 (94/63). */

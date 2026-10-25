@@ -33,7 +33,10 @@ import net.kyori.adventure.text.event.HoverEvent;
  * quest is followed is {@link Quests#follow}'s: picked again on arriving somewhere (joining, another
  * world, another area), kept while it's going otherwise. When a step of the quest being followed
  * changes the objective, NEW OBJECTIVE says the new one in chat two seconds later, with a note
- * block's pling (recorded after every step); arriving somewhere only changes the bar. Main thread.
+ * block's pling (recorded after every step); arriving somewhere only changes the bar. An objective
+ * that counts shows its count, and the bar fills with it ("Kill Zombies (1/10)", a tenth full); one
+ * whose goal is reached by the time they arrive somewhere is done then, without a word, and isn't
+ * said as new if it's reached already (the recorded "Reach Combat Level I", 2026-10-25). Main thread.
  */
 public final class QuestBar {
     /** NEW OBJECTIVE comes this long after the step (recorded: 1.9 to 2.0 s after the bar changed). */
@@ -47,6 +50,7 @@ public final class QuestBar {
     private static final class Following {
         Quest quest;
         int objective = -1;
+        double progress;
         BossBar bar;
         BukkitTask announcing;
     }
@@ -70,7 +74,18 @@ public final class QuestBar {
 
     /** They've arrived somewhere (joined, another world, another area): the quest most at home here, without a word. */
     public static void moved(Player player) {
+        User user = User.ifLoaded(player.getUniqueId());
+        if (user != null && !user.isReleased() && Quests.reachGoals(user.profile(), System.currentTimeMillis())) user.save();
         update(player, true, false);
+    }
+
+    /** What the objective they follow counts has changed: the bar and sidebar say so. */
+    static void counted(Player player) {
+        User user = User.ifLoaded(player.getUniqueId());
+        Following following = FOLLOWING.get(player.getUniqueId());
+        if (user == null || following == null || following.quest == null || following.objective < 0) return;
+        show(player, following, following.quest.objective(following.objective),
+                QuestText.progress(user.profile(), following.quest, following.objective));
     }
 
     /** A step of some quest was done: the followed quest stays while it's going, and a new objective of it is said. */
@@ -88,8 +103,8 @@ public final class QuestBar {
         boolean changed = quest != following.quest || objective != following.objective;
         following.quest = quest;
         following.objective = objective;
-        show(player, following, quest == null ? null : quest.objective(objective));
-        if (changed && announce && quest != null) announceLater(player, following, quest, objective);
+        show(player, following, quest == null ? null : quest.objective(objective), quest == null ? 0 : QuestText.progress(profile, quest, objective));
+        if (changed && announce && quest != null && !Quests.reached(profile, quest, objective)) announceLater(player, following, quest, objective);
     }
 
     /** Not in a dungeon run's world, where the run's own sidebar is. */
@@ -97,18 +112,21 @@ public final class QuestBar {
         return Dungeons.getSkyBlockServer().getServerType() != ServerType.DUNGEONS;
     }
 
-    private static void show(Player player, Following following, Objective objective) {
+    private static void show(Player player, Following following, Objective objective, double progress) {
         if (objective == null) {
             if (following.bar != null) player.hideBossBar(following.bar);
             following.bar = null;
             return;
         }
-        Component name = Text.line(QuestText.bossBar(objective));
+        Component name = Text.line(QuestText.bossBar(objective, progress));
+        float fill = QuestText.fill(objective.goal(), progress);
+        following.progress = progress;
         if (following.bar == null) {
-            following.bar = BossBar.bossBar(name, 1f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS);
+            following.bar = BossBar.bossBar(name, fill, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS);
             player.showBossBar(following.bar);
         } else {
             following.bar.name(name);
+            following.bar.progress(fill);
         }
     }
 
@@ -140,7 +158,7 @@ public final class QuestBar {
     public static List<String> sidebar(Player player) {
         Following following = FOLLOWING.get(player.getUniqueId());
         if (following == null || following.quest == null || following.objective < 0) return List.of();
-        return QuestText.sidebar(following.quest.objective(following.objective));
+        return QuestText.sidebar(following.quest.objective(following.objective), following.progress);
     }
 
     /** Gone, or on another profile: they follow nothing till they arrive somewhere again. */

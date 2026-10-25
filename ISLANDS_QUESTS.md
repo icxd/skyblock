@@ -1,10 +1,11 @@
 # Private islands, quests and the Hub
 
 A new profile's first minutes, as Hypixel has them: its private island, Getting Started and the
-quests after it, Jerry, the portal to the Hub on Hypixel's map, and the areas found there. Built
-from the recording of a new profile's first ten minutes (2026-10-24, decoded with `tools/replay`:
-chat, titles, boss bar, sidebar, menus, NPCs and holograms) and the dungeon scanner's captures of
-the island, the Hub and the Dungeon Hub (`/dscan world`). The code is in
+quests after it, Jerry, the portal to the Hub on Hypixel's map, the areas found there, and the Hub's
+first quests. Built from the recordings of a new profile's first ten minutes (2026-10-24) and of
+Marco's and the Bartender's quests (2026-10-25), decoded with `tools/replay` (chat, titles, boss bar,
+sidebar, menus, NPCs, holograms, block changes and the player's path), and the dungeon scanner's
+captures of the island, the Hub and the Dungeon Hub (`/dscan world`). The code is in
 `paper/src/main/java/net/icxd/dungeons/island`, `.../quest`, `.../hub` and `.../region/Areas.java`.
 
 ## The data
@@ -77,18 +78,24 @@ without gravity, and the plugin makes up for both where it matters:
     - Talk to Jerry.
     - Use the teleporter (done by arriving in the Hub).
   - **What follows.** Finishing Getting Started starts Marco the Artist (Talk to Marco). Finding
-    the Village starts Time to Strike (Talk to the Bartender).
+    the Village starts the Hub's quests: Marco the Artist (if it hasn't started), Time to Strike and
+    Saving Up. The Quest Log had all of the Hub's quests started at the minute the Village was found.
   - **How the objective shows**, as recorded:
     - A boss bar, yellow and full, reading "Objective: Break a log", 0.4 s after arriving.
     - Two sidebar lines under the purse.
     - NEW OBJECTIVE in chat 2 s after each step, linked to the Quest Log, with the quest's progress
-      as its hover.
-  - **Which quest is followed.** The one most at home where you are: an area's own (Saving Up in
-    the Bank), the island's on the island, the Hub's in the Hub, and one that belongs anywhere
-    elsewhere. It's picked again whenever you arrive somewhere; a step keeps the quest you follow
-    until that quest is done.
+      as its hover. An objective that's already reached isn't announced ("Reach Combat Level I").
+    - An objective that counts shows its count on the bar, which fills with it ("Kill Zombies
+      (3/10)"), and under it on the sidebar. A skill's XP shows as "(150/50 XP)". One that wants
+      items lists them on the sidebar ("Rose Red x5"). The Quest Log adds the counts ("Kill Zombies.
+      (10/10)"), a skill's XP as it is now.
+  - **Which quest is followed.** The one most at home where you are: an area's own (Marco's in the
+    Flower House, Saving Up's deposit in the Bank), the island's on the island, the Hub's in the
+    Hub, and one that belongs anywhere elsewhere (Marco's). An objective can have its own home:
+    Saving Up's "Talk to the Banker" is followed nowhere, even in the Bank. The quest is picked again
+    whenever you arrive somewhere; a step keeps the quest you follow until that quest is done.
   - **Storage.** Progress is kept on the profile under `quests.<id>` (when it started, how many
-    objectives are done, when it was completed).
+    objectives are done, what the current one has counted, when it was completed).
 - **Quest menus**, as recorded:
   - Quests & Chapters, from the SkyBlock Menu's Quests.
   - Chapters (`/chapters`).
@@ -103,18 +110,21 @@ without gravity, and the plugin makes up for both where it matters:
   facing the portal home). Two portals work, each under its recorded "Travel to:" sign: the end
   portal north of spawn takes you to your island, and the nether portal south-west of spawn
   (x -36 to -32, z 27) to the Dungeon Hub. Vanilla's portals go nowhere.
-- **The Hub's NPCs** (`HubNpcs`): the 49 the recording passed close by, where they stood and facing
-  the way they faced, in their skins (the villagers as their kind, the Alchemist a witch), under
+- **The Hub's NPCs** (`HubNpcs`): the ones the recordings passed close by (82 in the three so far),
+  where they stood and facing the way they faced, in their skins (the villagers as their kind, the Alchemist a witch), under
   their name tags at the recorded heights, holding what they held. Four say what they said when the
   recording's player talked to them, timed as recorded and in their voices (`HubTalk`): Elizabeth,
   the Community Center's Clerk Seraphine, Minister Nancy and the Auction Master. The Banker has
-  his bank and the Farm Merchant his shop (below). The others don't answer a click yet.
+  his bank, the Farm Merchant his shop, and Marco and the Bartender their quests (below). The others
+  don't answer a click yet.
 - **Saving Up and the Bank** (`Banker`, `bank/`), as recorded.
-  - **The Banker.** The first time, he says his three lines, timed as recorded, in a villager's
-    voice. With the last, Saving Up starts with Talk to the Banker done: OBJECTIVE COMPLETE and +5
-    SkyBlock XP, which SkyBlock Leveling counts as Complete Objectives ("+5 SkyBlock XP (Complete
-    Objective)" on the action bar 0.5 s later). The boss bar stays where it was. After that he
-    opens the Personal Bank Account, speaking as it opens.
+  - **The Banker.** Saving Up starts with the Village. While it's at Talk to the Banker, he says
+    his three lines, timed as recorded, in a villager's voice (again if you left before the last).
+    With the last, Talk to the Banker is done: OBJECTIVE COMPLETE and +5 SkyBlock XP, which SkyBlock
+    Leveling counts as Complete Objectives ("+5 SkyBlock XP (Complete Objective)" on the action bar
+    0.5 s later). The boss bar stays where it was. After that he opens the Personal Bank Account,
+    speaking as it opens. A profile that found the Village before Saving Up started with it starts
+    it with his last line.
   - **The menus.** The Personal Bank Account has deposit, withdraw, the last 10 transactions and
     the information, whose countdown to interest ticks every second. Bank Deposit takes the whole
     purse, half of it, or an amount typed on the recorded sign. Bank Withdrawal takes everything,
@@ -142,13 +152,46 @@ without gravity, and the plugin makes up for both where it matters:
   - **Every shop** (Ophelia's too) now has the recorded sale line ("You sold Cobblestone x20 for 20
     Coins!"), the coins' chime with each sale, and "Right-click for more trading options!" on
     wares that stack.
+- **Marco the Artist** (`Marco`), as recorded.
+  - **Talk to Marco.** His four lines ("Hey there!" to "Could you pick 5 Poppies and turn them into
+    Rose Red Dye...?"), timed as recorded; the objective is done with the last.
+  - **Give Rose Red Dye to Marco.** The sidebar lists "Rose Red x5". A Poppy crafts into a Rose
+    Red. With 5, a click on him has his five thanks; with the last he takes the dye, Claim Reward
+    opens with the Spray Can, and QUEST COMPLETE says "REWARD / Spray Can" (its line opens the menu
+    again). Then the boss bar goes to the Bartender, with NEW OBJECTIVE 2 s later.
+- **The flower beds** (`FlowerGarden`). The flowers in the two beds by the Flower House (x 80 to
+  91, z -4 to 22) can be picked, as recorded; nothing else in the Hub breaks (the grass between
+  them didn't). A flower drops as its item to pick up and gives +1 Foraging XP. It grows back as
+  itself: every 5 seconds, each picked one has a 1 in 2 chance (below). The beds have 6 Poppies.
+- **Time to Strike** (`Bartender`, `Graveyard`), as recorded.
+  - **Talk to the Bartender.** His four lines, timed as recorded. With the last, Claim Reward opens
+    with the Undead Sword, and OBJECTIVE COMPLETE says "REWARD / Undead Sword".
+  - **Kill Zombies (0/10).** Graveyard Zombies and Zombie Villagers both count, and the bar fills
+    by a tenth a kill. The tenth kill's Combat XP comes first (Combat I's SKILL LEVEL UP, with its
+    rewards), then OBJECTIVE COMPLETE with REWARDS: +5 SkyBlock XP and +100 Combat Experience.
+  - **Talk to the Bartender again.** His four thanks, with your name in your rank's colour, then
+    +100 Coins.
+  - **Reach Combat Level I (150/50 XP).** It's reached already, so NEW OBJECTIVE doesn't say it,
+    and it's done without a word as you next arrive in an area. Then Travel to the Spider's Den,
+    which isn't here, so the quest stops there.
+- **Claim Reward** (`ClaimMenu`, `Claims`, `/claimitem`), as recorded. Six rows of glass, the item in
+  the middle with "Click to claim!" under its lore, and Close. It opens with a lever's click as the
+  item is given. A click puts the item in your inventory, says "You claimed an Undead Sword!" (or
+  "a Spray Can") with the coins' chime, and closes the menu. Until then the reward waits on the
+  profile (`claims`), and the reward's chat line opens the menu again.
+- **The Graveyard** (`Graveyard`, `MobKinds`). Graveyard Zombies at the 59 spots where the
+  recorded ones first appeared, and at night (8pm to 6am) Zombie Villagers at their 12. One more
+  of each comes every 2 seconds while there are fewer than 20 zombies and 10 villagers, as
+  recorded. A villager left at 6am stays until it's killed; none come by day. Their name tags are
+  as recorded ("[Lv1] ༕ Graveyard Zombie 100/100❤", the Undead symbol in its classic form).
 - **The Dungeon Hub** (`DungeonHubMap`, with `server.map: dungeon_hub`). Players arrive where Hypixel
   put them (-28.5 121 0.5, facing west), and Ophelia stands at her recorded spot.
 - **Areas** (`Areas`). The first time a profile reaches an area, it gets the area's title (such as
   "Village" over "NEW AREA DISCOVERED!") and its chat lines, as recorded, for the Village,
-  Community Center, Election Room, Auction House, Bazaar Alley, Bank, Farm and Dungeon Hub. Found
-  areas are kept on the profile under `areas`. The Hub's area boxes (`RegionType`) are drawn around
-  those places on the map.
+  Community Center, Election Room, Auction House, Bazaar Alley, Bank, Farm, Flower House, Combat
+  Settlement, Graveyard and Dungeon Hub. A line too long for chat goes on under itself, as recorded.
+  Found areas are kept on the profile under `areas`. The Hub's area boxes (`RegionType`) are drawn
+  around those places on the map. The Village has two boxes, which count as one area.
 - **Sounds**, as recorded (the replay tool's `[sound]` lines). Hypixel's pitches come in 63rds
   (0.492 is 31/63), so they're used as the packets had them.
   - NEW OBJECTIVE: a note block's pling, pitch 0.49. Skill XP: an orb's pickup, volume 0.5, pitch
@@ -160,17 +203,47 @@ without gravity, and the plugin makes up for both where it matters:
   - OBJECTIVE COMPLETE and QUEST COMPLETE: a firework's launch, with a level-up when it gives
     SkyBlock XP. The bank's deposits and withdrawals: a pling at volume 8 and the top pitch.
   - Menus (`MenuSound`): a lever's click as one menu opens another (the SkyBlock Menu from its item
-    too), and a page turning as the quest book opens; one opened from the world is silent.
+    too, and Claim Reward as a reward gives its item), and a page turning as the quest book opens;
+    one opened from the world is silent. Claiming a reward chimes as coins do.
   - Picking up an item: vanilla's pop, which the client plays as the pickup's animation arrives
     (every SkyBlock item pickup was silent before).
+- **Fixed along the way.**
+  - **Dying keeps your items** on every server's main world. A death costs coins, as before;
+    islands and runs already kept items.
+  - **Mobs don't burn by day.** Since 26.2 a zombie's or skeleton's own setting no longer stops it,
+    so `Mobs` refuses daylight fire for SkyBlock mobs. A hit's or a block's fire still burns.
+  - **"RARE DROP!"** only for rare drops, from every mob (the Graveyard's Rotten Flesh and Poisonous
+    Potato had no line, its 1% Potato had one). The line is the recorded "RARE DROP! Potato (+7 ✯
+    Magic Find)", without the "%".
+  - **Block drops start from the block's middle**, as vanilla's do (on islands too). From its
+    corner they started inside the ground and were pushed out at random.
+  - **The SkyBlock XP action bar** names the later task when two gave the same at once. The
+    recorded Combat level-up and objective (+5 each) said "(Complete Objective) (10/100)".
 - **No vanilla progress** (`VanillaProgress`). There are no advancements, and the recipe book learns
   nothing, so "Advancement Made!" and "New Recipe(s) Unlocked!" never pop up (Hypixel shows neither).
 
 ## Approximated (UNKNOWN)
 
-- **The Hub's area boxes are rough.** Each is drawn so that every point where the recording
-  crossed into or out of an area falls on the correct side. The Hub's other areas (the Mountain,
-  the Forest, the Wilderness...) have no boxes yet, so the sidebar says None there.
+- **The Hub's area boxes are rough.** Each is drawn so that every point where the recordings
+  crossed into or out of an area falls on the correct side, give or take the block or two Hypixel's
+  notice lags behind (the Graveyard was entered at z -97.5 and left at z -93). Its box reaches
+  z -94 so that Pat stands in it. The Hub's other areas (the Mountain, the Forest, the Wilderness,
+  the Library, the Thaumaturgist, Pet Care...) have no boxes yet, so the sidebar says None or the
+  area round them there.
+- **The flowers' regrowth.** The six recorded ones grew back on a 5-second beat, on its 1st, 2nd,
+  1st, 2nd, 3rd and 4th beat after they were picked, so each has a chance every beat. Hypixel's
+  chance is UNKNOWN; 1 in 2 fits.
+- **The Graveyard's mobs** appear only where the map is loaded (a player is nearby), at a random
+  one of their spots, so an empty Hub has none. Hypixel always has its Graveyard full. Their
+  damage, coins, orbs and drops are the wiki's; Combat XP (5), level and health are as recorded.
+  That both kinds count for Kill Zombies is the wiki's (no villager was killed in the recording).
+- **What Marco and the Bartender say between steps** is this plugin's: Marco asks again if you
+  come without 5 Rose Red and says his last thanks once it's done; the Bartender asks for help
+  again while you kill zombies, then gives his last advice. Marco takes the dye with his last
+  line (Hypixel took it with his first), so nothing is lost if you leave while he talks.
+- **Claim Reward's other words** are this plugin's: "You don't have that to claim!" and "Your
+  inventory is full!".
+- **The reward's Combat XP** (+100) is given as it is, without Combat Wisdom.
 - **Island time stands at noon.** Hypixel showed midnight on the island and in the Hub at SkyBlock
   night; how its islands' time goes wasn't recorded.
 - **Skill XP** is 6 Foraging XP per log of any kind (only Oak was recorded). Nothing else broken
@@ -204,12 +277,22 @@ without gravity, and the plugin makes up for both where it matters:
   starting, so its message and transaction line are unknown; the rates are in the menu (2% to 10M,
   1% to 15M). Also missing: the vault, account upgrades, the SkyBlock Menu's Personal Bank (locked
   until Emerald Collection VI on a new profile) and co-op members' names on transactions.
-- **The Hub's NPCs' words and menus.** The recording didn't talk to most of them, and NPCs it only
-  saw from afar came without their name tags, so they're not placed: Marco and the Bartender among
-  them, so Marco the Artist and Time to Strike can't be finished. The four that talk say it on every
-  click (UNKNOWN whether Hypixel's repeat it); the menus they'd open (Elizabeth's Community Shop, the
-  Auction House) aren't here. Nor are the Hub's holograms (election timers, the gem shop, warps),
-  apart from the portals' signs.
+- **The Hub's NPCs' words and menus.** The recordings didn't talk to most of them, and NPCs they
+  only saw from afar came without their name tags, so they're not placed. The four that talk say it
+  on every click (UNKNOWN whether Hypixel's repeat it); the menus they'd open (Elizabeth's Community
+  Shop, the Auction House) aren't here. Nor are the Hub's holograms (election timers, the gem shop,
+  warps), apart from the portals' signs. Marco and the Bartender need `npcs/hub.json` made again
+  from all three recordings (with `setup`'s tables, see the replay tool's README).
+- **The rest of Time to Strike and the Hub's quests.** The Spider's Den isn't here, so "Travel to
+  the Spider's Den" is where Time to Strike stops. The Hub's other quests (Carpentry, the Foraging
+  and Fishing tutorials, Safety First, First Harvest, the Auctioneer's, Hub Explorer, Time to Mine,
+  Library Card) aren't here either.
+- **The sidebar's arrow.** Hypixel's "Objective" line has an arrow pointing to the objective's
+  place (yellow, then green when near: "Objective ⬉"). It's not here.
+- **The Spray Can** is only an item: its menu (the Ink Manager and Spray Selector) and spraying
+  your island's walls aren't here, nor is Marco's Canvas Room.
+- **A death in the Hub** shows vanilla's death screen. Hypixel's has none: it puts you back at
+  the spawn at once.
 - **The Dungeon Hub's other NPCs and quest.** Malik, Saul and the others aren't there either, and
   Mort only appears in runs. Finding the Dungeon Hub started a quest at "Talk to Guildford" whose
   name the recording didn't show, and the Farm's quest (Rigby's) is unknown too; neither is here.
