@@ -111,4 +111,31 @@ class QuestTextTest {
         assertEquals(List.of("", " &c✖ &eBreak a log.", "", "&7Started:", "  &fWinter 17th, Year 521", "  &73:08am"),
                 QuestText.logLore(profile, Quests.GETTING_STARTED));
     }
+
+    @Test
+    void theSidebarsArrow() {
+        Quest.Target north = new Quest.Target(Place.Island.HUB, 0, -100);
+        Place.Island hub = Place.Island.HUB;
+        // Facing north (yaw 180): straight ahead; turned to face east (-90), it's on their left.
+        assertEquals("&e&l⬆", QuestText.arrow(north, hub, 0, 0, 180));
+        assertEquals("&e&l⬅", QuestText.arrow(north, hub, 0, 0, -90));
+        assertEquals("&e&l➡", QuestText.arrow(north, hub, 0, 0, 90));
+        assertEquals("&e&l⬇", QuestText.arrow(north, hub, 0, 0, 0));
+        assertEquals("&e&l⬈", QuestText.arrow(north, hub, 0, 0, 135));
+        assertEquals("&e&l⬉", QuestText.arrow(north, hub, 0, 0, -135 + 360));
+        // Green within 50 blocks.
+        assertEquals("&a&l⬆", QuestText.arrow(north, hub, 0, -50, 180));
+        assertEquals("&e&l⬆", QuestText.arrow(north, hub, 0, -49, 180));
+        // Only on its island, and only with a target.
+        assertEquals("", QuestText.arrow(north, Place.Island.PRIVATE_ISLAND, 0, 0, 180));
+        assertEquals("", QuestText.arrow(null, hub, 0, 0, 180));
+        // Recorded (2026-10-24, "Talk to the Bartender"): where the player stood and faced, and the arrow then.
+        Quest.Target bartender = Quests.BARTENDER;
+        assertEquals("&e&l➡", QuestText.arrow(bartender, hub, 3.5, 19.6, 65));
+        assertEquals("&e&l⬆", QuestText.arrow(bartender, hub, -33.0, -15.8, 169));
+        assertEquals("&a&l➡", QuestText.arrow(bartender, hub, -28.4, -25.9, 70));
+        assertEquals("&e&l⬇", QuestText.arrow(bartender, hub, 5.6, 16.4, -28));
+        assertEquals(List.of("&fObjective &e&l⬉", "&eTalk to the Bartender"),
+                QuestText.sidebar(Quests.TIME_TO_STRIKE.objective(0), 0, "&e&l⬉"));
+    }
 }

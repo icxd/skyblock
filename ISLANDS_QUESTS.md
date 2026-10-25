@@ -221,6 +221,15 @@ without gravity, and the plugin makes up for both where it matters:
     recorded Combat level-up and objective (+5 each) said "(Complete Objective) (10/100)".
 - **No vanilla progress** (`VanillaProgress`). There are no advancements, and the recipe book learns
   nothing, so "Advancement Made!" and "New Recipe(s) Unlocked!" never pop up (Hypixel shows neither).
+- **The sidebar's arrow** (`QuestText.arrow`). The "Objective" line has an arrow toward the
+  objective's place while you're on its island: "Objective ⬉". It's bold yellow, and bold green
+  within 50 blocks. It's one of eight, the nearest to the way from where you face, and it shows again
+  each second with the sidebar.
+  - **How it was read.** Fitted to about 300 recorded arrows (2026-10-24 and 10-25) against where the
+    player stood and faced: their entity's look packets, read with `tools/replay`'s decoder.
+  - **Which objectives.** Here only Time to Strike's have one: the Bartender (both times), the
+    Graveyard (Kill Zombies) and the Spider's Den. None of Getting Started's, Marco's, Saving Up's or
+    the Librarian's showed one. Farmer Rigby's did, and his quest isn't here.
 - **Deaths** (`combat/Deaths`) are as on Hypixel: no death screen and no respawn. The death is called
   off, as a dungeon run's is.
   - **Where you come back.** On the next tick you're at the island's spawn: the Hub's, the Dungeon
@@ -242,6 +251,13 @@ without gravity, and the plugin makes up for both where it matters:
 
 ## Approximated (UNKNOWN)
 
+- **The arrow's targets.**
+  - **The Bartender's** is his NPC: the fit lands on him, and his arrows turned green at 50 blocks to
+    within a few tenths of a block.
+  - **Kill Zombies'** (-104, -122) and **the Spider's Den's** (-144, -188) are where their arrows fit
+    best, not known points. Kill Zombies' is the Graveyard's north-east, not its middle (20 of 21
+    arrows fit). No recording went to the Spider's Den (all 187 arrows fit, colour too).
+  - **The fit.** The arrow's sector fits the bearing within the second's turning (about 23° rms).
 - **Deaths.**
   - **The wording.** Only the kill line's shape is known (SkyHanni's pattern). The other reasons are
     the dungeon ones without "and became a ghost", plus "You fell into the void" (the old wiki's
@@ -317,8 +333,6 @@ without gravity, and the plugin makes up for both where it matters:
   the Spider's Den" is where Time to Strike stops. The Hub's other quests (Carpentry, the Foraging
   and Fishing tutorials, Safety First, First Harvest, the Auctioneer's, Hub Explorer, Time to Mine,
   Library Card) aren't here either.
-- **The sidebar's arrow.** Hypixel's "Objective" line has an arrow pointing to the objective's
-  place (yellow, then green when near: "Objective ⬉"). It's not here.
 - **The Spray Can** is only an item: its menu (the Ink Manager and Spray Selector) and spraying
   your island's walls aren't here, nor is Marco's Canvas Room.
 - **The Dungeon Hub's other NPCs and quest.** Malik, Saul and the others aren't there either, and

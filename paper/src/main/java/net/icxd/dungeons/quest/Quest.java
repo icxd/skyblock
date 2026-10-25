@@ -28,30 +28,43 @@ public record Quest(String id, String name, Material icon, Home home, List<Objec
      * NEW OBJECTIVE lines take you to the Quest Log (two of Getting Started's don't: "Talk to Jerry" and
      * "Use the teleporter" came without a click or hover), what it gives when it's done (null for
      * nothing, as for all of Getting Started's), what it counts towards (null for nothing: "Kill
-     * Zombies (3/10)"), and where it's followed if not where its quest is (null: as its quest; Saving
-     * Up's "Deposit Coins in the Bank" is, in the Bank, and its "Talk to the Banker" isn't).
+     * Zombies (3/10)"), where it's followed if not where its quest is (null: as its quest; Saving
+     * Up's "Deposit Coins in the Bank" is, in the Bank, and its "Talk to the Banker" isn't), and where
+     * the sidebar's arrow points (null for no arrow, as most have none).
      */
-    public record Objective(String text, boolean linked, Reward reward, Goal goal, Home home) {
+    public record Objective(String text, boolean linked, Reward reward, Goal goal, Home home, Target target) {
         public Objective(String text, boolean linked) {
-            this(text, linked, null, null, null);
+            this(text, linked, null, null, null, null);
         }
 
         public Objective(String text, boolean linked, Reward reward) {
-            this(text, linked, reward, null, null);
+            this(text, linked, reward, null, null, null);
         }
 
         public Objective counting(Goal goal) {
-            return new Objective(text, linked, reward, goal, home);
+            return new Objective(text, linked, reward, goal, home, target);
         }
 
         public Objective followed(Home home) {
-            return new Objective(text, linked, reward, goal, home);
+            return new Objective(text, linked, reward, goal, home, target);
+        }
+
+        /** With the sidebar's arrow pointing there (see {@link QuestText#arrow}). */
+        public Objective toward(Target target) {
+            return new Objective(text, linked, reward, goal, home, target);
         }
 
         /** As the Quest Log and the chat's hovers write it: a sentence ("Break a log."). */
         public String logText() {
             return text.endsWith(".") ? text : text + ".";
         }
+    }
+
+    /**
+     * Where an objective's arrow points, on the island it's on: the NPC to talk to, or where to go. The
+     * arrow only shows there (none was recorded anywhere else).
+     */
+    public record Target(Place.Island island, double x, double z) {
     }
 
     /**
