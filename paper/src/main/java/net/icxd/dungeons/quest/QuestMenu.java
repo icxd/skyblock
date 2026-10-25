@@ -14,9 +14,9 @@ import net.icxd.dungeons.user.User;
 
 /**
  * The quest menus (see {@link QuestMenus} for what they show): Quests & Chapters, Chapters, the Quest
- * Log and Completed Quests, linked as recorded. Each opens with a page turning, as the recording's
- * did, but going back, which clicks like any menu's Go Back (UNKNOWN for Completed Quests: a page).
- * Chapters, the Fairy Souls and the Dungeon Journals show but do nothing yet (none of them is here).
+ * Log, Completed Quests and the Fairy Souls Guide, linked as recorded. Each opens with a page turning, as the
+ * recording's did, but going back, which clicks like any menu's Go Back (UNKNOWN for Completed Quests: a page),
+ * and the guide, which clicks. Chapters and the Dungeon Journals show but do nothing yet (neither is here).
  * Main thread.
  */
 public final class QuestMenu extends GUI {
@@ -58,7 +58,17 @@ public final class QuestMenu extends GUI {
         QuestMenu menu = new QuestMenu(QuestMenus.QUEST_LOG, viewer, QuestMenus.questLog(user.profile()));
         menu.buttons.put(QuestMenus.BACK, () -> questsAndChapters(viewer, MenuSound.CLICK));
         menu.buttons.put(QuestMenus.COMPLETED, () -> completedQuests(viewer));
+        menu.buttons.put(QuestMenus.FAIRY_SOULS_SLOT, () -> fairySoulsGuide(viewer));
         menu.open(viewer, sound);
+    }
+
+    /** It opens with a click, as recorded (05:35.5); going back turns a page (05:36.5). */
+    static void fairySoulsGuide(Player viewer) {
+        User user = User.ifLoaded(viewer.getUniqueId());
+        if (user == null) return;
+        QuestMenu menu = new QuestMenu(QuestMenus.FAIRY_SOULS_GUIDE, viewer, QuestMenus.fairySoulsGuide(user.profile()));
+        menu.buttons.put(QuestMenus.BACK, () -> questLog(viewer, MenuSound.PAGE));
+        menu.open(viewer, MenuSound.CLICK);
     }
 
     static void completedQuests(Player viewer) {

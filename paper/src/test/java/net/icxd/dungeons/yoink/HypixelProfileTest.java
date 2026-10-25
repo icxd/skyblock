@@ -58,6 +58,7 @@ class HypixelProfileTest {
         assertTrue(YoinkPart.INVENTORY.available(banana));
         assertTrue(YoinkPart.MINING.available(banana));
         assertTrue(YoinkPart.CRIMSON_ISLE.available(banana));
+        assertTrue(YoinkPart.FAIRY_SOULS.available(banana));
         HypixelProfile strawberry = HypixelProfile.of(answer(), PLAYER).get(1);
         assertFalse(YoinkPart.INVENTORY.available(strawberry), "its inventory API is off");
         assertTrue(YoinkPart.COINS.available(strawberry));

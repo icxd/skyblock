@@ -103,6 +103,8 @@ import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.StatsRunnable;
 import net.icxd.dungeons.hex.Hex;
 import net.icxd.dungeons.hex.HexListener;
+import net.icxd.dungeons.fairysouls.SoulStands;
+import net.icxd.dungeons.fairysouls.Tia;
 import net.icxd.dungeons.hub.DungeonHubMap;
 import net.icxd.dungeons.hub.FlowerGarden;
 import net.icxd.dungeons.hub.Graveyard;
@@ -244,6 +246,8 @@ public class Dungeons extends JavaPlugin {
         listen(HubMap.class, () -> new HubMap(this));
         listen(DungeonHubMap.class, DungeonHubMap::new);
         listen(MapStands.class, MapStands::new);
+        // The Fairy Souls the Hub's and the Dungeon Hub's maps have.
+        listen(SoulStands.class, () -> new SoulStands(this));
         listen(IslandRules.class, IslandRules::new);
         listen(QuestListener.class, QuestListener::new);
         flowerGarden = listen(FlowerGarden.class, () -> new FlowerGarden(this));
@@ -303,6 +307,13 @@ public class Dungeons extends JavaPlugin {
                 HubNpcs.spawn(this);
             } catch (RuntimeException e) {
                 getLogger().log(java.util.logging.Level.SEVERE, "Couldn't spawn the Hub's NPCs", e);
+            }
+        }
+        if (skyBlockServer.runs(Tia.class) && HubMap.here()) {
+            try {
+                Tia.spawn(this, skyBlockServer.getMainWorld());
+            } catch (RuntimeException e) {
+                getLogger().log(java.util.logging.Level.SEVERE, "Couldn't spawn Tia the Fairy", e);
             }
         }
 

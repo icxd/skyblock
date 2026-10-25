@@ -12,6 +12,8 @@ import org.bson.Document;
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
+import net.icxd.dungeons.fairysouls.FairySoulTable;
+import net.icxd.dungeons.fairysouls.FairySouls;
 import net.icxd.dungeons.menu.Icon;
 import net.icxd.dungeons.quest.QuestMenus.Layout;
 
@@ -68,6 +70,47 @@ class QuestMenusTest {
         assertEquals("&eGetting Started", started.name());
         assertEquals(" &c✖ &eBreak a log.", started.lore().get(1));
         assertEquals(List.of("&8/quests", "", "&7View your active quests, progress,", "&7and rewards."), log.icons().get(4).lore());
+    }
+
+    /** The Quest Log's Fairy Souls: none found as recorded on a new profile, 246 as on the old one, all with a tick. */
+    @Test
+    void theFairySoulsFound() {
+        Document profile = new Document();
+        assertEquals(" &c✖ &eFound: &70/&d289", QuestMenus.fairySouls(profile).lore().get(1));
+        FairySouls.yoinked(profile, 246, 0);
+        assertEquals(" &c✖ &eFound: &d246&7/&d289", QuestMenus.fairySouls(profile).lore().get(1));
+        FairySouls.yoinked(profile, 289, 0);
+        assertEquals(" &a✔ &eFound: &d289&7/&d289", QuestMenus.fairySouls(profile).lore().get(1));
+    }
+
+    /** At 05:35.4 (2026-09-27): each island's head and count, glass everywhere else, back to the Quest Log. */
+    @Test
+    void theFairySoulsGuide() {
+        Document profile = new Document();
+        FairySouls.find(profile, new FairySoulTable.Soul(FairySoulTable.HUB, -233, 86, 84));
+        FairySouls.find(profile, new FairySoulTable.Soul(FairySoulTable.DUNGEON_HUB, 17, 124, -58));
+        Layout guide = QuestMenus.fairySoulsGuide(profile);
+        Set<Integer> items = range(10, 16);
+        items.addAll(range(19, 25));
+        items.addAll(range(28, 31));
+        items.addAll(Set.of(48, 49));
+        assertEquals(items, new TreeSet<>(guide.icons().keySet()));
+        Set<Integer> glass = range(0, 53);
+        glass.removeAll(items);
+        assertEquals(glass, guide.glass());
+        Icon misc = guide.icons().get(10);
+        assertEquals("&dMiscellaneous", misc.name());
+        assertEquals(List.of("&7Fairy Souls: &e0&7/&d17", " &7Dungeons: &d9", " &7Fishing: &d4", " &7Garden: &d2", " &7Placeable: &d1",
+                " &7Glacite Mineshafts: &d1"), misc.lore());
+        assertEquals("41b830eb4082acec836bc835e40a11282bb51193315f91184337e8d3555583", misc.texture());
+        assertEquals("&dHub", guide.icons().get(19).name());
+        assertEquals(List.of("&7Fairy Souls: &e1&7/&d80"), guide.icons().get(19).lore());
+        assertEquals(List.of("&7Fairy Souls: &e1&7/&d7"), guide.icons().get(21).lore());
+        assertEquals(List.of("&7Fairy Souls: &e0&7/&d12"), guide.icons().get(31).lore());
+        assertEquals("&dMoonglade Marsh", guide.icons().get(31).name());
+        assertEquals("&7To Quest Log", guide.icons().get(48).lore().getFirst());
+        int all = QuestMenus.GUIDE.stream().mapToInt(QuestMenus.GuideIsland::souls).sum();
+        assertEquals(FairySouls.TOTAL, all);
     }
 
     @Test

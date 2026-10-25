@@ -37,6 +37,7 @@ import net.icxd.dungeons.dwarven.Perk;
 import net.icxd.dungeons.dwarven.PowderType;
 import net.icxd.dungeons.economy.Coins;
 import net.icxd.dungeons.economy.Purse;
+import net.icxd.dungeons.fairysouls.FairySouls;
 import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.cost.essence.EssenceType;
 import net.icxd.dungeons.listeners.InventorySyncListener;
@@ -207,6 +208,7 @@ public final class Yoink {
                     case MINING -> mining(profile);
                     case CRIMSON_ISLE -> crimsonIsle(profile);
                     case MINIONS -> minions(profile);
+                    case FAIRY_SOULS -> fairySouls(profile);
                     default -> writes.get(part).accept(profile, storage);
                 }
             } catch (RuntimeException e) {
@@ -564,6 +566,15 @@ public final class Yoink {
         minions.put("craftedMinions", tiers);
         profile.put("minions", minions);
         done.put(YoinkPart.MINIONS, "Crafted Minions: " + tiers.size());
+    }
+
+    /** How many were found and given to Tia. The API doesn't say which, so none of this map's count as found (FairySouls). */
+    private void fairySouls(Document profile) {
+        JsonObject souls = HypixelProfile.object(from.member(), "fairy_soul");
+        int collected = (int) number(souls, "total_collected");
+        int exchanges = (int) number(souls, "fairy_exchanges");
+        FairySouls.yoinked(profile, collected, exchanges);
+        done.put(YoinkPart.FAIRY_SOULS, "Fairy Souls: &d" + Text.number(collected) + " &7found, " + plural(exchanges, "exchange") + " with Tia");
     }
 
     private static double number(JsonObject in, String key) {

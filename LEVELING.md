@@ -22,6 +22,7 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
     collections' tiers aren't milestones here (UNKNOWN whether Hypixel counts them).
   - Boss Collections: the SkyBlock XP the boss collections' own tiers give ("+15 SkyBlock XP" at Bonzo I; all of
     them add up to the task's 1,015), `Collections.skyBlockXp(profile, true)`.
+  - Fairy Souls: 10 for each five given to Tia the Fairy (FAIRY_SOULS.md).
   - Accessory Bag: 1 a point of the most Accessory Power the bag has had (`highestAccessoryPower` on the profile,
     as the API's `highest_magical_power`), so taking accessories out takes none back; worked out without dungeons'
     doubling. The wiki says only "per Accessory Power you have"; that it never goes down, as a task's XP doesn't,
@@ -81,7 +82,7 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
 
 ## Later, and what it waits for
 
-- The other XP tasks: Museum, Fairy Souls, Accessory Bag upgrades, Pet Score, crafting minions in play, bank
+- The other XP tasks: Museum, Accessory Bag upgrades, Pet Score, crafting minions in play, bank
   upgrades, fast travel, events, essence shops, Slayer, Bestiary, HOTM/HOTF, the Garden, Rift, consumables... each
   when its system exists (a `LevelingSources` method, or a task id in `SkyBlockXp.of`).
 - Level rankings (Hypixel's Global Ranking lines) need a ranking across profiles.

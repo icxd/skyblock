@@ -24,7 +24,8 @@ public enum YoinkPart {
     MINING("Heart of the Mountain", Material.PRISMARINE_SHARD, "HotM XP, tokens, perks and powder.", "mining_core"),
     CRIMSON_ISLE("Crimson Isle", Material.NETHERRACK, "Your Mage and Barbarian reputation and the Kuudra tiers you've beaten.",
             "nether_island_player_data"),
-    MINIONS("Crafted Minions", Material.COBBLESTONE, "Which minion tiers you've crafted.", "player_data.crafted_generators");
+    MINIONS("Crafted Minions", Material.COBBLESTONE, "Which minion tiers you've crafted.", "player_data.crafted_generators"),
+    FAIRY_SOULS("Fairy Souls", Material.PINK_DYE, "How many you've found and given to Tia.", "fairy_soul");
 
     private final String title;
     private final Material icon;

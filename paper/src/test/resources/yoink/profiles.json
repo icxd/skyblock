@@ -101,6 +101,11 @@
        "forge_time": 20
       }
      },
+     "fairy_soul": {
+      "total_collected": 246,
+      "fairy_exchanges": 49,
+      "unspent_souls": 1
+     },
      "nether_island_player_data": {
       "selected_faction": "mages",
       "mages_reputation": 3500.0,

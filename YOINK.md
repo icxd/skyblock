@@ -70,6 +70,8 @@ Each part replaces that part of the profile you play on:
   a completion; the keys are NEU's profile viewer's). Both count for SkyBlock XP. Not the faction picked: the
   tab list's lines for a faction aren't finished (its progress bar).
 - **Crafted Minions**: the minion tiers crafted.
+- **Fairy Souls**: how many were found and given to Tia (`fairy_soul.total_collected`, `fairy_exchanges`). The
+  API doesn't say which, so here they're on no island and the Hub's can be found again (FAIRY_SOULS.md).
 
 **Items** (`HypixelItems`). The API's items are base64 of gzipped Minecraft 1.8 NBT, read by `Nbt`. Each
 becomes the item of the same SkyBlock id (`ExtraAttributes.id`), with what was done to it written the way

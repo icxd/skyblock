@@ -16,6 +16,8 @@ import com.google.gson.JsonParser;
 
 import net.icxd.dungeons.common.DungeonFloor;
 import net.icxd.dungeons.dungeons.DungeonClass;
+import net.icxd.dungeons.fairysouls.FairySoulTable;
+import net.icxd.dungeons.fairysouls.FairySouls;
 import net.icxd.dungeons.leveling.LevelingData.Category;
 import net.icxd.dungeons.leveling.LevelingData.Task;
 import net.icxd.dungeons.quest.Quests;
@@ -143,6 +145,21 @@ class SkyBlockXpTest {
                 .append("barbarian", new Document("reputation", -3000))));
         xp = SkyBlockXp.of(profile, data, Fixtures.NONE);
         assertEquals(0, xp.of("mage_reputation") + xp.of("barbarian_reputation"));
+    }
+
+    /** "Per 5 Fairy Souls: +10", for each five given to Tia; found ones not given count for nothing yet. */
+    @Test
+    void fairySoulExchanges() {
+        LevelingData data = Fixtures.recorded();
+        assertEquals(570, data.task("fairy_souls").max());
+        Document profile = new Document();
+        for (int i = 0; i < 12; i++) FairySouls.find(profile, new FairySoulTable.Soul(FairySoulTable.HUB, i, 70, 0));
+        assertEquals(0, SkyBlockXp.of(profile, data, Fixtures.NONE).of("fairy_souls"));
+        FairySouls.exchange(profile);
+        FairySouls.exchange(profile);
+        assertEquals(20, SkyBlockXp.of(profile, data, Fixtures.NONE).of("fairy_souls"));
+        FairySouls.yoinked(profile, 289, 57);
+        assertEquals(570, SkyBlockXp.of(profile, data, Fixtures.NONE).of("fairy_souls"));
     }
 
     @Test

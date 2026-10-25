@@ -107,7 +107,9 @@ have all (27, 27, 18), and the locked ones say what unlocks them.
 - **Earning Ender Chest pages and backpack slots**: the Community Shop and Tia the Fairy's Fairy Soul
   exchanges. Until they're here everyone has all of them (`StorageMenu.pages` and `backpackSlots`); once
   they are, what players put in the pages they haven't earned needs a way out (a backpack in a locked
-  slot already shows, to be taken out; a locked page's items would stay in it unseen).
+  slot already shows, to be taken out; a locked page's items would stay in it unseen). Tia is here now,
+  but with only the Hub's and the Dungeon Hub's 87 souls (17 exchanges, 9 slots) the slots stay open
+  (FAIRY_SOULS.md).
 - **Collections** (the collections part): bag sizes read tiers through `Bag.setCollections` (by
   Hypixel's collection ids: `REDSTONE`, `NETHER_STALK`, `RAW_FISH`, `RAW_FISH:2`); until it's wired in,
   the Accessory Bag has its 9 and the other bags are locked. The Accessory Bag's slots from Jacobus, the

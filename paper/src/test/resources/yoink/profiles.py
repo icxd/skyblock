@@ -93,6 +93,7 @@ member = {
                  'selected_dungeon_class': 'mage'},
     'mining_core': {'experience': 1500000.0, 'tokens': 20, 'tokens_spent': 15, 'powder_mithril': 100000, 'powder_gemstone': 2000,
                     'powder_glacite': 30, 'nodes': {'mining_speed': 50, 'mining_fortune': 50, 'titanium_insanium': 50, 'forge_time': 20}},
+    'fairy_soul': {'total_collected': 246, 'fairy_exchanges': 49, 'unspent_souls': 1},
     'nether_island_player_data': {'selected_faction': 'mages', 'mages_reputation': 3500.0, 'barbarians_reputation': -200.0,
                                   'kuudra_completed_tiers': {'none': 12, 'hot': 3, 'highest_wave_hot': 4}},
     'accessory_bag_storage': {'selected_power': 'silky', 'tuning': {'slot_0': {'health': 3, 'critical_damage': 10, 'walk_speed': 2}}, 'highest_magical_power': 900},

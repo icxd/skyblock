@@ -99,7 +99,7 @@ without gravity, and the plugin makes up for both where it matters:
 - **Quest menus**, as recorded:
   - Quests & Chapters, from the SkyBlock Menu's Quests.
   - Chapters (`/chapters`).
-  - The Quest Log (`/quests`, `/questlog`): the Fairy Souls, then the quests going, each with its
+  - The Quest Log (`/quests`, `/questlog`): the Fairy Souls (FAIRY_SOULS.md), then the quests going, each with its
     progress and when it started (SkyBlock's date and time). Completed Quests appears there once a
     quest is done.
 - **Jerry** (`Jerry`). He's on every island, where the starter island has him: a plains farmer
@@ -343,5 +343,4 @@ without gravity, and the plugin makes up for both where it matters:
 - **The Community Center's warp** down to the Election Room.
 - **Island features:** Jerry's menu items, Island Properties, visits, guests and co-ops (an island
   is only ever on one server, its owner's), and minions (the starter minion stands still).
-- **Fairy Souls** (always 0/289), and the Chapters, which have the recorded layout and nothing in
-  them.
+- **The Chapters**, which have the recorded layout and nothing in them.
