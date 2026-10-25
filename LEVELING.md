@@ -23,10 +23,11 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
   - Boss Collections: the SkyBlock XP the boss collections' own tiers give ("+15 SkyBlock XP" at Bonzo I; all of
     them add up to the task's 1,015), `Collections.skyBlockXp(profile, true)`.
   - Fairy Souls: 10 for each five given to Tia the Fairy (FAIRY_SOULS.md).
+  - Accessory Bag Upgrades: 2 for each of Jacobus's (ISLANDS_QUESTS.md).
   - Accessory Bag: 1 a point of the most Accessory Power the bag has had (`highestAccessoryPower` on the profile,
     as the API's `highest_magical_power`), so taking accessories out takes none back; worked out without dungeons'
-    doubling. The wiki says only "per Accessory Power you have"; that it never goes down, as a task's XP doesn't,
-    is this plugin's reading.
+    doubling. The wiki says only "per Accessory Power you have"; NEU's profile viewer counts the highest
+    (`CoreTaskLevel`), as here.
   - Craft Minions: each minion tier crafted once, its tier's line (Tier I +1 to Tier XII +24), from
     `minions.craftedMinions` ("WHEAT_12", as the API's `crafted_generators`). Nothing crafts minions here yet,
     so only /yoinkprofile brings any.
@@ -82,9 +83,9 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
 
 ## Later, and what it waits for
 
-- The other XP tasks: Museum, Accessory Bag upgrades, Pet Score, crafting minions in play, bank
-  upgrades, fast travel, events, essence shops, Slayer, Bestiary, HOTM/HOTF, the Garden, Rift, consumables... each
-  when its system exists (a `LevelingSources` method, or a task id in `SkyBlockXp.of`).
+- The other XP tasks: Museum, Pet Score, crafting minions in play, bank upgrades, fast travel, events, essence
+  shops, Slayer, Bestiary, HOTM/HOTF, the Garden, Rift, consumables... each when its system exists (a
+  `LevelingSources` method, or a task id in `SkyBlockXp.of`).
 - Level rankings (Hypixel's Global Ranking lines) need a ranking across profiles.
 - Feature rewards (Community Shop, Garden, Wardrobe, Bazaar, Auction limits...) and the Book of Progression's
   bonuses are shown, not given: their systems don't exist.

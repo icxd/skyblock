@@ -23,6 +23,7 @@ import net.icxd.dungeons.leveling.LevelingData.Task;
 import net.icxd.dungeons.quest.Quests;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
+import net.icxd.dungeons.storage.BagUpgrades;
 
 /** A profile's SkyBlock XP from what it has done, its level and the level's colour. */
 class SkyBlockXpTest {
@@ -160,6 +161,16 @@ class SkyBlockXpTest {
         assertEquals(20, SkyBlockXp.of(profile, data, Fixtures.NONE).of("fairy_souls"));
         FairySouls.yoinked(profile, 289, 57);
         assertEquals(570, SkyBlockXp.of(profile, data, Fixtures.NONE).of("fairy_souls"));
+    }
+
+    /** "Per Upgrade: +2", each of Jacobus's. */
+    @Test
+    void accessoryBagUpgrades() {
+        LevelingData data = Fixtures.recorded();
+        assertEquals(198, data.task("accessory_bag_upgrades").max());
+        Document profile = new Document();
+        BagUpgrades.bought(profile, 7);
+        assertEquals(14, SkyBlockXp.of(profile, data, Fixtures.NONE).of("accessory_bag_upgrades"));
     }
 
     @Test

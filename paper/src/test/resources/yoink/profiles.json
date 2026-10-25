@@ -125,7 +125,8 @@
         "walk_speed": 2
        }
       },
-      "highest_magical_power": 900
+      "highest_magical_power": 900,
+      "bag_upgrades_purchased": 25
      },
      "inventory": {
       "inv_contents": {

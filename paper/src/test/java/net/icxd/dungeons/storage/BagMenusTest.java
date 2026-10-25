@@ -78,6 +78,34 @@ class BagMenusTest {
         assertEquals(0, Bag.POTION_BAG.capacity(sandbox, none));
     }
 
+    /** The wiki's Jacobus: +2 slots an upgrade, 99 at most, 1,761,500,000 coins for all of them. */
+    @Test
+    void jacobusUpgrades() {
+        assertEquals(1_500_000, BagUpgrades.cost(1));
+        assertEquals(5_000_000, BagUpgrades.cost(2));
+        assertEquals(5_000_000, BagUpgrades.cost(5));
+        assertEquals(8_000_000, BagUpgrades.cost(6));
+        assertEquals(12_000_000, BagUpgrades.cost(20));
+        assertEquals(20_000_000, BagUpgrades.cost(21));
+        long all = 0;
+        for (int upgrade = 1; upgrade <= BagUpgrades.MOST; upgrade++) all += BagUpgrades.cost(upgrade);
+        assertEquals(1_761_500_000L, all);
+        long toTheRegister = 0;
+        for (int upgrade = 1; upgrade <= BagUpgrades.REGISTER; upgrade++) toTheRegister += BagUpgrades.cost(upgrade);
+        assertEquals(21_500_000L, toTheRegister, "the wiki's Jacobus Register: 21.5M");
+
+        StorageTables none = PrivateTables.madeUp(Map.of());
+        Document profile = new Document();
+        BagUpgrades.bought(profile, 3);
+        assertEquals(15, Bag.ACCESSORY_BAG.capacity(profile, none));
+        assertEquals(9, Bag.ACCESSORY_BAG.fromCollection(profile, none));
+        // Only the Accessory Bag's, and never past 99.
+        assertEquals(0, Bag.POTION_BAG.capacity(profile, none));
+        BagUpgrades.bought(profile, 150);
+        assertEquals(BagUpgrades.MOST, BagUpgrades.bought(profile));
+        assertEquals(9 + 198, Bag.ACCESSORY_BAG.capacity(profile, none));
+    }
+
     @Test
     void recordedBagSizes() {
         StorageTables tables = PrivateTables.load();
@@ -122,5 +150,8 @@ class BagMenusTest {
         assertEquals(Material.CHEST, BagMenu.bottomRow(Bag.SACK_OF_SACKS, 0, 1).get(BagMenu.EXTRA).material());
         assertEquals(Map.of(BagMenu.GO_BACK, new Icon(Material.ARROW, "&aGo Back", "&7To Your Bags"), BagMenu.CLOSE, new Icon(Material.BARRIER, "&cClose")),
                 BagMenu.bottomRow(Bag.POTION_BAG, 0, 1));
+        // From Jacobus's shortcut, as recorded (2026-10-25, 00:55.9).
+        assertEquals(new Icon(Material.ARROW, "&aGo Back", "&7To Accessory Bag Upgrades"),
+                BagMenu.bottomRow(Bag.ACCESSORY_BAG, 0, 1, "&7To Accessory Bag Upgrades").get(BagMenu.GO_BACK));
     }
 }

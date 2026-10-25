@@ -116,7 +116,19 @@ without gravity, and the plugin makes up for both where it matters:
   recording's player talked to them, timed as recorded and in their voices (`HubTalk`): Elizabeth,
   the Community Center's Clerk Seraphine, Minister Nancy and the Auction Master. The Banker has
   his bank, the Farm Merchant his shop, and Marco and the Bartender their quests (below). The others
-  don't answer a click yet.
+  don't answer a click yet, but Jacobus (below), and Tia the Fairy, who isn't in the recordings
+  (FAIRY_SOULS.md).
+- **Jacobus** (`Jacobus`, `JacobusMenu`, `storage/BagUpgrades`), as recorded (2026-10-25, 00:52.7):
+  a click has him say a line, in a villager's voice at 0.7, and 0.8 s later his menu, Accessory Bag
+  Upgrades, opens. Each upgrade is 2 more Accessory Bag slots for coins from the purse, 99 at most, at
+  the wiki's prices (1,500,000 for the first, then 5M, 8M, 12M and 20M; 1,761,500,000 in all), and +2
+  SkyBlock XP. The 5th also gives the Jacobus Register (into the inventory, or the stash). The profile
+  keeps them as `accessoryBagUpgrades`. The menu's Accessory Bag Shortcut opens the bag, whose Go Back
+  says "To Accessory Bag Upgrades" and comes back, as recorded. Elizabeth's slots are +0 (no Community
+  Shop here). UNKNOWN: which of his nine lines he says (one at random), the slots-from-Jacobus line,
+  "Click to purchase!", what a purchase says or sounds like (nothing), how the Register comes, and
+  the menu once all 99 are bought (a click says the wiki's "You have reached the maximum amount of
+  Jacobus upgrades!").
 - **Saving Up and the Bank** (`Banker`, `bank/`), as recorded.
   - **The Banker.** Saving Up starts with the Village. While it's at Talk to the Banker, he says
     his three lines, timed as recorded, in a villager's voice (again if you left before the last).

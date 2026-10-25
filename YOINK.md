@@ -54,8 +54,9 @@ Each part replaces that part of the profile you play on:
 - **Backpacks**: each in the same slot (Hypixel's 0 is slot 1), its icon being the backpack itself, with
   its contents.
 - **Accessory Bag**: the bag's contents, the selected power (Hypixel's "silky" is the tables' "Silky"),
-  Stats Tuning, and the most Accessory Power the bag has had (`highest_magical_power`, which SkyBlock XP counts;
-  the bag here only raises it). Tuning comes from slot 0's `walk_speed`, `critical_damage` and the rest.
+  Stats Tuning, the most Accessory Power the bag has had (`highest_magical_power`, which SkyBlock XP counts;
+  the bag here only raises it), and Jacobus's upgrades (`bag_upgrades_purchased`, NEU's profile viewer's key).
+  Tuning comes from slot 0's `walk_speed`, `critical_damage` and the rest.
 - **Other Bags**: the Potion Bag, the Fishing Bag and the Sack of Sacks.
 - **Coins**: the purse, and the bank when the API has it.
 - **Skills**: each skill's XP, `SKILL_COMBAT` and the rest.

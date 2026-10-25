@@ -45,6 +45,7 @@ import net.icxd.dungeons.menu.SkyBlockMenuItem;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.storage.AccessoryBag;
 import net.icxd.dungeons.storage.Bag;
+import net.icxd.dungeons.storage.BagUpgrades;
 import net.icxd.dungeons.storage.StatsTuning;
 import net.icxd.dungeons.storage.Storage;
 import net.icxd.dungeons.storage.StorageDocument;
@@ -355,6 +356,7 @@ public final class Yoink {
         StorageTables.Power power = power(bag != null && bag.get("selected_power") instanceof JsonElement e && e.isJsonPrimitive() ? e.getAsString() : null);
         JsonObject tuning = HypixelProfile.object(HypixelProfile.object(bag, "tuning"), "slot_0");
         int highest = (int) Math.max(0, number(bag, "highest_magical_power"));
+        int upgrades = (int) number(bag, "bag_upgrades_purchased");
         Document points = new Document();
         int total = 0;
         for (Map.Entry<String, String> stat : TUNING.entrySet()) {
@@ -367,12 +369,14 @@ public final class Yoink {
             // The most Accessory Power their bag has had, as the API keeps it; the bag here can only raise it.
             if (highest > 0) profile.put(AccessoryBag.HIGHEST_POWER, highest);
             else profile.remove(AccessoryBag.HIGHEST_POWER);
+            // Jacobus's (NEU's profile viewer reads bag_upgrades_purchased for their SkyBlock XP).
+            BagUpgrades.bought(profile, upgrades);
             if (power == null) profile.remove(AccessoryBag.SELECTED_POWER);
             else profile.put(AccessoryBag.SELECTED_POWER, power.name());
             profile.put(StatsTuning.FIELD, points);
         });
         done.put(YoinkPart.ACCESSORIES, "Accessory Bag: " + count(accessories, "accessory") + ", " + (power == null ? "no power" : power.name())
-                + ", " + plural(total, "tuning point"));
+                + ", " + plural(total, "tuning point") + ", " + plural(Math.clamp(upgrades, 0, BagUpgrades.MOST), "upgrade") + " from Jacobus");
     }
 
     /** A power by Hypixel's id ("silky"), as the tables name it ("Silky"); null for none or one the tables haven't. */

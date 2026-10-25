@@ -23,6 +23,7 @@ import net.icxd.dungeons.leveling.LevelingData.Unlock;
 import net.icxd.dungeons.quest.Quests;
 import net.icxd.dungeons.skill.Skill;
 import net.icxd.dungeons.skill.Skills;
+import net.icxd.dungeons.storage.BagUpgrades;
 import net.icxd.dungeons.utils.Utils;
 
 /**
@@ -30,8 +31,8 @@ import net.icxd.dungeons.utils.Utils;
  * "can only be completed once"; the XP isn't a counter). Each task's XP comes from the leveling data's XP for it and
  * what the plugin keeps of the profile: its skill levels, its Catacombs and class levels, its floors completed (a
  * floor's first completion), its collection and boss collection tiers and its Accessory Power (from {@link
- * LevelingSources}), its Fairy Soul exchanges, the minion tiers it crafted, the Kuudra tiers it beat and its
- * factions' reputation. The other tasks (Museum, Slayer, Bestiary...) have no system here yet, so they give none. A
+ * LevelingSources}), its Fairy Soul exchanges, Jacobus's upgrades to its Accessory Bag, the minion tiers it crafted,
+ * the Kuudra tiers it beat and its factions' reputation. The other tasks (Museum, Slayer, Bestiary...) have no system here yet, so they give none. A
  * level is every 100 XP. No server needed.
  */
 public final class SkyBlockXp {
@@ -54,6 +55,7 @@ public final class SkyBlockXp {
     static final String OBJECTIVES = "complete_objectives";
     static final String FAIRY_SOULS = "fairy_souls";
     static final String ACCESSORY_BAG = "accessory_bag";
+    static final String ACCESSORY_BAG_UPGRADES = "accessory_bag_upgrades";
     static final String BOSS_COLLECTIONS = "boss_collections";
     static final String CRAFT_MINIONS = "craft_minions";
     static final String DEFEAT_KUUDRA = "defeat_kuudra";
@@ -106,6 +108,7 @@ public final class SkyBlockXp {
                     // "Per 5 Fairy Souls": five given to Tia, each time.
                     case FAIRY_SOULS -> FairySouls.exchanges(profile) * task.xpEach();
                     case ACCESSORY_BAG -> sources.accessoryPower(profile) * task.xpEach();
+                    case ACCESSORY_BAG_UPGRADES -> BagUpgrades.bought(profile) * task.xpEach();
                     case CRAFT_MINIONS -> minions(profile, task);
                     case DEFEAT_KUUDRA -> kuudra(profile, task, tasks);
                     case MAGE_REPUTATION -> reputation(profile, FactionType.MAGE, task, tasks);

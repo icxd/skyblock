@@ -40,7 +40,8 @@ keep the menus' short click cooldown.
 
 **Your Bags** (`/bags`; the head in the SkyBlock Menu): as recorded. A bag its collection hasn't
 unlocked is gray dye with what it needs ("Requires Nether Wart Collection II.", as the Time Pocket
-shows it). **Accessory Bag**: 9 slots, more with the Redstone Collection's tiers; a Sandbox profile's has all
+shows it). **Accessory Bag**: 9 slots, more with the Redstone Collection's tiers and 2 with each of Jacobus's
+upgrades (below); a Sandbox profile's has all
 281 there are (the wiki's sources added up); pages of 45 ("Accessory Bag (1/2)"); only accessories go in. Its accessories and those in the inventory count for their stats
 (`PlayerStats.addModifier`), only one of each and only the best of a line (Talisman, Ring, Artifact,
 Relic: NEU's upgrade lines; of two of the same, the recombobulated one). Accessory Power (shown as
@@ -112,8 +113,8 @@ have all (27, 27, 18), and the locked ones say what unlocks them.
   (FAIRY_SOULS.md).
 - **Collections** (the collections part): bag sizes read tiers through `Bag.setCollections` (by
   Hypixel's collection ids: `REDSTONE`, `NETHER_STALK`, `RAW_FISH`, `RAW_FISH:2`); until it's wired in,
-  the Accessory Bag has its 9 and the other bags are locked. The Accessory Bag's slots from Jacobus, the
-  Redstone Miner and Elizabeth aren't here either (a Sandbox profile has every slot anyway), nor Elizabeth's Account Upgrades for the Sack of Sacks
+  the Accessory Bag has its 9 and the other bags are locked. The Accessory Bag's slots from the Redstone
+  Miner and Elizabeth aren't here either (a Sandbox profile has every slot anyway), nor Elizabeth's Account Upgrades for the Sack of Sacks
   and for more loadouts and sets.
 - **A rank that drops**: Hypixel moves what's in a set that's locked then to the stash; here it stays in
   the set, unseen, until the rank comes back.
