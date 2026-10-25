@@ -35,8 +35,10 @@ it there are no pets (the log says so).
     next, a right click the one before, with the recorded lever click. Visibility: Show all pets, Hide all pets,
     Only your pet (a left click the next, as recorded), and a right click toggles name tags, with the recorded pling.
     Both are kept with the profile.
-- **Summoned pets** follow their owner, as recorded: an invisible marker armor stand holding the pet's head in its
-  right hand, and the name over it, "&8[&7Lv91&8] &6Mithril Golem" (others see "Bea's Bee", as Bea's was). It goes
+- **Summoned pets** follow their owner: a small invisible marker armor stand wearing the pet's head, and the name just
+  over it, "&8[&7Lv91&8] &6Mithril Golem" (others see "Bea's Bee", as Bea's was). Hypixel's stand is full-size and
+  holds the head in its right hand (recorded); a small one wearing it looks nicer. The name is on a marker stand of
+  its own, where the small stand's own name would be if it had a hitbox (a marker's shows under its head). It goes
   after you faster the farther it is, stops short of you, faces you, and bobs 0.55 up and down standing near you. It
   comes along to another world, catches up from far, and is out again when you come back.
 - **Stats**: the summoned pet's at its level, its held item's ("Grants &f+10❂ True Defense", in the pet's True Defense
