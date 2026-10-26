@@ -52,15 +52,36 @@ public final class PetData {
 
     /**
      * A pet at one rarity: its name (as the pet's, unless it's another at this rarity), its head's skin, its stats and
-     * numbers by level, its text ({@code {n}} in a paragraph is {@code numbers.get(n)}), and whether Kat can upgrade it.
+     * numbers by level, its text ({@code {n}} in a paragraph is {@code numbers.get(n)}), whether Kat can upgrade it ("Can
+     * be upgraded at Kat in The Hub!"), what that takes (null where it's unknown), and what George pays for it (0: he
+     * doesn't buy it, or it's unknown).
      */
     public record Variant(Rarity rarity, String name, String texture, Map<Stat, Formula> stats, List<Formula> numbers,
-                          List<Block> blocks, boolean kat) {
+                          List<Block> blocks, boolean kat, KatUpgrade katUpgrade, long george) {
         public Variant {
             stats = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(stats));
             numbers = List.copyOf(numbers);
             blocks = List.copyOf(blocks);
         }
+
+        public Variant(Rarity rarity, String name, String texture, Map<Stat, Formula> stats, List<Formula> numbers, List<Block> blocks,
+                       boolean kat) {
+            this(rarity, name, texture, stats, numbers, blocks, kat, null, 0);
+        }
+    }
+
+    /**
+     * What Kat takes to upgrade a pet at one rarity to the next (the wiki's Kat/Costs): how long, how many coins (less
+     * 0.3% a pet level, see Kat), and which items.
+     */
+    public record KatUpgrade(long seconds, long coins, List<ItemCost> items) {
+        public KatUpgrade {
+            items = List.copyOf(items);
+        }
+    }
+
+    /** So many of an item, by its id. */
+    public record ItemCost(String id, int amount) {
     }
 
     /**
@@ -206,8 +227,19 @@ public final class PetData {
             for (JsonElement line : array(block, "text")) text.add(line.getAsString());
             blocks.add(new Block(string(block, "name"), text));
         }
+        KatUpgrade upgrade = null;
+        JsonObject kat = object(json, "kat_upgrade");
+        if (kat != null) {
+            List<ItemCost> items = new ArrayList<>();
+            for (JsonElement item : array(kat, "items")) {
+                JsonArray pair = item.getAsJsonArray();
+                items.add(new ItemCost(pair.get(0).getAsString(), pair.get(1).getAsInt()));
+            }
+            upgrade = new KatUpgrade(kat.has("seconds") ? kat.get("seconds").getAsLong() : 0, kat.has("coins") ? kat.get("coins").getAsLong() : 0,
+                    items);
+        }
         return new Variant(rarity, string(json, "name"), string(json, "texture"), stats, numbers, blocks,
-                json.has("kat") && json.get("kat").getAsBoolean());
+                json.has("kat") && json.get("kat").getAsBoolean(), upgrade, json.has("george") ? json.get("george").getAsLong() : 0);
     }
 
     private static Formula formula(JsonObject json, int decimals) {
