@@ -55,8 +55,11 @@ public final class PetText {
 
     /** Where the pet's lore is: the Pets menu (what a click does), or an item (to add it to the menu). */
     public enum Where {
-        MENU, ITEM
+        MENU, ITEM, SHOP
     }
+
+    /** Under a shop's pet, its level 100's stats and abilities (Bea's Bee Pet, recorded). */
+    static final List<String> PREVIEW = List.of("&cThis is a preview of Lvl 100.", "&cNew pets are lowest level!");
 
     private PetText() {
     }
@@ -98,6 +101,10 @@ public final class PetText {
         boolean hatched = kind == null || level >= kind.statsFrom();
         sections.add(statLines(hatched ? Pets.withItem(pet, data) : HeldItems.stats(pet.heldItem())));
         if (variant != null && hatched) for (Block block : variant.blocks()) sections.add(blockLines(block, variant, level));
+        if (where == Where.SHOP) {
+            sections.add(PREVIEW);
+            return joined(sections);
+        }
         sections.add(heldItemLines(pet.heldItem()));
         if (pet.candyUsed() > 0) sections.add(List.of("&a(" + pet.candyUsed() + "/10) Pet Candy Used"));
         sections.add(progress(pet, data));
@@ -112,6 +119,11 @@ public final class PetText {
             footer.add(rarityLine(tier));
             sections.add(footer);
         }
+        return joined(sections);
+    }
+
+    /** Sections, a blank line between each (none for an empty one). */
+    private static List<String> joined(List<List<String>> sections) {
         List<String> lore = new ArrayList<>();
         for (List<String> section : sections) {
             if (section.isEmpty()) continue;

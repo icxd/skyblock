@@ -50,14 +50,17 @@ class ShopTest {
         assertEquals(1, Selling.total(1, 1));
     }
 
-    /** The recorded sales to the Farm Merchant (2026-10-24, 06:13.2 and 06:13.5). */
+    /** The recorded sales to the Farm Merchant (2026-10-24, 06:13.2 and 06:13.5), and buys. */
     @Test
     void theSaleLine() {
         assertEquals("&aYou sold &fCobblestone&8 x20 &afor &620 Coins&a!", Selling.sold("&fCobblestone", 20, 20));
         assertEquals("&aYou sold &fOak Sapling&8 x2 &afor &60.5 Coins&a!", Selling.sold("&fOak Sapling", 2, 0.5));
         assertEquals("&aYou sold &5Cicada Symphony Vinyl&8 x1 &afor &650,000 Coins&a!", Selling.sold("&5Cicada Symphony Vinyl", 1, 50_000));
-        assertEquals("&aYou bought &9Superboom TNT&a!", Selling.bought("&9Superboom TNT", 1));
-        assertEquals("&aYou bought &fFlint Arrow&a x20!", Selling.bought("&fFlint Arrow", 20));
+        // The recorded buys (2026-10-24, 03:53.7 and 05:44.8; Bea's, 2026-10-25, 00:34.8); with no coins, UNKNOWN.
+        assertEquals("&aYou bought &fRookie Hoe &afor &610 Coins&a!", Selling.bought("&fRookie Hoe", 1, 10));
+        assertEquals("&aYou bought &fExperience Bottle&8 x8 &afor &6240 Coins&a!", Selling.bought("&fExperience Bottle", 8, 240));
+        assertEquals("&aYou bought &fBee Pet &afor &650 Coins&a!", Selling.bought("&fBee Pet", 1, 50));
+        assertEquals("&aYou bought &9Superboom TNT&a!", Selling.bought("&9Superboom TNT", 1, 0));
     }
 
     /** The recorded wares' lore under their items' own (the Farm Merchant's at 06:06.6, Ophelia's at 08:31.2). */

@@ -35,8 +35,8 @@ import net.icxd.dungeons.npc.NpcTable;
  * whose words were recorded say them ({@link HubTalk}), the Banker his and then the bank ({@link
  * Banker}), the Farm Merchant his and then his shop ({@link FarmMerchant}), Marco and the Bartender
  * theirs for their quests ({@link Marco}, {@link Bartender}), Jacobus his and then his Accessory Bag
- * Upgrades ({@link Jacobus}), Madame Goldsworth hers and then the Museum ({@link MadameGoldsworth}); the
- * rest stand there for now. Their
+ * Upgrades ({@link Jacobus}), Madame Goldsworth hers and then the Museum ({@link MadameGoldsworth}), Bea her shop
+ * ({@link Bea}); the rest stand there for now. Their
  * chunks are kept loaded, since an NPC goes with its chunk. Main thread.
  */
 @OnlyOn({ServerType.LOBBY})
@@ -67,6 +67,7 @@ public final class HubNpcs {
                 case Bartender.ID -> player -> Bartender.click(plugin, player);
                 case Jacobus.ID -> player -> Jacobus.click(plugin, player);
                 case MadameGoldsworth.ID -> player -> MadameGoldsworth.click(plugin, player);
+                case Bea.ID -> Bea::click;
                 default -> HubTalk.of(npc).<Consumer<Player>>map(talk -> player -> talk.talk(plugin, player)).orElse(player -> {
                 });
             };

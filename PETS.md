@@ -78,6 +78,10 @@ it there are no pets (the log says so).
   (Pet Score, 3 a point, 1,527 at most) counts the highest it has been: a pet taken out and put back gives none
   again, as recorded.
 - **/yoinkprofile**: a Pets part (the API's `pets_data.pets` and the one out), and pet items wherever they are.
+- **Bea** (the Hub's Pet Care): her shop, as recorded: a Bee Pet for 50 coins (shown as its level 100, "&cThis is a
+  preview of Lvl 100." "&cNew pets are lowest level!"; bought a Common one, level 1) and the four Honey Dippers Kat takes,
+  500 to 500,000 coins, opening as she speaks (a villager's, high). Every shop's line now says what it cost, as recorded:
+  "&aYou bought &fBee Pet &afor &650 Coins&a!", "&aYou bought &fExperience Bottle&8 x8 &afor &6240 Coins&a!".
 - `/givepet BEE [RARITY] [LEVEL] [XP]`: a pet as an item, for staff (not a Sandbox tool).
 
 ## Abilities
@@ -182,6 +186,6 @@ are three).
   Lotus Crown, the Brown Bandana (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed
   Fish's coins (Griffin Burrows), the Rubber Snorkel's double on Foraging Islands, and the Kat upgrade items.
 - **Exp Sharing** (a click does nothing), **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown,
-  not used), Kat, Bea, George, Fann.
+  not used), Kat, George, Fann.
 - The Daedalus Blades' Damage and Magic Find on Mythological mobs (Diana's), and their Damage line showing the Taming
   levels' (it counts, but the lore shows the item's own).

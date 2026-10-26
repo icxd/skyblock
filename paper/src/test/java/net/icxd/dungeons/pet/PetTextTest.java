@@ -333,6 +333,16 @@ class PetTextTest {
     }
 
     @Test
+    void beasBee() {
+        // Bea's shop (2026-10-25, 00:32.6): a new Bee, as its level 100 (the recording's glyphs as the plugin's symbols).
+        OwnedPet bee = at("BEE", Rarity.COMMON, 100, 0, null, 0);
+        assertEquals("&7[Lvl 100] &fBee", PetText.name(bee, data, Where.SHOP));
+        assertEquals(List.of("&8Farming Pet", "", "&7Strength: &c+30", "&7Intelligence: &b+50", "&7Speed: &f+10", "", "&6Hive",
+                "&7For each player within &a25 &7blocks:", " &b+3✎ Intelligence", " &c+3❁ Strength", " &a+2❈ Defense", "&8Max 15 players", "",
+                "&cThis is a preview of Lvl 100.", "&cNew pets are lowest level!"), PetText.lore(bee, data, Where.SHOP, false));
+    }
+
+    @Test
     void guardian() {
         menu("&7[Lvl 94] &dGuardian", GUARDIAN, at("GUARDIAN", Rarity.MYTHIC, 94, 28_101, "PET_ITEM_ALL_SKILLS_BOOST_COMMON", 0), false);
     }
