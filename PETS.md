@@ -108,6 +108,15 @@ it there are no pets (the log says so).
   Pets). The Kuudra pet gains XP only on the Crimson Isle, where it shares as though in a slot (twice if it's in one,
   its item's boost not counting), as its lines and the wiki's Kuudra Pet say. A pet that leaves the menu leaves its
   slot.
+- **Fann** (the Hub's Pet Care; never recorded, from the wiki's Fann and SkyHanni's FannCost): with Taming 10, Pet
+  Training (the wiki's UI: three Training Slots, #2 and #3 locked as Hootie isn't here; the Owl pet for 2,200,000 coins;
+  Extra Free Training). A slot's menu takes a pet from your inventory and an Owl pet if you like (as Kat's slot does),
+  the Training Duration (an amount of days, or until a level), the Training Type (Free, Light, Moderate, Expert, Ultra,
+  Turbo!: Taming 10 to 60, the Fann page's XP and coins a day, Turbo!'s 500 Bits a day; Free's XP 20,000 to 50,000 by
+  the Taming level, the wiki's pet calculator), and Begin Training with its XP a day, its total or its time, and its
+  cost. The Owl adds its Efficient Trainer (+0.1% XP a level), and her coins spent take its Training Refunds (1% a
+  million, to 5%). Done, she rings (her lines when answered, the wiki's), and the pet waits in the slot to be picked
+  up with its XP; stopped early it comes back with the XP so far and half the time left's coins.
 - `/givepet BEE [RARITY] [LEVEL] [XP]`: a pet as an item, for staff (not a Sandbox tool).
 
 ## Abilities
@@ -133,7 +142,7 @@ are three).
 - **Some work** for 46 more: every one their pet has but those below. The Black Cat's Omen and Supernatural and the
   Bee's Busy Buzz Buzz are the pets' own stat lines (the same numbers), and the Reindeer's Winter Sprint is in its pet
   XP.
-- **Waiting on what isn't built** (146 of the data's 303 ability names; 153 work):
+- **Waiting on what isn't built** (144 of the data's 303 ability names; 153 work, and the Owl's two are Fann's):
   - Fishing: Ammonite's Expert Cave Fisher, Dolphin's Splash Surprise, Flying Fish's Rapid Decay, Frog's Home Sweet Home
     and Hunting Enjoyer, Hermit Crab's other three, Penguin's Thick Blubber, Seal, Slug's Slow and Steady, Spinosaurus.
   - The Garden, pests, crop drops and minions: Bee's Honey Harvester and Powered by Pollen, Elephant's Abundant
@@ -155,8 +164,8 @@ are three).
     Madness), mob healing (Tiger's Hemorrhage), souls (Ghoul's other two), Midas' Greed (Golden Dragon's Gold's
     Power), Power Orbs and Dungeon Potions (Jellyfish's other two), the Spirit coming to a ghost (Spirit Assistance).
   - Potions and brewing: Parrot's two, Rabbit's Happy Feet, Witch's Alchemism.
-  - Others: Superpairs (Guardian's Lucky Seven), Fann (Owl's other two), Drone Mods (Precursor Drone), squids told
-    apart in drops (Squid's More Ink), Bingo profiles (Bingo).
+  - Others: Superpairs (Guardian's Lucky Seven), Drone Mods (Precursor Drone), squids told apart in drops (Squid's
+    More Ink), Bingo profiles (Bingo). The Owl's other two are Fann's own (her sessions read them).
 - **Hooks added** for them (the smallest versions, as EFFECTS.md asks): stats once flat buffs are in
   (`PlayerStats.addBuffedModifier`), kill XP factors (`SkillGains.addKillXpFactor`), max mana factors
   (`PlayerSession.addMaxManaFactor`), Mining Speed by block (`BlockListener.addMiningSpeed`), powder bonuses
@@ -216,6 +225,11 @@ are three).
   the pet under it ("&eClick to remove!", a click taking it out), and choosing ("Choose a Pet", the Pets menu's pages
   and sort, "&eClick to choose!"); pets in the two disabled slots kept there, gaining nothing; a shared pet's level-up
   said and chimed as the summoned one's is; the Kuudra pet's Taming XP off the Crimson Isle (none).
+- **Fann**: all of her menus' items past the wiki's UI (names, lines and where), changing the days or level with clicks
+  (1 to 100 days; Hypixel's may be typed), her costs (the Fann page's table; the wiki's pet calculator has others:
+  Light 250,000, Moderate 600,000, Expert 950,000, Ultra 2,000,000 a day), the cost of a session going by its days with
+  the Owl's XP shortening a level's, the Refunds' steps past the first, what stopping early gives back, her voice and
+  lines' timing, a training pet shown as its head with its time left and XP so far, and right-click to stop it.
 - **George**: how a pet is given him (never recorded: with one he wants in the slot, +1 Taming Level Cap says "&eClick
   to donate your pet!", and Confirm Donation asks first, as Confirm Sale does); the cap item with none left ("  &aNone");
   his voice (a villager's) and his lines' timing (a second apart); what he shows for a pet he doesn't buy (a barrier,
@@ -228,7 +242,9 @@ are three).
 - **Pet items** that need what isn't built: trophy fishing's Barrel of Riches and Lotus Crown, the Brown Bandana
   (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed Fish's coins (Griffin Burrows)
   and the Rubber Snorkel's double on Foraging Islands.
-- **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown, not used), Fann.
+- **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown, not used).
+- Hootie (Fann's owl, and feeding him Carrot Candies for her two other slots), the Boreal Owl Shard, the Enchanted
+  Clock, and Fann's Abiphone contact.
 - Kat Flowers and Bouquets (and the Enchanted Clock's hour), and her Abiphone contact.
 - The Daedalus Blades' Damage and Magic Find on Mythological mobs (Diana's), and their Damage line showing the Taming
   levels' (it counts, but the lore shows the item's own).

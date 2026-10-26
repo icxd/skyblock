@@ -63,6 +63,7 @@ public final class Pets {
         SkillGains.addGainListener(PetXp::gained);
         PetFollowers.start(plugin);
         Kat.start(plugin);
+        Fann.start(plugin);
         George.enable();
         Logger log = plugin.getLogger();
         Path folder = plugin.getDataFolder().toPath();
