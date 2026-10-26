@@ -98,7 +98,9 @@ import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
+import net.icxd.dungeons.pet.HeldItemEffects;
 import net.icxd.dungeons.pet.PetFollowers;
+import net.icxd.dungeons.pet.PetItemUse;
 import net.icxd.dungeons.pet.PetListener;
 import net.icxd.dungeons.pet.Pets;
 import net.icxd.dungeons.pet.ability.PetAbilities;
@@ -292,6 +294,7 @@ public class Dungeons extends JavaPlugin {
         listen(Npcs.class, Npcs::new);
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         listen(PetListener.class, PetListener::new);
+        listen(PetItemUse.class, PetItemUse::new);
         listen(UtilityListener.class, UtilityListener::new);
         listen(Activations.class, Activations::new);
         // What weapons' enchantments and reforges do in a fight (ENCHANTS_WEAPONS.md).
@@ -311,6 +314,7 @@ public class Dungeons extends JavaPlugin {
         // After the armor's: a pet ability's share of a stat ("Increases all Combat stats by 10%") counts what the armor gives.
         try {
             PetAbilities.enable(this);
+            HeldItemEffects.enable(this);
         } catch (RuntimeException e) {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable pet abilities", e);
         }

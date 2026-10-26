@@ -29,7 +29,7 @@ public final class PetItems implements ItemBehaviour {
         if (pet == null) return null;
         PetData data = Pets.data();
         Pet kind = data.pet(pet.type());
-        Variant variant = kind == null ? null : kind.variant(pet.tier());
+        Variant variant = kind == null ? null : kind.variant(Pets.tier(pet, data));
         String texture = variant == null ? null : variant.texture();
         return new Shown(PetText.name(pet, data, Where.ITEM), PetText.lore(pet, data, Where.ITEM, false),
                 texture == null ? null : Utils.texture(texture));

@@ -25,6 +25,7 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.upgrade.Book;
 import net.icxd.dungeons.pet.HeldItems;
+import net.icxd.dungeons.pet.Pets;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
 import net.icxd.dungeons.user.User;
@@ -313,7 +314,7 @@ final class StatAbilities {
 
         @Override
         public void petStats(Player player, Active a, Stats pet) {
-            Stats held = HeldItems.stats(a.pet().heldItem());
+            Stats held = HeldItems.granted(a.pet().heldItem(), Pets.stats(a.pet(), Pets.data()), a.level());
             for (Stat stat : COMBAT) if (held.has(stat)) pet.add(stat, held.get(stat) * a.n(0) / 100);
         }
     }

@@ -300,7 +300,7 @@ public final class PetAbilities implements Listener {
     static void add(List<PetAbility.Active> active, OwnedPet pet, PetData data, boolean fromMenu) {
         Map<String, List<PetAbility>> abilities = BY_PET.get(pet.type());
         Pet kind = abilities == null ? null : data.pet(pet.type());
-        Variant variant = kind == null ? null : kind.variant(pet.tier());
+        Variant variant = kind == null ? null : kind.variant(Pets.tier(pet, data));
         if (variant == null) return;
         int level = Pets.level(pet, data);
         // A dragon's egg has none of its abilities yet, as it shows none.

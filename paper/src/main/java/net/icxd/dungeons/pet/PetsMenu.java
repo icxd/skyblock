@@ -18,6 +18,7 @@ import net.icxd.dungeons.menu.Icon;
 import net.icxd.dungeons.menu.SkyBlockMenu;
 import net.icxd.dungeons.pet.PetData.Pet;
 import net.icxd.dungeons.pet.PetData.Reward;
+import net.icxd.dungeons.pet.PetData.Variant;
 import net.icxd.dungeons.pet.PetText.Where;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
@@ -113,7 +114,8 @@ public final class PetsMenu extends GUI {
     /** A pet, as the menu shows it: its head, name and lore. */
     static ItemStack stack(OwnedPet pet, PetData data, boolean out) {
         Pet kind = data.pet(pet.type());
-        String texture = kind == null || kind.variant(pet.tier()) == null ? null : kind.variant(pet.tier()).texture();
+        Variant variant = kind == null ? null : kind.variant(Pets.tier(pet, data));
+        String texture = variant == null ? null : variant.texture();
         ItemStack stack = new Icon(Material.PLAYER_HEAD, PetText.name(pet, data, Where.MENU), PetText.lore(pet, data, Where.MENU, out)).stack();
         if (texture != null) Utils.skull(stack, Utils.texture(texture));
         return stack;

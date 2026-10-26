@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
@@ -42,6 +43,8 @@ public final class Pets {
     static final String BEST_SCORE = "bestScore";
     /** "Current Max Pets: 112", and "+28 Pet Slots" (5,000 Bits) twice more (the wiki's Pets). */
     public static final int SLOTS = 112;
+    /** The pets a Tier Boost does nothing for (the wiki's Pet Items; SkyCrypt's {@code ignoresTierBoost}). */
+    static final Set<String> NO_TIER_BOOST = Set.of("GRIFFIN", "DROPLET_WISP", "FROST_WISP", "GLACIAL_WISP", "SUBZERO_WISP");
     public static final int SLOTS_PER_UPGRADE = 28;
     public static final int MOST_UPGRADES = 2;
     public static final int UPGRADE_BITS = 5_000;
@@ -281,7 +284,7 @@ public final class Pets {
 
     private static String name(OwnedPet pet, PetData data) {
         Pet kind = data.pet(pet.type());
-        return kind == null ? pet.type() : kind.name(pet.tier());
+        return kind == null ? pet.type() : kind.name(tier(pet, data));
     }
 
     private static String skill(OwnedPet pet, PetData data) {
@@ -289,10 +292,30 @@ public final class Pets {
         return kind == null || kind.kind() == null ? "~" : kind.kind();
     }
 
-    // Levels
+    // Rarity and levels
 
+    /**
+     * The rarity a pet is as: its own, or as many more as its held item raises it (the Tier Boost's 1, "until the Pet Item
+     * held by the Pet is changed", the wiki's Pets), up to Legendary ("It cannot increase a Rarity to Mythic"), to a
+     * rarity its type has, and none for the Griffin and the Wisps ("Does not work on the Griffin Pet or the Wisp Pet").
+     * Everything goes by it but its item's {@code petInfo} and Kat, which keep its own.
+     */
+    public static Rarity tier(OwnedPet pet, PetData data) {
+        int tiers = HeldItems.effect(pet.heldItem()).tiers();
+        if (tiers <= 0 || NO_TIER_BOOST.contains(pet.type())) return pet.tier();
+        Pet kind = data.pet(pet.type());
+        Rarity tier = pet.tier();
+        for (int i = 0; i < tiers && tier.compareTo(Rarity.LEGENDARY) < 0; i++) {
+            Rarity next = tier.upgrade();
+            if (kind == null || kind.variant(next) == null) break;
+            tier = next;
+        }
+        return tier;
+    }
+
+    /** Its level: its XP on the table of the rarity it's as (see {@link #tier}). */
     public static int level(OwnedPet pet, PetData data) {
-        return data.level(data.pet(pet.type()), pet.tier(), pet.exp());
+        return data.level(data.pet(pet.type()), tier(pet, data), pet.exp());
     }
 
     public static boolean maxed(OwnedPet pet, PetData data) {
@@ -309,17 +332,19 @@ public final class Pets {
     public static int score(List<OwnedPet> pets, PetData data) {
         Map<String, OwnedPet> best = new HashMap<>();
         for (OwnedPet pet : pets) {
-            if (data.pet(pet.type()) == null || data.scoreOf(pet.tier()) == 0) continue;
+            if (data.pet(pet.type()) == null || data.scoreOf(tier(pet, data)) == 0) continue;
             best.merge(pet.type(), pet, (a, b) -> better(a, b, data));
         }
         int score = 0;
-        for (OwnedPet pet : best.values()) score += data.scoreOf(pet.tier()) + (maxed(pet, data) ? data.scoreMaxLevel() : 0);
+        for (OwnedPet pet : best.values()) score += data.scoreOf(tier(pet, data)) + (maxed(pet, data) ? data.scoreMaxLevel() : 0);
         return score;
     }
 
     /** The better of two pets of a type: the higher rarity, then the higher level (the first, if they're the same). */
     public static OwnedPet better(OwnedPet a, OwnedPet b, PetData data) {
-        if (a.tier() != b.tier()) return a.tier().compareTo(b.tier()) > 0 ? a : b;
+        Rarity at = tier(a, data);
+        Rarity bt = tier(b, data);
+        if (at != bt) return at.compareTo(bt) > 0 ? a : b;
         return level(a, data) >= level(b, data) ? a : b;
     }
 
@@ -354,7 +379,7 @@ public final class Pets {
     public static Stats stats(OwnedPet pet, PetData data) {
         Stats stats = new Stats();
         Pet kind = pet == null ? null : data.pet(pet.type());
-        Variant variant = kind == null ? null : kind.variant(pet.tier());
+        Variant variant = kind == null ? null : kind.variant(tier(pet, data));
         if (variant == null) return stats;
         int level = level(pet, data);
         if (level < kind.statsFrom()) return stats;
@@ -363,12 +388,22 @@ public final class Pets {
     }
 
     /**
+     * A pet's stats with its held item's (see {@link HeldItems#granted}), as its lore shows them: the Dwarf Turtle Shelmet's
+     * +10 True Defense is in its True Defense line (recorded), a Minos Relic's third more in each (UNKNOWN whether the
+     * lore shows those).
+     */
+    public static Stats withItem(OwnedPet pet, PetData data) {
+        Stats base = stats(pet, data);
+        return base.copy().add(HeldItems.granted(pet.heldItem(), base, level(pet, data)));
+    }
+
+    /**
      * A pet's stats as they count for its owner (null for none known): its own at its level, its held item's, and what its
      * abilities give it ("to your pet", see PetAbility#petStats).
      */
     public static Stats petStats(Player owner, OwnedPet pet, PetData data) {
         Stats base = stats(pet, data);
-        Stats stats = base.copy().add(HeldItems.stats(pet.heldItem()));
+        Stats stats = base.copy().add(HeldItems.granted(pet.heldItem(), base, level(pet, data)));
         if (owner != null) PetAbilities.petStats(owner, pet, base, stats);
         return stats;
     }

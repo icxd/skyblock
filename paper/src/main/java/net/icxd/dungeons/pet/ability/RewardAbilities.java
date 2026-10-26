@@ -30,6 +30,7 @@ import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.mob.KillingBlow;
 import net.icxd.dungeons.mob.MobDrop;
 import net.icxd.dungeons.mob.SkyBlockMobDeathEvent;
+import net.icxd.dungeons.pet.HeldItems;
 import net.icxd.dungeons.session.Absorption;
 import net.icxd.dungeons.session.PlayerHealth;
 import net.icxd.dungeons.session.PlayerSession;
@@ -271,6 +272,9 @@ final class RewardAbilities {
             int n = combo.getOrDefault(player.getUniqueId(), 0);
             if (n <= 0) return;
             stats.add(Stat.MAGIC_FIND, total(a, n, 0)).add(Stat.COMBAT_WISDOM, total(a, n, 3));
+            // The Grandma's Knitting Needle on it: "Grants +5% ✯ Magic Find when getting a combo of 50 or above."
+            HeldItems.Effect item = HeldItems.effect(a.pet().heldItem());
+            if (item.comboAt() > 0 && n >= item.comboAt()) stats.add(item.combo());
         }
 
         @Override

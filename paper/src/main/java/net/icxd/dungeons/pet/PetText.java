@@ -64,7 +64,8 @@ public final class PetText {
     /** "&6Lion": its name in its rarity's colour. */
     public static String colored(OwnedPet pet, PetData data) {
         Pet kind = data.pet(pet.type());
-        return "&" + pet.tier().getCode() + (kind == null ? pet.type() : kind.name(pet.tier()));
+        Rarity tier = Pets.tier(pet, data);
+        return "&" + tier.getCode() + (kind == null ? pet.type() : kind.name(tier));
     }
 
     /** "&7[Lvl 94] &dGuardian"; in the menu, "&e⭐ " before a favourite's. */
@@ -75,8 +76,9 @@ public final class PetText {
     /** "&8[&7Lv100&8] &6Lion" over a summoned pet; "&6Bea's Bee" over someone else's (recorded, Bea's in the Hub). */
     public static String floating(OwnedPet pet, PetData data, String owner) {
         Pet kind = data.pet(pet.type());
-        String name = kind == null ? pet.type() : kind.name(pet.tier());
-        return "&8[&7Lv" + Pets.level(pet, data) + "&8] &" + pet.tier().getCode() + (owner == null ? "" : owner + "'s ") + name;
+        Rarity tier = Pets.tier(pet, data);
+        String name = kind == null ? pet.type() : kind.name(tier);
+        return "&8[&7Lv" + Pets.level(pet, data) + "&8] &" + tier.getCode() + (owner == null ? "" : owner + "'s ") + name;
     }
 
     /** A number of its text at a level, with its decimals: "6.6", "1.16", "115". */
@@ -88,14 +90,13 @@ public final class PetText {
     /** The lore, as recorded in the Pets menu (with what a click does; {@code active}: it's the one out) or as an item. */
     public static List<String> lore(OwnedPet pet, PetData data, Where where, boolean active) {
         Pet kind = data.pet(pet.type());
-        Variant variant = kind == null ? null : kind.variant(pet.tier());
+        Rarity tier = Pets.tier(pet, data);
+        Variant variant = kind == null ? null : kind.variant(tier);
         int level = Pets.level(pet, data);
         List<List<String>> sections = new ArrayList<>();
         sections.add(List.of("&8" + (kind == null || kind.kind() == null ? "Pet" : kind.kind())));
         boolean hatched = kind == null || level >= kind.statsFrom();
-        Stats held = HeldItems.stats(pet.heldItem());
-        Stats own = hatched ? Pets.stats(pet, data) : new Stats();
-        sections.add(statLines(own.add(held)));
+        sections.add(statLines(hatched ? Pets.withItem(pet, data) : HeldItems.stats(pet.heldItem())));
         if (variant != null && hatched) for (Block block : variant.blocks()) sections.add(blockLines(block, variant, level));
         sections.add(heldItemLines(pet.heldItem()));
         if (pet.candyUsed() > 0) sections.add(List.of("&a(" + pet.candyUsed() + "/10) Pet Candy Used"));
@@ -108,7 +109,7 @@ public final class PetText {
             sections.add(List.of(ADD));
             List<String> footer = new ArrayList<>();
             if (kat) footer.add(KAT);
-            footer.add(rarityLine(pet.tier()));
+            footer.add(rarityLine(tier));
             sections.add(footer);
         }
         List<String> lore = new ArrayList<>();
@@ -176,8 +177,9 @@ public final class PetText {
         Pet kind = data.pet(pet.type());
         int level = Pets.level(pet, data);
         if (kind != null && level >= data.maxLevel(kind)) return List.of(MAX_LEVEL, "&8▸ " + SkillText.number(Math.floor(pet.exp())) + " XP");
-        double need = data.xpFor(kind, pet.tier(), level + 1);
-        double into = data.xpIntoLevel(kind, pet.tier(), pet.exp());
+        Rarity tier = Pets.tier(pet, data);
+        double need = data.xpFor(kind, tier, level + 1);
+        double into = data.xpIntoLevel(kind, tier, pet.exp());
         double fraction = need <= 0 ? 0 : Math.min(1, into / need);
         return List.of("&7Progress to Level " + (level + 1) + ": &e" + SkillText.percent(fraction) + "%", SkillText.bar(fraction, into, need));
     }

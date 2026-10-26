@@ -44,6 +44,23 @@ it there are no pets (the log says so).
   comes along to another world, catches up from far, and is out again when you come back.
 - **Stats**: the summoned pet's at its level, its held item's ("Grants &f+10❂ True Defense", in the pet's True Defense
   line, as recorded), and the Pet Score's Magic Find, added to yours.
+- **Giving a pet an item** ("To use them, equip a pet and right-click the pet while holding a pet item", the wiki):
+  looking at its head within your reach, as its marker stand can't be clicked. With none held it takes it ("Your pet is
+  now holding Burnt Texts.", SkyHanni's test lines); with another, Swap Pet Item opens (the wiki's 0.24.1 screenshot:
+  the two items, Confirm Swap's "Replace ... with ... You will be refunded your ... Cost 250,000 Coins Click to swap!"),
+  for 25,000 to 2,500,000 coins by the replaced item's rarity, and the old one comes back (to the stash if there's no
+  room). A Super Scrubber takes it off the same way ("You removed Quick Claw from your pet!"; "&cYour Pet isn't holding
+  any item!" with none). One for another pet, an egg, the Snail's Unalloyed Speed or the Kuudra's Exp Share: "&cThis
+  item is not compatible with your pet!". Pet Items are never placed.
+- **What held items do**, read from their own lines: every stat they grant ("Grants +30❁ Strength and +20✦ Speed.", not
+  those "while" or "when" make sometimes, less what "reduces your ☂ Fishing Speed by 50"), shares of the pet's own
+  stats (Minos and Hephaestus Relics' "all pet stats", Gold and Iron Claws, Textbook, the Remedies), Quick Claw's stats
+  every 2 levels, the Shelmets' knockback immunity, Unalloyed Speed's speed cap, the Reaper Gem's Ferocity on a kill,
+  Grandma's Knitting Needle's Magic Find at a 50 Kill Combo, and the Tier Boost: the pet is one rarity higher (its
+  stats, abilities, level table, colour and head) "until the Pet Item held by the Pet is changed", up to Legendary, and
+  not the Griffin or the Wisps (the wiki; SkyCrypt's `ignoresTierBoost`), as NEU works its level out. Before, a stat
+  after "and" and the conditional ones were read wrong (the Spooky Cupcake had no Speed, the Titanium Minecart its
+  Mining Fortune everywhere).
 - **Pet XP**: skill XP before Wisdom x the pet's share x (1 + Taming level / 100) x (1 + its held item's boost) x its
   own (the Reindeer's 2). Its share (the wiki's): all of its own skill's (every skill's for All Skills), a third of
   another's, a twelfth of Alchemy's or Enchanting's when they aren't its own, 1.5x Fishing's; none from Carpentry,
@@ -143,12 +160,22 @@ are three).
 - Name tags off says "&cDisabled"; a full menu "&cYour pet menu is full!"; no room for a pet item "&cYour inventory is
   full!"; +28 Pet Slots you can afford "&eClick to purchase!". Pet Score Rewards with no threshold reached marks none.
 - The dragons' egg (below level 100) shows no stats or abilities, under the dragon's name.
+- **Pet items**: the lines' colours; "already holding" ("&cYour pet is already holding this item!") and too few coins
+  ("&cYou don't have enough coins!"); Swap Pet Item's Cancel (hidden under the screenshot's tooltip) and the Super
+  Scrubber's menu (this one: "Confirm Removal", "Remove ... from your pet."); anything rarer than Divine costing
+  Divine's; looking at the head (its middle 0.75 over the stand's feet, 0.45 to either side); a hidden pet taking none;
+  the stat lines showing a share item's stats; the Pet Score counting a Tier Boost's rarity; Unalloyed Speed's +50 not
+  adding to a Black Cat's +100 (the most counts, as the speed caps here do); a Reaper Gem kill starting its 5s again.
+  The wiki's "it will always consume the item in the slot closest to the first" isn't copied: it's the one in your hand.
+  The wiki says a Minos Relic "does not increase the perks of a pet" (the Black Cat's Magic Find); here it increases the
+  data's stat lines, the Black Cat's included.
 
 ## Not done
 
 - **Ability effects** that need what isn't built (see Abilities).
-- **Pet items' other effects**: a share of the pet's stats (Gold Claws, Minos Relic), the Tier Boost's rarity, Exp Share,
-  and putting one on a pet (right-clicking the summoned pet); only "Grants +N Stat" and "pet exp for" work.
+- **Pet items** that need what isn't built: Exp Share (the Exp Sharing slots), trophy fishing's Barrel of Riches and
+  Lotus Crown, the Brown Bandana (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed
+  Fish's coins (Griffin Burrows), the Rubber Snorkel's double on Foraging Islands, and the Kat upgrade items.
 - **Exp Sharing** (a click does nothing), **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown,
   not used), Kat, Bea, George, Fann.
 - Chimera and the other things that copy pet stats.
