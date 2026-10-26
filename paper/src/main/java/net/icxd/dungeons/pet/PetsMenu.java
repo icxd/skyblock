@@ -30,7 +30,7 @@ import net.icxd.dungeons.utils.Utils;
  * Close, Search, Pet visibility and Sort. A click on a pet summons it (or despawns the one out), a shift click makes it a
  * favourite, a right click makes it an item again.
  *
- * <p>Not here: Exp Sharing (a click does nothing), Search (nothing), Autopet. Main thread.
+ * <p>Exp Sharing opens {@link ExpSharingMenu}. Not here: Search (nothing), Autopet. Main thread.
  */
 public final class PetsMenu extends GUI {
     static final String TITLE = "Pets";
@@ -86,8 +86,7 @@ public final class PetsMenu extends GUI {
         }
         OwnedPet active = Pets.active(profile);
         set(SUMMARY, summary(active, data).stack());
-        set(GUIClickableItem.button(EXP_SHARING, expSharing().stack(), viewer, () -> {
-        }));
+        set(GUIClickableItem.button(EXP_SHARING, expSharing().stack(), viewer, () -> new ExpSharingMenu(viewer).open(viewer)));
         if (Pets.upgrades(profile) < Pets.MOST_UPGRADES) {
             set(GUIClickableItem.button(SLOTS, slots(Pets.slots(profile), user.getBits()).stack(), viewer, () -> buySlots(viewer)));
         }
@@ -113,10 +112,19 @@ public final class PetsMenu extends GUI {
 
     /** A pet, as the menu shows it: its head, name and lore. */
     static ItemStack stack(OwnedPet pet, PetData data, boolean out) {
+        return stack(pet, data, Where.MENU, out);
+    }
+
+    /** A pet as another of the pets' menus shows it (Exp Sharing's). */
+    static ItemStack stack(OwnedPet pet, PetData data, Where where) {
+        return stack(pet, data, where, false);
+    }
+
+    private static ItemStack stack(OwnedPet pet, PetData data, Where where, boolean out) {
         Pet kind = data.pet(pet.type());
         Variant variant = kind == null ? null : kind.variant(Pets.tier(pet, data));
         String texture = variant == null ? null : variant.texture();
-        ItemStack stack = new Icon(Material.PLAYER_HEAD, PetText.name(pet, data, Where.MENU), PetText.lore(pet, data, Where.MENU, out)).stack();
+        ItemStack stack = new Icon(Material.PLAYER_HEAD, PetText.name(pet, data, where), PetText.lore(pet, data, where, out)).stack();
         if (texture != null) Utils.skull(stack, Utils.texture(texture));
         return stack;
     }

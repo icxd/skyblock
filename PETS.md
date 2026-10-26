@@ -100,6 +100,14 @@ it there are no pets (the log says so).
   60), says his lines for it (the wiki's, and its six more for the last) and counts for SkyBlock Leveling's Taming Cap
   Increases (+10 SkyBlock XP). A skill's cap is now the profile's (`Skills.cap`): its menus, tab lines and level-ups
   use it, and XP past the old cap counts once it rises. The first talk is the wiki's three lines.
+- **Exp Sharing** (the Pets menu's): the menu as recorded, the three slots over what's in them, and choosing a pet
+  for one. A pet in slot #1 gains the summoned pet's XP (its share of the skill's, before its multipliers) at its Exp
+  Share rate (0.2% a Taming level, +15% for an Exp Share held, to 47%), then its own multipliers (Taming's, its item's,
+  its own); slots #2 and #3 need Diana's perk ("&8Enabled by a Mayor Diana perk."), and there are no mayors, so their
+  pets gain nothing. No pet summoned, none gains, and the summoned one gains no more for being in a slot (the wiki's
+  Pets). The Kuudra pet gains XP only on the Crimson Isle, where it shares as though in a slot (twice if it's in one,
+  its item's boost not counting), as its lines and the wiki's Kuudra Pet say. A pet that leaves the menu leaves its
+  slot.
 - `/givepet BEE [RARITY] [LEVEL] [XP]`: a pet as an item, for staff (not a Sandbox tool).
 
 ## Abilities
@@ -204,6 +212,10 @@ are three).
   "not ready yet" lines' timing (a second apart); a remaining time of more than one unit ("1 day 4 hours"); the pet's
   name in its old rarity's colour after the upgrade; her time not dropping with the pet's level; the call ringing once,
   when the pet is ready (checked every second; Hypixel's came 2.7 s after).
+- **Exp Sharing** with a pet in a slot (never recorded): the slot in green with "&7Exp Share rate: &a12%" and "&a&lACTIVE",
+  the pet under it ("&eClick to remove!", a click taking it out), and choosing ("Choose a Pet", the Pets menu's pages
+  and sort, "&eClick to choose!"); pets in the two disabled slots kept there, gaining nothing; a shared pet's level-up
+  said and chimed as the summoned one's is; the Kuudra pet's Taming XP off the Crimson Isle (none).
 - **George**: how a pet is given him (never recorded: with one he wants in the slot, +1 Taming Level Cap says "&eClick
   to donate your pet!", and Confirm Donation asks first, as Confirm Sale does); the cap item with none left ("  &aNone");
   his voice (a villager's) and his lines' timing (a second apart); what he shows for a pet he doesn't buy (a barrier,
@@ -213,11 +225,10 @@ are three).
 ## Not done
 
 - **Ability effects** that need what isn't built (see Abilities).
-- **Pet items** that need what isn't built: Exp Share (the Exp Sharing slots), trophy fishing's Barrel of Riches and
-  Lotus Crown, the Brown Bandana (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed
-  Fish's coins (Griffin Burrows) and the Rubber Snorkel's double on Foraging Islands.
-- **Exp Sharing** (a click does nothing), **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown,
-  not used), Fann.
+- **Pet items** that need what isn't built: trophy fishing's Barrel of Riches and Lotus Crown, the Brown Bandana
+  (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed Fish's coins (Griffin Burrows)
+  and the Rubber Snorkel's double on Foraging Islands.
+- **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown, not used), Fann.
 - Kat Flowers and Bouquets (and the Enchanted Clock's hour), and her Abiphone contact.
 - The Daedalus Blades' Damage and Magic Find on Mythological mobs (Diana's), and their Damage line showing the Taming
   levels' (it counts, but the lore shows the item's own).

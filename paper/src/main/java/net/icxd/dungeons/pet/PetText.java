@@ -53,10 +53,17 @@ public final class PetText {
         }
     }
 
-    /** Where the pet's lore is: the Pets menu (what a click does), or an item (to add it to the menu). */
+    /**
+     * Where the pet's lore is: the Pets menu (what a click does), an item (to add it to the menu), a shop, or Exp
+     * Sharing: in a slot (a click takes it out) or to choose for one.
+     */
     public enum Where {
-        MENU, ITEM, SHOP
+        MENU, ITEM, SHOP, EXP_SHARE, CHOOSE
     }
+
+    /** UNKNOWN: what Exp Sharing's say (never recorded with a pet). */
+    static final String REMOVE = "&eClick to remove!";
+    static final String CHOOSE = "&eClick to choose!";
 
     /** Under a shop's pet, its level 100's stats and abilities (Bea's Bee Pet, recorded). */
     static final List<String> PREVIEW = List.of("&cThis is a preview of Lvl 100.", "&cNew pets are lowest level!");
@@ -109,7 +116,9 @@ public final class PetText {
         if (pet.candyUsed() > 0) sections.add(List.of("&a(" + pet.candyUsed() + "/10) Pet Candy Used"));
         sections.add(progress(pet, data));
         boolean kat = variant != null && variant.kat();
-        if (where == Where.MENU) {
+        if (where == Where.EXP_SHARE || where == Where.CHOOSE) {
+            sections.add(List.of(where == Where.EXP_SHARE ? REMOVE : CHOOSE));
+        } else if (where == Where.MENU) {
             if (kat) sections.add(List.of(KAT));
             sections.add(List.of(active ? DESPAWN : SUMMON, FAVORITE, CONVERT));
         } else {

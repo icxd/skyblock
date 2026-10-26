@@ -210,7 +210,7 @@ public final class Pets {
         return true;
     }
 
-    /** Takes one out of the menu (despawned, if it was out); null if it isn't there. */
+    /** Takes one out of the menu (despawned, if it was out, and out of its Exp Share slot); null if it isn't there. */
     public static OwnedPet remove(Document profile, String uuid) {
         List<OwnedPet> pets = pets(profile);
         OwnedPet found = null;
@@ -218,6 +218,7 @@ public final class Pets {
         if (found == null) return null;
         pets.remove(found);
         set(profile, pets);
+        ExpSharing.forget(profile, uuid);
         return found;
     }
 

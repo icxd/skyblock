@@ -70,6 +70,8 @@ class HeldItemsDataTest {
         assertTrue(!HeldItems.compatible("PET_ITEM_FLYING_PIG", "LION", "Lion"));
         assertTrue(!HeldItems.compatible("UNALLOYED_SPEED", "SNAIL", "Snail"), "the wiki's Unalloyed Speed");
         assertTrue(!HeldItems.compatible("PET_ITEM_EXP_SHARE", "KUUDRA", "Kuudra"), "the wiki's Kuudra Pet");
+        // Exp Sharing's: Taming 60's 12% and the Exp Share's 15%.
+        assertEquals(27, ExpSharing.rate(60, "PET_ITEM_EXP_SHARE"), 1e-9);
     }
 
     @Test

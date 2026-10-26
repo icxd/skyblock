@@ -10,6 +10,8 @@ import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 import net.icxd.dungeons.Dungeons;
+import net.icxd.dungeons.SkyBlockServer;
+import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.pet.PetData.Pet;
 import net.icxd.dungeons.session.PlayerSession;
@@ -73,7 +75,11 @@ public final class PetXp {
         return "&aYour " + PetText.colored(pet, data) + " &aleveled up to level &9" + level + "&a!";
     }
 
-    /** A player gained a skill's XP ({@code base}, before Wisdom): their summoned pet's share, and Taming's. */
+    /**
+     * A player gained a skill's XP ({@code base}, before Wisdom): their summoned pet's share, and Taming's, and the
+     * pets sharing it (ExpSharing). The Kuudra pet gains none off the Crimson Isle ("This pet only gains XP on the
+     * Crimson Isle!"), nor Taming from it; the pets sharing still do.
+     */
     public static void gained(Player player, Skill skill, double base) {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased() || !(base > 0)) return;
@@ -82,21 +88,45 @@ public final class PetXp {
         OwnedPet active = Pets.active(profile);
         Pet kind = active == null ? null : data.pet(active.type());
         if (kind == null) return;
-        double xp = petXp(kind, skill, base, Skills.level(profile, Skill.TAMING), HeldItems.expBoost(active.heldItem(), skill));
-        if (!(xp > 0)) return;
-        int before = Pets.level(active, data);
-        OwnedPet after = active.withExp(active.exp() + xp);
-        Pets.replace(profile, after);
-        double taming = tamingXp(kind, skill, base);
-        if (taming > 0) SkillGains.giveQuietly(player, Skill.TAMING, taming);
-        int level = Pets.level(after, data);
-        if (level <= before) return;
-        for (int l = before + 1; l <= level; l++) player.sendMessage(Text.line(levelUp(after, data, l)));
+        double raw = share(kind, skill, base);
+        if (!(raw > 0)) return;
+        int taming = Skills.level(profile, Skill.TAMING);
+        boolean crimsonIsle = onCrimsonIsle();
+        boolean leveled = false;
+        boolean activeLeveled = false;
+        if (!ExpSharing.KUUDRA.equals(active.type()) || crimsonIsle) {
+            activeLeveled = give(player, profile, data, active, petXp(kind, skill, base, taming, HeldItems.expBoost(active.heldItem(), skill)));
+            leveled = activeLeveled;
+            double tamingXp = tamingXp(kind, skill, base);
+            if (tamingXp > 0) SkillGains.giveQuietly(player, Skill.TAMING, tamingXp);
+        }
+        for (ExpSharing.Sharer sharer : ExpSharing.sharers(profile, active, crimsonIsle)) {
+            leveled |= give(player, profile, data, sharer.pet(), ExpSharing.xp(sharer, data.pet(sharer.pet().type()), skill, raw, taming));
+        }
+        if (!leveled) return;
         chime(player);
-        PetFollowers.refresh(player);
-        PlayerSession.of(player).invalidateStats();
+        if (activeLeveled) {
+            PetFollowers.refresh(player);
+            PlayerSession.of(player).invalidateStats();
+        }
         if (Pets.raiseBest(profile, data)) SkyBlockLevels.changed(player);
         user.save();
+    }
+
+    /** XP to one of their pets, and its level-ups said; whether it levelled up. */
+    private static boolean give(Player player, Document profile, PetData data, OwnedPet pet, double xp) {
+        if (!(xp > 0)) return false;
+        int before = Pets.level(pet, data);
+        OwnedPet after = pet.withExp(pet.exp() + xp);
+        Pets.replace(profile, after);
+        int level = Pets.level(after, data);
+        for (int l = before + 1; l <= level; l++) player.sendMessage(Text.line(levelUp(after, data, l)));
+        return level > before;
+    }
+
+    private static boolean onCrimsonIsle() {
+        SkyBlockServer server = Dungeons.getSkyBlockServer();
+        return server != null && server.getServerType() == ServerType.CRIMSON_ISLE;
     }
 
     /** The level-up's notes, as recorded. */
