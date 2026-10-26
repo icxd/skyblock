@@ -117,6 +117,9 @@ it there are no pets (the log says so).
   cost. The Owl adds its Efficient Trainer (+0.1% XP a level), and her coins spent take its Training Refunds (1% a
   million, to 5%). Done, she rings (her lines when answered, the wiki's), and the pet waits in the slot to be picked
   up with its XP; stopped early it comes back with the XP so far and half the time left's coins.
+- **Search** (the Pets menu's): a sign ("Enter query", as the plugin's other searches), then the menu with the pets whose
+  names have it, any case, under 'Pets: "bee"' ('(1/2) Pets: "bee"' paged, as SkyHanni's tests have Hypixel's titles);
+  nothing typed shows them all again. How Hypixel's matches (names only here) is UNKNOWN.
 - `/givepet BEE [RARITY] [LEVEL] [XP]`: a pet as an item, for staff (not a Sandbox tool).
 
 ## Abilities
@@ -242,7 +245,7 @@ are three).
 - **Pet items** that need what isn't built: trophy fishing's Barrel of Riches and Lotus Crown, the Brown Bandana
   (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed Fish's coins (Griffin Burrows)
   and the Rubber Snorkel's double on Foraging Islands.
-- **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown, not used).
+- Autopet, pet skins (kept, not shown), Pet Candy (shown, not used).
 - Hootie (Fann's owl, and feeding him Carrot Candies for her two other slots), the Boreal Owl Shard, the Enchanted
   Clock, and Fann's Abiphone contact.
 - Kat Flowers and Bouquets (and the Enchanted Clock's hour), and her Abiphone contact.
