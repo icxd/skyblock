@@ -35,7 +35,7 @@ import net.icxd.dungeons.utils.Text;
  * opens Swap Pet Item ({@link SwapPetItemMenu}) for coins by the replaced item's rarity, and the old one comes back; a
  * Super Scrubber opens it to take the item off ("You removed Quick Claw from your pet!", SkyHanni's; "&cYour Pet isn't
  * holding any item!" with none, the wiki's). One that isn't for the pet: "&cThis item is not compatible with your pet!"
- * (the wiki's Unalloyed Speed). Pet Items are never placed. Main thread.
+ * (the wiki's Unalloyed Speed). Pet Items are never placed. Pet Food goes the same way ({@link PetFood}). Main thread.
  */
 public final class PetItemUse implements Listener {
     @EventHandler(priority = EventPriority.LOW)
@@ -43,16 +43,19 @@ public final class PetItemUse implements Listener {
         if (event.getHand() != EquipmentSlot.HAND) return;
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         String id = id(event.getItem());
-        if (id == null) return;
+        PetFood.Food food = id == null ? PetFood.of(event.getItem()) : null;
+        if (id == null && food == null) return;
         Player player = event.getPlayer();
         if (!PetFollowers.lookingAtOwn(player)) return;
         event.setCancelled(true);
-        use(player, id);
+        if (id != null) use(player, id);
+        else PetFood.offer(player, food);
     }
 
+    /** Pet Items and Pet Food (the Pet Cake) are never placed. */
     @EventHandler(priority = EventPriority.LOW)
     public void onPlace(BlockPlaceEvent event) {
-        if (id(event.getItemInHand()) != null) event.setCancelled(true);
+        if (id(event.getItemInHand()) != null || PetFood.of(event.getItemInHand()) != null) event.setCancelled(true);
     }
 
     /** The id of a Pet Item that's given to pets (not one used at Kat), or the Super Scrubber's; null for anything else. */

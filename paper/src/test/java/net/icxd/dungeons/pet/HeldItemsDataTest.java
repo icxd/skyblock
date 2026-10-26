@@ -75,6 +75,17 @@ class HeldItemsDataTest {
     }
 
     @Test
+    void theFoods() {
+        Map<String, Double> grants = Map.of("SIMPLE_CARROT_CANDY", 20_000.0, "GREAT_CARROT_CANDY", 200_000.0, "SUPERB_CARROT_CANDY", 750_000.0,
+                "ULTIMATE_CARROT_CANDY", 1_500_000.0, "PET_CAKE", 10_000.0, "CHYME", 90_000.0, "FISH_FOOD", 2_000.0, "HYPERGOLIC_GABAGOOL", 3_276_800.0);
+        grants.forEach((id, xp) -> {
+            PetFood.Food food = PetFood.of(id, id, ItemRegistry.get(id).lore());
+            assertEquals(xp, food.xp(), 1e-9, id);
+            assertEquals(id.endsWith("_CARROT_CANDY"), food.candy(), id);
+        });
+    }
+
+    @Test
     void theCopiers() {
         assertEquals(10, PetCopies.copier(ItemRegistry.get("MANTICORE_CLAW")).combatShare(), 1e-9);
         assertEquals("Bee", PetCopies.copier(ItemRegistry.get("BEE_MASK")).doubles());

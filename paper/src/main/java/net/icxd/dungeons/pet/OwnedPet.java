@@ -50,6 +50,11 @@ public record OwnedPet(String uuid, String type, Rarity tier, double exp, String
         return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);
     }
 
+    /** With so many Pet Candies eaten. */
+    public OwnedPet withCandyUsed(int candyUsed) {
+        return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);
+    }
+
     /** Holding this item (by its id; null for none). */
     public OwnedPet withHeldItem(String heldItem) {
         return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);

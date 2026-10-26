@@ -117,6 +117,10 @@ it there are no pets (the log says so).
   cost. The Owl adds its Efficient Trainer (+0.1% XP a level), and her coins spent take its Training Refunds (1% a
   million, to 5%). Done, she rings (her lines when answered, the wiki's), and the pet waits in the slot to be picked
   up with its XP; stopped early it comes back with the XP so far and half the time left's coins.
+- **Pet Food**: right-click your summoned pet with it (as a Pet Item), confirm, and it gains the food's Pet EXP (its
+  lines': Carrot Candies 20,000 to 1,500,000, Pet Cake 10,000, Chyme 90,000, Fish Food 2,000), Carrot Candy ten in
+  a pet's life ("(3/10) Pet Candy Used"); Gabagool for Wisps only, by the wiki's table, the one food Taming and an
+  all-skills Pet Item boost (the wiki's Pet Candies). A pet at its most level eats nothing; Pet Cake isn't placed.
 - **Search** (the Pets menu's): a sign ("Enter query", as the plugin's other searches), then the menu with the pets whose
   names have it, any case, under 'Pets: "bee"' ('(1/2) Pets: "bee"' paged, as SkyHanni's tests have Hypixel's titles);
   nothing typed shows them all again. How Hypixel's matches (names only here) is UNKNOWN.
@@ -224,6 +228,9 @@ are three).
   "not ready yet" lines' timing (a second apart); a remaining time of more than one unit ("1 day 4 hours"); the pet's
   name in its old rarity's colour after the upgrade; her time not dropping with the pet's level; the call ringing once,
   when the pet is ready (checked every second; Hypixel's came 2.7 s after).
+- **Pet Food**: its confirmation ("Feed Pet", as Confirm Sale is), what it says ("&aYour &fBee &agained &e20,000 Pet
+  EXP&a!") and its refusals ("&cThis pet can't eat any more candy!", "&cThis pet is already at its max level!", "&cOnly
+  Wisp pets eat Gabagool!").
 - **Exp Sharing** with a pet in a slot (never recorded): the slot in green with "&7Exp Share rate: &a12%" and "&a&lACTIVE",
   the pet under it ("&eClick to remove!", a click taking it out), and choosing ("Choose a Pet", the Pets menu's pages
   and sort, "&eClick to choose!"); pets in the two disabled slots kept there, gaining nothing; a shared pet's level-up
@@ -245,7 +252,8 @@ are three).
 - **Pet items** that need what isn't built: trophy fishing's Barrel of Riches and Lotus Crown, the Brown Bandana
   (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed Fish's coins (Griffin Burrows)
   and the Rubber Snorkel's double on Foraging Islands.
-- Autopet, pet skins (kept, not shown), Pet Candy (shown, not used).
+- Autopet, pet skins (kept, not shown).
+- The Caducous Feeder; hiding a Legendary pet's candy count once it's at its most level without the candies' XP.
 - Hootie (Fann's owl, and feeding him Carrot Candies for her two other slots), the Boreal Owl Shard, the Enchanted
   Clock, and Fann's Abiphone contact.
 - Kat Flowers and Bouquets (and the Enchanted Clock's hour), and her Abiphone contact.
