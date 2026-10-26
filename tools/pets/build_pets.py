@@ -464,6 +464,7 @@ class Neu:
                     if n.isdigit() and int(n) < len(RARITIES):
                         self.george[(pet, RARITIES[int(n)])] = coins
         self.templates = collections.defaultdict(dict)  # type -> rarity -> NEU item
+        self.skins = {}  # a skin's id (its item's, less PET_SKIN_) -> NEU item
         self.ids = {}  # an item's name, as the wiki writes it -> its id (not a pet's, an enchanted book's or a rune's)
         items = os.path.join(path, 'items')
         for f in sorted(os.listdir(items)):
@@ -475,6 +476,8 @@ class Neu:
             if m and int(m.group(2)) < len(RARITIES) and 'petInfo' in it.get('nbttag', ''):
                 self.templates[m.group(1)][RARITIES[int(m.group(2))]] = it
             elif ';' not in f:
+                if f.startswith('PET_SKIN_'):
+                    self.skins[f[len('PET_SKIN_'):-len('.json')]] = it
                 name = re.sub(r'§.', '', it.get('displayname', '')).strip()
                 if name:
                     self.ids.setdefault(name, f[:-len('.json')])
@@ -485,6 +488,39 @@ class Neu:
                                   check=True).stdout.strip()
         except (OSError, subprocess.CalledProcessError):
             return None
+
+
+# ---------- skins ----------
+
+SKIN_FOR = re.compile(r'This skin can (?:only )?be applied to (.+?) pets?\.')
+SKIN_RARITY = re.compile(r'^§(.)§l(.+?) COSMETIC$')
+
+
+def skin(sid, it, names, problems):
+    """A pet skin as pets.json has it, from NEU's item: its name, the name it shows on a pet ("Void Conqueror" of the
+    Void Conqueror Enderman Skin: "&8Combat Pet, Void Conqueror Skin", recorded), its rarity and that rarity's colour
+    (an Ultimate's too), its head, and the pets it's for (by type). None if it says no pet NEU has."""
+    lore = it.get('lore', [])
+    m = SKIN_FOR.search(' '.join(re.sub(r'§.', '', line) for line in lore))
+    if not m:
+        problems.append(f'skin {sid}: no "This skin can only be applied to" line: left out')
+        return None
+    pets = []
+    for name in re.split(r',\s*(?:and\s+)?|\s+and\s+', m.group(1)):
+        name = name.strip()
+        if name in names:
+            pets.append(names[name])
+        elif name:
+            problems.append(f'skin {sid}: for {name!r}, a pet NEU has no template of: left out of its pets')
+    if not pets:
+        return None
+    display = re.sub(r'§.', '', it.get('displayname', '')).strip()
+    short = display[:-len(' Skin')] if display.endswith(' Skin') else display
+    for name in sorted((n for n, t in names.items() if t in pets), key=len, reverse=True):
+        short = re.sub(r'(?:^|\s+)' + re.escape(name) + r'(?=\s|$)', '', short).strip() or short
+    rarity = SKIN_RARITY.match(lore[-1]) if lore else None
+    return {'name': display, 'short': short, 'rarity': rarity.group(2).replace(' ', '_') if rarity else 'COMMON',
+            'color': rarity.group(1) if rarity else 'f', 'texture': texture(it.get('nbttag', '')), 'pets': pets}
 
 
 # ---------- building ----------
@@ -668,6 +704,11 @@ def build(neu, wiki, problems, kat=None, kat_pages=None):
                 pets[pet]['rarities'][rarity]['kat_upgrade'] = kat_upgrade(upgrades[rarity], neu.ids, pet, problems)
             else:
                 problems.append(f'{pet} {rarity}: "Can be upgraded at Kat", but neither Kat/Costs nor its page has the cost')
+    skins = {}
+    for sid, it in sorted(neu.skins.items()):
+        made = skin(sid, it, names, problems)
+        if made:
+            skins[sid] = made
     for cp, ids in sorted(TEXT.dropped.items()):
         problems.append(f'glyph {cp:04X} has no symbol (glyphs.tsv): dropped in {", ".join(sorted(ids))}')
     return {
@@ -677,6 +718,7 @@ def build(neu, wiki, problems, kat=None, kat_pages=None):
         'max_level': 100,
         'score': {'rarity': SCORE_RARITY, 'max_level': 1},
         'pets': pets,
+        'skins': skins,
     }
 
 
@@ -814,7 +856,7 @@ def report(data, problems, checked, source):
     rarities = sum(len(p['rarities']) for p in pets.values())
     lines = ['# Pets data', '', f'Made by tools/pets/build_pets.py from NEU-REPO `{source.get("neu_commit")}`, the wiki\'s '
              f'Module:Pet/Data (revision {source.get("wiki_revision")}) and the recording `{source.get("recording")}`.', '',
-             f'- {len(pets)} pets, {rarities} rarities',
+             f'- {len(pets)} pets, {rarities} rarities, {len(data.get("skins", {}))} skins',
              '- their numbers and stats: ' + ', '.join(f'{n} {how}' for how, n in HOWS.most_common()) + ' (see Fit in the script)',
              '']
     if checked:

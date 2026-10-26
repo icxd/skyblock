@@ -169,6 +169,24 @@ class Recording(unittest.TestCase):
         self.assertNotIn('UNCOMMON', costs)
         self.assertEqual(1_500_000, bp.coins('1.5m'))
 
+    def test_a_skin(self):
+        names = {'Enderman': 'ENDERMAN', 'Ender Dragon': 'ENDER_DRAGON', 'Subzero Wisp': 'SUBZERO_WISP', 'Frost Wisp': 'FROST_WISP'}
+        problems = []
+        void = bp.skin('ENDERMAN_SLAYER', neu_item('PET_SKIN_ENDERMAN_SLAYER', '§5Void Conqueror Enderman Skin', [
+            '§8Consumed on use', '', '§7This skin can only be applied to', '§aEnderman§7 pets.', '', '§5§lEPIC COSMETIC'], 'void1'),
+            names, problems)
+        self.assertEqual({'name': 'Void Conqueror Enderman Skin', 'short': 'Void Conqueror', 'rarity': 'EPIC', 'color': '5',
+                          'texture': 'void1', 'pets': ['ENDERMAN']}, void)
+        neon = bp.skin('DRAGON_NEON_RED', neu_item('PET_SKIN_DRAGON_NEON_RED', '§4Neon Red Ender Dragon Skin', [
+            '§7This skin can only be applied to', '§aEnder Dragon§7 pets.', '', '§4§lULTIMATE COSMETIC']), names, problems)
+        self.assertEqual(('Neon Red', 'ULTIMATE', '4'), (neon['short'], neon['rarity'], neon['color']))
+        fairy = bp.skin('WISP_FAIRY', neu_item('PET_SKIN_WISP_FAIRY', '§dFairy Wisp Skin', [
+            '§7This skin can be applied to Subzero Wisp, Droplet Wisp, Frost Wisp, and Glacial Wisp pets.', '§d§lMYTHIC COSMETIC']),
+            names, problems)
+        self.assertEqual(['SUBZERO_WISP', 'FROST_WISP'], fairy['pets'])
+        self.assertEqual(2, len(problems), "the two Wisps this test's NEU hasn't")
+        self.assertIsNone(bp.skin('X', neu_item('PET_SKIN_X', '§fX Skin', ['§7Nothing.']), names, []))
+
     def test_built_and_checked(self):
         with tempfile.TemporaryDirectory() as d:
             neu = os.path.join(d, 'neu')

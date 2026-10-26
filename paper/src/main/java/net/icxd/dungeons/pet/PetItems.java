@@ -11,7 +11,6 @@ import net.icxd.dungeons.item.SkyBlockItem;
 import net.icxd.dungeons.item.behaviour.ItemBehaviour;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.pet.PetData.Pet;
-import net.icxd.dungeons.pet.PetData.Variant;
 import net.icxd.dungeons.pet.PetText.Where;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
@@ -32,9 +31,7 @@ public final class PetItems implements ItemBehaviour {
         OwnedPet pet = pet(tag);
         if (pet == null) return null;
         PetData data = Pets.data();
-        Pet kind = data.pet(pet.type());
-        Variant variant = kind == null ? null : kind.variant(Pets.tier(pet, data));
-        String texture = variant == null ? null : variant.texture();
+        String texture = Pets.texture(pet, data);
         return new Shown(PetText.name(pet, data, Where.ITEM), PetText.lore(pet, data, Where.ITEM, false),
                 texture == null ? null : Utils.texture(texture));
     }

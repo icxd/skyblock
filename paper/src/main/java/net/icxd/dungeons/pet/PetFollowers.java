@@ -24,7 +24,6 @@ import org.bukkit.util.Vector;
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
 import net.icxd.dungeons.pet.PetData.Pet;
-import net.icxd.dungeons.pet.PetData.Variant;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
@@ -172,11 +171,11 @@ public final class PetFollowers {
         return new Follower(owner.getUniqueId(), pet.uuid(), shown, holder, ownName, othersName);
     }
 
-    /** Its head: the rarity it's as's (a Tier Boost's, see Pets#tier). */
+    /** Its head: its skin's, else the rarity it's as's (a Tier Boost's, see Pets#tier). */
     private static ItemStack head(OwnedPet pet, Pet kind, PetData data) {
-        Variant variant = kind.variant(Pets.tier(pet, data));
+        String texture = Pets.texture(pet, data);
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-        if (variant != null && variant.texture() != null) Utils.skull(head, Utils.texture(variant.texture()));
+        if (texture != null) Utils.skull(head, Utils.texture(texture));
         return head;
     }
 

@@ -107,11 +107,22 @@ public final class PetData {
         }
     }
 
+    /**
+     * A pet skin (NEU's PET_SKIN_ items; a pet's {@code skin} is its id, the item's less "PET_SKIN_"): its name ("Void
+     * Conqueror Enderman Skin"), the name it shows on a pet ("Void Conqueror"), its rarity's name ("EPIC", an Ultimate's
+     * too) and colour code, its head, and the pets it's for.
+     */
+    public record Skin(String id, String name, String shortName, String rarity, char color, String texture, List<String> pets) {
+        public Skin {
+            pets = List.copyOf(pets);
+        }
+    }
+
     /** A Pet Score threshold and the Magic Find it gives ("&650 Score&8: +&b3 Magic Find"). */
     public record Reward(int score, int magicFind) {
     }
 
-    private static final PetData EMPTY = new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of());
+    private static final PetData EMPTY = new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of(), Map.of());
 
     private final Map<String, Pet> pets;
     private final long[] levels;
@@ -121,9 +132,10 @@ public final class PetData {
     private final int scoreMaxLevel;
     private final List<Reward> scoreRewards;
     private final List<String> problems;
+    private final Map<String, Skin> skins;
 
     PetData(Map<String, Pet> pets, long[] levels, Map<Rarity, Integer> rarityOffset, int maxLevel, Map<Rarity, Integer> scoreRarity,
-            int scoreMaxLevel, List<Reward> scoreRewards, List<String> problems) {
+            int scoreMaxLevel, List<Reward> scoreRewards, List<String> problems, Map<String, Skin> skins) {
         this.pets = pets;
         this.levels = levels;
         this.rarityOffset = rarityOffset;
@@ -132,6 +144,7 @@ public final class PetData {
         this.scoreMaxLevel = scoreMaxLevel;
         this.scoreRewards = List.copyOf(scoreRewards);
         this.problems = List.copyOf(problems);
+        this.skins = Map.copyOf(skins);
     }
 
     public static PetData empty() {
@@ -150,7 +163,7 @@ public final class PetData {
     }
 
     private static PetData withProblem(String problem) {
-        return new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of(problem));
+        return new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of(problem), Map.of());
     }
 
     static PetData parse(JsonObject json) {
@@ -177,7 +190,21 @@ public final class PetData {
                 problems.add(entry.getKey() + ": left out (" + e + ")");
             }
         }
-        return new PetData(pets, levels, offsets, maxLevel, scoreRarity, scoreMaxLevel, rewards, problems);
+        Map<String, Skin> skins = new LinkedHashMap<>();
+        JsonObject allSkins = object(json, "skins");
+        for (Map.Entry<String, JsonElement> entry : allSkins == null ? List.<Map.Entry<String, JsonElement>>of() : allSkins.entrySet()) {
+            try {
+                JsonObject skin = entry.getValue().getAsJsonObject();
+                List<String> forPets = new ArrayList<>();
+                for (JsonElement pet : array(skin, "pets")) forPets.add(pet.getAsString());
+                String color = string(skin, "color");
+                skins.put(entry.getKey(), new Skin(entry.getKey(), string(skin, "name"), string(skin, "short"), string(skin, "rarity"),
+                        color == null || color.isEmpty() ? 'f' : color.charAt(0), string(skin, "texture"), forPets));
+            } catch (RuntimeException e) {
+                problems.add("skin " + entry.getKey() + ": left out (" + e + ")");
+            }
+        }
+        return new PetData(pets, levels, offsets, maxLevel, scoreRarity, scoreMaxLevel, rewards, problems, skins);
     }
 
     private static Pet pet(String id, JsonObject json, List<String> problems) {
@@ -251,6 +278,11 @@ public final class PetData {
 
     public Pet pet(String id) {
         return id == null ? null : pets.get(id.toUpperCase(Locale.ROOT));
+    }
+
+    /** A skin by its id (a pet's {@code skin}); null if there's none. */
+    public Skin skin(String id) {
+        return id == null ? null : skins.get(id.toUpperCase(Locale.ROOT));
     }
 
     public Collection<Pet> pets() {

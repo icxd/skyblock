@@ -318,6 +318,21 @@ public final class Pets {
     }
 
     /** Its level: its XP on the table of the rarity it's as (see {@link #tier}). */
+    /** Its skin, if it has one the data knows and that's for its type; null otherwise. */
+    public static PetData.Skin skin(OwnedPet pet, PetData data) {
+        PetData.Skin skin = data.skin(pet.skin());
+        return skin != null && skin.pets().contains(pet.type()) ? skin : null;
+    }
+
+    /** Its head's skin: its skin's, else its rarity's (a Tier Boost's, see {@link #tier}); null for none. */
+    public static String texture(OwnedPet pet, PetData data) {
+        PetData.Skin skin = skin(pet, data);
+        if (skin != null && skin.texture() != null) return skin.texture();
+        Pet kind = data.pet(pet.type());
+        Variant variant = kind == null ? null : kind.variant(tier(pet, data));
+        return variant == null ? null : variant.texture();
+    }
+
     public static int level(OwnedPet pet, PetData data) {
         return data.level(data.pet(pet.type()), tier(pet, data), pet.exp());
     }

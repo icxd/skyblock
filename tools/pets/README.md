@@ -30,6 +30,7 @@ It writes `pets.json` (format 1, below) and `report.md` next to it.
   - What Kat takes to upgrade each rarity: the wiki's `Kat/Costs` table (fetched, or `--kat` for its saved raw text),
     and for the pets it doesn't have, their own page's `{{Kat Cost table}}` (the Orchid Mantis, the Sloth). Its items'
     names become ids by NEU's item names. George's prices: NEU's `constants/george.json` (the wiki's George/Prices).
+  - The pet skins: NEU's `PET_SKIN_` items (their names, rarity lines, heads, and the pets their lines say they're for).
 - **The text.** The type line ("Farming Pet": the pet's skill), the stats, then each ability's name and lines and any
   other block, as NEU has them; the footer (the right-click line, Kat's, the rarity line) is the plugin's to write.
   Hypixel's private-use glyphs become the plugin's symbols (`tools/items/data/glyphs.tsv`). Lines are joined back into
@@ -58,7 +59,7 @@ It writes `pets.json` (format 1, below) and `report.md` next to it.
 {"format": 1, "source": {"neu_commit": SHA, "wiki_revision": REVID, "kat_revision": REVID, "recording": NAME},
  "levels": [100, 110, ...], "rarity_offset": {"COMMON": 0, "UNCOMMON": 6, ...}, "max_level": 100,
  "score": {"rarity": {"COMMON": 1, ...}, "max_level": 1, "rewards": [[10, 1], [25, 2], ...]},
- "pets": {"BEE": PET}}
+ "pets": {"BEE": PET}, "skins": {"ENDERMAN_SLAYER": SKIN}}
 ```
 
 - `levels`: the XP each level takes from the one before; a pet of a rarity starts `rarity_offset` into them (a Rare's
@@ -73,3 +74,6 @@ It writes `pets.json` (format 1, below) and `report.md` next to it.
   `{"base", "per_level", "decimals"}`), `blocks` (`{"name": "&6Hive", "text": [PARAGRAPH]}`, or without `name`: the
   lines after the stats, in order, a blank line between each), `kat` (true: Kat can upgrade it), `kat_upgrade` (what
   that takes: `{"seconds", "coins", "items": [[ID, AMOUNT]]}`), `george` (the coins George pays for it).
+- `SKIN`, by its id (a pet's `skin`, its item's id less `PET_SKIN_`): `name` ("Void Conqueror Enderman Skin"), `short`
+  (what a skinned pet's type line says: "Combat Pet, Void Conqueror Skin"), `rarity` ("EPIC", "ULTIMATE"), `color`
+  (that rarity's colour code), `texture`, and `pets` (the types it's for).

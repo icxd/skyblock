@@ -14,7 +14,7 @@ import net.icxd.dungeons.item.enums.Rarity;
 /**
  * A pet someone has, in their Pets menu (kept with the profile as Hypixel's API keeps one, {@code pets_data.pets}) or
  * as an item (its {@code petInfo}): its own id, type ("BEE"), rarity, XP, held item (an item id, or null), the Pet
- * Candy it's had, its skin (an id, or null; skins aren't shown yet) and whether it's a favourite. Immutable.
+ * Candy it's had, its skin (an id, or null: the pets data's, see PetData#skin) and whether it's a favourite. Immutable.
  */
 public record OwnedPet(String uuid, String type, Rarity tier, double exp, String heldItem, int candyUsed, String skin, boolean favorite) {
     static final String UUID_KEY = "uuid";
@@ -47,6 +47,11 @@ public record OwnedPet(String uuid, String type, Rarity tier, double exp, String
 
     /** At this rarity (Kat's upgrade): its XP as it was, so its level is that rarity's. */
     public OwnedPet withTier(Rarity tier) {
+        return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);
+    }
+
+    /** Wearing this skin (by its id; null for none). */
+    public OwnedPet withSkin(String skin) {
         return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);
     }
 

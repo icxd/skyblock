@@ -71,11 +71,12 @@ public final class PetText {
     private PetText() {
     }
 
-    /** "&6Lion": its name in its rarity's colour. */
+    /** "&6Lion": its name in its rarity's colour; with a skin, "&dEnderman&5 ✦" (the ✦ in the skin's, recorded). */
     public static String colored(OwnedPet pet, PetData data) {
         Pet kind = data.pet(pet.type());
         Rarity tier = Pets.tier(pet, data);
-        return "&" + tier.getCode() + (kind == null ? pet.type() : kind.name(tier));
+        PetData.Skin skin = Pets.skin(pet, data);
+        return "&" + tier.getCode() + (kind == null ? pet.type() : kind.name(tier)) + (skin == null ? "" : "&" + skin.color() + " ✦");
     }
 
     /** "&7[Lvl 94] &dGuardian"; in the menu, "&e⭐ " before a favourite's. */
@@ -104,7 +105,9 @@ public final class PetText {
         Variant variant = kind == null ? null : kind.variant(tier);
         int level = Pets.level(pet, data);
         List<List<String>> sections = new ArrayList<>();
-        sections.add(List.of("&8" + (kind == null || kind.kind() == null ? "Pet" : kind.kind())));
+        PetData.Skin skin = Pets.skin(pet, data);
+        // "&8Combat Pet, Void Conqueror Skin" (recorded).
+        sections.add(List.of("&8" + (kind == null || kind.kind() == null ? "Pet" : kind.kind()) + (skin == null ? "" : ", " + skin.shortName() + " Skin")));
         boolean hatched = kind == null || level >= kind.statsFrom();
         sections.add(statLines(hatched ? Pets.withItem(pet, data) : HeldItems.stats(pet.heldItem())));
         if (variant != null && hatched) for (Block block : variant.blocks()) sections.add(blockLines(block, variant, level));

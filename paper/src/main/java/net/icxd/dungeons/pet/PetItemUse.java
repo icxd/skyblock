@@ -35,7 +35,8 @@ import net.icxd.dungeons.utils.Text;
  * opens Swap Pet Item ({@link SwapPetItemMenu}) for coins by the replaced item's rarity, and the old one comes back; a
  * Super Scrubber opens it to take the item off ("You removed Quick Claw from your pet!", SkyHanni's; "&cYour Pet isn't
  * holding any item!" with none, the wiki's). One that isn't for the pet: "&cThis item is not compatible with your pet!"
- * (the wiki's Unalloyed Speed). Pet Items are never placed. Pet Food goes the same way ({@link PetFood}). Main thread.
+ * (the wiki's Unalloyed Speed). Pet Items are never placed. Pet Food goes the same way ({@link PetFood}), and pet skins
+ * ({@link #applySkin}). Main thread.
  */
 public final class PetItemUse implements Listener {
     @EventHandler(priority = EventPriority.LOW)
@@ -44,18 +45,59 @@ public final class PetItemUse implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         String id = id(event.getItem());
         PetFood.Food food = id == null ? PetFood.of(event.getItem()) : null;
-        if (id == null && food == null) return;
+        PetData.Skin skin = id == null && food == null ? skin(event.getItem()) : null;
+        if (id == null && food == null && skin == null) return;
         Player player = event.getPlayer();
         if (!PetFollowers.lookingAtOwn(player)) return;
         event.setCancelled(true);
         if (id != null) use(player, id);
-        else PetFood.offer(player, food);
+        else if (food != null) PetFood.offer(player, food);
+        else applySkin(player, skin);
     }
 
-    /** Pet Items and Pet Food (the Pet Cake) are never placed. */
+    /** The pet skin this item is (PET_SKIN_ and its id, as NEU has them); null if it isn't one the data has. */
+    static PetData.Skin skin(ItemStack stack) {
+        NBTTagCompound tag = ItemNBT.read(stack);
+        String id = tag == null ? null : tag.getString("id");
+        return id != null && id.startsWith(SKIN_PREFIX) ? Pets.data().skin(id.substring(SKIN_PREFIX.length())) : null;
+    }
+
+    static final String SKIN_PREFIX = "PET_SKIN_";
+
+    /**
+     * A pet skin on their summoned pet: "Right-click on your summoned pet to apply this skin!" (its lines). It can't be
+     * taken off, and one put on in its place is gone (the wiki's Pet Skins). Not for this pet: the Pet Items' line; what
+     * it says when it's on, UNKNOWN.
+     */
+    static void applySkin(Player player, PetData.Skin skin) {
+        User user = User.ifLoaded(player.getUniqueId());
+        if (user == null || user.isReleased() || InventorySyncListener.frozen(player)) return;
+        Document profile = user.profile();
+        OwnedPet pet = Pets.active(profile);
+        if (pet == null) return;
+        if (!skin.pets().contains(pet.type())) {
+            player.sendMessage(Text.line("&cThis item is not compatible with your pet!"));
+            return;
+        }
+        if (skin.id().equals(pet.skin())) {
+            player.sendMessage(Text.line("&cYour pet already has this skin!"));
+            return;
+        }
+        ItemStack hand = player.getInventory().getItemInMainHand();
+        if (skin(hand) != skin) return;
+        if (hand.getAmount() > 1) hand.setAmount(hand.getAmount() - 1);
+        else player.getInventory().setItemInMainHand(null);
+        Pets.replace(profile, pet.withSkin(skin.id()));
+        player.sendMessage(Text.line("&aYou applied the &" + skin.color() + skin.name() + " &ato your pet!"));
+        PetFollowers.refresh(player);
+        user.save();
+    }
+
+    /** Pet Items, Pet Food (the Pet Cake) and pet skins (heads) are never placed. */
     @EventHandler(priority = EventPriority.LOW)
     public void onPlace(BlockPlaceEvent event) {
-        if (id(event.getItemInHand()) != null || PetFood.of(event.getItemInHand()) != null) event.setCancelled(true);
+        ItemStack item = event.getItemInHand();
+        if (id(item) != null || PetFood.of(item) != null || skin(item) != null) event.setCancelled(true);
     }
 
     /** The id of a Pet Item that's given to pets (not one used at Kat), or the Super Scrubber's; null for anything else. */

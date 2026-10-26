@@ -117,6 +117,11 @@ it there are no pets (the log says so).
   cost. The Owl adds its Efficient Trainer (+0.1% XP a level), and her coins spent take its Training Refunds (1% a
   million, to 5%). Done, she rings (her lines when answered, the wiki's), and the pet waits in the slot to be picked
   up with its XP; stopped early it comes back with the XP so far and half the time left's coins.
+- **Pet skins** (the data's, from NEU's skin items): a skinned pet's name has a ✦ in the skin's rarity colour
+  ("&7[Lvl 100] &dEnderman&5 ✦"), its type line the skin ("&8Combat Pet, Void Conqueror Skin"), and its head (in the
+  menu, as an item, following you) the skin's, as recorded. A skin item right-clicked on your summoned pet goes on it
+  (for that pet only; the old one's gone, as the wiki's Pet Skins says). The items data has no skin items, so only
+  /yoinkprofile's pets wear them for now.
 - **Pet Food**: right-click your summoned pet with it (as a Pet Item), confirm, and it gains the food's Pet EXP (its
   lines': Carrot Candies 20,000 to 1,500,000, Pet Cake 10,000, Chyme 90,000, Fish Food 2,000), Carrot Candy ten in
   a pet's life ("(3/10) Pet Candy Used"); Gabagool for Wisps only, by the wiki's table, the one food Taming and an
@@ -228,6 +233,8 @@ are three).
   "not ready yet" lines' timing (a second apart); a remaining time of more than one unit ("1 day 4 hours"); the pet's
   name in its old rarity's colour after the upgrade; her time not dropping with the pet's level; the call ringing once,
   when the pet is ready (checked every second; Hypixel's came 2.7 s after).
+- **Pet skins**: what applying one says ("&aYou applied the &5Void Conqueror Enderman Skin &ato your pet!", "&cYour pet
+  already has this skin!"); the ✦ on the name over a summoned pet (none).
 - **Pet Food**: its confirmation ("Feed Pet", as Confirm Sale is), what it says ("&aYour &fBee &agained &e20,000 Pet
   EXP&a!") and its refusals ("&cThis pet can't eat any more candy!", "&cThis pet is already at its max level!", "&cOnly
   Wisp pets eat Gabagool!").
@@ -252,7 +259,8 @@ are three).
 - **Pet items** that need what isn't built: trophy fishing's Barrel of Riches and Lotus Crown, the Brown Bandana
   (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed Fish's coins (Griffin Burrows)
   and the Rubber Snorkel's double on Foraging Islands.
-- Autopet, pet skins (kept, not shown).
+- Autopet. Pet skins' animations and particle trails (a skin shows its first head), and the Four Seasons Griffin's
+  seasons.
 - The Caducous Feeder; hiding a Legendary pet's candy count once it's at its most level without the candies' XP.
 - Hootie (Fann's owl, and feeding him Carrot Candies for her two other slots), the Boreal Owl Shard, the Enchanted
   Clock, and Fann's Abiphone contact.
