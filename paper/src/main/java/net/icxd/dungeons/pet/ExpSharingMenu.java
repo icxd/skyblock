@@ -57,7 +57,7 @@ final class ExpSharingMenu extends GUI {
             set(FIRST_SLOT + i, slot(i, pet, taming).stack());
             int index = i;
             if (pet == null) {
-                set(GUIClickableItem.button(FIRST_PET + i, EMPTY.stack(), viewer, () -> ChoosePetMenu.show(viewer, index, 1)));
+                set(GUIClickableItem.button(FIRST_PET + i, EMPTY.stack(), viewer, () -> choose(viewer, index)));
             } else {
                 set(GUIClickableItem.button(FIRST_PET + i, PetsMenu.stack(pet, data, Where.EXP_SHARE), viewer, () -> remove(viewer, index)));
             }
@@ -87,6 +87,16 @@ final class ExpSharingMenu extends GUI {
         lore.add("");
         lore.add("&a&lACTIVE");
         return new Icon(Material.LIME_STAINED_GLASS_PANE, "&a" + name, lore);
+    }
+
+    /** Choosing a pet for a slot ({@link ChoosePetMenu}), out of another it was in, then back here. */
+    private static void choose(Player player, int slot) {
+        ChoosePetMenu.show(player, 1, "&7To Exp Sharing", () -> new ExpSharingMenu(player).open(player, MenuSound.CLICK), uuid -> {
+            User user = User.ifLoaded(player.getUniqueId());
+            if (user == null || user.isReleased()) return;
+            ExpSharing.put(user.profile(), slot, uuid);
+            new ExpSharingMenu(player).open(player, MenuSound.CLICK);
+        });
     }
 
     private static void remove(Player player, int slot) {

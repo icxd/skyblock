@@ -478,6 +478,7 @@ public final class DungeonRun implements ScoreCounts {
     private void start() {
         phase = Phase.RUNNING;
         startedAt = System.currentTimeMillis();
+        for (Player player : players()) for (BiConsumer<Player, Integer> listener : START_LISTENERS) listener.accept(player, floorNumber());
         sidebarScore.start(startedAt);
         classes.start(members());
         fairies = Fairies.spawn(this, layout, world);
@@ -826,6 +827,13 @@ public final class DungeonRun implements ScoreCounts {
     }
 
     /** Adds what hears of a member of a run healing others for so much, as {@link #healedAllies} counts it (the Jellyfish pet's Stored Energy). */
+    /** What hears a run start, for each of its players, with its floor (Autopet's "When you enter Catacombs Floor"). */
+    private static final List<BiConsumer<Player, Integer>> START_LISTENERS = new ArrayList<>();
+
+    public static void addStartListener(BiConsumer<Player, Integer> listener) {
+        START_LISTENERS.add(listener);
+    }
+
     public static void addAllyHealing(BiConsumer<Player, Double> heard) {
         ALLY_HEALING.add(heard);
     }

@@ -32,7 +32,7 @@ import net.icxd.dungeons.utils.Utils;
  * favourite, a right click makes it an item again.
  *
  * <p>Exp Sharing opens {@link ExpSharingMenu}; Search asks on a sign and shows the pets whose names have it (UNKNOWN
- * how Hypixel's matches). Not here: Autopet. Main thread.
+ * how Hypixel's matches); Autopet opens {@link AutopetMenu}. Main thread.
  */
 public final class PetsMenu extends GUI {
     static final String TITLE = "Pets";
@@ -40,6 +40,8 @@ public final class PetsMenu extends GUI {
     static final int EXP_SHARING = 7;
     static final int SLOTS = 8;
     static final int PREVIOUS = 45;
+    /** UNKNOWN: where Hypixel's is (none was recorded: the recorded profile had no Autopet rules). */
+    static final int AUTOPET = 46;
     static final int SCORE = 47;
     static final int BACK = 48;
     static final int CLOSE = 49;
@@ -131,6 +133,7 @@ public final class PetsMenu extends GUI {
         if (page > 1) set(GUIClickableItem.button(PREVIOUS, pageItem("&aPrevious Page", page - 1).stack(), viewer, () -> show(viewer, page - 1, null, query)));
         if (page < pages) set(GUIClickableItem.button(NEXT, pageItem("&aNext Page", page + 1).stack(), viewer, () -> show(viewer, page + 1, null, query)));
         set(SCORE, score(Pets.score(profile, data), data).stack());
+        set(GUIClickableItem.button(AUTOPET, autopet().stack(), viewer, () -> new AutopetMenu(viewer).open(viewer)));
         set(GUIClickableItem.button(BACK, back().stack(), viewer, () -> new SkyBlockMenu(viewer).open(viewer, MenuSound.CLICK)));
         set(GUIClickableItem.close(CLOSE));
         set(GUIClickableItem.button(SEARCH, search().stack(), viewer, () -> search(viewer)));
@@ -280,6 +283,11 @@ public final class PetsMenu extends GUI {
 
     static Icon back() {
         return new Icon(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu");
+    }
+
+    /** UNKNOWN: Hypixel's. */
+    static Icon autopet() {
+        return new Icon(Material.COMPARATOR, "&aAutopet", "&7Equip your pets automatically when", "&7things happen!", "", "&eClick to view!");
     }
 
     static Icon search() {

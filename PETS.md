@@ -126,6 +126,13 @@ it there are no pets (the log says so).
   lines': Carrot Candies 20,000 to 1,500,000, Pet Cake 10,000, Chyme 90,000, Fish Food 2,000), Carrot Candy ten in
   a pet's life ("(3/10) Pet Candy Used"); Gabagool for Wisps only, by the wiki's table, the one food Taming and an
   all-skills Pet Item boost (the wiki's Pet Candies). A pet at its most level eats nothing; Pet Cake isn't placed.
+- **Autopet** (the wiki's): rules that equip a pet when something happens, unless one of up to five exceptions holds;
+  the first rule that matches equips, two ticks at least between two. Rule slots two at a time, to 28 (the 2-Pack's
+  21,000 Bits). Triggers: on login, on entering an island (each server), on gaining a skill's XP, on entering combat,
+  on killing a mob of a vanilla type, on choosing a dungeon class (or a run starting with it), on entering a Catacombs
+  floor, on throwing a fishing hook. Exceptions: in an island, not in one (two of them never let it through, as the
+  wiki says), already having a pet equipped. "&cAutopet &eequipped your &7[Lvl 100] &6Mosquito&e! &a&lVIEW RULE" (as
+  SkyHanni's tests have it), VIEW RULE opening the rule, its hover the pet and its item.
 - **Search** (the Pets menu's): a sign ("Enter query", as the plugin's other searches), then the menu with the pets whose
   names have it, any case, under 'Pets: "bee"' ('(1/2) Pets: "bee"' paged, as SkyHanni's tests have Hypixel's titles);
   nothing typed shows them all again. How Hypixel's matches (names only here) is UNKNOWN.
@@ -233,6 +240,9 @@ are three).
   "not ready yet" lines' timing (a second apart); a remaining time of more than one unit ("1 day 4 hours"); the pet's
   name in its old rarity's colour after the upgrade; her time not dropping with the pet's level; the call ringing once,
   when the pet is ready (checked every second; Hypixel's came 2.7 s after).
+- **Autopet**: all of its menus (Autopet in the Pets menu's slot 46, "Autopet Rules", "Autopet Rule"), buying rule
+  slots there rather than from Elizabeth, "On login" on every join, combat meaning a hit given or taken after 10
+  seconds of neither, which vanilla mobs it offers, two rules at once (the first only), and VIEW RULE's hover.
 - **Pet skins**: what applying one says ("&aYou applied the &5Void Conqueror Enderman Skin &ato your pet!", "&cYour pet
   already has this skin!"); the ✦ on the name over a summoned pet (none).
 - **Pet Food**: its confirmation ("Feed Pet", as Confirm Sale is), what it says ("&aYour &fBee &agained &e20,000 Pet
@@ -259,8 +269,10 @@ are three).
 - **Pet items** that need what isn't built: trophy fishing's Barrel of Riches and Lotus Crown, the Brown Bandana
   (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed Fish's coins (Griffin Burrows)
   and the Rubber Snorkel's double on Foraging Islands.
-- Autopet. Pet skins' animations and particle trails (a skin shows its first head), and the Four Seasons Griffin's
-  seasons.
+- Pet skins' animations and particle trails (a skin shows its first head), and the Four Seasons Griffin's seasons.
+- Autopet's triggers and exceptions that need what isn't built: events, bosses, Slayer quests, the experimentation
+  table, going AFK, Griffin burrows, winter gifts, Mythological mobs and Sea Creatures; "during an event", "it is
+  [day]".
 - The Caducous Feeder; hiding a Legendary pet's candy count once it's at its most level without the candies' XP.
 - Hootie (Fann's owl, and feeding him Carrot Candies for her two other slots), the Boreal Owl Shard, the Enchanted
   Clock, and Fann's Abiphone contact.

@@ -65,6 +65,7 @@ public final class Pets {
         Kat.start(plugin);
         Fann.start(plugin);
         George.enable();
+        Autopet.enable();
         Logger log = plugin.getLogger();
         Path folder = plugin.getDataFolder().toPath();
         CompletableFuture.supplyAsync(() -> PetData.load(folder)).thenAccept(loaded -> Bukkit.getScheduler().runTask(plugin, () -> {

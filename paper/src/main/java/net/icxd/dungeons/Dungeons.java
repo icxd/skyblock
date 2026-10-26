@@ -100,6 +100,7 @@ import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
+import net.icxd.dungeons.pet.AutopetListener;
 import net.icxd.dungeons.pet.George;
 import net.icxd.dungeons.pet.HeldItemEffects;
 import net.icxd.dungeons.pet.PetCopies;
@@ -304,6 +305,7 @@ public class Dungeons extends JavaPlugin {
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         listen(PetListener.class, PetListener::new);
         listen(PetItemUse.class, PetItemUse::new);
+        listen(AutopetListener.class, AutopetListener::new);
         listen(Callbacks.class, Callbacks::new);
         listen(UtilityListener.class, UtilityListener::new);
         listen(Activations.class, Activations::new);
