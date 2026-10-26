@@ -45,6 +45,11 @@ public record OwnedPet(String uuid, String type, Rarity tier, double exp, String
         return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);
     }
 
+    /** At this rarity (Kat's upgrade): its XP as it was, so its level is that rarity's. */
+    public OwnedPet withTier(Rarity tier) {
+        return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);
+    }
+
     /** Holding this item (by its id; null for none). */
     public OwnedPet withHeldItem(String heldItem) {
         return new OwnedPet(uuid, type, tier, exp, heldItem, candyUsed, skin, favorite);

@@ -62,6 +62,7 @@ public final class Pets {
         ItemBehaviours.register(PetItems.ID, new PetItems());
         SkillGains.addGainListener(PetXp::gained);
         PetFollowers.start(plugin);
+        Kat.start(plugin);
         Logger log = plugin.getLogger();
         Path folder = plugin.getDataFolder().toPath();
         CompletableFuture.supplyAsync(() -> PetData.load(folder)).thenAccept(loaded -> Bukkit.getScheduler().runTask(plugin, () -> {
@@ -126,7 +127,7 @@ public final class Pets {
         }
     }
 
-    private static Document part(Document profile, boolean make) {
+    static Document part(Document profile, boolean make) {
         Document pets = profile == null ? null : profile.get(FIELD, Document.class);
         if (pets == null && make) {
             pets = new Document();

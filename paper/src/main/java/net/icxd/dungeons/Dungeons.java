@@ -32,6 +32,7 @@ import net.icxd.dungeons.command.commands.admin.UnlockCommand;
 import net.icxd.dungeons.command.commands.admin.UpgradeCommand;
 import net.icxd.dungeons.command.commands.user.BackpackCommand;
 import net.icxd.dungeons.command.commands.user.BagsCommand;
+import net.icxd.dungeons.command.commands.user.CbCommand;
 import net.icxd.dungeons.command.commands.user.EnderChestCommand;
 import net.icxd.dungeons.command.commands.user.HexCommand;
 import net.icxd.dungeons.command.commands.user.HotmCommand;
@@ -70,6 +71,7 @@ import net.icxd.dungeons.menu.SkyBlockMenuItem;
 import net.icxd.dungeons.menu.SkyBlockMenuListener;
 import net.icxd.dungeons.mining.BlockListener;
 import net.icxd.dungeons.region.MovementListener;
+import net.icxd.dungeons.command.Callbacks;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.database.collections.UserCollection;
 import net.icxd.dungeons.database.mongo.Settings;
@@ -296,6 +298,7 @@ public class Dungeons extends JavaPlugin {
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         listen(PetListener.class, PetListener::new);
         listen(PetItemUse.class, PetItemUse::new);
+        listen(Callbacks.class, Callbacks::new);
         listen(UtilityListener.class, UtilityListener::new);
         listen(Activations.class, Activations::new);
         // What weapons' enchantments and reforges do in a fight (ENCHANTS_WEAPONS.md).
@@ -360,7 +363,7 @@ public class Dungeons extends JavaPlugin {
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
                 new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand(),
                 new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand(), new ClaimItemCommand(),
-                new YoinkProfileCommand(), new PetsCommand(), new GivePetCommand());
+                new YoinkProfileCommand(), new PetsCommand(), new GivePetCommand(), new CbCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {

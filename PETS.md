@@ -82,6 +82,16 @@ it there are no pets (the log says so).
   preview of Lvl 100." "&cNew pets are lowest level!"; bought a Common one, level 1) and the four Honey Dippers Kat takes,
   500 to 500,000 coins, opening as she speaks (a villager's, high). Every shop's line now says what it cost, as recorded:
   "&aYou bought &fBee Pet &afor &650 Coins&a!", "&aYou bought &fExperience Bottle&8 x8 &afor &6240 Coins&a!".
+- **Kat** (the Hub's Pet Care): the Pet Sitter as recorded. A pet item clicked in your inventory goes in its slot (and
+  back when clicked there or when the menu closes; while it's out, a copy waits in the profile's overflow, so a crash
+  can't lose it). Hire Kat shows her time and cost (the data's Kat/Costs: its items, its coins less 0.3% a pet level),
+  green with "&eClick to hire Kat!" or red with why not ("&cYou don't have the required items!"); Confirm Hiring Kat's
+  warning; her two lines (70 ticks apart) with the pling; and when it's ready, her call ("&e✆ &bKat&e ✆ ", three RINGs
+  with [PICK UP], `/cb`, twelve plings). Talking to her then gives it back a rarity up, its XP as it was, with her three
+  lines (26 and 94 ticks on) and a level-up sound. Before it's ready she says when (the wiki's lines). The first talk
+  is the wiki's three lines. She won't take a pet the data says she doesn't upgrade (the wiki's Bingo, Grandma Wolf,
+  Kuudra, Montezuma, Wisps; the top rarity), one holding a Tier Boost, or one without the Taming level its new rarity
+  takes (1, 5, 10, 20, 25).
 - `/givepet BEE [RARITY] [LEVEL] [XP]`: a pet as an item, for staff (not a Sandbox tool).
 
 ## Abilities
@@ -178,14 +188,23 @@ are three).
   The wiki's "it will always consume the item in the slot closest to the first" isn't copied: it's the one in your hand.
   The wiki says a Minos Relic "does not increase the perks of a pet" (the Black Cat's Magic Find); here it increases the
   data's stat lines, the Black Cat's included.
+- **Kat**: answering her call is talking to her, on the phone ("&b✆ &f" after her name, as her Abiphone lines have it),
+  so it gives the pet back; what the Pet Sitter shows for a pet she won't upgrade (a barrier, "&7Kat can't upgrade this
+  pet!"), for a Tier Boost ("&cKat won't upgrade a pet holding a Tier Boost!") and without the Taming level (the
+  plugin's requirement line); too few coins ("&cYou don't have enough coins!"); coins before items in the cost; her
+  coins rounded; another pet clicked taking the first's place; Cancel going back to the Pet Sitter; her first lines' and
+  "not ready yet" lines' timing (a second apart); a remaining time of more than one unit ("1 day 4 hours"); the pet's
+  name in its old rarity's colour after the upgrade; her time not dropping with the pet's level; the call ringing once,
+  when the pet is ready (checked every second; Hypixel's came 2.7 s after).
 
 ## Not done
 
 - **Ability effects** that need what isn't built (see Abilities).
 - **Pet items** that need what isn't built: Exp Share (the Exp Sharing slots), trophy fishing's Barrel of Riches and
   Lotus Crown, the Brown Bandana (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed
-  Fish's coins (Griffin Burrows), the Rubber Snorkel's double on Foraging Islands, and the Kat upgrade items.
+  Fish's coins (Griffin Burrows) and the Rubber Snorkel's double on Foraging Islands.
 - **Exp Sharing** (a click does nothing), **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown,
-  not used), Kat, George, Fann.
+  not used), George, Fann.
+- Kat Flowers and Bouquets (and the Enchanted Clock's hour), and her Abiphone contact.
 - The Daedalus Blades' Damage and Magic Find on Mythological mobs (Diana's), and their Damage line showing the Taming
   levels' (it counts, but the lore shows the item's own).
