@@ -23,6 +23,7 @@ import java.util.function.BiConsumer;
 public final class PlayerStats {
     /** What else changes a player's stats (a dungeon class's bonuses), after everything else, in order. */
     private static final List<BiConsumer<Player, Stats>> MODIFIERS = new ArrayList<>();
+    private static final List<BiConsumer<Player, Stats>> BUFFED = new ArrayList<>();
 
     private PlayerStats() {
     }
@@ -30,6 +31,20 @@ public final class PlayerStats {
     /** Adds something that changes players' stats: it gets their stats once the rest are in, to add to or scale. */
     public static void addModifier(BiConsumer<Player, Stats> modifier) {
         MODIFIERS.add(modifier);
+    }
+
+    /**
+     * Adds something that changes players' stats once their flat buffs are in as well (see
+     * {@link net.icxd.dungeons.session.PlayerSession#stats}): a stat from another stat, which counts what buffs give
+     * ("Every Speed buff ... counts towards the Slow and Steady ability", the wiki's Snail Pet).
+     */
+    public static void addBuffedModifier(BiConsumer<Player, Stats> modifier) {
+        BUFFED.add(modifier);
+    }
+
+    /** What the buffed modifiers (see {@link #addBuffedModifier}) make of their stats with their flat buffs in. */
+    public static void buffed(Player player, Stats stats) {
+        for (BiConsumer<Player, Stats> modifier : BUFFED) modifier.accept(player, stats);
     }
 
     /**
@@ -51,7 +66,7 @@ public final class PlayerStats {
         if (user != null) {
             stats.add(Skills.stats(user.profile()));
             // The summoned pet's and its held item's, and the Pet Score's Magic Find.
-            stats.add(Pets.stats(user.profile()));
+            stats.add(Pets.stats(player, user.profile()));
             for (Perk perk : Perk.values()) {
                 Integer level = user.profileValue("dwarvenMines.hotm.tree." + perk.name(), Integer.class);
                 if (level != null && level > 0) stats.add(perk.getStats().apply(level));

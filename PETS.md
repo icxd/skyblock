@@ -1,9 +1,10 @@
 # Pets
 
-The Pets menu, pet items, summoning a pet that follows you, its stats, pet XP and levels with Taming, the Pet Score and
-its SkyBlock XP and Magic Find, and /yoinkprofile's pets, as recorded on Hypixel (2026-10-25: the Pets menu of a
-profile with nine pets, a Bee bought from Bea, levelled on wheat and upgraded by Kat, its menu actions, the Lion
-summoned and followed round the Hub). The code is in `paper/src/main/java/net/icxd/dungeons/pet`.
+The Pets menu, pet items, summoning a pet that follows you, its stats and abilities, pet XP and levels with Taming, the
+Pet Score and its SkyBlock XP and Magic Find, and /yoinkprofile's pets, as recorded on Hypixel (2026-10-25: the Pets
+menu of a profile with nine pets, a Bee bought from Bea, levelled on wheat and upgraded by Kat, its menu actions, the
+Lion summoned and followed round the Hub). The code is in `paper/src/main/java/net/icxd/dungeons/pet`, the abilities in
+its `ability` package.
 
 ## The data
 
@@ -57,6 +58,78 @@ it there are no pets (the log says so).
 - **/yoinkprofile**: a Pets part (the API's `pets_data.pets` and the one out), and pet items wherever they are.
 - `/givepet BEE [RARITY] [LEVEL] [XP]`: a pet as an item, for staff (not a Sandbox tool).
 
+## Abilities
+
+An ability is its pet's, its block's name and its text with `#` for each number (`pet/ability`). Its numbers are the
+text's at the pet's level: the data's `{n}`s and the ones written in. A test checks every ability's text against the
+private data at every rarity; an ability counts only where the text is its own (High Stride's Jump Boost II, III and IV
+are three).
+
+- **Which count**: the summoned pet's; a dragon's egg (below level 100) has none. The Grandma Wolf's, Spirit's, Owl's
+  and Kuudra's ("This pet's perks are active even when the pet is not summoned!") count from the Pets menu as well: each
+  type's best, as the Pet Score picks it, looked at once a second. The Bingo Pet's don't: they "do not work on
+  non-Bingo profiles" (the wiki), and there are none here.
+- **Stats**: what one gives the pet itself ("to your pet": Shining Scales, Tyrant) is the pet's, where Chimera will copy
+  it from. Then the flat ones on yours, and once your flat buffs are in, those worked out from your other stats (Armored
+  Tank, Bulk, Stomp, Slow and Steady: "Every Speed buff ... counts", the wiki's Snail), the auras of other players' pets
+  near you (Bird Discourse, Genius Amniote: each once, the highest level's) and Web Battlefield's battlefields; percent
+  buffs come after all that.
+- **Every ability works** for: Ankylosaurus (Unyielding on Last Stand; there's no Lifeline), Blaze, Blue Whale, Crow,
+  Ender Dragon, Giraffe, Golem, Grandma Wolf, Horse, Hound, Jerry (its three do nothing, as they say), Lion, Mithril
+  Golem, Phoenix, Rift Ferret, Sheep, Silverfish, Skeleton, Skeleton Horse, Snowman, T-Rex, Turtle, Wither Skeleton,
+  Wolf and Zombie.
+- **Some work** for 46 more: every one their pet has but those below. The Black Cat's Omen and Supernatural and the
+  Bee's Busy Buzz Buzz are the pets' own stat lines (the same numbers), and the Reindeer's Winter Sprint is in its pet
+  XP.
+- **Waiting on what isn't built** (146 of the data's 303 ability names; 153 work):
+  - Fishing: Ammonite's Expert Cave Fisher, Dolphin's Splash Surprise, Flying Fish's Rapid Decay, Frog's Home Sweet Home
+    and Hunting Enjoyer, Hermit Crab's other three, Penguin's Thick Blubber, Seal, Slug's Slow and Steady, Spinosaurus.
+  - The Garden, pests, crop drops and minions: Bee's Honey Harvester and Powered by Pollen, Elephant's Abundant
+    Harvest, Hedgehog, Mooshroom Cow's Mushroom Eater and Bovine Blessing, Mosquito, Orchid Mantis' other two, Rabbit's
+    other three, Rose Dragon's other three, Slug's Repugnant Aroma; Magma Cube's, Pigman's, Spider's, Ocelot's and
+    Snail's minion ones.
+  - Foraging and its places: Ocelot's Tree Essence, Sloth, Monkey's two in The Park, Jade Dragon's Apex Predator
+    (attributes), Eagle (the Critter Safari).
+  - Mining's other places and blocks: the Crystal Hollows (Bal, Goblin, Mole, Scatha's Burrowing, Armadillo), the
+    Glacite Tunnels and Mineshafts (Glacite Golem's other two, Mammoth's other two, Penguin's Subzero Hero), Heart of
+    the Mountain levels (Ammonite's Heart of the Sea), Mining Spread (Snail's Slimy Reach), End Stone and the Draconic
+    Altar (Endermite's other three).
+  - Mounts and morphs: Armadillo and Rock (riding), Rat.
+  - Events and calendar years: the Spooky Festival (Bat's three, Eerie), the Years of the Witch, Pig and Seal (Witch,
+    Pig, Seal), the Fishing Festival (Megalodon's other two), Jerry's Workshop and the Gift Attack (Baby Yeti's other
+    three, Reindeer), the Mythological Ritual (Griffin's other three).
+  - Fights and things to fight: Kuudra (Kuudra's other three), Slayers (Tarantula's Webbed Cells; the Wisps' Bulwark,
+    Icehammer and Drophammer), the Crimson Isle's pools (the Wisps' Extinguish), special Zealots (Enderman's Zealot
+    Madness), mob healing (Tiger's Hemorrhage), souls (Ghoul's other two), Midas' Greed (Golden Dragon's Gold's
+    Power), Power Orbs and Dungeon Potions (Jellyfish's other two), the Spirit coming to a ghost (Spirit Assistance).
+  - Potions and brewing: Parrot's two, Rabbit's Happy Feet, Witch's Alchemism.
+  - Others: Superpairs (Guardian's Lucky Seven), Fann (Owl's other two), Drone Mods (Precursor Drone), squids told
+    apart in drops (Squid's More Ink), Bingo profiles (Bingo).
+- **Hooks added** for them (the smallest versions, as EFFECTS.md asks): stats once flat buffs are in
+  (`PlayerStats.addBuffedModifier`), kill XP factors (`SkillGains.addKillXpFactor`), max mana factors
+  (`PlayerSession.addMaxManaFactor`), Mining Speed by block (`BlockListener.addMiningSpeed`), powder bonuses
+  (`Powder.addBonus`), Intimidation levels and the accessories' Haste (`AccessoryEffects.addIntimidationLevels`,
+  `hasteLevel`), Last Stand's effectiveness (`ArmorEnchants.addLastStandBoost`), and in a run, Half Life's score
+  (`DungeonRun.setHalfLife`), Ally Healing (`addAllyHealing`) and cutting an ultimate's cooldown (`cutUltimate`).
+- **Approximated (UNKNOWN)**:
+  - "For every": whole steps (Bulk, Stomp, Walking Fortress, Tusk Luck, Dragon's Pride, Dragon's Greed, Higher Ground),
+    but Farming Strength, which the wiki rounds down once (⌊Strength / 20 × 0.7⌋).
+  - How long and how far where the text doesn't say: Web-weaver's slow 3s, Ferocious Roar's stun a second, Turtle
+    Shell's Vitality 10s, Snow Cannon 8 blocks, Skeletal Defense 3, Laserbeam 16, "near water or lava" 3, a "nearby
+    wolf monster" 10. Turtle Tactics' "standing still" is where you were a second before.
+  - Kill Combo: a kill within the time of the tier reached keeps it; its lines are "+5 Kill Combo" and "Your Kill Combo
+    has expired!" (Danker's Skyblock Mod hides lines with those), the rest of them made up.
+  - Stacks: Stampede's each last their own 5s, the oldest going past 20; a Hop jump starts its 20s again; Overheal's
+    shield comes once you have none of it left.
+  - Stored Energy: every whole 2,000 Ally Healing takes its seconds off a Wish that's cooling down (none while it's
+    ready), 30s off one cooldown at most. Unyielding makes both Last Stand's Defense and its Vitality more.
+  - Whose counts: an aura's owner gets Bird Discourse too, Genius Amniote goes to the four nearest others; Happy Tree
+    Friends counts the other players in the world with a Frog out; Pod Tactics, Chilly Reception and Crab Rave the
+    others within reach.
+  - Where: "Mining Islands" are the Dwarven Mines, Mithril Affinity's Mithril its blocks, powder "from all sources" what
+    you mine (the only source here), and Dexterity's Haste is Mining Speed as the Haste Ring's is (50 a level), not on
+    top of the ring's.
+
 ## Approximated (UNKNOWN)
 
 - **Number decimals**: as many as NEU's level 1 value shows when that's rounded, else all of them (two numbers have
@@ -73,7 +146,7 @@ it there are no pets (the log says so).
 
 ## Not done
 
-- **Ability effects**: the text is shown, none of it does anything yet.
+- **Ability effects** that need what isn't built (see Abilities).
 - **Pet items' other effects**: a share of the pet's stats (Gold Claws, Minos Relic), the Tier Boost's rarity, Exp Share,
   and putting one on a pet (right-clicking the summoned pet); only "Grants +N Stat" and "pet exp for" work.
 - **Exp Sharing** (a click does nothing), **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown,

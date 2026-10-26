@@ -12,10 +12,13 @@ import net.icxd.dungeons.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.ToDoubleFunction;
 
 /**
  * What this server keeps about an online player while they're on it: their stats (worked out at
@@ -27,6 +30,7 @@ import java.util.UUID;
  */
 public final class PlayerSession {
     private static final Map<UUID, PlayerSession> sessions = new HashMap<>();
+    private static final List<ToDoubleFunction<Player>> MAX_MANA_FACTORS = new ArrayList<>();
 
     private final Player player;
     private Stats stats;
@@ -76,8 +80,9 @@ public final class PlayerSession {
     }
 
     /**
-     * Their stats now: the base, their armor and held item and what they have for a while (flat buffs, then
-     * the percent ones on what that comes to), worked out once per tick.
+     * Their stats now: the base, their armor and held item and what they have for a while (flat buffs, then what
+     * comes from those as well, see {@link PlayerStats#addBuffedModifier}, then the percent ones on what that comes
+     * to), worked out once per tick.
      */
     public Stats stats() {
         int tick = Bukkit.getCurrentTick();
@@ -86,6 +91,7 @@ public final class PlayerSession {
             long now = System.currentTimeMillis();
             buffs.values().removeIf(buff -> buff.endMillis <= now);
             for (Buff buff : buffs.values()) stats.add(buff.stats);
+            PlayerStats.buffed(player, stats);
             if (!percentBuffs.isEmpty()) {
                 percentBuffs.values().removeIf(buff -> buff.endMillis <= now);
                 Map<Stat, Double> percents = new EnumMap<>(Stat.class);
@@ -135,9 +141,16 @@ public final class PlayerSession {
     private record Buff(Stats stats, long endMillis) {
     }
 
-    /** Their mana pool: 100, and 1 for each point of intelligence. */
+    /** Their mana pool: 100, and 1 for each point of intelligence, times what changes it (see {@link #addMaxManaFactor}). */
     public int maxMana() {
-        return Utils.doubleToInt(100.0 + stats().get(Stat.INTELLIGENCE));
+        double factor = 1;
+        for (ToDoubleFunction<Player> f : MAX_MANA_FACTORS) factor *= f.applyAsDouble(player);
+        return Utils.doubleToInt((100.0 + stats().get(Stat.INTELLIGENCE)) * factor);
+    }
+
+    /** Adds a factor on a player's mana pool (the Sheep pet's "Increases your total mana by 25% while in dungeons": 1.25); they multiply. */
+    public static void addMaxManaFactor(ToDoubleFunction<Player> factor) {
+        MAX_MANA_FACTORS.add(factor);
     }
 
     /** Null once it has run out. */

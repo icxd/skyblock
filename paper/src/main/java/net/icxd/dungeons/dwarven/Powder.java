@@ -1,7 +1,9 @@
 package net.icxd.dungeons.dwarven;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.ToDoubleBiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +26,7 @@ public final class Powder {
     static final int CAP = 2_000_000_000;
     /** "Grants +20% Mithril Powder." (the Mithril Drills), "Grants +5% Gemstone Powder, and …" (the Gemstone Drills). */
     private static final Pattern HELD_BONUS = Pattern.compile("Grants \\+([\\d.]+)% (\\w+) Powder");
+    private static final List<ToDoubleBiFunction<Player, PowderType>> BONUSES = new ArrayList<>();
 
     private Powder() {
     }
@@ -34,7 +37,14 @@ public final class Powder {
      * other sources, Core of the Mountain, Powder Buff, Sky Mall, events and pets, aren't here).
      */
     public static void mined(Player player, PowderType type, int base) {
-        add(User.ifLoaded(player.getUniqueId()), type, withBonus(base, heldBonus(player, type), ThreadLocalRandom.current().nextDouble()));
+        double percent = heldBonus(player, type);
+        for (ToDoubleBiFunction<Player, PowderType> bonus : BONUSES) percent += bonus.applyAsDouble(player, type);
+        add(User.ifLoaded(player.getUniqueId()), type, withBonus(base, percent, ThreadLocalRandom.current().nextDouble()));
+    }
+
+    /** Adds percent more powder of a type a player gets from what they mine (the Mithril Golem pet's "+20% Mithril Powder"); they add up. */
+    public static void addBonus(ToDoubleBiFunction<Player, PowderType> percent) {
+        BONUSES.add(percent);
     }
 
     /** The percent more powder of a type what they hold in their main hand gives, as its text says; 0 for none. */

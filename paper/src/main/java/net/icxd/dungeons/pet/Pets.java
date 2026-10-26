@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import org.bson.Document;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
@@ -19,6 +20,7 @@ import net.icxd.dungeons.pet.PetData.Formula;
 import net.icxd.dungeons.pet.PetData.Pet;
 import net.icxd.dungeons.pet.PetData.Reward;
 import net.icxd.dungeons.pet.PetData.Variant;
+import net.icxd.dungeons.pet.ability.PetAbilities;
 import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
@@ -64,6 +66,7 @@ public final class Pets {
             data = loaded;
             if (loaded.count() > 0) {
                 log.info("Pets: " + loaded.count() + " pets, " + loaded.scoreRewards().size() + " Pet Score rewards");
+                PetAbilities.problems(loaded).forEach(p -> log.warning("Pet abilities: " + p));
                 PetFollowers.refreshAll();
             }
         }));
@@ -314,7 +317,8 @@ public final class Pets {
         return score;
     }
 
-    private static OwnedPet better(OwnedPet a, OwnedPet b, PetData data) {
+    /** The better of two pets of a type: the higher rarity, then the higher level (the first, if they're the same). */
+    public static OwnedPet better(OwnedPet a, OwnedPet b, PetData data) {
         if (a.tier() != b.tier()) return a.tier().compareTo(b.tier()) > 0 ? a : b;
         return level(a, data) >= level(b, data) ? a : b;
     }
@@ -358,16 +362,29 @@ public final class Pets {
         return stats;
     }
 
-    /** What the profile's pets give its stats: the summoned one's and its held item's, and the Pet Score's Magic Find. */
+    /**
+     * A pet's stats as they count for its owner (null for none known): its own at its level, its held item's, and what its
+     * abilities give it ("to your pet", see PetAbility#petStats).
+     */
+    public static Stats petStats(Player owner, OwnedPet pet, PetData data) {
+        Stats base = stats(pet, data);
+        Stats stats = base.copy().add(HeldItems.stats(pet.heldItem()));
+        if (owner != null) PetAbilities.petStats(owner, pet, base, stats);
+        return stats;
+    }
+
+    /** What the profile's pets give its stats, with no player to ask (see {@link #stats(Player, Document)}). */
     public static Stats stats(Document profile) {
+        return stats(null, profile);
+    }
+
+    /** What the profile's pets give a player's stats: the summoned one's (see {@link #petStats}), and the Pet Score's Magic Find. */
+    public static Stats stats(Player player, Document profile) {
         PetData data = data();
         Stats stats = new Stats();
         if (profile == null || data.count() == 0) return stats;
         OwnedPet active = active(profile);
-        if (active != null) {
-            stats.add(stats(active, data));
-            stats.add(HeldItems.stats(active.heldItem()));
-        }
+        if (active != null) stats.add(petStats(player, active, data));
         int magicFind = magicFind(score(profile, data), data);
         if (magicFind > 0) stats.add(Stat.MAGIC_FIND, magicFind);
         return stats;

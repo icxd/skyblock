@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.ToDoubleFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,7 +88,7 @@ public final class AccessoryEffects implements Listener {
      * Mining Speed a level of Haste is given as (the wiki's Haste Ring: "instead of the Haste being overridden, the
      * player is given +100 Mining Speed" for II; the Artifact's III as 150 is UNKNOWN).
      */
-    static final double HASTE_MINING_SPEED = 50;
+    public static final double HASTE_MINING_SPEED = 50;
     /** How far from an island's spawn the Gravity Talisman's +10 drops to +1: UNKNOWN (the wiki gives no distances), a point every 10 blocks. */
     static final double GRAVITY_STEP = 10;
     /** The Blood God Crest and Sigil, whose kills are counted on them. */
@@ -97,6 +98,8 @@ public final class AccessoryEffects implements Listener {
     static final String KILLS = "blood_god_kills";
 
     private static final Map<UUID, Summary> SUMMARIES = new HashMap<>();
+    /** What adds levels to the Intimidation line's (see {@link #addIntimidationLevels}). */
+    private static final List<ToDoubleFunction<Player>> INTIMIDATION_LEVELS = new ArrayList<>();
     private static final Map<UUID, Deque<Long>> REAPER_KILLS = new HashMap<>();
     private static final Map<UUID, Map<UUID, Integer>> TARANTULA_HITS = new HashMap<>();
     private static final Map<UUID, Long> DENTIST = new HashMap<>();
@@ -242,6 +245,14 @@ public final class AccessoryEffects implements Listener {
     /** Of two Master Skulls, the one that grants more. */
     private static String best(String a, String b) {
         return a == null || AccessoryText.after(b, "Grants", 0) > AccessoryText.after(a, "Grants", 0) ? b : a;
+    }
+
+    /**
+     * The Haste their counted accessories give, as Mining Speed (see {@link #HASTE_MINING_SPEED}): for another source of
+     * Haste, which doesn't stack with it (the wiki's Silverfish Pet).
+     */
+    public static int hasteLevel(Player player) {
+        return summary(player).haste;
     }
 
     /** "Grants permanent Haste II": its level (2); 0 for none. */
@@ -481,7 +492,14 @@ public final class AccessoryEffects implements Listener {
         Summary s = summary(player);
         if (s.intimidation < 1) return false;
         int level = SetBonuses.shownLevel(mob);
-        return level >= 0 && level <= s.intimidation;
+        double more = 0;
+        for (ToDoubleFunction<Player> levels : INTIMIDATION_LEVELS) more += levels.applyAsDouble(player);
+        return level >= 0 && level <= s.intimidation + more;
+    }
+
+    /** Adds levels to the Intimidation line's, for a player who has one counted (the Parrot pet's "Adds 20 levels to intimidation accessories"). */
+    public static void addIntimidationLevels(ToDoubleFunction<Player> levels) {
+        INTIMIDATION_LEVELS.add(levels);
     }
 
     // ---------- vanilla damage ----------

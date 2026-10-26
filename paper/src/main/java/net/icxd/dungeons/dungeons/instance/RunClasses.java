@@ -90,6 +90,8 @@ final class RunClasses {
         long abilityReadyAt;
         boolean abilityAnnounced = true;
         long ultimateReadyAt;
+        /** What's been taken off the cooldown it's on (see {@link #cut}). */
+        long ultimateCut;
         int nextReminder = FIRST_REMINDER;
         /** Until when Ragnarok or Castle of Stone lasts. */
         long ultimateUntil;
@@ -518,7 +520,27 @@ final class RunClasses {
     /** The ultimate was used at run tick {@code tick}, {@code now}: it's ready, and reminded of, when the cooldown is over. */
     static void usedUltimate(State s, int tick, long now, long cooldown) {
         s.ultimateReadyAt = now + cooldown;
+        s.ultimateCut = 0;
         s.nextReminder = tick + (int) (cooldown / 50);
+    }
+
+    /** See {@link DungeonRun#cutUltimate}. */
+    long cutUltimate(UUID member, DungeonClass dungeonClass, long millis, long most) {
+        State s = states.get(member);
+        return s == null || s.dungeonClass != dungeonClass ? 0 : cut(s, ticks, System.currentTimeMillis(), millis, most);
+    }
+
+    /**
+     * Takes up to {@code millis} off the cooldown the ultimate is on at run tick {@code tick}, {@code now}, no more than
+     * {@code most} off it in all, and reminds of it when it's over instead; what it took off.
+     */
+    static long cut(State s, int tick, long now, long millis, long most) {
+        long cut = Math.min(Math.min(millis, most - s.ultimateCut), s.ultimateReadyAt - now);
+        if (cut <= 0) return 0;
+        s.ultimateReadyAt -= cut;
+        s.ultimateCut += cut;
+        s.nextReminder = tick + (int) Math.ceil((s.ultimateReadyAt - now) / 50.0);
+        return cut;
     }
 
     /**

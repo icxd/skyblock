@@ -52,7 +52,7 @@ public final class DropEnchants implements Listener {
     }
 
     /** Whether it's a piece of armor the mob drops (the Rotten Armor pieces): every item it can be is armor. */
-    static boolean armor(MobDrop drop) {
+    public static boolean armor(MobDrop drop) {
         for (String id : drop.itemIds()) {
             SkyBlockItem item = ItemRegistry.get(id);
             if (item == null || item.genericItemType() != GenericItemType.ARMOR) return false;

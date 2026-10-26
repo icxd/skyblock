@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.bukkit.Bukkit;
@@ -75,6 +77,10 @@ public final class DungeonRun implements ScoreCounts {
     public enum Phase { WAITING, STARTING, RUNNING, ENDED }
 
     static final long AUTO_CLOSE_MILLIS = 120_000;
+    /** Who of a run dies with the Spirit pet's Half Life (see {@link #setHalfLife}): nobody unless the pets say. */
+    private static Predicate<UUID> halfLife = member -> false;
+    /** What hears of members healing others (see {@link #addAllyHealing}). */
+    private static final List<BiConsumer<Player, Double>> ALLY_HEALING = new ArrayList<>();
     private static final int COUNTDOWN_SECONDS = 4;
     private static final Set<Integer> CLOSE_WARNINGS = Set.of(30, 15, 10, 5, 4, 3, 2, 1);
     /** Ticks after the start until the entrance door opens (Hypixel's timing). */
@@ -145,6 +151,8 @@ public final class DungeonRun implements ScoreCounts {
     private final RunClasses classes;
     private Fairies fairies;
     private boolean failed;
+    /** Whether the run's first death was a member's whose Spirit pet makes it cost the score less (see {@link #setHalfLife}). */
+    private boolean firstDeathHadSpirit;
     private int ticks;
     private final MapView map;
     private Phase phase = Phase.WAITING;
@@ -811,7 +819,23 @@ public final class DungeonRun implements ScoreCounts {
     /** For the tab list's "Team Healing Done" and EXTRA STATS' "Ally Healing": a member healed others for this much. */
     public void healedAllies(UUID member, double healing) {
         Member m = members.get(member);
-        if (m != null && phase == Phase.RUNNING && healing > 0) m.healing += healing;
+        if (m == null || phase != Phase.RUNNING || healing <= 0) return;
+        m.healing += healing;
+        Player player = Bukkit.getPlayer(member);
+        if (player != null) for (BiConsumer<Player, Double> heard : ALLY_HEALING) heard.accept(player, healing);
+    }
+
+    /** Adds what hears of a member of a run healing others for so much, as {@link #healedAllies} counts it (the Jellyfish pet's Stored Energy). */
+    public static void addAllyHealing(BiConsumer<Player, Double> heard) {
+        ALLY_HEALING.add(heard);
+    }
+
+    /**
+     * Takes up to {@code millis} off a member's ultimate's cooldown, if they play this class and it's cooling down, and no
+     * more than {@code most} off one cooldown in all; what it took off.
+     */
+    public long cutUltimate(UUID member, DungeonClass dungeonClass, long millis, long most) {
+        return classes.cutUltimate(member, dungeonClass, millis, most);
     }
 
     // For items' abilities (item/ability/utility)
@@ -859,7 +883,17 @@ public final class DungeonRun implements ScoreCounts {
 
     void died(UUID member) {
         Member m = members.get(member);
-        if (m != null && phase == Phase.RUNNING) m.deaths++;
+        if (m == null || phase != Phase.RUNNING) return;
+        if (deaths() == 0) firstDeathHadSpirit = halfLife.test(member);
+        m.deaths++;
+    }
+
+    /**
+     * What says whether a member's death would cost the score 1 rather than 2, as the first (the Spirit pet's Half Life:
+     * "If you are the first player to die in a dungeon, the score penalty for that death is reduced to 1").
+     */
+    public static void setHalfLife(Predicate<UUID> member) {
+        halfLife = member;
     }
 
     /** Deaths so far, everyone's (for the score and the tab list). */
@@ -875,12 +909,12 @@ public final class DungeonRun implements ScoreCounts {
 
     /**
      * What the score is worked out from, now: rooms are cells (the Entrance room's not counted), and
-     * the rest is {@link ScoreCounts}'. No pets (the Spirit pet's death), Mimic (Floor VI and up) or
-     * mayors (Paul) here.
+     * the rest is {@link ScoreCounts}', with the Spirit pet's first death (see {@link #setHalfLife}). No Mimic (Floor
+     * VI and up) or mayors (Paul) here.
      */
     private Score.Inputs scoreInputs(long now) {
         double seconds = startedAt == 0 ? 0 : (now - startedAt) / 1000.0;
-        return new Score.Inputs(runMap.completedCells(), runMap.totalCells(), secretsFound(), totalSecrets(), deaths(), false,
+        return new Score.Inputs(runMap.completedCells(), runMap.totalCells(), secretsFound(), totalSecrets(), deaths(), firstDeathHadSpirit,
                 puzzlesNotDone(), cryptsBlown(), false, false, seconds);
     }
 

@@ -184,6 +184,22 @@ class RunClassesTest {
         assertTrue(RunClasses.reminderDue(s, 1066, NOW + 1));
     }
 
+    @Test
+    void cutsOffACooldown() {
+        RunClasses.State s = new RunClasses.State(DungeonClass.HEALER, 14, false);
+        assertEquals(0, RunClasses.cut(s, 466, NOW, 1_000, 30_000), "ready: nothing to cut");
+        RunClasses.usedUltimate(s, 1000, NOW, 120_000);
+        assertEquals(1_000, RunClasses.cut(s, 1000, NOW, 1_000, 30_000));
+        assertEquals(NOW + 119_000, s.ultimateReadyAt);
+        // No more than 30 s off one cooldown, and reminded of when it's over.
+        assertEquals(29_000, RunClasses.cut(s, 1000, NOW, 40_000, 30_000));
+        assertEquals(0, RunClasses.cut(s, 1000, NOW, 1_000, 30_000));
+        assertTrue(RunClasses.reminderDue(s, 1000 + 1_800, NOW + 90_000));
+        // A new cooldown can be cut again.
+        RunClasses.usedUltimate(s, 3000, NOW + 100_000, 120_000);
+        assertEquals(5_000, RunClasses.cut(s, 3000, NOW + 100_000, 5_000, 30_000));
+    }
+
     private static List<Integer> dueUpTo(RunClasses.State s, int from, int to, long now) {
         List<Integer> due = new ArrayList<>();
         for (int tick = from; tick <= to; tick++) if (RunClasses.reminderDue(s, tick, now)) due.add(tick);

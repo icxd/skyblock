@@ -101,6 +101,7 @@ import net.icxd.dungeons.npc.Ophelia;
 import net.icxd.dungeons.pet.PetFollowers;
 import net.icxd.dungeons.pet.PetListener;
 import net.icxd.dungeons.pet.Pets;
+import net.icxd.dungeons.pet.ability.PetAbilities;
 import net.icxd.dungeons.profile.SandboxDrops;
 import net.icxd.dungeons.profile.SandboxStorage;
 import net.icxd.dungeons.rune.RuneRunnable;
@@ -306,6 +307,12 @@ public class Dungeons extends JavaPlugin {
             ArmorEnchants.enable(this);
         } catch (RuntimeException e) {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable armor enchantments", e);
+        }
+        // After the armor's: a pet ability's share of a stat ("Increases all Combat stats by 10%") counts what the armor gives.
+        try {
+            PetAbilities.enable(this);
+        } catch (RuntimeException e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable pet abilities", e);
         }
         listen(StorageListener.class, StorageListener::new);
         listen(CollectionGains.class, CollectionGains::new);
