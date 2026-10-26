@@ -99,6 +99,7 @@ import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
 import net.icxd.dungeons.pet.HeldItemEffects;
+import net.icxd.dungeons.pet.PetCopies;
 import net.icxd.dungeons.pet.PetFollowers;
 import net.icxd.dungeons.pet.PetItemUse;
 import net.icxd.dungeons.pet.PetListener;
@@ -315,6 +316,7 @@ public class Dungeons extends JavaPlugin {
         try {
             PetAbilities.enable(this);
             HeldItemEffects.enable(this);
+            PetCopies.enable();
         } catch (RuntimeException e) {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable pet abilities", e);
         }

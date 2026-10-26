@@ -61,6 +61,11 @@ it there are no pets (the log says so).
   not the Griffin or the Wisps (the wiki; SkyCrypt's `ignoresTierBoost`), as NEU works its level out. Before, a stat
   after "and" and the conditional ones were read wrong (the Spooky Cupcake had no Speed, the Titanium Minecart its
   Mining Fortune everywhere).
+- **What copies a pet's stats**, by their texts: Chimera on what you hold (its book's 20% a level, to 100% at V), the
+  Manticore Claw worn (10% of the pet's Combat stats), and the Daedalus Blades held (+4❁ Damage a Taming level, +5 for
+  the ⚚ one, and the pet's Combat stats). They copy the pet's stats with its item's, not its abilities' ("It does not
+  copy stats granted by pet abilities, but it does copy stats added to the pet's base stats by Pet Items", the wiki's
+  Chimera). The Bee Mask worn doubles a Bee's own stats (before its item's share of them, UNKNOWN which comes first).
 - **Pet XP**: skill XP before Wisdom x the pet's share x (1 + Taming level / 100) x (1 + its held item's boost) x its
   own (the Reindeer's 2). Its share (the wiki's): all of its own skill's (every skill's for All Skills), a third of
   another's, a twelfth of Alchemy's or Enchanting's when they aren't its own, 1.5x Fishing's; none from Carpentry,
@@ -178,4 +183,5 @@ are three).
   Fish's coins (Griffin Burrows), the Rubber Snorkel's double on Foraging Islands, and the Kat upgrade items.
 - **Exp Sharing** (a click does nothing), **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown,
   not used), Kat, Bea, George, Fann.
-- Chimera and the other things that copy pet stats.
+- The Daedalus Blades' Damage and Magic Find on Mythological mobs (Diana's), and their Damage line showing the Taming
+  levels' (it counts, but the lore shows the item's own).

@@ -398,11 +398,33 @@ public final class Pets {
     }
 
     /**
-     * A pet's stats as they count for its owner (null for none known): its own at its level, its held item's, and what its
-     * abilities give it ("to your pet", see PetAbility#petStats).
+     * A pet's own stats for its owner (null for none known): at its level, twice that with what they wear that doubles
+     * them (the Bee Mask's "Double the base pet stats of your active Bee pet", see PetCopies).
+     */
+    static Stats base(Player owner, OwnedPet pet, PetData data) {
+        Stats base = stats(pet, data);
+        Pet kind = data.pet(pet.type());
+        if (owner == null || kind == null || !PetCopies.doubled(owner, kind.name(tier(pet, data)))) return base;
+        for (Stat stat : Stat.values()) if (base.has(stat)) base.set(stat, base.get(stat) * 2);
+        return base;
+    }
+
+    /**
+     * What copies of a pet's stats copy (Chimera, the Manticore Claw, the Daedalus Blades, see PetCopies): its own (see
+     * {@link #base}) and its held item's, not what its abilities give it ("It does not copy stats granted by pet
+     * abilities, but it does copy stats added to the pet's base stats by Pet Items", the wiki's Chimera).
+     */
+    public static Stats copyable(Player owner, OwnedPet pet, PetData data) {
+        Stats base = base(owner, pet, data);
+        return base.copy().add(HeldItems.granted(pet.heldItem(), base, level(pet, data)));
+    }
+
+    /**
+     * A pet's stats as they count for its owner (null for none known): its own (see {@link #base}), its held item's, and
+     * what its abilities give it ("to your pet", see PetAbility#petStats).
      */
     public static Stats petStats(Player owner, OwnedPet pet, PetData data) {
-        Stats base = stats(pet, data);
+        Stats base = base(owner, pet, data);
         Stats stats = base.copy().add(HeldItems.granted(pet.heldItem(), base, level(pet, data)));
         if (owner != null) PetAbilities.petStats(owner, pet, base, stats);
         return stats;

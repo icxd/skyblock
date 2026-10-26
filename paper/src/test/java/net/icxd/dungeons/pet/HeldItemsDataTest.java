@@ -73,6 +73,16 @@ class HeldItemsDataTest {
     }
 
     @Test
+    void theCopiers() {
+        assertEquals(10, PetCopies.copier(ItemRegistry.get("MANTICORE_CLAW")).combatShare(), 1e-9);
+        assertEquals("Bee", PetCopies.copier(ItemRegistry.get("BEE_MASK")).doubles());
+        PetCopies.Copier blade = PetCopies.copier(ItemRegistry.get("DAEDALUS_AXE"));
+        assertEquals(4, blade.perTaming(), 1e-9);
+        assertTrue(blade.baseCombat());
+        assertEquals(5, PetCopies.copier(ItemRegistry.get("STARRED_DAEDALUS_AXE")).perTaming(), 1e-9);
+    }
+
+    @Test
     void tierBoost() {
         OwnedPet lion = OwnedPet.of("LION", Rarity.EPIC).withExp(data.totalXp(data.pet("LION"), Rarity.EPIC, 100));
         assertEquals(100, Pets.level(lion, data));
