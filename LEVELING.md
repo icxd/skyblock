@@ -42,6 +42,8 @@ Where they say nothing the code says UNKNOWN and takes the simplest reading.
   - Pet Score: 3 a point of the highest Pet Score the profile has had (see PETS.md; 1,527 at most). Taking a pet
     out of the menu lowers the score, not the XP: the recorded re-added Bee gave "+3 SkyBlock XP (Pet Score)
     (94/100)", not 6.
+  - Taming Cap Increases: 10 for each pet given George (his +1 Taming Level Cap's "+10 SkyBlock XP"; see PETS.md;
+    100 at most).
   - Every task is capped at what the data says it's worth.
 - **Cached per player and profile** (`SkyBlockLevels`): worked out again 0.5 s after something that gives XP (a skill
   level-up in `SkillGains`, a run's rewards in `DungeonRun`, a quest's reward: the action bar's gain came 0.5 s after

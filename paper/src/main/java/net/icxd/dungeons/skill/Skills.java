@@ -5,8 +5,11 @@ import net.icxd.dungeons.user.User;
 import org.bson.Document;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.ToIntBiFunction;
 
 /**
  * A profile's skill XP and levels: XP is a double under {@code skills.<key>} ({@link Skill#key}), and
@@ -18,14 +21,22 @@ public final class Skills {
     private Skills() {
     }
 
-    /** What adding XP did: the XP before and after, and the levels they reach. */
-    public record Gain(Skill skill, double amount, double before, double after) {
+    /** What raises a profile's caps (see {@link #addCapRaise}). */
+    private static final List<ToIntBiFunction<Document, Skill>> CAP_RAISES = new ArrayList<>();
+
+    /** What adding XP did: the XP before and after, and the levels they reach under the profile's cap. */
+    public record Gain(Skill skill, double amount, double before, double after, int cap) {
+        /** Under the skill's own cap. */
+        public Gain(Skill skill, double amount, double before, double after) {
+            this(skill, amount, before, after, skill.cap());
+        }
+
         public int oldLevel() {
-            return skill.level(before);
+            return skill.level(before, cap);
         }
 
         public int newLevel() {
-            return skill.level(after);
+            return skill.level(after, cap);
         }
 
         public boolean leveledUp() {
@@ -40,7 +51,22 @@ public final class Skills {
     }
 
     public static int level(Document profile, Skill skill) {
-        return skill.level(xp(profile, skill));
+        return skill.level(xp(profile, skill), cap(profile, skill));
+    }
+
+    /**
+     * How many levels more than its own a profile's skill may reach ({@link Skill#cap}): what's been added (George's
+     * Taming, pet/George), to the skill's table's most.
+     */
+    public static void addCapRaise(ToIntBiFunction<Document, Skill> raise) {
+        CAP_RAISES.add(raise);
+    }
+
+    /** The highest level this profile's skill can reach. */
+    public static int cap(Document profile, Skill skill) {
+        int cap = skill.cap();
+        if (profile != null) for (ToIntBiFunction<Document, Skill> raise : CAP_RAISES) cap += Math.max(0, raise.applyAsInt(profile, skill));
+        return Math.min(cap, skill.maxLevel());
     }
 
     /** Every skill's level on this profile. */
@@ -53,7 +79,8 @@ public final class Skills {
     /** Adds XP to a skill on this profile (nothing for none or less). */
     public static Gain add(Document profile, Skill skill, double amount) {
         double before = xp(profile, skill);
-        if (!(amount > 0)) return new Gain(skill, 0, before, before);
+        int cap = cap(profile, skill);
+        if (!(amount > 0)) return new Gain(skill, 0, before, before, cap);
         Document skills = profile.get("skills") instanceof Document d ? d : null;
         if (skills == null) {
             skills = new Document();
@@ -61,7 +88,7 @@ public final class Skills {
         }
         double after = before + amount;
         skills.put(skill.key(), after);
-        return new Gain(skill, amount, before, after);
+        return new Gain(skill, amount, before, after, cap);
     }
 
     /** The skill's level on the profile they play on: 0 while their data isn't loaded. */

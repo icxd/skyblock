@@ -1033,7 +1033,8 @@ public final class DungeonRun implements ScoreCounts {
                 "&e&lProfile: &a" + (user != null && user.isLoaded() ? user.profileName() : "?"),
                 " Bank: &6" + (user != null && user.isLoaded() ? Utils.formatNumber(user.getBankBalance()) : "0"),
                 "",
-                SkillText.dungeonTab(skill, user != null && user.isLoaded() ? Skills.xp(user.profile(), skill) : 0),
+                user != null && user.isLoaded() ? SkillText.dungeonTab(skill, Skills.xp(user.profile(), skill), Skills.cap(user.profile(), skill))
+                        : SkillText.dungeonTab(skill, 0),
                 " Speed: &f" + (stats == null ? 0 : (int) stats.get(Stat.SPEED)),
                 " Strength: &c" + (stats == null ? 0 : (int) stats.get(Stat.STRENGTH)),
                 " Crit Chance: &9" + (stats == null ? 0 : (int) stats.get(Stat.CRIT_CHANCE)),

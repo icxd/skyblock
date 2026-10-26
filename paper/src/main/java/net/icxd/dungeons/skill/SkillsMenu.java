@@ -47,7 +47,8 @@ public final class SkillsMenu extends GUI {
         set(4, menuItem(Material.DIAMOND_SWORD, "&aYour Skills", summary(Skills.average(profile), false)));
         for (Skill skill : Skill.values()) {
             double xp = Skills.xp(profile, skill);
-            ItemStack stack = menuItem(skill.icon(), "&a" + SkillText.named(skill, skill.level(xp)), lore(skill, xp));
+            int cap = Skills.cap(profile, skill);
+            ItemStack stack = menuItem(skill.icon(), "&a" + SkillText.named(skill, skill.level(xp, cap)), lore(skill, xp, cap));
             set(GUIClickableItem.button(slot(skill), stack, viewer, () -> new SkillMenu(viewer, skill).open(viewer)));
         }
         ItemStack head = menuItem(Material.PLAYER_HEAD, "&aDungeoneering", List.of("&7Complete Dungeons to level up your",
@@ -80,16 +81,21 @@ public final class SkillsMenu extends GUI {
      * reached!" over a full bar with its XP (what mods read; the rest of that lore is UNKNOWN).
      */
     static List<String> lore(Skill skill, double xp) {
+        return lore(skill, xp, skill.cap());
+    }
+
+    /** {@link #lore(Skill, double)} under a profile's cap. */
+    static List<String> lore(Skill skill, double xp, int cap) {
         List<String> lore = new ArrayList<>(skill.description());
         lore.add("");
-        if (skill.maxed(xp)) {
+        if (skill.maxed(xp, cap)) {
             lore.add("&7Max Skill level reached!");
             lore.add(SkillText.strip(1) + " &e" + SkillText.number(xp));
         } else {
-            int next = skill.level(xp) + 1;
+            int next = skill.level(xp, cap) + 1;
             String roman = Utils.getRomanNumeral(next);
-            lore.add("&7Progress to Level " + roman + ": &e" + SkillText.percent(skill.progress(xp)) + "%");
-            lore.add(SkillText.bar(skill.progress(xp), skill.xpIntoLevel(xp), skill.xpFor(next)));
+            lore.add("&7Progress to Level " + roman + ": &e" + SkillText.percent(skill.progress(xp, cap)) + "%");
+            lore.add(SkillText.bar(skill.progress(xp, cap), skill.xpIntoLevel(xp, cap), skill.xpFor(next)));
             lore.add("");
             List<String> rewards = SkillRewards.lines(skill, next);
             lore.add("&7Level " + roman + (rewards.size() == 1 ? " Reward:" : " Rewards:"));

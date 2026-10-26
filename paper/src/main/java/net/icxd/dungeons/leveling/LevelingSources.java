@@ -37,4 +37,9 @@ public interface LevelingSources {
     default int petScore(Document profile) {
         return 0;
     }
+
+    /** How many times George has raised the profile's Taming cap: the Taming Cap Increases task. */
+    default int tamingCapIncreases(Document profile) {
+        return 0;
+    }
 }

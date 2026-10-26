@@ -28,6 +28,7 @@ import net.icxd.dungeons.OnlyOn;
 import net.icxd.dungeons.common.ServerType;
 import net.icxd.dungeons.npc.Npc;
 import net.icxd.dungeons.npc.NpcTable;
+import net.icxd.dungeons.pet.George;
 import net.icxd.dungeons.pet.Kat;
 
 /**
@@ -37,7 +38,8 @@ import net.icxd.dungeons.pet.Kat;
  * Banker}), the Farm Merchant his and then his shop ({@link FarmMerchant}), Marco and the Bartender
  * theirs for their quests ({@link Marco}, {@link Bartender}), Jacobus his and then his Accessory Bag
  * Upgrades ({@link Jacobus}), Madame Goldsworth hers and then the Museum ({@link MadameGoldsworth}), Bea her shop
- * ({@link Bea}), Kat hers and then the Pet Sitter ({@link Kat}); the rest stand there for now. Their
+ * ({@link Bea}), Kat hers and then the Pet Sitter ({@link Kat}), George his and then Offer Pets ({@link George}); the
+ * rest stand there for now. Their
  * chunks are kept loaded, since an NPC goes with its chunk. Main thread.
  */
 @OnlyOn({ServerType.LOBBY})
@@ -70,6 +72,7 @@ public final class HubNpcs {
                 case MadameGoldsworth.ID -> player -> MadameGoldsworth.click(plugin, player);
                 case Bea.ID -> Bea::click;
                 case Kat.ID -> player -> Kat.click(plugin, player);
+                case George.ID -> player -> George.click(plugin, player);
                 default -> HubTalk.of(npc).<Consumer<Player>>map(talk -> player -> talk.talk(plugin, player)).orElse(player -> {
                 });
             };

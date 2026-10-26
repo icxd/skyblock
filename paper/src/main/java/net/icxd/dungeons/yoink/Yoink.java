@@ -43,6 +43,7 @@ import net.icxd.dungeons.item.ItemBuilder;
 import net.icxd.dungeons.item.cost.essence.EssenceType;
 import net.icxd.dungeons.listeners.InventorySyncListener;
 import net.icxd.dungeons.menu.SkyBlockMenuItem;
+import net.icxd.dungeons.pet.George;
 import net.icxd.dungeons.pet.OwnedPet;
 import net.icxd.dungeons.pet.PetFollowers;
 import net.icxd.dungeons.pet.PetText;
@@ -609,11 +610,17 @@ public final class Yoink {
             if (out != null && out.isJsonPrimitive() && out.getAsBoolean()) active = pet.uuid();
         }
         Pets.yoinked(profile, pets, active);
+        JsonElement sacrificed = from.at("pets_data.pet_care.pet_types_sacrificed");
+        List<String> given = new ArrayList<>();
+        for (JsonElement type : sacrificed != null && sacrificed.isJsonArray() ? sacrificed.getAsJsonArray() : new JsonArray()) {
+            if (type.isJsonPrimitive()) given.add(type.getAsString());
+        }
+        George.yoinked(profile, given);
         PetFollowers.refresh(online);
         OwnedPet summoned = Pets.active(profile);
         done.put(YoinkPart.PETS, "Pets: " + plural(pets.size(), "pet") + (unknown > 0 ? " &8(" + unknown + " this plugin doesn't have)" : "")
                 + (summoned == null ? "" : "&7, " + PetText.colored(summoned, Pets.data()) + " &7out") + "&7, Pet Score &b"
-                + Pets.score(profile, Pets.data()));
+                + Pets.score(profile, Pets.data()) + (given.isEmpty() ? "" : "&7, " + plural(given.size(), "pet") + " given George"));
     }
 
     private static double number(JsonObject in, String key) {

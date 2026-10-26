@@ -92,6 +92,14 @@ it there are no pets (the log says so).
   is the wiki's three lines. She won't take a pet the data says she doesn't upgrade (the wiki's Bingo, Grandma Wolf,
   Kuudra, Montezuma, Wisps; the top rarity), one holding a Tier Boost, or one without the Taming level its new rarity
   takes (1, 5, 10, 20, 25).
+- **George** (the Hub's Pet Care): Offer Pets as recorded, the same pet slot as Kat's. Offer a Pet becomes Accept
+  Offer with his price for the pet's rarity (the data's George prices: "&6250 Coins" for an Uncommon Bee), then Confirm
+  Sale ("&7Giving: &aBee", "&7Receiving: &6250 Coins") and "&aYou sold your &7[Lvl 4] &aBee to &eGeorge &afor &6250
+  Coins&a!" with a pling; at most 50,000,000 coins a day (the wiki's). +1 Taming Level Cap lists the pets he still
+  wants (the wiki's ten, each at its least rarity or better); one given raises the profile's Taming cap by one (to
+  60), says his lines for it (the wiki's, and its six more for the last) and counts for SkyBlock Leveling's Taming Cap
+  Increases (+10 SkyBlock XP). A skill's cap is now the profile's (`Skills.cap`): its menus, tab lines and level-ups
+  use it, and XP past the old cap counts once it rises. The first talk is the wiki's three lines.
 - `/givepet BEE [RARITY] [LEVEL] [XP]`: a pet as an item, for staff (not a Sandbox tool).
 
 ## Abilities
@@ -196,6 +204,11 @@ are three).
   "not ready yet" lines' timing (a second apart); a remaining time of more than one unit ("1 day 4 hours"); the pet's
   name in its old rarity's colour after the upgrade; her time not dropping with the pet's level; the call ringing once,
   when the pet is ready (checked every second; Hypixel's came 2.7 s after).
+- **George**: how a pet is given him (never recorded: with one he wants in the slot, +1 Taming Level Cap says "&eClick
+  to donate your pet!", and Confirm Donation asks first, as Confirm Sale does); the cap item with none left ("  &aNone");
+  his voice (a villager's) and his lines' timing (a second apart); what he shows for a pet he doesn't buy (a barrier,
+  "&7George won't buy this pet!") and past the daily limit ("&cGeorge can't buy any more pets today!"); a sold or given
+  pet's held item coming back to you; his price going by the pet's own rarity, not a Tier Boost's.
 
 ## Not done
 
@@ -204,7 +217,7 @@ are three).
   Lotus Crown, the Brown Bandana (pests), Bubblegum (Deployables), the Titanium Minecart (no Titanium), the Four-Eyed
   Fish's coins (Griffin Burrows) and the Rubber Snorkel's double on Foraging Islands.
 - **Exp Sharing** (a click does nothing), **Search** (nothing), Autopet, pet skins (kept, not shown), Pet Candy (shown,
-  not used), George, Fann.
+  not used), Fann.
 - Kat Flowers and Bouquets (and the Enchanted Clock's hour), and her Abiphone contact.
 - The Daedalus Blades' Damage and Magic Find on Mythological mobs (Diana's), and their Damage line showing the Taming
   levels' (it counts, but the lore shows the item's own).

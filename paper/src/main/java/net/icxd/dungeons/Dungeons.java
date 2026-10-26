@@ -100,6 +100,7 @@ import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
+import net.icxd.dungeons.pet.George;
 import net.icxd.dungeons.pet.HeldItemEffects;
 import net.icxd.dungeons.pet.PetCopies;
 import net.icxd.dungeons.pet.PetFollowers;
@@ -230,6 +231,11 @@ public class Dungeons extends JavaPlugin {
             @Override
             public int petScore(Document profile) {
                 return Pets.bestScore(profile);
+            }
+
+            @Override
+            public int tamingCapIncreases(Document profile) {
+                return George.sacrificed(profile).size();
             }
         });
         // SkyBlock Leveling's tasks and rewards, from the same data (leveling/leveling.json), read off the main thread.
