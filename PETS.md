@@ -36,10 +36,8 @@ it there are no pets (the log says so).
     next, a right click the one before, with the recorded lever click. Visibility: Show all pets, Hide all pets,
     Only your pet (a left click the next, as recorded), and a right click toggles name tags, with the recorded pling.
     Both are kept with the profile.
-- **Summoned pets** follow their owner: a small invisible marker armor stand wearing the pet's head, and the name just
-  over it, "&8[&7Lv91&8] &6Mithril Golem" (others see "Bea's Bee", as Bea's was). Hypixel's stand is full-size and
-  holds the head in its right hand (recorded); a small one wearing it looks nicer. The name is on a marker stand of
-  its own, where the small stand's own name would be if it had a hitbox (a marker's shows under its head). It goes
+- **Summoned pets** follow their owner, as recorded: an invisible marker armor stand holding the pet's head in its
+  right hand, and the name over it, "&8[&7Lv91&8] &6Mithril Golem" (others see "Bea's Bee", as Bea's was). It goes
   after you faster the farther it is, stops short of you, faces you, and bobs 0.55 up and down standing near you. It
   comes along to another world, catches up from far, and is out again when you come back.
 - **Stats**: the summoned pet's at its level, its held item's ("Grants &f+10❂ True Defense", in the pet's True Defense
@@ -226,10 +224,11 @@ are three).
 - **Pet items**: the lines' colours; "already holding" ("&cYour pet is already holding this item!") and too few coins
   ("&cYou don't have enough coins!"); Swap Pet Item's Cancel (hidden under the screenshot's tooltip) and the Super
   Scrubber's menu (this one: "Confirm Removal", "Remove ... from your pet."); anything rarer than Divine costing
-  Divine's; looking at the head (its middle 0.75 over the stand's feet, 0.45 to either side); a hidden pet taking none;
-  the stat lines showing a share item's stats; the Pet Score counting a Tier Boost's rarity; Unalloyed Speed's +50 not
-  adding to a Black Cat's +100 (the most counts, as the speed caps here do); a Reaper Gem kill starting its 5s again.
-  The wiki's "it will always consume the item in the slot closest to the first" isn't copied: it's the one in your hand.
+  Divine's; looking at the head (where vanilla's models draw it in the stand's hand: 1.03 up, 0.425 back and 0.2 to its
+  left; 0.45 to either side); a hidden pet taking none; the stat lines showing a share item's stats; the Pet Score
+  counting a Tier Boost's rarity; Unalloyed Speed's +50 not adding to a Black Cat's +100 (the most counts, as the speed
+  caps here do); a Reaper Gem kill starting its 5s again. The wiki's "it will always consume the item in the slot
+  closest to the first" isn't copied: it's the one in your hand.
   The wiki says a Minos Relic "does not increase the perks of a pet" (the Black Cat's Magic Find); here it increases the
   data's stat lines, the Black Cat's included.
 - **Kat**: answering her call is talking to her, on the phone ("&b✆ &f" after her name, as her Abiphone lines have it),
