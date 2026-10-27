@@ -75,7 +75,8 @@ Each part replaces that part of the profile you play on:
   API doesn't say which, so here they're on no island and the Hub's can be found again (FAIRY_SOULS.md).
 - **Pets**: the Pets menu's pets (`pets_data.pets`: each one's type, rarity, XP, held item, candy and skin) in place
   of yours, and the one out (`active`); the highest Pet Score goes up to theirs if it's higher (PETS.md). A pet the
-  pets data doesn't have is listed as not brought over.
+  pets data doesn't have is listed as not brought over. The pets given George (`pets_data.pet_care.pet_types_sacrificed`,
+  each one a Taming level over 50) in place of yours.
 
 **Items** (`HypixelItems`). The API's items are base64 of gzipped Minecraft 1.8 NBT, read by `Nbt`. Each
 becomes the item of the same SkyBlock id (`ExtraAttributes.id`), with what was done to it written the way

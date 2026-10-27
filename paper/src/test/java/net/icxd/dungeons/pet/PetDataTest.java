@@ -96,5 +96,11 @@ class PetDataTest {
         Pet dragon = data.pet("GOLDEN_DRAGON");
         assertEquals(200, data.maxLevel(dragon));
         assertEquals(214_023_230, data.totalXp(dragon, Rarity.LEGENDARY, 200));
+        // Kat's, as recorded: "for 1 minute", "Cost: Small Honey Dipper"; George's: "for 250 Coins" for an Uncommon one.
+        PetData.KatUpgrade kat = bee.variant(Rarity.COMMON).katUpgrade();
+        assertEquals(60, kat.seconds());
+        assertEquals(0, kat.coins());
+        assertEquals(List.of(new PetData.ItemCost("SMALL_HONEY_DIPPER", 1)), kat.items());
+        assertEquals(250, bee.variant(Rarity.UNCOMMON).george());
     }
 }

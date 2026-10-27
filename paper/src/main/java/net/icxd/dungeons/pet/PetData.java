@@ -52,15 +52,36 @@ public final class PetData {
 
     /**
      * A pet at one rarity: its name (as the pet's, unless it's another at this rarity), its head's skin, its stats and
-     * numbers by level, its text ({@code {n}} in a paragraph is {@code numbers.get(n)}), and whether Kat can upgrade it.
+     * numbers by level, its text ({@code {n}} in a paragraph is {@code numbers.get(n)}), whether Kat can upgrade it ("Can
+     * be upgraded at Kat in The Hub!"), what that takes (null where it's unknown), and what George pays for it (0: he
+     * doesn't buy it, or it's unknown).
      */
     public record Variant(Rarity rarity, String name, String texture, Map<Stat, Formula> stats, List<Formula> numbers,
-                          List<Block> blocks, boolean kat) {
+                          List<Block> blocks, boolean kat, KatUpgrade katUpgrade, long george) {
         public Variant {
             stats = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(stats));
             numbers = List.copyOf(numbers);
             blocks = List.copyOf(blocks);
         }
+
+        public Variant(Rarity rarity, String name, String texture, Map<Stat, Formula> stats, List<Formula> numbers, List<Block> blocks,
+                       boolean kat) {
+            this(rarity, name, texture, stats, numbers, blocks, kat, null, 0);
+        }
+    }
+
+    /**
+     * What Kat takes to upgrade a pet at one rarity to the next (the wiki's Kat/Costs): how long, how many coins (less
+     * 0.3% a pet level, see Kat), and which items.
+     */
+    public record KatUpgrade(long seconds, long coins, List<ItemCost> items) {
+        public KatUpgrade {
+            items = List.copyOf(items);
+        }
+    }
+
+    /** So many of an item, by its id. */
+    public record ItemCost(String id, int amount) {
     }
 
     /**
@@ -86,11 +107,22 @@ public final class PetData {
         }
     }
 
+    /**
+     * A pet skin (NEU's PET_SKIN_ items; a pet's {@code skin} is its id, the item's less "PET_SKIN_"): its name ("Void
+     * Conqueror Enderman Skin"), the name it shows on a pet ("Void Conqueror"), its rarity's name ("EPIC", an Ultimate's
+     * too) and colour code, its head, and the pets it's for.
+     */
+    public record Skin(String id, String name, String shortName, String rarity, char color, String texture, List<String> pets) {
+        public Skin {
+            pets = List.copyOf(pets);
+        }
+    }
+
     /** A Pet Score threshold and the Magic Find it gives ("&650 Score&8: +&b3 Magic Find"). */
     public record Reward(int score, int magicFind) {
     }
 
-    private static final PetData EMPTY = new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of());
+    private static final PetData EMPTY = new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of(), Map.of());
 
     private final Map<String, Pet> pets;
     private final long[] levels;
@@ -100,9 +132,10 @@ public final class PetData {
     private final int scoreMaxLevel;
     private final List<Reward> scoreRewards;
     private final List<String> problems;
+    private final Map<String, Skin> skins;
 
     PetData(Map<String, Pet> pets, long[] levels, Map<Rarity, Integer> rarityOffset, int maxLevel, Map<Rarity, Integer> scoreRarity,
-            int scoreMaxLevel, List<Reward> scoreRewards, List<String> problems) {
+            int scoreMaxLevel, List<Reward> scoreRewards, List<String> problems, Map<String, Skin> skins) {
         this.pets = pets;
         this.levels = levels;
         this.rarityOffset = rarityOffset;
@@ -111,6 +144,7 @@ public final class PetData {
         this.scoreMaxLevel = scoreMaxLevel;
         this.scoreRewards = List.copyOf(scoreRewards);
         this.problems = List.copyOf(problems);
+        this.skins = Map.copyOf(skins);
     }
 
     public static PetData empty() {
@@ -129,7 +163,7 @@ public final class PetData {
     }
 
     private static PetData withProblem(String problem) {
-        return new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of(problem));
+        return new PetData(Map.of(), new long[0], Map.of(), 100, Map.of(), 0, List.of(), List.of(problem), Map.of());
     }
 
     static PetData parse(JsonObject json) {
@@ -156,7 +190,21 @@ public final class PetData {
                 problems.add(entry.getKey() + ": left out (" + e + ")");
             }
         }
-        return new PetData(pets, levels, offsets, maxLevel, scoreRarity, scoreMaxLevel, rewards, problems);
+        Map<String, Skin> skins = new LinkedHashMap<>();
+        JsonObject allSkins = object(json, "skins");
+        for (Map.Entry<String, JsonElement> entry : allSkins == null ? List.<Map.Entry<String, JsonElement>>of() : allSkins.entrySet()) {
+            try {
+                JsonObject skin = entry.getValue().getAsJsonObject();
+                List<String> forPets = new ArrayList<>();
+                for (JsonElement pet : array(skin, "pets")) forPets.add(pet.getAsString());
+                String color = string(skin, "color");
+                skins.put(entry.getKey(), new Skin(entry.getKey(), string(skin, "name"), string(skin, "short"), string(skin, "rarity"),
+                        color == null || color.isEmpty() ? 'f' : color.charAt(0), string(skin, "texture"), forPets));
+            } catch (RuntimeException e) {
+                problems.add("skin " + entry.getKey() + ": left out (" + e + ")");
+            }
+        }
+        return new PetData(pets, levels, offsets, maxLevel, scoreRarity, scoreMaxLevel, rewards, problems, skins);
     }
 
     private static Pet pet(String id, JsonObject json, List<String> problems) {
@@ -206,8 +254,19 @@ public final class PetData {
             for (JsonElement line : array(block, "text")) text.add(line.getAsString());
             blocks.add(new Block(string(block, "name"), text));
         }
+        KatUpgrade upgrade = null;
+        JsonObject kat = object(json, "kat_upgrade");
+        if (kat != null) {
+            List<ItemCost> items = new ArrayList<>();
+            for (JsonElement item : array(kat, "items")) {
+                JsonArray pair = item.getAsJsonArray();
+                items.add(new ItemCost(pair.get(0).getAsString(), pair.get(1).getAsInt()));
+            }
+            upgrade = new KatUpgrade(kat.has("seconds") ? kat.get("seconds").getAsLong() : 0, kat.has("coins") ? kat.get("coins").getAsLong() : 0,
+                    items);
+        }
         return new Variant(rarity, string(json, "name"), string(json, "texture"), stats, numbers, blocks,
-                json.has("kat") && json.get("kat").getAsBoolean());
+                json.has("kat") && json.get("kat").getAsBoolean(), upgrade, json.has("george") ? json.get("george").getAsLong() : 0);
     }
 
     private static Formula formula(JsonObject json, int decimals) {
@@ -219,6 +278,11 @@ public final class PetData {
 
     public Pet pet(String id) {
         return id == null ? null : pets.get(id.toUpperCase(Locale.ROOT));
+    }
+
+    /** A skin by its id (a pet's {@code skin}); null if there's none. */
+    public Skin skin(String id) {
+        return id == null ? null : skins.get(id.toUpperCase(Locale.ROOT));
     }
 
     public Collection<Pet> pets() {

@@ -139,7 +139,7 @@ public final class Damage {
     }
 
     /** What one enchantment adds to this hit, in percent (0 for enchantments that add nothing to damage). */
-    static double enchantment(String id, int level, Attacker attacker, Target target) {
+    public static double enchantment(String id, int level, Attacker attacker, Target target) {
         boolean melee = !attacker.ranged();
         return switch (id) {
             case "sharpness" -> melee ? at(SHARPNESS, level) : 0;

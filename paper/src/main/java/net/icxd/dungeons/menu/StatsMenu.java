@@ -48,7 +48,7 @@ public final class StatsMenu extends GUI {
      * recording's order, with the stats it didn't have (at 0) placed as the fandom wiki's Stats page
      * lists them; Charm Chance and Mining Spread, which it had, aren't stats here yet.
      */
-    enum Category {
+    public enum Category {
         COMBAT(14, Material.STONE_SWORD, "&cCombat Stats", List.of("&7Stats that influence how much", "&7damage you take and deal when in",
                 "&7combat."), HEALTH, DEFENSE, TRUE_DEFENSE, STRENGTH, CRIT_CHANCE, CRIT_DAMAGE, ATTACK_SPEED, FEROCITY, SWING_RANGE,
                 INTELLIGENCE, ABILITY_DAMAGE, HEALTH_REGEN, VITALITY, MENDING),
@@ -82,6 +82,11 @@ public final class StatsMenu extends GUI {
             this.name = name;
             this.description = description;
             this.stats = List.of(stats);
+        }
+
+        /** Its stats, in the menu's order (a pet's "all Combat stats" are these). */
+        public List<Stat> stats() {
+            return stats;
         }
     }
 

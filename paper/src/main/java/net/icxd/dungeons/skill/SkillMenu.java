@@ -92,8 +92,8 @@ public final class SkillMenu extends GUI {
     // The menu
 
     /** The level whose progress is shown: the next one, or the last once maxed. */
-    private static int current(Skill skill, double xp) {
-        return Math.min(skill.level(xp) + 1, skill.cap());
+    private static int current(Skill skill, double xp, int cap) {
+        return Math.min(skill.level(xp, cap) + 1, cap);
     }
 
     @Override
@@ -107,16 +107,16 @@ public final class SkillMenu extends GUI {
         User user = User.ifLoaded(viewer.getUniqueId());
         if (user == null) return;
         double xp = Skills.xp(user.profile(), skill);
-        int levels = skill.cap();
-        int centre = centred(current(skill, xp), levels);
+        int levels = Skills.cap(user.profile(), skill);
+        int centre = centred(current(skill, xp, levels), levels);
         if (offset < 0) offset = centre;
         offset = Math.max(0, Math.min(offset, maxOffset(levels)));
 
         int header = slot(ROWS - 1, 0, offset);
-        if (header >= 0) set(header, SkillsMenu.menuItem(skill.icon(), "&a" + skill.getName() + " Skill", header(skill, xp)));
+        if (header >= 0) set(header, SkillsMenu.menuItem(skill.icon(), "&a" + skill.getName() + " Skill", header(skill, xp, levels)));
         for (int level = 1; level <= levels; level++) {
             int slot = levelSlot(level, offset);
-            if (slot >= 0) set(slot, levelItem(skill, level, xp));
+            if (slot >= 0) set(slot, levelItem(skill, level, xp, levels));
         }
 
         if (skill == Skill.COMBAT) {
@@ -153,15 +153,19 @@ public final class SkillMenu extends GUI {
 
     /** The skill's own item: its progress and its perk now (none at level 0). */
     static List<String> header(Skill skill, double xp) {
+        return header(skill, xp, skill.cap());
+    }
+
+    static List<String> header(Skill skill, double xp, int cap) {
         List<String> lore = new ArrayList<>(skill.description());
         lore.add("");
-        int level = skill.level(xp);
-        if (skill.maxed(xp)) {
+        int level = skill.level(xp, cap);
+        if (skill.maxed(xp, cap)) {
             lore.add("&7Max Skill level reached!");
             lore.add(SkillText.strip(1) + " &e" + SkillText.number(xp));
         } else {
-            lore.add("&7Progress to Level " + Utils.getRomanNumeral(level + 1) + ": &e" + SkillText.percent(skill.progress(xp)) + "%");
-            lore.add(SkillText.bar(skill.progress(xp), skill.xpIntoLevel(xp), skill.xpFor(level + 1)));
+            lore.add("&7Progress to Level " + Utils.getRomanNumeral(level + 1) + ": &e" + SkillText.percent(skill.progress(xp, cap)) + "%");
+            lore.add(SkillText.bar(skill.progress(xp, cap), skill.xpIntoLevel(xp, cap), skill.xpFor(level + 1)));
         }
         String perk = SkillRewards.perkName(skill);
         if (perk != null && level > 0) {
@@ -180,14 +184,15 @@ public final class SkillMenu extends GUI {
      * A level on the path: green glass once reached (a diamond helmet every fifth level), yellow for the
      * one in progress (with its progress), red past it; as many as the level.
      */
-    static ItemStack levelItem(Skill skill, int level, double xp) {
-        int reached = skill.level(xp);
+    static ItemStack levelItem(Skill skill, int level, double xp, int cap) {
+        int reached = skill.level(xp, cap);
         boolean done = level <= reached;
         boolean next = level == reached + 1;
         Material material = done ? (level % 5 == 0 ? Material.DIAMOND_HELMET : Material.LIME_STAINED_GLASS_PANE)
                 : next ? Material.YELLOW_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
         String color = done ? "&a" : next ? "&e" : "&c";
-        ItemStack stack = SkillsMenu.menuItem(material, color + skill.getName() + " Level " + Utils.getRomanNumeral(level), levelLore(skill, level, xp));
+        ItemStack stack = SkillsMenu.menuItem(material, color + skill.getName() + " Level " + Utils.getRomanNumeral(level),
+                levelLore(skill, level, xp, cap));
         // A helmet only stacks to 1, and a stack past its item's limit can't be sent.
         stack.setData(DataComponentTypes.MAX_STACK_SIZE, 64);
         stack.setAmount(level);
@@ -195,17 +200,21 @@ public final class SkillMenu extends GUI {
     }
 
     static List<String> levelLore(Skill skill, int level, double xp) {
+        return levelLore(skill, level, xp, skill.cap());
+    }
+
+    static List<String> levelLore(Skill skill, int level, double xp, int cap) {
         List<String> lore = new ArrayList<>();
         lore.add("&7Rewards:");
         for (String line : SkillRewards.lines(skill, level)) lore.add("  " + line);
-        int reached = skill.level(xp);
+        int reached = skill.level(xp, cap);
         if (level <= reached) {
             lore.add("");
             lore.add("&a&lUNLOCKED");
         } else if (level == reached + 1) {
             lore.add("");
-            lore.add("&7Progress: &e" + SkillText.percent(skill.progress(xp)) + "%");
-            lore.add(SkillText.bar(skill.progress(xp), skill.xpIntoLevel(xp), skill.xpFor(level)));
+            lore.add("&7Progress: &e" + SkillText.percent(skill.progress(xp, cap)) + "%");
+            lore.add(SkillText.bar(skill.progress(xp, cap), skill.xpIntoLevel(xp, cap), skill.xpFor(level)));
         }
         return lore;
     }

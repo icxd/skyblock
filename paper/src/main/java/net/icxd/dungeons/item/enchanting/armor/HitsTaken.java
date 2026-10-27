@@ -186,7 +186,7 @@ final class HitsTaken {
      * hit or vanilla damage that takes them from 40% or more to below it (not a killing one). The pieces' add up
      * (the wiki: it "will stack across multiple armor pieces"); one cooldown for them all (UNKNOWN), kept with
      * their ability cooldowns. The Defense is a share of their Defense as the rest makes it
-     * ({@link PlayerSession#buffPercent}).
+     * ({@link PlayerSession#buffPercent}); what makes it more effective makes both more ({@link ArmorEnchants#addLastStandBoost}).
      */
     static void lastStand(Player player, List<WornEnchants.Piece> pieces, double before, double after) {
         double defense = 0;
@@ -205,8 +205,9 @@ final class HitsTaken {
         PlayerSession session = PlayerSession.of(player);
         if (session.cooldownLeft(LAST_STAND_KEY) > 0) return;
         session.startCooldown(LAST_STAND_KEY, (long) (rules[4] * 1000));
-        session.buffPercent(LAST_STAND_KEY, Stat.DEFENSE, defense, (long) (rules[2] * 1000));
-        session.setVitality(Math.min(Vitality.max(player), Vitality.get(player) + vitality));
+        double boost = 1 + ArmorEnchants.lastStandBoost(player) / 100;
+        session.buffPercent(LAST_STAND_KEY, Stat.DEFENSE, defense * boost, (long) (rules[2] * 1000));
+        session.setVitality(Math.min(Vitality.max(player), Vitality.get(player) + vitality * boost));
     }
 
     /** Whether their health went from at least {@code share} of {@code max} to below it, and they're alive. */

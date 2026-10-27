@@ -6,11 +6,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 import org.bson.Document;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.icxd.dungeons.item.behaviour.ItemBehaviours;
@@ -19,6 +21,7 @@ import net.icxd.dungeons.pet.PetData.Formula;
 import net.icxd.dungeons.pet.PetData.Pet;
 import net.icxd.dungeons.pet.PetData.Reward;
 import net.icxd.dungeons.pet.PetData.Variant;
+import net.icxd.dungeons.pet.ability.PetAbilities;
 import net.icxd.dungeons.skill.SkillGains;
 import net.icxd.dungeons.stats.Stat;
 import net.icxd.dungeons.stats.Stats;
@@ -40,6 +43,8 @@ public final class Pets {
     static final String BEST_SCORE = "bestScore";
     /** "Current Max Pets: 112", and "+28 Pet Slots" (5,000 Bits) twice more (the wiki's Pets). */
     public static final int SLOTS = 112;
+    /** The pets a Tier Boost does nothing for (the wiki's Pet Items; SkyCrypt's {@code ignoresTierBoost}). */
+    static final Set<String> NO_TIER_BOOST = Set.of("GRIFFIN", "DROPLET_WISP", "FROST_WISP", "GLACIAL_WISP", "SUBZERO_WISP");
     public static final int SLOTS_PER_UPGRADE = 28;
     public static final int MOST_UPGRADES = 2;
     public static final int UPGRADE_BITS = 5_000;
@@ -57,6 +62,10 @@ public final class Pets {
         ItemBehaviours.register(PetItems.ID, new PetItems());
         SkillGains.addGainListener(PetXp::gained);
         PetFollowers.start(plugin);
+        Kat.start(plugin);
+        Fann.start(plugin);
+        George.enable();
+        Autopet.enable();
         Logger log = plugin.getLogger();
         Path folder = plugin.getDataFolder().toPath();
         CompletableFuture.supplyAsync(() -> PetData.load(folder)).thenAccept(loaded -> Bukkit.getScheduler().runTask(plugin, () -> {
@@ -64,6 +73,7 @@ public final class Pets {
             data = loaded;
             if (loaded.count() > 0) {
                 log.info("Pets: " + loaded.count() + " pets, " + loaded.scoreRewards().size() + " Pet Score rewards");
+                PetAbilities.problems(loaded).forEach(p -> log.warning("Pet abilities: " + p));
                 PetFollowers.refreshAll();
             }
         }));
@@ -120,7 +130,7 @@ public final class Pets {
         }
     }
 
-    private static Document part(Document profile, boolean make) {
+    static Document part(Document profile, boolean make) {
         Document pets = profile == null ? null : profile.get(FIELD, Document.class);
         if (pets == null && make) {
             pets = new Document();
@@ -202,7 +212,7 @@ public final class Pets {
         return true;
     }
 
-    /** Takes one out of the menu (despawned, if it was out); null if it isn't there. */
+    /** Takes one out of the menu (despawned, if it was out, and out of its Exp Share slot); null if it isn't there. */
     public static OwnedPet remove(Document profile, String uuid) {
         List<OwnedPet> pets = pets(profile);
         OwnedPet found = null;
@@ -210,6 +220,7 @@ public final class Pets {
         if (found == null) return null;
         pets.remove(found);
         set(profile, pets);
+        ExpSharing.forget(profile, uuid);
         return found;
     }
 
@@ -278,7 +289,7 @@ public final class Pets {
 
     private static String name(OwnedPet pet, PetData data) {
         Pet kind = data.pet(pet.type());
-        return kind == null ? pet.type() : kind.name(pet.tier());
+        return kind == null ? pet.type() : kind.name(tier(pet, data));
     }
 
     private static String skill(OwnedPet pet, PetData data) {
@@ -286,10 +297,45 @@ public final class Pets {
         return kind == null || kind.kind() == null ? "~" : kind.kind();
     }
 
-    // Levels
+    // Rarity and levels
+
+    /**
+     * The rarity a pet is as: its own, or as many more as its held item raises it (the Tier Boost's 1, "until the Pet Item
+     * held by the Pet is changed", the wiki's Pets), up to Legendary ("It cannot increase a Rarity to Mythic"), to a
+     * rarity its type has, and none for the Griffin and the Wisps ("Does not work on the Griffin Pet or the Wisp Pet").
+     * Everything goes by it but its item's {@code petInfo} and Kat, which keep its own.
+     */
+    public static Rarity tier(OwnedPet pet, PetData data) {
+        int tiers = HeldItems.effect(pet.heldItem()).tiers();
+        if (tiers <= 0 || NO_TIER_BOOST.contains(pet.type())) return pet.tier();
+        Pet kind = data.pet(pet.type());
+        Rarity tier = pet.tier();
+        for (int i = 0; i < tiers && tier.compareTo(Rarity.LEGENDARY) < 0; i++) {
+            Rarity next = tier.upgrade();
+            if (kind == null || kind.variant(next) == null) break;
+            tier = next;
+        }
+        return tier;
+    }
+
+    /** Its level: its XP on the table of the rarity it's as (see {@link #tier}). */
+    /** Its skin, if it has one the data knows and that's for its type; null otherwise. */
+    public static PetData.Skin skin(OwnedPet pet, PetData data) {
+        PetData.Skin skin = data.skin(pet.skin());
+        return skin != null && skin.pets().contains(pet.type()) ? skin : null;
+    }
+
+    /** Its head's skin: its skin's, else its rarity's (a Tier Boost's, see {@link #tier}); null for none. */
+    public static String texture(OwnedPet pet, PetData data) {
+        PetData.Skin skin = skin(pet, data);
+        if (skin != null && skin.texture() != null) return skin.texture();
+        Pet kind = data.pet(pet.type());
+        Variant variant = kind == null ? null : kind.variant(tier(pet, data));
+        return variant == null ? null : variant.texture();
+    }
 
     public static int level(OwnedPet pet, PetData data) {
-        return data.level(data.pet(pet.type()), pet.tier(), pet.exp());
+        return data.level(data.pet(pet.type()), tier(pet, data), pet.exp());
     }
 
     public static boolean maxed(OwnedPet pet, PetData data) {
@@ -306,16 +352,19 @@ public final class Pets {
     public static int score(List<OwnedPet> pets, PetData data) {
         Map<String, OwnedPet> best = new HashMap<>();
         for (OwnedPet pet : pets) {
-            if (data.pet(pet.type()) == null || data.scoreOf(pet.tier()) == 0) continue;
+            if (data.pet(pet.type()) == null || data.scoreOf(tier(pet, data)) == 0) continue;
             best.merge(pet.type(), pet, (a, b) -> better(a, b, data));
         }
         int score = 0;
-        for (OwnedPet pet : best.values()) score += data.scoreOf(pet.tier()) + (maxed(pet, data) ? data.scoreMaxLevel() : 0);
+        for (OwnedPet pet : best.values()) score += data.scoreOf(tier(pet, data)) + (maxed(pet, data) ? data.scoreMaxLevel() : 0);
         return score;
     }
 
-    private static OwnedPet better(OwnedPet a, OwnedPet b, PetData data) {
-        if (a.tier() != b.tier()) return a.tier().compareTo(b.tier()) > 0 ? a : b;
+    /** The better of two pets of a type: the higher rarity, then the higher level (the first, if they're the same). */
+    public static OwnedPet better(OwnedPet a, OwnedPet b, PetData data) {
+        Rarity at = tier(a, data);
+        Rarity bt = tier(b, data);
+        if (at != bt) return at.compareTo(bt) > 0 ? a : b;
         return level(a, data) >= level(b, data) ? a : b;
     }
 
@@ -350,7 +399,7 @@ public final class Pets {
     public static Stats stats(OwnedPet pet, PetData data) {
         Stats stats = new Stats();
         Pet kind = pet == null ? null : data.pet(pet.type());
-        Variant variant = kind == null ? null : kind.variant(pet.tier());
+        Variant variant = kind == null ? null : kind.variant(tier(pet, data));
         if (variant == null) return stats;
         int level = level(pet, data);
         if (level < kind.statsFrom()) return stats;
@@ -358,16 +407,61 @@ public final class Pets {
         return stats;
     }
 
-    /** What the profile's pets give its stats: the summoned one's and its held item's, and the Pet Score's Magic Find. */
+    /**
+     * A pet's stats with its held item's (see {@link HeldItems#granted}), as its lore shows them: the Dwarf Turtle Shelmet's
+     * +10 True Defense is in its True Defense line (recorded), a Minos Relic's third more in each (UNKNOWN whether the
+     * lore shows those).
+     */
+    public static Stats withItem(OwnedPet pet, PetData data) {
+        Stats base = stats(pet, data);
+        return base.copy().add(HeldItems.granted(pet.heldItem(), base, level(pet, data)));
+    }
+
+    /**
+     * A pet's own stats for its owner (null for none known): at its level, twice that with what they wear that doubles
+     * them (the Bee Mask's "Double the base pet stats of your active Bee pet", see PetCopies).
+     */
+    static Stats base(Player owner, OwnedPet pet, PetData data) {
+        Stats base = stats(pet, data);
+        Pet kind = data.pet(pet.type());
+        if (owner == null || kind == null || !PetCopies.doubled(owner, kind.name(tier(pet, data)))) return base;
+        for (Stat stat : Stat.values()) if (base.has(stat)) base.set(stat, base.get(stat) * 2);
+        return base;
+    }
+
+    /**
+     * What copies of a pet's stats copy (Chimera, the Manticore Claw, the Daedalus Blades, see PetCopies): its own (see
+     * {@link #base}) and its held item's, not what its abilities give it ("It does not copy stats granted by pet
+     * abilities, but it does copy stats added to the pet's base stats by Pet Items", the wiki's Chimera).
+     */
+    public static Stats copyable(Player owner, OwnedPet pet, PetData data) {
+        Stats base = base(owner, pet, data);
+        return base.copy().add(HeldItems.granted(pet.heldItem(), base, level(pet, data)));
+    }
+
+    /**
+     * A pet's stats as they count for its owner (null for none known): its own (see {@link #base}), its held item's, and
+     * what its abilities give it ("to your pet", see PetAbility#petStats).
+     */
+    public static Stats petStats(Player owner, OwnedPet pet, PetData data) {
+        Stats base = base(owner, pet, data);
+        Stats stats = base.copy().add(HeldItems.granted(pet.heldItem(), base, level(pet, data)));
+        if (owner != null) PetAbilities.petStats(owner, pet, base, stats);
+        return stats;
+    }
+
+    /** What the profile's pets give its stats, with no player to ask (see {@link #stats(Player, Document)}). */
     public static Stats stats(Document profile) {
+        return stats(null, profile);
+    }
+
+    /** What the profile's pets give a player's stats: the summoned one's (see {@link #petStats}), and the Pet Score's Magic Find. */
+    public static Stats stats(Player player, Document profile) {
         PetData data = data();
         Stats stats = new Stats();
         if (profile == null || data.count() == 0) return stats;
         OwnedPet active = active(profile);
-        if (active != null) {
-            stats.add(stats(active, data));
-            stats.add(HeldItems.stats(active.heldItem()));
-        }
+        if (active != null) stats.add(petStats(player, active, data));
         int magicFind = magicFind(score(profile, data), data);
         if (magicFind > 0) stats.add(Stat.MAGIC_FIND, magicFind);
         return stats;

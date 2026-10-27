@@ -23,10 +23,12 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.ToDoubleFunction;
 
 /**
  * Armor and equipment enchantments that do more than their text's plain stats (ENCHANTS_ARMOR.md), and the armor
@@ -39,6 +41,8 @@ import java.util.UUID;
  */
 public final class ArmorEnchants implements Listener {
     static final String TRANSYLVANIAN = "transylvanian";
+    /** What makes Last Stand more effective, in percent (see {@link #addLastStandBoost}). */
+    private static final List<ToDoubleFunction<Player>> LAST_STAND_BOOSTS = new ArrayList<>();
 
     /** Their health as vanilla damage reaches them, for Last Stand (see {@link #onDamageBefore}). */
     private final Map<UUID, Double> healthBefore = new HashMap<>();
@@ -46,6 +50,22 @@ public final class ArmorEnchants implements Listener {
 
     private ArmorEnchants(Plugin plugin) {
         this.plugin = plugin;
+    }
+
+    /**
+     * Adds what makes a player's Last Stand more effective, in percent: its Defense and Vitality that much more (the
+     * Ankylosaurus pet's "Increase the effectiveness of Last Stand and Lifeline by 50%"; UNKNOWN which of its parts it
+     * means). They add up.
+     */
+    public static void addLastStandBoost(ToDoubleFunction<Player> percent) {
+        LAST_STAND_BOOSTS.add(percent);
+    }
+
+    /** How many percent more effective their Last Stand is. */
+    static double lastStandBoost(Player player) {
+        double percent = 0;
+        for (ToDoubleFunction<Player> boost : LAST_STAND_BOOSTS) percent += boost.applyAsDouble(player);
+        return percent;
     }
 
     /**

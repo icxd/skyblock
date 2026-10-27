@@ -32,6 +32,7 @@ import net.icxd.dungeons.command.commands.admin.UnlockCommand;
 import net.icxd.dungeons.command.commands.admin.UpgradeCommand;
 import net.icxd.dungeons.command.commands.user.BackpackCommand;
 import net.icxd.dungeons.command.commands.user.BagsCommand;
+import net.icxd.dungeons.command.commands.user.CbCommand;
 import net.icxd.dungeons.command.commands.user.EnderChestCommand;
 import net.icxd.dungeons.command.commands.user.HexCommand;
 import net.icxd.dungeons.command.commands.user.HotmCommand;
@@ -70,6 +71,7 @@ import net.icxd.dungeons.menu.SkyBlockMenuItem;
 import net.icxd.dungeons.menu.SkyBlockMenuListener;
 import net.icxd.dungeons.mining.BlockListener;
 import net.icxd.dungeons.region.MovementListener;
+import net.icxd.dungeons.command.Callbacks;
 import net.icxd.dungeons.command.SCommand;
 import net.icxd.dungeons.database.collections.UserCollection;
 import net.icxd.dungeons.database.mongo.Settings;
@@ -98,9 +100,15 @@ import net.icxd.dungeons.npc.Npcs;
 import net.icxd.dungeons.mob.DropEnchants;
 import net.icxd.dungeons.economy.ExpBonuses;
 import net.icxd.dungeons.npc.Ophelia;
+import net.icxd.dungeons.pet.AutopetListener;
+import net.icxd.dungeons.pet.George;
+import net.icxd.dungeons.pet.HeldItemEffects;
+import net.icxd.dungeons.pet.PetCopies;
 import net.icxd.dungeons.pet.PetFollowers;
+import net.icxd.dungeons.pet.PetItemUse;
 import net.icxd.dungeons.pet.PetListener;
 import net.icxd.dungeons.pet.Pets;
+import net.icxd.dungeons.pet.ability.PetAbilities;
 import net.icxd.dungeons.profile.SandboxDrops;
 import net.icxd.dungeons.profile.SandboxStorage;
 import net.icxd.dungeons.rune.RuneRunnable;
@@ -225,6 +233,11 @@ public class Dungeons extends JavaPlugin {
             public int petScore(Document profile) {
                 return Pets.bestScore(profile);
             }
+
+            @Override
+            public int tamingCapIncreases(Document profile) {
+                return George.sacrificed(profile).size();
+            }
         });
         // SkyBlock Leveling's tasks and rewards, from the same data (leveling/leveling.json), read off the main thread.
         SkyBlockLevels.start(this);
@@ -291,6 +304,9 @@ public class Dungeons extends JavaPlugin {
         listen(Npcs.class, Npcs::new);
         listen(SkyBlockMenuListener.class, SkyBlockMenuListener::new);
         listen(PetListener.class, PetListener::new);
+        listen(PetItemUse.class, PetItemUse::new);
+        listen(AutopetListener.class, AutopetListener::new);
+        listen(Callbacks.class, Callbacks::new);
         listen(UtilityListener.class, UtilityListener::new);
         listen(Activations.class, Activations::new);
         // What weapons' enchantments and reforges do in a fight (ENCHANTS_WEAPONS.md).
@@ -306,6 +322,14 @@ public class Dungeons extends JavaPlugin {
             ArmorEnchants.enable(this);
         } catch (RuntimeException e) {
             getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable armor enchantments", e);
+        }
+        // After the armor's: a pet ability's share of a stat ("Increases all Combat stats by 10%") counts what the armor gives.
+        try {
+            PetAbilities.enable(this);
+            HeldItemEffects.enable(this);
+            PetCopies.enable();
+        } catch (RuntimeException e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Couldn't enable pet abilities", e);
         }
         listen(StorageListener.class, StorageListener::new);
         listen(CollectionGains.class, CollectionGains::new);
@@ -347,7 +371,7 @@ public class Dungeons extends JavaPlugin {
                 new CollectionCommand(), new ViewCollectionCommand(), new ViewBossCollectionCommand(), new RecipesCommand(),
                 new ViewRecipeCommand(), new CraftCommand(), new SetCollectionCommand(), new LevelsCommand(), new SkyBlockXpCommand(),
                 new HexCommand(), new IsCommand(), new QuestsCommand(), new ChaptersCommand(), new ClaimItemCommand(),
-                new YoinkProfileCommand(), new PetsCommand(), new GivePetCommand());
+                new YoinkProfileCommand(), new PetsCommand(), new GivePetCommand(), new CbCommand());
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             for (SCommand command : commands) {
                 try {

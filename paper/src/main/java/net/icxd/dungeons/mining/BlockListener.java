@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
+import java.util.function.ToDoubleBiFunction;
 
 /**
  * Mining: the mithril in the Dwarven Mines. Each block broken gives its drops (with their fortune), its Mining XP
@@ -50,10 +51,22 @@ public class BlockListener implements Listener {
     /** The crack stages a break is shown in, vanilla's ten. */
     static final int STAGES = 10;
     private static final List<BiConsumer<Player, Block>> BROKEN = new ArrayList<>();
+    private static final List<ToDoubleBiFunction<Player, MinableBlock>> MINING_SPEED = new ArrayList<>();
 
     /** Adds something that hears of each block a player mines here, once it's broken (the Promising Pickaxe counts them). */
     public static void addBrokenListener(BiConsumer<Player, Block> listener) {
         BROKEN.add(listener);
+    }
+
+    /** Adds Mining Speed a player has on one kind of block (the Mithril Golem pet's "+200 Mining Speed when mining Mithril"). */
+    public static void addMiningSpeed(ToDoubleBiFunction<Player, MinableBlock> bonus) {
+        MINING_SPEED.add(bonus);
+    }
+
+    private static double miningSpeed(Player player, MinableBlock block) {
+        double bonus = 0;
+        for (ToDoubleBiFunction<Player, MinableBlock> b : MINING_SPEED) bonus += b.applyAsDouble(player, block);
+        return bonus;
     }
 
     /** Flowstate's Mining Speed counts in their stats from now on (on this server, where the streaks are). */
@@ -90,7 +103,7 @@ public class BlockListener implements Listener {
             player.sendMessage(Utils.color(tooWeak(minableBlock)));
             return;
         }
-        double miningSpeed = stats.get(Stat.MINING_SPEED) * MiningTools.miningRate(player.isUnderWater(), aquaAffinity(player));
+        double miningSpeed = (stats.get(Stat.MINING_SPEED) + miningSpeed(player, minableBlock)) * MiningTools.miningRate(player.isUnderWater(), aquaAffinity(player));
         if (miningSpeed <= 0) return;
         double fortune = fortune(stats, minableBlock);
         Location location = block.getLocation();

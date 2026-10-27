@@ -45,8 +45,11 @@ public final class Selling {
         return "&aYou sold " + name + "&8 x" + amount + " &afor &6" + Coins.format(total) + " Coins&a!";
     }
 
-    /** "You bought Superboom TNT!", "You bought Flint Arrow x20!" */
-    static String bought(String name, int amount) {
-        return "&aYou bought " + name + "&a" + (amount > 1 ? " x" + amount : "") + "!";
+    /**
+     * "&aYou bought &fRookie Hoe &afor &610 Coins&a!", "&aYou bought &fExperience Bottle&8 x8 &afor &6240 Coins&a!", as
+     * recorded (2026-10-24, 2026-10-25); with no coins, "&aYou bought Superboom TNT!" (UNKNOWN).
+     */
+    static String bought(String name, int amount, double coins) {
+        return "&aYou bought " + name + (amount > 1 ? "&8 x" + amount : "") + (coins > 0 ? " &afor &6" + Coins.format(coins) + " Coins&a!" : "&a!");
     }
 }

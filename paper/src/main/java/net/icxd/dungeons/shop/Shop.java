@@ -11,6 +11,7 @@ import net.icxd.dungeons.item.cost.coins.CoinCost;
 import net.icxd.dungeons.item.cost.essence.EssenceCost;
 import net.icxd.dungeons.item.cost.essence.EssenceType;
 import net.icxd.dungeons.item.cost.item.ItemCost;
+import net.icxd.dungeons.pet.PetItems;
 
 /**
  * An NPC's shop: what it sells, in the order its menu shows it. Every shop buys what players sell
@@ -30,13 +31,22 @@ public record Shop(String name, List<Ware> wares) {
      * Farming Skill 1). {@code stock} is how many of the item they may buy a day (0 for no limit, see
      * {@link ShopStock}).
      */
-    public record Ware(String item, int amount, int floor, boolean locked, List<Cost> costs, int stock) {
+    public record Ware(String item, int amount, int floor, boolean locked, List<Cost> costs, int stock, String pet) {
         public Ware {
             costs = List.copyOf(costs);
         }
 
+        public Ware(String item, int amount, int floor, boolean locked, List<Cost> costs, int stock) {
+            this(item, amount, floor, locked, costs, stock, null);
+        }
+
         public Ware(String item, int amount, int floor, boolean locked, List<Cost> costs) {
-            this(item, amount, floor, locked, costs, 0);
+            this(item, amount, floor, locked, costs, 0, null);
+        }
+
+        /** A new pet of this type (its lowest rarity, level 1), shown as its level 100 is (Bea's Bee Pet, recorded). */
+        public static Ware pet(String type, Cost... costs) {
+            return new Ware(PetItems.ID, 1, 0, false, List.of(costs), 0, type);
         }
     }
 
@@ -130,6 +140,17 @@ public record Shop(String name, List<Ware> wares) {
             ware("ROOKIE_HOE", 0, coins(10)),
             ware("ROOKIE_FARMING_AXE", 0, coins(10)),
             ware("BEGINNER_AGRONOMY_SACK", 0, coins(250))));
+
+    /**
+     * Bea's, at the Hub's Pet Care, as recorded (2026-10-25, 00:32.6): a Bee Pet and the Honey Dippers Kat takes to
+     * upgrade one.
+     */
+    public static final Shop BEA = new Shop("Bea", List.of(
+            Ware.pet("BEE", coins(50)),
+            ware("SMALL_HONEY_DIPPER", 0, coins(500)),
+            ware("MEDIUM_HONEY_DIPPER", 0, coins(5_000)),
+            ware("LARGE_HONEY_DIPPER", 0, coins(50_000)),
+            ware("GIANT_HONEY_DIPPER", 0, coins(500_000))));
 
     /** This many for this many coins, with a day's stock. */
     private static Ware stocked(String item, int amount, int coins) {

@@ -98,8 +98,8 @@ public final class SkillText {
      */
     public static String actionBar(Skills.Gain gain) {
         Skill skill = gain.skill();
-        String progress = skill.maxed(gain.after()) ? number(skill.xpIntoLevel(gain.after())) + "/0"
-                : twoDecimals(skill.progress(gain.after()) * 100) + "%";
+        String progress = skill.maxed(gain.after(), gain.cap()) ? number(skill.xpIntoLevel(gain.after(), gain.cap())) + "/0"
+                : twoDecimals(skill.progress(gain.after(), gain.cap()) * 100) + "%";
         return "&3+" + number(gain.amount()) + " " + skill.getName() + " (" + progress + ")";
     }
 
@@ -108,9 +108,14 @@ public final class SkillText {
      * with {@code &3}). At the cap "MAX" (mods read " Farming 60: MAX"; its colour UNKNOWN: the percentage's).
      */
     public static String tab(Skill skill, double xp, String color) {
-        int level = skill.level(xp);
+        return tab(skill, xp, skill.cap(), color);
+    }
+
+    /** {@link #tab(Skill, double, String)} under a profile's cap. */
+    public static String tab(Skill skill, double xp, int cap, String color) {
+        int level = skill.level(xp, cap);
         String name = level > 0 ? skill.getName() + " " + level : skill.getName();
-        return name + ": " + color + (skill.maxed(xp) ? "MAX" : percent(skill.progress(xp)) + "%");
+        return name + ": " + color + (skill.maxed(xp, cap) ? "MAX" : percent(skill.progress(xp, cap)) + "%");
     }
 
     /** The Hub tab list's Skills widget: its header and these four, in the recorded order. */
@@ -118,14 +123,19 @@ public final class SkillText {
         List<String> lines = new ArrayList<>();
         lines.add("&e&lSkills:");
         for (Skill skill : List.of(Skill.FARMING, Skill.MINING, Skill.COMBAT, Skill.FORAGING)) {
-            lines.add(" " + tab(skill, Skills.xp(profile, skill), "&a"));
+            lines.add(" " + tab(skill, Skills.xp(profile, skill), Skills.cap(profile, skill), "&a"));
         }
         return lines;
     }
 
     /** The dungeon tab list's one line: the skill that last gained XP ("&e&lSkills: &aCombat 24: &335.5%"). */
     public static String dungeonTab(Skill skill, double xp) {
-        return "&e&lSkills: &a" + tab(skill, xp, "&3");
+        return dungeonTab(skill, xp, skill.cap());
+    }
+
+    /** {@link #dungeonTab(Skill, double)} under a profile's cap. */
+    public static String dungeonTab(Skill skill, double xp, int cap) {
+        return "&e&lSkills: &a" + tab(skill, xp, cap, "&3");
     }
 
     /** The Dungeon Hub tab list's Dungeons widget: " &fCatacombs 21: &a22%", " &aBerserk 20: 72.6%" (the selected class). */

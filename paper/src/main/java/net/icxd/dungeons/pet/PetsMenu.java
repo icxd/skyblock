@@ -2,6 +2,7 @@ package net.icxd.dungeons.pet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.bson.Document;
 import org.bukkit.Material;
@@ -12,6 +13,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import net.icxd.dungeons.gui.GUI;
+import net.icxd.dungeons.gui.SignInput;
 import net.icxd.dungeons.gui.MenuSound;
 import net.icxd.dungeons.gui.item.GUIClickableItem;
 import net.icxd.dungeons.menu.Icon;
@@ -29,7 +31,8 @@ import net.icxd.dungeons.utils.Utils;
  * Close, Search, Pet visibility and Sort. A click on a pet summons it (or despawns the one out), a shift click makes it a
  * favourite, a right click makes it an item again.
  *
- * <p>Not here: Exp Sharing (a click does nothing), Search (nothing), Autopet. Main thread.
+ * <p>Exp Sharing opens {@link ExpSharingMenu}; Search asks on a sign and shows the pets whose names have it (UNKNOWN
+ * how Hypixel's matches); Autopet opens {@link AutopetMenu}. Main thread.
  */
 public final class PetsMenu extends GUI {
     static final String TITLE = "Pets";
@@ -37,6 +40,8 @@ public final class PetsMenu extends GUI {
     static final int EXP_SHARING = 7;
     static final int SLOTS = 8;
     static final int PREVIOUS = 45;
+    /** UNKNOWN: where Hypixel's is (none was recorded: the recorded profile had no Autopet rules). */
+    static final int AUTOPET = 46;
     static final int SCORE = 47;
     static final int BACK = 48;
     static final int CLOSE = 49;
@@ -47,20 +52,47 @@ public final class PetsMenu extends GUI {
     /** The pets' slots: four rows of seven inside the border. */
     static final int PER_PAGE = 28;
 
+    /** Search's sign, as the plugin's other searches have it. */
+    static final List<String> SEARCH_SIGN = List.of("", "^^^^^^^^^^^^^^^", "Enter query", "");
+
     private final Player viewer;
     private final int page;
+    /** What Search is filtering by; null for nothing. */
+    private final String query;
 
-    PetsMenu(Player viewer, int page, int pages) {
-        super(pages > 1 ? "(" + page + "/" + pages + ") " + TITLE : TITLE, Size.SIX);
+    PetsMenu(Player viewer, int page, int pages, String query) {
+        super(title(page, pages, query), Size.SIX);
         this.viewer = viewer;
         this.page = page;
+        this.query = query;
+    }
+
+    /** "(1/3) Pets", and with a search 'Pets: "bee"' (SkyHanni's tests: '(6/6) Pets: "e"'). */
+    static String title(int page, int pages, String query) {
+        return (pages > 1 ? "(" + page + "/" + pages + ") " : "") + TITLE + (query == null ? "" : ": \"" + query + "\"");
     }
 
     /** Opens its page (1 first) with this sound (null for none). */
     public static void show(Player player, int page, MenuSound sound) {
+        show(player, page, sound, null);
+    }
+
+    /** Opens its page of the pets Search finds ({@code query}; null for all of them). */
+    static void show(Player player, int page, MenuSound sound, String query) {
         User user = User.ifLoaded(player.getUniqueId());
-        int pages = pages(user == null ? 0 : Pets.pets(user.profile()).size());
-        new PetsMenu(player, Math.max(1, Math.min(page, pages)), pages).open(player, sound);
+        int pages = pages(user == null ? 0 : found(Pets.pets(user.profile()), Pets.data(), query).size());
+        new PetsMenu(player, Math.max(1, Math.min(page, pages)), pages, query).open(player, sound);
+    }
+
+    /** The pets whose names have this in them, any case (null: all of them). */
+    static List<OwnedPet> found(List<OwnedPet> pets, PetData data, String query) {
+        if (query == null) return pets;
+        String wanted = query.toLowerCase(Locale.ROOT);
+        return pets.stream().filter(pet -> {
+            Pet kind = data.pet(pet.type());
+            String name = kind == null ? pet.type() : kind.name(Pets.tier(pet, data));
+            return name.toLowerCase(Locale.ROOT).contains(wanted);
+        }).toList();
     }
 
     static int pages(int pets) {
@@ -85,66 +117,74 @@ public final class PetsMenu extends GUI {
         }
         OwnedPet active = Pets.active(profile);
         set(SUMMARY, summary(active, data).stack());
-        set(GUIClickableItem.button(EXP_SHARING, expSharing().stack(), viewer, () -> {
-        }));
+        set(GUIClickableItem.button(EXP_SHARING, expSharing().stack(), viewer, () -> new ExpSharingMenu(viewer).open(viewer)));
         if (Pets.upgrades(profile) < Pets.MOST_UPGRADES) {
             set(GUIClickableItem.button(SLOTS, slots(Pets.slots(profile), user.getBits()).stack(), viewer, () -> buySlots(viewer)));
         }
-        List<OwnedPet> pets = Pets.sorted(Pets.pets(profile), Pets.sort(profile), data);
+        List<OwnedPet> pets = Pets.sorted(found(Pets.pets(profile), data, query), Pets.sort(profile), data);
         int pages = pages(pets.size());
         for (int i = 0; i < PER_PAGE; i++) {
             int index = (page - 1) * PER_PAGE + i;
             if (index >= pets.size()) break;
             OwnedPet pet = pets.get(index);
             boolean out = active != null && active.uuid().equals(pet.uuid());
-            set(GUIClickableItem.button(slot(i), stack(pet, data, out), viewer, click -> clicked(viewer, pet.uuid(), click, page)));
+            set(GUIClickableItem.button(slot(i), stack(pet, data, out), viewer, click -> clicked(viewer, pet.uuid(), click, page, query)));
         }
-        if (page > 1) set(GUIClickableItem.button(PREVIOUS, pageItem("&aPrevious Page", page - 1).stack(), viewer, () -> show(viewer, page - 1, null)));
-        if (page < pages) set(GUIClickableItem.button(NEXT, pageItem("&aNext Page", page + 1).stack(), viewer, () -> show(viewer, page + 1, null)));
+        if (page > 1) set(GUIClickableItem.button(PREVIOUS, pageItem("&aPrevious Page", page - 1).stack(), viewer, () -> show(viewer, page - 1, null, query)));
+        if (page < pages) set(GUIClickableItem.button(NEXT, pageItem("&aNext Page", page + 1).stack(), viewer, () -> show(viewer, page + 1, null, query)));
         set(SCORE, score(Pets.score(profile, data), data).stack());
+        set(GUIClickableItem.button(AUTOPET, autopet().stack(), viewer, () -> new AutopetMenu(viewer).open(viewer)));
         set(GUIClickableItem.button(BACK, back().stack(), viewer, () -> new SkyBlockMenu(viewer).open(viewer, MenuSound.CLICK)));
         set(GUIClickableItem.close(CLOSE));
-        set(SEARCH, search().stack());
+        set(GUIClickableItem.button(SEARCH, search().stack(), viewer, () -> search(viewer)));
         set(GUIClickableItem.button(VISIBILITY, visibility(Pets.visibility(profile), Pets.nametags(profile)).stack(), viewer,
-                click -> visibilityClicked(viewer, click, page)));
-        set(GUIClickableItem.button(SORT, sort(Pets.sort(profile)).stack(), viewer, click -> sortClicked(viewer, click, page)));
+                click -> visibilityClicked(viewer, click, page, query)));
+        set(GUIClickableItem.button(SORT, sort(Pets.sort(profile)).stack(), viewer, click -> sortClicked(viewer, click, page, query)));
     }
 
     /** A pet, as the menu shows it: its head, name and lore. */
     static ItemStack stack(OwnedPet pet, PetData data, boolean out) {
-        Pet kind = data.pet(pet.type());
-        String texture = kind == null || kind.variant(pet.tier()) == null ? null : kind.variant(pet.tier()).texture();
-        ItemStack stack = new Icon(Material.PLAYER_HEAD, PetText.name(pet, data, Where.MENU), PetText.lore(pet, data, Where.MENU, out)).stack();
+        return stack(pet, data, Where.MENU, out);
+    }
+
+    /** A pet as another of the pets' menus shows it (Exp Sharing's). */
+    static ItemStack stack(OwnedPet pet, PetData data, Where where) {
+        return stack(pet, data, where, false);
+    }
+
+    private static ItemStack stack(OwnedPet pet, PetData data, Where where, boolean out) {
+        String texture = Pets.texture(pet, data);
+        ItemStack stack = new Icon(Material.PLAYER_HEAD, PetText.name(pet, data, where), PetText.lore(pet, data, where, out)).stack();
         if (texture != null) Utils.skull(stack, Utils.texture(texture));
         return stack;
     }
 
     // What a click does
 
-    private static void clicked(Player player, String uuid, ClickType click, int page) {
+    private static void clicked(Player player, String uuid, ClickType click, int page, String query) {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased()) return;
         OwnedPet pet = Pets.find(user.profile(), uuid);
         if (pet == null) {
-            show(player, page, null);
+            show(player, page, null, query);
             return;
         }
         switch (click) {
             case LEFT -> PetActions.summonOrDespawn(player, user, pet);
             case SHIFT_LEFT -> {
                 PetActions.favorite(player, user, pet);
-                show(player, page, null);
+                show(player, page, null, query);
             }
             case RIGHT, SHIFT_RIGHT -> {
                 PetActions.toItem(player, user, pet);
-                show(player, page, null);
+                show(player, page, null, query);
             }
             default -> {
             }
         }
     }
 
-    private static void visibilityClicked(Player player, ClickType click, int page) {
+    private static void visibilityClicked(Player player, ClickType click, int page, String query) {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased()) return;
         Document profile = user.profile();
@@ -153,17 +193,27 @@ public final class PetsMenu extends GUI {
         PetFollowers.settingsChanged(player);
         // A pling, as recorded (volume 8, pitch 4.05: the client's most is 2), and the menu again.
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.BLOCKS, 8, 2);
-        show(player, page, null);
+        show(player, page, null, query);
     }
 
-    private static void sortClicked(Player player, ClickType click, int page) {
+    private static void sortClicked(Player player, ClickType click, int page, String query) {
         User user = User.ifLoaded(player.getUniqueId());
         if (user == null || user.isReleased()) return;
         Document profile = user.profile();
         Pets.sort(profile, Pets.sort(profile).step(click.isRightClick()));
-        show(player, page, null);
+        show(player, page, null, query);
         // A lever's click, as recorded (0.55, pitch 2).
         player.playSound(player.getLocation(), Sound.BLOCK_LEVER_CLICK, SoundCategory.BLOCKS, 0.55f, 2);
+    }
+
+    /** Search: a sign for what to find (the menu closes first); nothing typed shows them all again. */
+    private static void search(Player player) {
+        player.closeInventory();
+        SignInput.open(player, SEARCH_SIGN, lines -> {
+            if (!player.isOnline()) return;
+            String typed = lines.isEmpty() ? "" : lines.getFirst().strip();
+            show(player, 1, null, typed.isEmpty() ? null : typed);
+        });
     }
 
     /** "+28 Pet Slots" for 5,000 Bits, twice (the wiki's Pets); what it says once they can is UNKNOWN. */
@@ -233,6 +283,11 @@ public final class PetsMenu extends GUI {
 
     static Icon back() {
         return new Icon(Material.ARROW, "&aGo Back", "&7To SkyBlock Menu");
+    }
+
+    /** UNKNOWN: Hypixel's. */
+    static Icon autopet() {
+        return new Icon(Material.COMPARATOR, "&aAutopet", "&7Equip your pets automatically when", "&7things happen!", "", "&eClick to view!");
     }
 
     static Icon search() {

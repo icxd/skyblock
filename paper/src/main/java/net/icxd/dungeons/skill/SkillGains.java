@@ -35,6 +35,7 @@ public final class SkillGains implements Listener {
     /** The XP part of the action bar stays about 2 seconds after the last gain (research skills.md 2.1). */
     static final long SHOWN_MILLIS = 2_000;
     private static final List<ToDoubleBiFunction<Player, SkyBlockMobDeathEvent>> KILL_WISDOM = new ArrayList<>();
+    private static final List<ToDoubleBiFunction<Player, SkyBlockMobDeathEvent>> KILL_XP_FACTORS = new ArrayList<>();
     private static final List<GainListener> GAINED = new ArrayList<>();
 
     /** What else a skill's XP gives (the summoned pet's XP, see PetXp): told the skill and its XP before Wisdom. */
@@ -56,6 +57,15 @@ public final class SkillGains implements Listener {
     }
 
     /**
+     * Adds a factor on the Combat XP one kill gives, 1 for none: the slayer-themed pets' "Gain +50☯ Combat Wisdom
+     * towards Zombies" and the Hound's "Gain 1.5x Combat XP against Wolves" multiply it (the wiki's Wolf Pet: they
+     * "grant a multiplicative Combat XP boost", where Wisdom adds); they multiply.
+     */
+    public static void addKillXpFactor(ToDoubleBiFunction<Player, SkyBlockMobDeathEvent> factor) {
+        KILL_XP_FACTORS.add(factor);
+    }
+
+    /**
      * The killer gets the mob's Combat XP with their Combat Wisdom and the Champion (or Toxophilite) on what they hold
      * (research skills.md 5.1). Only the killer: how a party shares it is UNKNOWN (the recordings are
      * solo). There are no Private Islands here, where mobs would give none. Kill Combo (a pet's) isn't
@@ -69,6 +79,7 @@ public final class SkillGains implements Listener {
         if (base <= 0) return;
         double extra = 0;
         for (ToDoubleBiFunction<Player, SkyBlockMobDeathEvent> wisdom : KILL_WISDOM) extra += wisdom.applyAsDouble(killer, event);
+        for (ToDoubleBiFunction<Player, SkyBlockMobDeathEvent> factor : KILL_XP_FACTORS) base *= factor.applyAsDouble(killer, event);
         // Combat Wisdom is give's, as every skill's Wisdom is: combatXp(base, wisdom, champion) in all.
         give(killer, Skill.COMBAT, base * (1 + combatXpPercent(Combat.heldEnchantments(killer)) / 100), extra);
     }

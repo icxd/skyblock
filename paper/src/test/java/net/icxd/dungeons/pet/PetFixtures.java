@@ -26,8 +26,8 @@ final class PetFixtures {
                "COMMON": {"texture": "bee0", "stats": {"STRENGTH": {"base": 5, "per_level": 0.25}, "INTELLIGENCE": {"base": 0, "per_level": 0.5}},
                           "numbers": [{"base": 1, "per_level": 0.02, "decimals": 2}],
                           "blocks": [{"name": "&6Hive", "text": ["&7For each player within &a25 &7blocks:", " &b+{0}✎ Intelligence", "&8Max 15 players"]}],
-                          "kat": true},
-               "UNCOMMON": {"texture": "bee1", "stats": {"STRENGTH": {"base": 5, "per_level": 0.25}},
+                          "kat": true, "kat_upgrade": {"seconds": 60, "coins": 0, "items": [["SMALL_HONEY_DIPPER", 1]]}},
+               "UNCOMMON": {"texture": "bee1", "george": 250, "stats": {"STRENGTH": {"base": 5, "per_level": 0.25}},
                             "numbers": [{"base": 1, "per_level": 0.05, "decimals": 2}],
                             "blocks": [{"name": "&6Hive", "text": ["&7For each player within &a25 &7blocks:", " &b+{0}✎ Intelligence"]}]}}},
               "GUARDIAN": {"name": "Guardian", "kind": "Enchanting Pet", "skill": "ENCHANTING", "rarities": {

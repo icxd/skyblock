@@ -12,16 +12,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
 import net.icxd.dungeons.item.ability.utility.UtilityListener;
 import net.icxd.dungeons.pet.PetData.Pet;
-import net.icxd.dungeons.pet.PetData.Variant;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
@@ -45,6 +47,12 @@ import net.icxd.dungeons.utils.Utils;
 public final class PetFollowers {
     /** How far over the holder its name stand is: a small armor stand's height, where its own name would show. */
     static final double NAME_UP = 0.9875;
+    /**
+     * Where its head is, above the stand's feet, and how near a look has to pass it to be at it: the head's middle, and
+     * a bit more than half its width (UNKNOWN: Hypixel's stand can't be clicked either; see {@link #lookingAtOwn}).
+     */
+    static final double HEAD_UP = 0.75;
+    static final double AIM = 0.45;
     /** Over the owner's feet, and how far it bobs (recorded: 71.17 to 72.30 over a player at 71). */
     static final double HEIGHT = 0.75;
     static final double BOB = 0.55;
@@ -114,7 +122,7 @@ public final class PetFollowers {
             if (follower != null) despawn(player.getUniqueId());
             return;
         }
-        String shown = active.type() + ":" + active.tier() + ":" + Pets.level(active, data);
+        String shown = active.type() + ":" + Pets.tier(active, data) + ":" + Pets.level(active, data) + ":" + active.heldItem();
         if (follower != null && (!follower.holder.isValid() || !follower.pet.equals(active.uuid()))) {
             despawn(player.getUniqueId());
             follower = null;
@@ -126,6 +134,7 @@ public final class PetFollowers {
         }
         if (!shown.equals(follower.shown)) {
             follower.shown = shown;
+            follower.holder.getEquipment().setHelmet(head(active, kind, data));
             follower.ownName.customName(Text.line(PetText.floating(active, data, null)));
             follower.othersName.customName(Text.line(PetText.floating(active, data, player.getName())));
         }
@@ -151,9 +160,7 @@ public final class PetFollowers {
 
     private static Follower spawn(Player owner, OwnedPet pet, Pet kind, PetData data, String shown) {
         Location at = holderSpot(owner.getLocation(), 0);
-        Variant variant = kind.variant(pet.tier());
-        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-        if (variant != null && variant.texture() != null) Utils.skull(head, Utils.texture(variant.texture()));
+        ItemStack head = head(pet, kind, data);
         ArmorStand holder = at.getWorld().spawn(at, ArmorStand.class, stand -> {
             prop(stand);
             stand.setSmall(true);
@@ -162,6 +169,14 @@ public final class PetFollowers {
         ArmorStand ownName = name(nameSpot(at), PetText.floating(pet, data, null));
         ArmorStand othersName = name(nameSpot(at), PetText.floating(pet, data, owner.getName()));
         return new Follower(owner.getUniqueId(), pet.uuid(), shown, holder, ownName, othersName);
+    }
+
+    /** Its head: its skin's, else the rarity it's as's (a Tier Boost's, see Pets#tier). */
+    private static ItemStack head(OwnedPet pet, Pet kind, PetData data) {
+        String texture = Pets.texture(pet, data);
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        if (texture != null) Utils.skull(head, Utils.texture(texture));
+        return head;
     }
 
     private static ArmorStand name(Location at, String name) {
@@ -188,6 +203,26 @@ public final class PetFollowers {
         Location at = feet.clone().add(0, HEIGHT + bob, 0);
         at.setPitch(0);
         return at;
+    }
+
+    /**
+     * Whether they're looking at their own summoned pet's head, no farther than they reach entities: to give it a Pet Item
+     * ("Right-click on your summoned pet to give it this item!"), as a marker stand can't be clicked.
+     */
+    public static boolean lookingAtOwn(Player player) {
+        Follower follower = FOLLOWING.get(player.getUniqueId());
+        if (follower == null || !follower.holder.isValid() || !follower.holder.getWorld().equals(player.getWorld())) return false;
+        AttributeInstance range = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
+        return aimedAt(player.getEyeLocation(), follower.holder.getLocation().add(0, HEAD_UP, 0), range == null ? 3 : range.getValue());
+    }
+
+    /** Whether a look from {@code eye} passes within {@link #AIM} of {@code head}, ahead of it and within {@code reach}. */
+    static boolean aimedAt(Location eye, Location head, double reach) {
+        Vector look = eye.getDirection();
+        Vector to = head.toVector().subtract(eye.toVector());
+        double along = to.dot(look);
+        if (along <= 0 || along > reach + AIM) return false;
+        return to.subtract(look.multiply(along)).lengthSquared() <= AIM * AIM;
     }
 
     /** Where its name stand is: right over the holder's head. */

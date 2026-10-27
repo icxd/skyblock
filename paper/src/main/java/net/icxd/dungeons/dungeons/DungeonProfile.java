@@ -1,5 +1,9 @@
 package net.icxd.dungeons.dungeons;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+
 import org.bson.Document;
 import org.bukkit.entity.Player;
 
@@ -46,6 +50,14 @@ public final class DungeonProfile {
     public static void selectClass(User user, DungeonClass dungeonClass) {
         dungeons(user).put("selectedClass", dungeonClass.name());
         user.save();
+        for (BiConsumer<User, DungeonClass> listener : CLASS_LISTENERS) listener.accept(user, dungeonClass);
+    }
+
+    /** What hears a class chosen (Autopet's "On select dungeon [class]"). */
+    private static final List<BiConsumer<User, DungeonClass>> CLASS_LISTENERS = new ArrayList<>();
+
+    public static void addClassListener(BiConsumer<User, DungeonClass> listener) {
+        CLASS_LISTENERS.add(listener);
     }
 
     // Experience

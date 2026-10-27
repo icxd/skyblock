@@ -33,7 +33,7 @@ public enum Skill {
             "&7Craft items to earn Carpentry EXP!"),
     RUNECRAFTING("Runecrafting", Table.RUNECRAFTING, 25, Material.MAGMA_CREAM,
             "&7Slay bosses and runic mobs, and", "&7fuse runes to earn Runecrafting EXP!"),
-    /** 50, and one more per pet type sacrificed (not in this plugin: 50). */
+    /** 50, and one more per pet type given to George (see {@link Skills#cap}). */
     TAMING("Taming", Table.STANDARD, 50, Material.POLAR_BEAR_SPAWN_EGG,
             "&7Level up pets to earn Taming EXP!"),
     SOCIAL("Social", Table.SOCIAL, 25, Material.EMERALD,
@@ -97,7 +97,10 @@ public enum Skill {
         return table.perLevel.length;
     }
 
-    /** The highest level it can reach here: 60 for Combat, Mining and Enchanting, 25 for Runecrafting and Social, else 50. */
+    /**
+     * The highest level it can reach here: 60 for Combat, Mining and Enchanting, 25 for Runecrafting and Social, else 50;
+     * a profile's may be higher ({@link Skills#cap}).
+     */
     public int cap() {
         return cap;
     }
@@ -129,27 +132,45 @@ public enum Skill {
 
     /** The level this much XP reaches, at most the cap. */
     public int level(double xp) {
+        return level(xp, cap);
+    }
+
+    /** The level this much XP reaches, at most this cap (a profile's own, see {@link Skills#cap}). */
+    public int level(double xp, int cap) {
+        int most = Math.min(cap, maxLevel());
         int level = 0;
-        while (level < cap && xp >= table.cumulative[level + 1]) level++;
+        while (level < most && xp >= table.cumulative[level + 1]) level++;
         return level;
     }
 
     /** Whether this much XP has reached the cap. */
     public boolean maxed(double xp) {
-        return level(xp) >= cap;
+        return maxed(xp, cap);
+    }
+
+    public boolean maxed(double xp, int cap) {
+        return level(xp, cap) >= Math.min(cap, maxLevel());
     }
 
     /** How far this much XP is into the next level, from 0 to 1 (1 once it's at the cap). */
     public double progress(double xp) {
-        int level = level(xp);
-        if (level >= cap) return 1;
+        return progress(xp, cap);
+    }
+
+    public double progress(double xp, int cap) {
+        int level = level(xp, cap);
+        if (level >= Math.min(cap, maxLevel())) return 1;
         double into = xp - table.cumulative[level];
         return Math.max(0, Math.min(1, into / table.perLevel[level]));
     }
 
     /** XP into the level after this much XP's; past the cap, XP beyond it. */
     public double xpIntoLevel(double xp) {
-        return Math.max(0, xp - table.cumulative[level(xp)]);
+        return xpIntoLevel(xp, cap);
+    }
+
+    public double xpIntoLevel(double xp, int cap) {
+        return Math.max(0, xp - table.cumulative[level(xp, cap)]);
     }
 
     /**

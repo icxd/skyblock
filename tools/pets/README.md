@@ -9,6 +9,7 @@ That is Hypixel's, so it lives in the private data repository; the script here m
 node tools/replay/replay.js decode REC.mcpr --out REC                                  # the Pets menu, as gui.txt
 python3 tools/pets/build_pets.py --neu NEU-REPO --gui REC/gui.txt                      # fetches the wiki's Module:Pet/Data
 python3 tools/pets/build_pets.py --neu NEU-REPO --gui REC/gui.txt --wiki SAVED.json    # a copy saved with --save-wiki
+python3 tools/pets/build_pets.py ... --kat KAT_COSTS.txt                               # a saved Kat/Costs page
 python3 tools/pets/test_build_pets.py                                                  # its checks (no data needed)
 ```
 
@@ -26,6 +27,10 @@ It writes `pets.json` (format 1, below) and `report.md` next to it.
     a base and so much a level.
   - A recording of Hypixel's Pets menu (`--gui`, a decoded replay's `gui.txt`): its pets are checked against what the
     data makes of them at their levels, and its Pet Score Rewards item has the Pet Score's Magic Find thresholds.
+  - What Kat takes to upgrade each rarity: the wiki's `Kat/Costs` table (fetched, or `--kat` for its saved raw text),
+    and for the pets it doesn't have, their own page's `{{Kat Cost table}}` (the Orchid Mantis, the Sloth). Its items'
+    names become ids by NEU's item names. George's prices: NEU's `constants/george.json` (the wiki's George/Prices).
+  - The pet skins: NEU's `PET_SKIN_` items (their names, rarity lines, heads, and the pets their lines say they're for).
 - **The text.** The type line ("Farming Pet": the pet's skill), the stats, then each ability's name and lines and any
   other block, as NEU has them; the footer (the right-click line, Kat's, the rarity line) is the plugin's to write.
   Hypixel's private-use glyphs become the plugin's symbols (`tools/items/data/glyphs.tsv`). Lines are joined back into
@@ -51,10 +56,10 @@ It writes `pets.json` (format 1, below) and `report.md` next to it.
 ### Format 1
 
 ```
-{"format": 1, "source": {"neu_commit": SHA, "wiki_revision": REVID, "recording": NAME},
+{"format": 1, "source": {"neu_commit": SHA, "wiki_revision": REVID, "kat_revision": REVID, "recording": NAME},
  "levels": [100, 110, ...], "rarity_offset": {"COMMON": 0, "UNCOMMON": 6, ...}, "max_level": 100,
  "score": {"rarity": {"COMMON": 1, ...}, "max_level": 1, "rewards": [[10, 1], [25, 2], ...]},
- "pets": {"BEE": PET}}
+ "pets": {"BEE": PET}, "skins": {"ENDERMAN_SLAYER": SKIN}}
 ```
 
 - `levels`: the XP each level takes from the one before; a pet of a rarity starts `rarity_offset` into them (a Rare's
@@ -67,4 +72,8 @@ It writes `pets.json` (format 1, below) and `report.md` next to it.
 - `RARITY`: `texture` (its head's skin, the hash of its textures.minecraft.net URL), `name` (where not the pet's),
   `stats` (by the plugin's Stat name: `{"base", "per_level"}`), `numbers` (`{n}` in the text is `numbers[n]`:
   `{"base", "per_level", "decimals"}`), `blocks` (`{"name": "&6Hive", "text": [PARAGRAPH]}`, or without `name`: the
-  lines after the stats, in order, a blank line between each), `kat` (true: Kat can upgrade it).
+  lines after the stats, in order, a blank line between each), `kat` (true: Kat can upgrade it), `kat_upgrade` (what
+  that takes: `{"seconds", "coins", "items": [[ID, AMOUNT]]}`), `george` (the coins George pays for it).
+- `SKIN`, by its id (a pet's `skin`, its item's id less `PET_SKIN_`): `name` ("Void Conqueror Enderman Skin"), `short`
+  (what a skinned pet's type line says: "Combat Pet, Void Conqueror Skin"), `rarity` ("EPIC", "ULTIMATE"), `color`
+  (that rarity's colour code), `texture`, and `pets` (the types it's for).

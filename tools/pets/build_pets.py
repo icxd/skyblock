@@ -26,6 +26,10 @@ import build_items  # noqa: E402  (the plugin's glyphs, text widths and wrapping
 
 WIKI = 'https://hypixelskyblock.minecraft.wiki'
 WIKI_MODULE = 'Module:Pet/Data'
+# The wiki's table of what Kat takes to upgrade each pet's rarity: its columns are Common -> Uncommon to Legendary -> Mythic.
+WIKI_KAT = 'Kat/Costs'
+KAT_FROM = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY']
+KAT_UNITS = {'second': 1, 'minute': 60, 'hour': 3600, 'day': 86400}
 # NEU's file suffixes: items/BEE;1.json is the Uncommon Bee.
 RARITIES = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY', 'MYTHIC', 'DIVINE', 'SPECIAL', 'VERY_SPECIAL']
 COLORS = {'COMMON': 'f', 'UNCOMMON': 'a', 'RARE': '9', 'EPIC': '5', 'LEGENDARY': '6', 'MYTHIC': 'd', 'DIVINE': 'b',
@@ -239,6 +243,77 @@ def load_wiki(path, save):
     return pets, revid
 
 
+# ---------- Kat and George ----------
+
+def coins(text):
+    """{{c|10k}}'s "10k" as 10000 ("1.5m": 1500000, "500": 500)."""
+    m = re.fullmatch(r'([\d.]+)\s*([kmb]?)', text.strip().lower())
+    if not m:
+        raise ValueError(f'not coins: {text!r}')
+    return int(round(float(m.group(1)) * {'': 1, 'k': 1e3, 'm': 1e6, 'b': 1e9}[m.group(2)]))
+
+
+def kat_costs(text):
+    """The wiki's Kat/Costs table: by the pet's name, what each rarity's upgrade to the next takes ({'seconds',
+    'coins', 'items': [(item name, amount)]}); a {{bc}} (no upgrade) is left out."""
+    out = {}
+    for row in re.split(r'\n\|-[^\n]*\n', text):
+        m = re.search(r'^!\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]', row, re.M)
+        if not m:
+            continue
+        name = (m.group(2) or m.group(1)).strip()
+        cells = [c for c in re.split(r'\n\|(?![-}])', '\n' + row[m.end():]) if c.strip()]
+        upgrades = {}
+        for rarity, cell in zip(KAT_FROM, cells):
+            if '{{bc}}' in cell:
+                continue
+            seconds = sum(float(n) * KAT_UNITS[unit.lower().rstrip('s')]
+                          for n, unit in re.findall(r'\{\{Green\|([\d.]+)\}\}\s*\{\{[Tt]ime\|([A-Za-z]+)\}\}', cell))
+            items = [(item.strip(), int(amount or 1))
+                     for item, amount in re.findall(r'\{\{Item\|([^|}]+)(?:\|amount=(\d+))?[^}]*\}\}', cell)]
+            items += [(item.strip(), int(amount))
+                      for amount, item in re.findall(r'\{\{Green\|(\d+)x\}\}\s*\{\{LI\|([^|}]+)', cell)]
+            upgrades[rarity] = {'seconds': int(seconds), 'coins': sum(coins(c) for c in re.findall(r'\{\{c\|([^}]+)\}\}', cell)),
+                                'items': items}
+        out[name] = upgrades
+    return out
+
+
+def kat_template(text):
+    """A pet's page's {{Kat Cost table}} ("|cost_common = 250k", "|mats_c = *Enchanted Mycelium, 64 *Digested Mushrooms,
+    32", "|time_e = 12 Hours"), as kat_costs has a pet: for the pets its table doesn't have (the Orchid Mantis, the
+    Sloth)."""
+    m = re.search(r'\{\{Kat Cost table(.*?)\n\}\}', text, re.S)
+    if not m:
+        return {}
+    params = {}
+    for part in m.group(1).split('\n|')[1:]:
+        key, _, value = part.partition('=')
+        params[key.strip()] = value.strip()
+    out = {}
+    for rarity in KAT_FROM:
+        key = next((k for k in (rarity.lower(), rarity[0].lower()) if any(p + k in params for p in ('cost_', 'mats_', 'time_'))), None)
+        if key is None:
+            continue
+        cost = params.get('cost_' + key, '').replace(',', '')
+        time = re.match(r'([\d.]+)\s*([A-Za-z]+)', params.get('time_' + key, ''))
+        items = [(name.strip(), int(n)) for name, n in re.findall(r'([^*\n,]+),\s*(\d+)', params.get('mats_' + key, ''))]
+        out[rarity] = {'seconds': int(float(time.group(1)) * KAT_UNITS[time.group(2).lower().rstrip('s')]) if time else 0,
+                       'coins': coins(cost) if re.match(r'[\d.]', cost) else 0, 'items': items}
+    return out
+
+
+def kat_upgrade(upgrade, ids, pet, problems):
+    """One of kat_costs's upgrades as pets.json has it: its items by id ([id, amount]); one with no id here, left out."""
+    items = []
+    for name, amount in upgrade['items']:
+        if name in ids:
+            items.append([ids[name], amount])
+        else:
+            problems.append(f'{pet}: Kat\'s {name!r} isn\'t an item NEU has: left out of the cost')
+    return {'seconds': upgrade['seconds'], 'coins': upgrade['coins'], 'items': items}
+
+
 def wiki_rarity(pet, rarity):
     return ((pet or {}).get('variables') or {}).get(rarity.lower())
 
@@ -380,16 +455,32 @@ class Neu:
             self.pets = json.load(f)
         with open(os.path.join(path, 'constants', 'petnums.json'), encoding='utf-8') as f:
             self.nums = json.load(f)
+        george = os.path.join(path, 'constants', 'george.json')
+        self.george = {}  # (type, rarity) -> coins: George's prices (the wiki's George/Prices, NEU's copy)
+        if os.path.isfile(george):
+            with open(george, encoding='utf-8') as f:
+                for key, coins in json.load(f).get('prices', {}).items():
+                    pet, _, n = key.partition(';')
+                    if n.isdigit() and int(n) < len(RARITIES):
+                        self.george[(pet, RARITIES[int(n)])] = coins
         self.templates = collections.defaultdict(dict)  # type -> rarity -> NEU item
+        self.skins = {}  # a skin's id (its item's, less PET_SKIN_) -> NEU item
+        self.ids = {}  # an item's name, as the wiki writes it -> its id (not a pet's, an enchanted book's or a rune's)
         items = os.path.join(path, 'items')
         for f in sorted(os.listdir(items)):
-            m = re.match(r'^([A-Z0-9_]+);(\d)\.json$', f)
-            if not m or int(m.group(2)) >= len(RARITIES):
+            if not f.endswith('.json'):
                 continue
+            m = re.match(r'^([A-Z0-9_]+);(\d)\.json$', f)
             with open(os.path.join(items, f), encoding='utf-8') as fh:
                 it = json.load(fh)
-            if 'petInfo' in it.get('nbttag', ''):
+            if m and int(m.group(2)) < len(RARITIES) and 'petInfo' in it.get('nbttag', ''):
                 self.templates[m.group(1)][RARITIES[int(m.group(2))]] = it
+            elif ';' not in f:
+                if f.startswith('PET_SKIN_'):
+                    self.skins[f[len('PET_SKIN_'):-len('.json')]] = it
+                name = re.sub(r'§.', '', it.get('displayname', '')).strip()
+                if name:
+                    self.ids.setdefault(name, f[:-len('.json')])
 
     def commit(self):
         try:
@@ -397,6 +488,39 @@ class Neu:
                                   check=True).stdout.strip()
         except (OSError, subprocess.CalledProcessError):
             return None
+
+
+# ---------- skins ----------
+
+SKIN_FOR = re.compile(r'This skin can (?:only )?be applied to (.+?) pets?\.')
+SKIN_RARITY = re.compile(r'^§(.)§l(.+?) COSMETIC$')
+
+
+def skin(sid, it, names, problems):
+    """A pet skin as pets.json has it, from NEU's item: its name, the name it shows on a pet ("Void Conqueror" of the
+    Void Conqueror Enderman Skin: "&8Combat Pet, Void Conqueror Skin", recorded), its rarity and that rarity's colour
+    (an Ultimate's too), its head, and the pets it's for (by type). None if it says no pet NEU has."""
+    lore = it.get('lore', [])
+    m = SKIN_FOR.search(' '.join(re.sub(r'§.', '', line) for line in lore))
+    if not m:
+        problems.append(f'skin {sid}: no "This skin can only be applied to" line: left out')
+        return None
+    pets = []
+    for name in re.split(r',\s*(?:and\s+)?|\s+and\s+', m.group(1)):
+        name = name.strip()
+        if name in names:
+            pets.append(names[name])
+        elif name:
+            problems.append(f'skin {sid}: for {name!r}, a pet NEU has no template of: left out of its pets')
+    if not pets:
+        return None
+    display = re.sub(r'§.', '', it.get('displayname', '')).strip()
+    short = display[:-len(' Skin')] if display.endswith(' Skin') else display
+    for name in sorted((n for n, t in names.items() if t in pets), key=len, reverse=True):
+        short = re.sub(r'(?:^|\s+)' + re.escape(name) + r'(?=\s|$)', '', short).strip() or short
+    rarity = SKIN_RARITY.match(lore[-1]) if lore else None
+    return {'name': display, 'short': short, 'rarity': rarity.group(2).replace(' ', '_') if rarity else 'COMMON',
+            'color': rarity.group(1) if rarity else 'f', 'texture': texture(it.get('nbttag', '')), 'pets': pets}
 
 
 # ---------- building ----------
@@ -445,7 +569,7 @@ def letters(s):
     return re.sub(r'[^a-z]', '', strip(str(s)).lower())
 
 
-def build_pet(pet, neu, wiki, problems, stat_keys):
+def build_pet(pet, neu, wiki, problems, stat_keys, kat=None):
     templates = neu.templates[pet]
     custom = neu.pets.get('custom_pet_leveling', {}).get(pet, {})
     out = {'rarities': {}}
@@ -509,6 +633,11 @@ def build_pet(pet, neu, wiki, problems, stat_keys):
         r['blocks'] = t.blocks
         if t.kat:
             r['kat'] = True
+        upgrade = (kat or {}).get(rarity)
+        if upgrade is not None:
+            r['kat_upgrade'] = kat_upgrade(upgrade, neu.ids, pet, problems)
+        if (pet, rarity) in neu.george:
+            r['george'] = neu.george[(pet, rarity)]
         if curve:
             out['stats_from'] = 100
         out['rarities'][rarity] = r
@@ -545,7 +674,7 @@ def note(problems, pet, what, f, v1, v100, cand):
 TEXT = None
 
 
-def build(neu, wiki, problems):
+def build(neu, wiki, problems, kat=None, kat_pages=None):
     global TEXT
     HOWS.clear()
     glyphs = {int(cp, 16): symbol for cp, symbol, _how in build_items.tsv('glyphs.tsv') if symbol}
@@ -554,11 +683,32 @@ def build(neu, wiki, problems):
     STAT_NAMES.clear()
     STAT_NAMES.update(names)
     pets = {}
+    kat = kat or {}
+    names = {}
     for pet in sorted(neu.templates):
         try:
-            pets[pet] = build_pet(pet, neu, wiki, problems, stat_keys)
+            name = re.sub(r'§.|\[Lvl [^]]*\]', '', next(iter(neu.templates[pet].values())).get('displayname', '')).strip()
+            names[name] = pet
+            pets[pet] = build_pet(pet, neu, wiki, problems, stat_keys, kat.get(name))
         except (KeyError, ValueError, TypeError, IndexError) as e:
             problems.append(f'{pet}: left out ({type(e).__name__}: {e})')
+    for name in sorted(set(kat) - set(names)):
+        problems.append(f'Kat/Costs: {name!r} isn\'t a pet NEU has: left out')
+    for name, pet in sorted(names.items()):
+        missing = [r for r, v in pets.get(pet, {}).get('rarities', {}).items() if v.get('kat') and 'kat_upgrade' not in v]
+        if not missing or kat_pages is None:
+            continue
+        upgrades = kat_template(kat_pages(name + ' Pet'))
+        for rarity in missing:
+            if rarity in upgrades:
+                pets[pet]['rarities'][rarity]['kat_upgrade'] = kat_upgrade(upgrades[rarity], neu.ids, pet, problems)
+            else:
+                problems.append(f'{pet} {rarity}: "Can be upgraded at Kat", but neither Kat/Costs nor its page has the cost')
+    skins = {}
+    for sid, it in sorted(neu.skins.items()):
+        made = skin(sid, it, names, problems)
+        if made:
+            skins[sid] = made
     for cp, ids in sorted(TEXT.dropped.items()):
         problems.append(f'glyph {cp:04X} has no symbol (glyphs.tsv): dropped in {", ".join(sorted(ids))}')
     return {
@@ -568,6 +718,7 @@ def build(neu, wiki, problems):
         'max_level': 100,
         'score': {'rarity': SCORE_RARITY, 'max_level': 1},
         'pets': pets,
+        'skins': skins,
     }
 
 
@@ -705,7 +856,7 @@ def report(data, problems, checked, source):
     rarities = sum(len(p['rarities']) for p in pets.values())
     lines = ['# Pets data', '', f'Made by tools/pets/build_pets.py from NEU-REPO `{source.get("neu_commit")}`, the wiki\'s '
              f'Module:Pet/Data (revision {source.get("wiki_revision")}) and the recording `{source.get("recording")}`.', '',
-             f'- {len(pets)} pets, {rarities} rarities',
+             f'- {len(pets)} pets, {rarities} rarities, {len(data.get("skins", {}))} skins',
              '- their numbers and stats: ' + ', '.join(f'{n} {how}' for how, n in HOWS.most_common()) + ' (see Fit in the script)',
              '']
     if checked:
@@ -730,13 +881,19 @@ def main():
     ap.add_argument('--gui', required=True, help="a decoded recording's gui.txt with the Pets menu (tools/replay decode)")
     ap.add_argument('--wiki', help='a saved Module:Pet/Data (from --save-wiki) instead of fetching it')
     ap.add_argument('--save-wiki', help='where to save the Module:Pet/Data fetched')
+    ap.add_argument('--kat', help="a saved Kat/Costs page (the wiki's raw text) instead of fetching it")
     ap.add_argument('--out', default=None, help='where the files go (default: pets/ of the private data checkout)')
     args = ap.parse_args()
     problems = []
     neu = Neu(args.neu)
     wiki, revid = load_wiki(args.wiki, args.save_wiki)
-    data = build(neu, wiki, problems)
-    source = {'neu_commit': neu.commit(), 'wiki_revision': revid}
+    if args.kat:
+        with open(args.kat, encoding='utf-8') as f:
+            kat_text, kat_revid = f.read(), None
+    else:
+        kat_text, kat_revid = fetch_wiki(WIKI_KAT)
+    data = build(neu, wiki, problems, kat_costs(kat_text), lambda title: fetch_wiki(title)[0])
+    source = {'neu_commit': neu.commit(), 'wiki_revision': revid, 'kat_revision': kat_revid}
     source['recording'] = os.path.basename(os.path.dirname(os.path.abspath(args.gui)))
     checked = check(data, args.gui, problems)
     data['score']['rewards'] = score_rewards(args.gui)

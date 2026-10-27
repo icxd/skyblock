@@ -33,6 +33,8 @@ import net.icxd.dungeons.item.nbt.ItemNBT;
 import net.icxd.dungeons.item.nbt.NBTTagCompound;
 import net.icxd.dungeons.item.requirement.Requirement;
 import net.icxd.dungeons.listeners.InventorySyncListener;
+import net.icxd.dungeons.pet.OwnedPet;
+import net.icxd.dungeons.pet.PetItems;
 import net.icxd.dungeons.user.StoredInventory;
 import net.icxd.dungeons.user.User;
 import net.icxd.dungeons.utils.Text;
@@ -149,8 +151,9 @@ public final class ShopMenu extends GUI {
 
     private GUIClickableItem wareButton(int slot, Shop.Ware ware, Document profile, long now) {
         SkyBlockItem item = ItemRegistry.get(ware.item());
-        // As theirs, so a requirement they don't meet shows ("Requires Farming Skill 1", as recorded).
-        ItemStack stack = ItemBuilder.shownTo(item, ware.amount(), viewer);
+        // As theirs, so a requirement they don't meet shows ("Requires Farming Skill 1", as recorded); a pet, as its level 100.
+        ItemStack preview = ware.pet() == null ? null : PetItems.preview(ware.pet());
+        ItemStack stack = preview != null ? preview : ItemBuilder.shownTo(item, ware.amount(), viewer);
         List<String> costs = new ArrayList<>();
         for (Cost cost : Shop.costs(ware, viewer)) costs.add(costLine(cost));
         boolean locked = locked(ware, item);
@@ -234,7 +237,9 @@ public final class ShopMenu extends GUI {
                     : Selling.NOT_ENOUGH_ITEMS);
             return;
         }
-        ItemStack bought = ItemBuilder.build(item, ware.amount());
+        OwnedPet pet = ware.pet() == null ? null : PetItems.newPet(ware.pet());
+        if (ware.pet() != null && pet == null) return;
+        ItemStack bought = pet != null ? PetItems.item(pet) : ItemBuilder.build(item, ware.amount());
         // What they hold on the cursor goes back into their inventory when the menu closes, or
         // falls at their feet if it has no room: it needs its place as much as what they buy.
         if (!fits(viewer.getInventory(), viewer.getItemOnCursor(), bought)) {
@@ -244,7 +249,9 @@ public final class ShopMenu extends GUI {
         for (Cost cost : costs) cost.pay(viewer, user);
         ShopStock.record(user.profile(), shop, ware, now);
         viewer.getInventory().addItem(bought);
-        tell(Selling.bought(name(item, bought), ware.amount()));
+        double coins = 0;
+        for (Cost cost : costs) if (cost instanceof CoinCost c) coins += c.getAmount();
+        tell(Selling.bought(pet != null ? PetItems.shopName(pet) : name(item, bought), ware.amount(), coins));
         // The stock it shows is one trade less.
         if (ware.stock() > 0) {
             items();

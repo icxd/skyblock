@@ -147,6 +147,46 @@ class Wiki(unittest.TestCase):
 
 
 class Recording(unittest.TestCase):
+    def test_kat_costs(self):
+        table = ("{| class=\"wikitable\"\n!Pets\n|-\n![[Bee Pet|Bee]]\n|{{Plainlist|\n* {{Green|1}} {{Time|Minute}}\n"
+                 "* {{Item|Small Honey Dipper|amount=1}}\n}}\n\n|{{Plainlist|\n* {{Green|1}} {{Time|Hours}}\n* {{c|1.5m}}\n"
+                 "* {{Item|Enchanted Acacia Log}}\n* {{Green|512x}} {{LI|Revenant Flesh|Revenant Flesh}}\n}}\n|{{bc}}\n|-\n"
+                 "![[Bal Pet|Bal]]\n|{{bc}}\n|{{Plainlist|\n* {{Green|10}} {{Time|Days}}\n* {{c|2m}}\n}}\n|}")
+        costs = bp.kat_costs(table)
+        self.assertEqual({'seconds': 60, 'coins': 0, 'items': [('Small Honey Dipper', 1)]}, costs['Bee']['COMMON'])
+        self.assertEqual({'seconds': 3600, 'coins': 1500000, 'items': [('Enchanted Acacia Log', 1), ('Revenant Flesh', 512)]},
+                         costs['Bee']['UNCOMMON'])
+        self.assertNotIn('RARE', costs['Bee'])
+        self.assertEqual({'UNCOMMON': {'seconds': 864000, 'coins': 2000000, 'items': []}}, costs['Bal'])
+
+    def test_a_pages_kat_table(self):
+        page = ("== Kat ==\n{{Kat Cost table\n|cost_c = 25,000\n|mats_c = Enchanted Mycelium, 16\n|time_c = 1 Hour\n\n"
+                "|cost_r = 100000\n|mats_r = \n*Enchanted Mycelium, 64\n*Digested Mushrooms, 32\n|time_r = 6 Hours\n"
+                "|headtext = y\n}}")
+        costs = bp.kat_template(page)
+        self.assertEqual({'seconds': 3600, 'coins': 25000, 'items': [('Enchanted Mycelium', 16)]}, costs['COMMON'])
+        self.assertEqual([('Enchanted Mycelium', 64), ('Digested Mushrooms', 32)], costs['RARE']['items'])
+        self.assertNotIn('UNCOMMON', costs)
+        self.assertEqual(1_500_000, bp.coins('1.5m'))
+
+    def test_a_skin(self):
+        names = {'Enderman': 'ENDERMAN', 'Ender Dragon': 'ENDER_DRAGON', 'Subzero Wisp': 'SUBZERO_WISP', 'Frost Wisp': 'FROST_WISP'}
+        problems = []
+        void = bp.skin('ENDERMAN_SLAYER', neu_item('PET_SKIN_ENDERMAN_SLAYER', '§5Void Conqueror Enderman Skin', [
+            '§8Consumed on use', '', '§7This skin can only be applied to', '§aEnderman§7 pets.', '', '§5§lEPIC COSMETIC'], 'void1'),
+            names, problems)
+        self.assertEqual({'name': 'Void Conqueror Enderman Skin', 'short': 'Void Conqueror', 'rarity': 'EPIC', 'color': '5',
+                          'texture': 'void1', 'pets': ['ENDERMAN']}, void)
+        neon = bp.skin('DRAGON_NEON_RED', neu_item('PET_SKIN_DRAGON_NEON_RED', '§4Neon Red Ender Dragon Skin', [
+            '§7This skin can only be applied to', '§aEnder Dragon§7 pets.', '', '§4§lULTIMATE COSMETIC']), names, problems)
+        self.assertEqual(('Neon Red', 'ULTIMATE', '4'), (neon['short'], neon['rarity'], neon['color']))
+        fairy = bp.skin('WISP_FAIRY', neu_item('PET_SKIN_WISP_FAIRY', '§dFairy Wisp Skin', [
+            '§7This skin can be applied to Subzero Wisp, Droplet Wisp, Frost Wisp, and Glacial Wisp pets.', '§d§lMYTHIC COSMETIC']),
+            names, problems)
+        self.assertEqual(['SUBZERO_WISP', 'FROST_WISP'], fairy['pets'])
+        self.assertEqual(2, len(problems), "the two Wisps this test's NEU hasn't")
+        self.assertIsNone(bp.skin('X', neu_item('PET_SKIN_X', '§fX Skin', ['§7Nothing.']), names, []))
+
     def test_built_and_checked(self):
         with tempfile.TemporaryDirectory() as d:
             neu = os.path.join(d, 'neu')
