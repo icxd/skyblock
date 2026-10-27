@@ -213,6 +213,40 @@ class ScanAndExportTest {
     assertEquals(a.centerZ() - 15, room.clayZ());
   }
 
+  /** F1's 4x5, with solid stone in cells (4,5) and (5,5) as around Bonzo's arena: not a room there. */
+  @Test
+  void onlyTheFloorsGridIsRead() {
+    FakeWorld w = new FakeWorld();
+    BlockState stone = Blocks.STONE.defaultBlockState();
+    Cell room = new Cell(0, 0);
+    w.fill(room.centerX() - 15, 68, room.centerZ() - 15, room.centerX() + 15, 68, room.centerZ() + 15, stone);
+    w.fill(room.centerX() - 15, ROOF, room.centerZ() - 15, room.centerX() + 15, ROOF, room.centerZ() + 15, stone);
+    w.fill(new Cell(4, 5).centerX() - 15, 0, new Cell(4, 5).centerZ() - 15, new Cell(5, 5).centerX() + 15, ROOF, new Cell(5, 5).centerZ() + 15,
+        stone);
+
+    ScannedDungeon anyFloor = DungeonScan.scan(w, EMPTY_DB);
+    assertEquals(2, anyFloor.rooms().size());
+    assertEquals(6, anyFloor.width());
+
+    ScannedDungeon f1 = DungeonScan.scan(w, EMPTY_DB, "F1");
+    assertEquals(1, f1.rooms().size());
+    assertEquals(List.of(room), f1.rooms().get(0).cells());
+    assertEquals(1, f1.width());
+    assertEquals(1, f1.height());
+    assertTrue(f1.complete() && f1.rooms().get(0).complete());
+
+    assertEquals(List.of(4, 4), toList(DungeonScan.grid("E")));
+    assertEquals(List.of(4, 5), toList(DungeonScan.grid("M1")));
+    assertEquals(List.of(5, 5), toList(DungeonScan.grid("F3")));
+    assertEquals(List.of(6, 5), toList(DungeonScan.grid("F4")));
+    assertEquals(List.of(6, 6), toList(DungeonScan.grid("F7")));
+    assertEquals(List.of(6, 6), toList(DungeonScan.grid("unknown")));
+  }
+
+  private static List<Integer> toList(int[] a) {
+    return java.util.Arrays.stream(a).boxed().toList();
+  }
+
   @Test
   void openedWitherDoorStaysAWitherDoor(@TempDir Path dir) throws Exception {
     FakeWorld w = new FakeWorld();

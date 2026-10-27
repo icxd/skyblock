@@ -175,7 +175,7 @@ public final class DungeonScannerClient implements ClientModInitializer {
     }
     try {
       LevelView view = new LevelView(mc.level);
-      ScannedDungeon dungeon = DungeonScan.scan(view, db);
+      ScannedDungeon dungeon = DungeonScan.scan(view, db, exporter.floor());
       Exporter.Result result = exporter.export(view, dungeon);
       for (String id : result.newRooms()) say("Saved new room: " + id, ChatFormatting.GREEN);
       for (String p : result.problems()) say(p, ChatFormatting.YELLOW);

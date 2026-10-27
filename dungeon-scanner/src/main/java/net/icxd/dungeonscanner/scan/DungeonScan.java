@@ -18,7 +18,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Reads the dungeon layout out of the world. The Catacombs always sit on the same grid: cells of
- * 31x31 blocks with a 1-block gap, the first cell's centre at -185,-185, up to 6x6 cells.
+ * 31x31 blocks with a 1-block gap, the first cell's centre at -185,-185, up to 6x6 cells. Only the
+ * floor's own cells are read: on F1 the stone around Bonzo's arena fills cells (4,5) and (5,5),
+ * outside its 4x5, and was saved as a room with no doors.
  *
  * <p>Between two neighbouring cells there's either nothing (different rooms, no door), a doorway
  * whose column tops out at y=73 (or 81 for Old Trap) with the door block at y=69, or the room
@@ -36,11 +38,20 @@ public final class DungeonScan {
   private DungeonScan() {
   }
 
+  /** A dungeon on an unknown floor: every cell of the 6x6. */
   public static ScannedDungeon scan(WorldView world, RoomDatabase db) {
+    return scan(world, db, null);
+  }
+
+  /** A dungeon on this floor ("E", "F1", "M4", as the sidebar has it), read only within its grid. */
+  public static ScannedDungeon scan(WorldView world, RoomDatabase db, String floor) {
+    int[] grid = grid(floor);
+    int sizeX = grid[0];
+    int sizeZ = grid[1];
     RoomCore[][] cores = new RoomCore[MAX_CELLS][MAX_CELLS];
     boolean allCellsKnown = true;
-    for (int x = 0; x < MAX_CELLS; x++) {
-      for (int z = 0; z < MAX_CELLS; z++) {
+    for (int x = 0; x < sizeX; x++) {
+      for (int z = 0; z < sizeZ; z++) {
         Cell c = new Cell(x, z);
         if (!world.isLoaded(c.centerX(), c.centerZ())) {
           allCellsKnown = false;
@@ -56,13 +67,13 @@ public final class DungeonScan {
     for (int i = 0; i < parent.length; i++) parent[i] = i;
     List<Door> doors = new ArrayList<>();
     Map<Long, Link> links = new HashMap<>();
-    for (int x = 0; x < MAX_CELLS; x++) {
-      for (int z = 0; z < MAX_CELLS; z++) {
+    for (int x = 0; x < sizeX; x++) {
+      for (int z = 0; z < sizeZ; z++) {
         if (cores[x][z] == null) continue;
         for (int[] d : new int[][]{{1, 0}, {0, 1}}) {
           int nx = x + d[0];
           int nz = z + d[1];
-          if (nx >= MAX_CELLS || nz >= MAX_CELLS || cores[nx][nz] == null) continue;
+          if (nx >= sizeX || nz >= sizeZ || cores[nx][nz] == null) continue;
           Cell a = new Cell(x, z);
           Cell b = new Cell(nx, nz);
           int gx = a.centerX() + d[0] * (PITCH / 2);
@@ -76,8 +87,8 @@ public final class DungeonScan {
     }
 
     Map<Integer, List<Cell>> groups = new HashMap<>();
-    for (int x = 0; x < MAX_CELLS; x++) {
-      for (int z = 0; z < MAX_CELLS; z++) {
+    for (int x = 0; x < sizeX; x++) {
+      for (int z = 0; z < sizeZ; z++) {
         if (cores[x][z] != null) groups.computeIfAbsent(find(parent, x * MAX_CELLS + z), k -> new ArrayList<>()).add(new Cell(x, z));
       }
     }
@@ -87,7 +98,7 @@ public final class DungeonScan {
     int height = 0;
     for (List<Cell> cells : groups.values()) {
       cells.sort(Comparator.comparingInt(Cell::z).thenComparingInt(Cell::x));
-      rooms.add(room(world, db, cores, cells, links));
+      rooms.add(room(world, db, cores, cells, links, sizeX, sizeZ));
       for (Cell c : cells) {
         width = Math.max(width, c.x() + 1);
         height = Math.max(height, c.z() + 1);
@@ -95,6 +106,21 @@ public final class DungeonScan {
     }
     rooms.sort(Comparator.comparingInt((Room r) -> r.cells().get(0).z()).thenComparingInt(r -> r.cells().get(0).x()));
     return new ScannedDungeon(rooms, doors, width, height, allCellsKnown);
+  }
+
+  /**
+   * The floor's grid, cells along x and z: Entrance 4x4, F1 4x5, F2-F3 5x5, F4 6x5, F5-F7 6x6, Master
+   * Mode the same (Odin, Skytils); 6x6 for a floor it doesn't know.
+   */
+  public static int[] grid(String floor) {
+    if (floor == null) return new int[]{MAX_CELLS, MAX_CELLS};
+    return switch (floor) {
+      case "E" -> new int[]{4, 4};
+      case "F1", "M1" -> new int[]{4, 5};
+      case "F2", "M2", "F3", "M3" -> new int[]{5, 5};
+      case "F4", "M4" -> new int[]{6, 5};
+      default -> new int[]{MAX_CELLS, MAX_CELLS};
+    };
   }
 
   private static Link link(WorldView world, RoomDatabase db, RoomCore a, RoomCore b, int gx, int gz) {
@@ -127,7 +153,8 @@ public final class DungeonScan {
     return info != null && info.type().equals("ENTRANCE");
   }
 
-  private static Room room(WorldView world, RoomDatabase db, RoomCore[][] cores, List<Cell> cells, Map<Long, Link> links) {
+  private static Room room(WorldView world, RoomDatabase db, RoomCore[][] cores, List<Cell> cells, Map<Long, Link> links,
+      int sizeX, int sizeZ) {
     RoomInfo info = null;
     int roof = 0;
     for (Cell c : cells) {
@@ -190,7 +217,7 @@ public final class DungeonScan {
     for (Cell c : cells) {
       for (int[] d : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
         Cell n = new Cell(c.x() + d[0], c.z() + d[1]);
-        if (n.x() < 0 || n.z() < 0 || n.x() >= MAX_CELLS || n.z() >= MAX_CELLS) continue;
+        if (n.x() < 0 || n.z() < 0 || n.x() >= sizeX || n.z() >= sizeZ) continue;
         if (cores[n.x()][n.z()] == null && !world.isLoaded(n.centerX(), n.centerZ())) complete = false;
         Link l = links.get(d[0] + d[1] > 0 ? key(c, n) : key(n, c));
         if (l == Link.UNKNOWN) complete = false;

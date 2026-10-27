@@ -1,7 +1,7 @@
 # Dungeon runs
 
 What happens from entering a dungeon to leaving it, as on Hypixel. Everything here was taken from
-Replay Mod recordings of Entrance runs on Hypixel (and, for the boss room, three Floor I fights),
+Replay Mod recordings of Hypixel runs, two on the Entrance and three on Floor I (with Bonzo),
 decoded with `tools/replay`, unless it says otherwise. The code is in `paper/src/main/java/net/icxd/dungeons/dungeons/instance`
 (`DungeonRun` for the stages below, `RunManager` for worlds and players) and the proxy's
 `dungeon` package.
