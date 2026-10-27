@@ -292,6 +292,31 @@ the ring.
   wait..." come 4.15 and 8.25 s after his death. He gives the killer Combat XP and his kill, as a
   mob does.
 
+**Reward chests** (`RewardChests`, `RewardChestMenu`, the `chests` package; all three recordings, and
+MCW's Dungeon Reward Chest for what they can't show).
+- They appear with the summary round the ring's middle, facing it: Wood to the west, Gold to the
+  east, Diamond to the north, then Emerald to the south for a score of 230 and Obsidian in the
+  middle for 270 (all five in the 301 S+ recording). Each is Hypixel's model, invisible armor stands
+  wearing slabs, blocks and heads, as recorded (`ChestModel`); `/spawnrewardchest <type>` builds one
+  where you stand.
+- Right-clicking one opens its menu ("Wood", "Gold", "Diamond") with a lever click: your loot along
+  the second row, "Open Reward Chest" listing it and its cost (FREE, 25,000, 50,000, 100,000 and
+  250,000 coins on Floor I, more for Bonzo's Mask or Staff, a Recombobulator or a Fuming Potato
+  Book in it), Close, and "Reroll Chest".
+- The loot is each member's own, rolled the first time they look, as MCW describes: the chest's
+  quality (x1.05 for S+, then the best Treasure accessory's multiplier, applied twice as Hypixel's
+  bug does) is spent on rows picked by weight until none fits, what's left becomes Undead Essence,
+  and the chest's essence is added. The tables are MCW's, in `dungeons/chest_loot.json`. All three
+  recorded chests come out of it exactly with a Treasure Talisman.
+- One chest a run; a Dungeon Chest Key in the inventory lets a second open, and is used up by it.
+  A Kismet Feather rerolls one chest a run (not one already opened) and is used up. Coins come from
+  the purse, and what it's short from the bank.
+- Opening (recorded for Wood): the menu shuts, the lid shakes for 4 s with a wooden step every
+  quarter second, then it's gone, a white firework bursts on the chest (it hurts nobody), "WOOD
+  CHEST REWARDS" and the rewards go to chat, and each reward stands named on a circle 2 blocks
+  round the chest, starting in front, until walked over (within 1.5 blocks): items into the
+  inventory, essence onto the profile with "+7 Wither Essence" on the action bar.
+
 **Ending** (when the boss is beaten, the Watcher lets you pass on a floor without one, or `/dungeon end`, staff):
 - Each member's summary between bold green rules: "The Catacombs - Entrance", "Team Score: 182
   (B)", "☠ Defeated The Watcher in 03m 55s", "> EXTRA STATS <" (click: `/showextrastats`), then
@@ -377,10 +402,16 @@ Those multipliers are community reverse-engineering, unverified.
 
 ## Not yet
 
-- The bosses after Floor I, the boss bar compass. Bonzo's reward chests. What the recordings don't
+- The bosses after Floor I, the boss bar compass. What the recordings don't
   show of Bonzo: where he chooses to go (here away from players, a pillar 2 times in 5), how often
   his aimed balloons come (here at most every 5 s), whether he heals after SHOW TIME, whether his
-  Undead go when he dies, and any cap on them. Unstarred mobs in the hidden parts of
+  Undead go when he dies, and any cap on them. Of the reward chests: what chat says for a second
+  chest without a key, a chest already opened, too few coins and a reroll (the plugin's own words);
+  the colour of each chest's "REWARDS" title but Wood's; which parts of the other chests' lids shake
+  and go (their heads, here); the menu's layout for 1, 2 or 5+ rewards; whether teammates see your
+  rewards; what happens to rewards not picked up when the instance closes (given then, here); the
+  Class Milestone 2 a chest needs; Croesus; dyes, discs and shards; the stars and upgrades weapons
+  and armor can come with. Unstarred mobs in the hidden parts of
   rooms nobody recorded; crypts where no tomb is known; the Dungeon Sack. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
   his real icons (placeholders for now).
 - The puzzles of later floors (Higher or Lower, Boulder, Ice Path, Quiz, Ice Fill) and the

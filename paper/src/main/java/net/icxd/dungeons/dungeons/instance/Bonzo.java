@@ -804,14 +804,13 @@ final class Bonzo implements DungeonMobs.Mob {
         run.later(TUNNEL_AFTER, () -> sink(TUNNEL_BLOCKS));
     }
 
-    /** A line over where he fell; it goes by itself 3.1 s later (the run may be over, and not ticking him). */
+    /** A line over where he fell, for 3.1 s like any other (the run ticks him after its end). */
     private void sayAt(Location at, String line) {
         lastLine = age;
         run.tell("&c[BOSS] Bonzo&f: " + line);
         if (speech != null) speech.remove();
-        ArmorStand stand = stand(at.clone().add(0, DOWN_SPEECH_ABOVE, 0), "&l" + line);
-        speech = stand;
-        run.later(SPEECH_LASTS, stand::remove);
+        speech = stand(at.clone().add(0, DOWN_SPEECH_ABOVE, 0), "&l" + line);
+        speechUntil = age + SPEECH_LASTS;
     }
 
     /** Blocks that go down into the floor, as the run's doors do. */
