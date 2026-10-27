@@ -58,7 +58,7 @@ public final class PetFollowers {
     static final double BOB = 0.55;
     static final double BOB_TICKS = 78;
     /** How close it comes, and how fast (blocks a tick: a third of the recorded 3 ticks' 0.47 x distance^0.575). */
-    static final double NEAR = 0.8;
+    static final double NEAR = 1.5;
     static final double SPEED = 0.157;
     static final double SPEED_POWER = 0.575;
     /** How fast it rises and falls to its height: a third of the recorded 0.156 every 3 ticks. */
