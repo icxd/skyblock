@@ -171,6 +171,11 @@ final class Bonzo implements DungeonMobs.Mob {
             "Balloon (Cyan)", "Balloon (Blue)", "Balloon (Purple)", "Balloon (Pink)", "Balloon (Lime)");
     /** His wither skulls in flight, for their hits (see {@link #skullHit}). */
     private static final Map<UUID, Bonzo> SKULLS = new HashMap<>();
+    /**
+     * On each of his skulls, so it's still known as his when it blows up: Paper runs a skull's hit on a block even when
+     * the hit's event is cancelled, after {@link #skullHit} has let it go.
+     */
+    private static final String SKULL_TAG = "bonzo_skull";
 
     private final DungeonRun run;
     private final BossArena arena;
@@ -532,6 +537,7 @@ final class Bonzo implements DungeonMobs.Mob {
         WitherSkull skull = world.spawn(from.add(aim.clone().multiply(0.6)), WitherSkull.class, s -> {
             s.setShooter(body);
             s.setPersistent(false);
+            s.addScoreboardTag(SKULL_TAG);
             s.setAcceleration(aim.clone().multiply(0.1));
             s.setVelocity(aim.clone().multiply(0.1));
         });
@@ -557,7 +563,7 @@ final class Bonzo implements DungeonMobs.Mob {
 
     /** Whether this is one of his skulls (they don't blow up). */
     static boolean isSkull(Entity entity) {
-        return SKULLS.containsKey(entity.getUniqueId());
+        return entity.getScoreboardTags().contains(SKULL_TAG);
     }
 
     // Dead, for a while
