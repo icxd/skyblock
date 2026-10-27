@@ -71,8 +71,8 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
  *   <li>On a floor with a boss room ({@link BossArena}), the Watcher letting them pass lights the Blood
  *       Room's portal ({@link BloodPortal}), which takes them to the boss ({@link Bonzo} on Floor I).</li>
  *   <li>Ended, when the boss is beaten (on the Entrance, and floors whose boss isn't here yet, when the
- *       Watcher lets them pass) or with {@code /dungeon end}: the score and a re-queue link, and 20
- *       seconds later everyone goes to the Dungeon Hub.</li>
+ *       Watcher lets them pass) or with {@code /dungeon end}: the score and a re-queue link, the boss room's
+ *       reward chests ({@link RewardChests}), and 20 seconds later everyone goes to the Dungeon Hub.</li>
  * </ol>
  *
  * <p>Main thread. {@link RunManager} ticks it every tick and every second.
@@ -155,6 +155,8 @@ public final class DungeonRun implements ScoreCounts {
     /** Once the Watcher's done; and the boss, once someone's come through it. */
     private BloodPortal portal;
     private Bonzo boss;
+    /** The boss room's reward chests, from the end on. */
+    private RewardChests rewardChests;
     /** From the start ({@link #start}); the blessings once one is found. */
     private RunSecrets secrets;
     private RunBlessings blessings;
@@ -330,6 +332,7 @@ public final class DungeonRun implements ScoreCounts {
             roomMobs.tickWaiting();
             // A beaten boss still has his last lines, and his undeads, after the end.
             if (phase == Phase.ENDED && boss != null) boss.tick();
+            if (phase == Phase.ENDED && rewardChests != null) rewardChests.tick();
             return;
         }
         ticks++;
@@ -373,6 +376,18 @@ public final class DungeonRun implements ScoreCounts {
 
     boolean isKey(org.bukkit.entity.Entity entity) {
         return doors.isKey(entity);
+    }
+
+    /** Whether this is part of one of the reward chests. */
+    boolean isRewardChest(org.bukkit.entity.Entity entity) {
+        return rewardChests != null && rewardChests.chestOf(entity) != null;
+    }
+
+    /** A right click on a reward chest: its menu (see {@link RewardChests}). */
+    void clickRewardChest(Player player, org.bukkit.entity.Entity entity) {
+        if (rewardChests == null || closed) return;
+        var type = rewardChests.chestOf(entity);
+        if (type != null) rewardChests.click(player, type);
     }
 
     void doorOpened(Door door) {
@@ -715,6 +730,8 @@ public final class DungeonRun implements ScoreCounts {
         // Before the Blood Room counts, as Hypixel's chat has it.
         chatScore = score(endedAt);
         rewardAndSummarize();
+        // With the summary, as recorded.
+        if (arena != null) rewardChests = RewardChests.spawn(this, arena, floor, chatScore.total());
         later(RunEnd.CARD, this::showScoreCard);
         later(RunEnd.CARD_ITEM, () -> {
             for (Player player : players()) giveMap(player, "&a&lYour Score Summary", List.of());
@@ -839,6 +856,7 @@ public final class DungeonRun implements ScoreCounts {
     /** Everyone to the Dungeon Hub, and the run is done. */
     private void close() {
         if (closed) return;
+        if (rewardChests != null) rewardChests.handOver();
         for (Player player : players()) {
             player.closeInventory();
             manager.leave(player);
@@ -857,6 +875,7 @@ public final class DungeonRun implements ScoreCounts {
         if (fairies != null) fairies.dispose();
         if (watcher != null) watcher.dispose();
         if (boss != null) boss.dispose();
+        if (rewardChests != null) rewardChests.dispose();
         if (secrets != null) secrets.dispose();
         if (cases != null) cases.dispose();
         puzzleRooms.dispose();

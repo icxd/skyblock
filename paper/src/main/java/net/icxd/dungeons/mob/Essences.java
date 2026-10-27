@@ -103,14 +103,31 @@ public final class Essences implements Listener {
         for (Roll gain : gains) add(user.profile(), gain.type(), gain.amount());
         user.save();
         Roll last = gains.get(gains.size() - 1);
-        PlayerSession session = PlayerSession.of(killer);
-        Replacement shown = Replacement.forMillis(actionBar(last.type(), last.amount()), SHOWN_MILLIS);
+        show(killer, actionBar(last.type(), last.amount()));
+    }
+
+    /**
+     * Essence for a player from anything but a kill (a reward chest's): onto their profile, with "+7 Wither Essence" on the
+     * action bar as a kill's (recorded for a Wood chest's).
+     */
+    public static void give(Player player, EssenceType type, int amount) {
+        User user = User.ifLoaded(player.getUniqueId());
+        if (amount <= 0 || user == null || user.isReleased()) return;
+        add(user.profile(), type, amount);
+        user.save();
+        show(player, actionBar(type, amount));
+    }
+
+    /** The gain on the action bar in Defense's place for {@link #SHOWN_MILLIS}. */
+    private static void show(Player player, String text) {
+        PlayerSession session = PlayerSession.of(player);
+        Replacement shown = Replacement.forMillis(text, SHOWN_MILLIS);
         session.setDefenseReplacement(shown);
-        StatsRunnable.sendActionBar(killer);
+        StatsRunnable.sendActionBar(player);
         Bukkit.getScheduler().runTaskLater(Dungeons.getInstance(), () -> {
-            if (!killer.isOnline() || session.getDefenseReplacement() != shown) return;
+            if (!player.isOnline() || session.getDefenseReplacement() != shown) return;
             session.setDefenseReplacement(null);
-            StatsRunnable.sendActionBar(killer);
+            StatsRunnable.sendActionBar(player);
         }, SHOWN_MILLIS / 50);
     }
 }

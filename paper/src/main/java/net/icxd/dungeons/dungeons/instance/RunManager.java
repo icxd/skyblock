@@ -53,6 +53,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -709,6 +710,18 @@ public final class RunManager {
             arriving.remove(event.getPlayer().getUniqueId());
         }
 
+        /**
+         * A right click on a reward chest, which is armor stands: the server asks this event of them first (its own
+         * handlers, not {@link PlayerInteractEntityEvent}'s), then hands the stand its click.
+         */
+        @EventHandler
+        public void onInteractAt(PlayerInteractAtEntityEvent event) {
+            DungeonRun run = runIn(event.getRightClicked().getWorld());
+            if (run == null || !run.isRewardChest(event.getRightClicked())) return;
+            event.setCancelled(true);
+            if (event.getHand() == EquipmentSlot.HAND) run.clickRewardChest(event.getPlayer(), event.getRightClicked());
+        }
+
         /** Clicking Mort (or his name tags) before the start opens the Ready Up menu: a right click, or a left one. */
         @EventHandler
         public void onInteract(PlayerInteractEntityEvent event) {
@@ -736,7 +749,8 @@ public final class RunManager {
         @EventHandler
         public void onArmorStand(PlayerArmorStandManipulateEvent event) {
             DungeonRun run = runIn(event.getRightClicked().getWorld());
-            if (run != null && (run.isMort(event.getRightClicked()) || run.isKey(event.getRightClicked()))) event.setCancelled(true);
+            if (run != null && (run.isMort(event.getRightClicked()) || run.isKey(event.getRightClicked())
+                    || run.isRewardChest(event.getRightClicked()))) event.setCancelled(true);
         }
 
         /** Clicking a wither door or the Blood Door (right or left, as on Hypixel), with the key or without. */
@@ -754,6 +768,12 @@ public final class RunManager {
             if (DungeonMobs.of(event.getEntity()) == null) return;
             if (event instanceof EntityDamageByEntityEvent hit && playerBehind(hit.getDamager()) != null) return;
             if (event.getCause() != EntityDamageEvent.DamageCause.KILL) event.setCancelled(true);
+        }
+
+        /** A reward chest's firework only bursts (see {@link RewardChests}). */
+        @EventHandler(priority = EventPriority.LOWEST)
+        public void onBurst(EntityDamageByEntityEvent event) {
+            if (RewardChests.isBurst(event.getDamager())) event.setCancelled(true);
         }
 
         /** Their own attacks (the Parasites' silverfish) do SkyBlock damage. */
