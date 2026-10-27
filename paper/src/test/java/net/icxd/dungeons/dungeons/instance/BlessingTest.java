@@ -32,6 +32,8 @@ class BlessingTest {
         assertEquals("&6&lDUNGEON BUFF! &fYou found a &dBlessing of Wisdom V&f! (&a14s&f)", Blessing.WISDOM.found(null, 5, "14s"));
         assertEquals("&6&lDUNGEON BUFF! &fYou found a &dBlessing of Power V&f! (&a01m 22s&f)", Blessing.POWER.found(null, 5, "01m 22s"));
         assertEquals("&6&lDUNGEON BUFF! &bAlice &ffound a &dBlessing of Life V&f!", Blessing.LIFE.found("&bAlice", 5, null));
+        // The Blood Room's, nobody having picked them up (recorded 2026-10-26).
+        assertEquals("&6&lDUNGEON BUFF! &fA &dBlessing of Power V&f was found! (&a01m 34s&f)", Blessing.POWER.foundByItself(5, "01m 34s"));
         assertEquals("Blessing of Wisdom XII", Blessing.WISDOM.displayName(12));
     }
 

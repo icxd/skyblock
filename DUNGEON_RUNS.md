@@ -1,8 +1,8 @@
 # Dungeon runs
 
 What happens from entering a dungeon to leaving it, as on Hypixel. Everything here was taken from
-Replay Mod recordings of Entrance runs on Hypixel (decoded with `tools/replay`), unless it says
-otherwise. The code is in `paper/src/main/java/net/icxd/dungeons/dungeons/instance`
+Replay Mod recordings of Entrance runs on Hypixel (and, for the boss room, three Floor I fights),
+decoded with `tools/replay`, unless it says otherwise. The code is in `paper/src/main/java/net/icxd/dungeons/dungeons/instance`
 (`DungeonRun` for the stages below, `RunManager` for worlds and players) and the proxy's
 `dungeon` package.
 
@@ -248,9 +248,51 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
 - He can't be hurt: hitting him zaps you with an elder guardian's beam, for as much as an undead
   hits.
 - When the last one dies: "You have proven yourself. You may pass.", and 5 seconds later the run
-  ends (there are no bosses yet).
+  ends on the Entrance (and floors whose boss isn't here yet). On Floor I the Blood Room's portal
+  opens instead (below).
 
-**Ending** (when the Watcher lets you pass, or `/dungeon end`, staff):
+**The boss room** (`BossArena`, `ArenaLibrary`, `BloodPortal`; Floor I only so far).
+- Bonzo's ring isn't one of the floor's rooms: it's read once when the server starts from the
+  Floor I world capture (`plugins/dungeons/worlds`, sidebar area "The Catacombs (F1)"), blocks only,
+  x -72 to -14, y 55 to 147, z -40 to 49, and pasted with the floor, beside its grid as on
+  Hypixel. Without a capture the server logs it and Floor I runs end with the Watcher.
+- 4.5 s after "You may pass." (all three recordings) lightning strikes the Blood Room's obsidian
+  frame (14 blocks round a 3x4 opening, in every captured Blood Room) and it fills with portal.
+  At the same time a Blessing of Power V and one of Life V appear a block to either side of the
+  room's middle. Nobody picking them up, they go by themselves after 10.1 s (10.1 and 10.3
+  recorded): "A Blessing of Power was picked up!", then "DUNGEON BUFF! A Blessing of Power V was
+  found! (01m 34s)" with the run's time.
+- Walking into the portal takes you to the ring at -42.5 71 34.5, facing its middle. The first one
+  in starts the fight, and anyone who's a ghost then is revived where they are (MCW Ghosts). The
+  portal never goes to the Nether.
+
+**Bonzo** (`Bonzo`, `BonzoUndead`; MCW for what the recordings can't show). 250,000 health in each
+phase, 2,664 damage; "✰♃ Bonzo 250k❤" over him (Undead for Humanoid in his second phase;
+health to a tenth of a thousand, "236.4k"), "BOSS" above that, and a red boss bar to whoever's in
+the ring.
+- Phase 1: three lines 4.1 s apart ("Gratz for making it this far, but I'm basically
+  unbeatable." ...), standing in the middle. From 11.5 s he moves: a run (0.33 blocks a tick) or a
+  leap (a block a tick) somewhere else, often up one of the seven pillars, and stands between.
+  Standing, he fires wither skulls at the nearest player he can see, every 0.5 to 0.95 s; they
+  speed up as vanilla's do, don't explode, and hit for 5,328 ("Bonzo's Wither Skull hit you for
+  5,328 damage."). From 13.6 s he summons Undead (50,000 health, 1,440 damage), the first in the
+  middle, then one every 0.4 to 4.6 s anywhere in the ring. Hit, he says "Oh noes, you got me.. what
+  ever will I do?!", then one of the wiki's lines at most every 4.1 s.
+- At 0 he falls over in the middle: "Oh I'm dead!" 1 s later, "Sike" 3.1 s after that, and 1.1 s
+  later he's back in his second skin with his staff and full health. He can't be hurt meanwhile.
+- Phase 2: he chases the nearest player and hits them; at someone more than 6 blocks off he fires
+  three balloons half a second apart ("Bonzo's Balloon hit you for 1598.3999999999999 damage.",
+  Hypixel's own unrounded number; "Do you want a balloon Name?" the first time). 7.1 s in and every
+  33.5 s after: "SHOOOOOOOOWWWWWWW TIMEEEEEEE!", and he goes to the middle and can't be hurt while
+  balloons go out every 3 ticks in every direction (0.78 blocks a tick) for 8.4 s, a line 4.1 s in,
+  ten fast ones at 12.8 s, and he's back at it at 13.6 s.
+- At 0 again: "Alright, maybe I'm just weak after all..", and the run ends 2.1 s later ("☠ Defeated
+  Bonzo in 02m 43s"). 2 s after the summary the north pillar sinks into the floor as a door does,
+  and 2 s after that the tunnel door behind it. "But my masters are a lot stronger.." and "Just you
+  wait..." come 4.15 and 8.25 s after his death. He gives the killer Combat XP and his kill, as a
+  mob does.
+
+**Ending** (when the boss is beaten, the Watcher lets you pass on a floor without one, or `/dungeon end`, staff):
 - Each member's summary between bold green rules: "The Catacombs - Entrance", "Team Score: 182
   (B)", "☠ Defeated The Watcher in 03m 55s", "> EXTRA STATS <" (click: `/showextrastats`), then
   "+3 Bits", "+131.1 Catacombs Experience" and "+126.2 Berserk Experience" (their class first,
@@ -335,7 +377,10 @@ Those multipliers are community reverse-engineering, unverified.
 
 ## Not yet
 
-- The bosses, the boss bar compass. Unstarred mobs in the hidden parts of
+- The bosses after Floor I, the boss bar compass. Bonzo's reward chests. What the recordings don't
+  show of Bonzo: where he chooses to go (here away from players, a pillar 2 times in 5), how often
+  his aimed balloons come (here at most every 5 s), whether he heals after SHOW TIME, whether his
+  Undead go when he dies, and any cap on them. Unstarred mobs in the hidden parts of
   rooms nobody recorded; crypts where no tomb is known; the Dungeon Sack. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
   his real icons (placeholders for now).
 - The puzzles of later floors (Higher or Lower, Boulder, Ice Path, Quiz, Ice Fill) and the

@@ -140,6 +140,14 @@ public enum Blessing {
                 + (elapsed == null ? "" : " (&a" + elapsed + "&f)");
     }
 
+    /**
+     * "DUNGEON BUFF! A Blessing of Power V was found! (01m 34s)": one nobody picked up, that the team got by itself (the Blood
+     * Room's, recorded with "A Blessing of Power was picked up!" before it).
+     */
+    public String foundByItself(int level, String elapsed) {
+        return "&6&lDUNGEON BUFF! &fA &d" + displayName(level) + "&f was found! (&a" + elapsed + "&f)";
+    }
+
     /** The run's time in a picked up one's line: "14s", "01m 22s" (whole seconds, as recorded). */
     static String elapsed(long millis) {
         return RunText.elapsed(Math.max(0, millis - millis % 1000));

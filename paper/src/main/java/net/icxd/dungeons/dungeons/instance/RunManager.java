@@ -46,12 +46,16 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -59,6 +63,7 @@ import org.bukkit.map.MapView;
 import org.bukkit.plugin.Plugin;
 
 import com.mongodb.client.MongoCollection;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
 
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.math.Position;
@@ -69,6 +74,8 @@ import net.icxd.dungeons.dungeons.generation.DungeonConfig;
 import net.icxd.dungeons.dungeons.generation.DungeonGenerator;
 import net.icxd.dungeons.dungeons.instance.puzzle.PuzzleData;
 import net.icxd.dungeons.dungeons.instance.puzzle.PuzzleEvents;
+import net.icxd.dungeons.dungeons.paste.ArenaLibrary;
+import net.icxd.dungeons.dungeons.paste.BossArena;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.dungeons.paste.RoomLibrary;
 import net.icxd.dungeons.dungeons.paste.WorldEditPaster;
@@ -94,7 +101,7 @@ public final class RunManager {
     private static final String WORLD_PREFIX = "run-";
     private static final Pattern WORLD_NAME = Pattern.compile("run-\\d+");
     private static final long EMPTY_MILLIS = 60_000;
-    /** How far above the tallest room the waiting platform is (so clearing an old floor leaves it be). */
+    /** How far above the tallest room (or boss room) the waiting platform is (so clearing an old floor leaves it be). */
     private static final int WAITING_ABOVE = 10;
 
     private static final class Run {
@@ -136,6 +143,11 @@ public final class RunManager {
     private final Deque<String> idle = new ArrayDeque<>();
     /** Run worlds nothing has been pasted in yet. */
     private final Set<String> empty = new HashSet<>();
+    /** The boss room each run world has (none for a world without), and the worlds from before this start, which may have any. */
+    private final Map<String, BossArena> arenaIn = new HashMap<>();
+    private final Set<String> arenasUnknown = new HashSet<>();
+    /** The boss rooms' blocks, once read from their captures (see {@link ArenaLibrary}); null until then, or without WorldEdit. */
+    private ArenaLibrary arenas;
     /** Maps of finished runs, for the next ones (each new one is saved with the main world for good). */
     private final Deque<MapView> spareMaps = new ArrayDeque<>();
     private CompletableFuture<RoomLibrary> library;
@@ -175,13 +187,21 @@ public final class RunManager {
             }
         });
         loadSecrets(folder);
+        if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null) {
+            // Once the server is up: it opens a world for each capture.
+            Path captures = plugin.getDataFolder().toPath().resolve("worlds");
+            Bukkit.getScheduler().runTask(plugin, () -> ArenaLibrary.load(plugin, captures, loaded -> arenas = loaded));
+        }
         library.whenComplete((rooms, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (error != null) {
                 log.severe("No dungeon runs on this server: " + (error.getCause() != null ? error.getCause() : error).getMessage());
                 return;
             }
             largest = PastePlan.largestArea(rooms, PastePlan.HYPIXEL_BASE, PastePlan.HYPIXEL_BASE);
-            waitingY = largest.max().y() + WAITING_ABOVE;
+            // Above the boss rooms too: a big floor's corner cells are under Bonzo's, which an earlier run's may leave to clear.
+            int top = largest.max().y();
+            for (BossArena arena : BossArena.ALL) top = Math.max(top, arena.box().max().y());
+            waitingY = top + WAITING_ABOVE;
             prepareSpare();
         }));
         loadPuzzles(folder.resolve("rooms"));
@@ -340,20 +360,36 @@ public final class RunManager {
         run.waiting = new Location(world, entrance.x() + 0.5, waitingY, entrance.z() + 0.5);
         for (Player player : online(run)) send(player, run);
 
+        // Its boss room, if its floor has one and its capture was read (without, it ends with the Watcher).
+        BossArena arena = BossArena.of(run.floor);
+        Clipboard arenaBlocks = arena == null || arenas == null ? null : arenas.clipboard(arena);
+        if (arenaBlocks == null) arena = null;
+        BossArena bossRoom = arena;
+        // A boss room an earlier run left that this one doesn't have goes (a world from before this start may have any).
+        List<PastePlan.Box> staleArenas = new ArrayList<>();
+        BossArena before = arenaIn.remove(world.getName());
+        for (BossArena old : arenasUnknown.remove(world.getName()) ? BossArena.ALL : before == null ? List.<BossArena>of() : List.of(before)) {
+            if (old != arena) staleArenas.add(old.box());
+        }
+        if (arena != null) arenaIn.put(world.getName(), arena);
+
         // Loaded off the main thread first, or the paste's first steps would load them all at once
         // and hold up the server, logins included.
         // A world nothing's been pasted in only needs this floor's chunks; any other may have an
         // earlier floor, of any size, to clear.
-        PastePlan.Box area = wasEmpty ? plan.area() : largest;
-        loadChunks(world, area, true).whenComplete((loaded, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
+        List<PastePlan.Box> areas = new ArrayList<>(List.of(wasEmpty ? plan.area() : largest));
+        areas.addAll(staleArenas);
+        if (arena != null) areas.add(arena.box());
+        loadChunks(world, areas, true).whenComplete((loaded, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (run.ended) return;
             if (error != null) {
                 fail(run, "couldn't load its world: " + error.getMessage());
                 return;
             }
             step(run, "chunks");
-            List<PastePlan.Box> clear = wasEmpty ? List.of() : List.of(largest);
-            new WorldEditPaster(world, clear).paste(plugin, plan, result -> {
+            List<PastePlan.Box> clear = new ArrayList<>(wasEmpty ? List.of() : List.of(largest));
+            clear.addAll(staleArenas);
+            new WorldEditPaster(world, clear).paste(plugin, plan, arenaBlocks, result -> {
                 // The floor's chunks stay loaded (the tickets) until the run ends: keys, doors and
                 // the Watcher can be anywhere on it.
                 // Only now, so generating it doesn't slow this run's chunks down.
@@ -371,7 +407,7 @@ public final class RunManager {
                 platform(world, entrance, Material.AIR);
                 run.map = takeMap(world);
                 run.lifecycle = new DungeonRun(this, plugin, run.id, run.floor, run.members, world, entrance, plan.entranceDoor(),
-                        new RunLayout(plan.layout(), plan.rooms()), plan.roomCount(), plan.puzzleCount(), run.map);
+                        new RunLayout(plan.layout(), plan.rooms()), plan.roomCount(), plan.puzzleCount(), run.map, bossRoom);
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runs.updateOne(eq("_id", run.id), set(Runs.STATE, Runs.RUNNING)));
                 for (Player player : online(run)) send(player, run);
             });
@@ -589,12 +625,21 @@ public final class RunManager {
      * {@code keep} they stay loaded until this plugin's chunk tickets are removed.
      */
     private CompletableFuture<Void> loadChunks(World world, PastePlan.Box area, boolean keep) {
+        return loadChunks(world, List.of(area), keep);
+    }
+
+    /** The same for several areas (a chunk two of them share is loaded once). */
+    private CompletableFuture<Void> loadChunks(World world, List<PastePlan.Box> areas, boolean keep) {
+        Set<Long> seen = new HashSet<>();
         List<CompletableFuture<?>> chunks = new ArrayList<>();
-        for (int cx = area.min().x() >> 4; cx <= area.max().x() >> 4; cx++) {
-            for (int cz = area.min().z() >> 4; cz <= area.max().z() >> 4; cz++) {
-                chunks.add(world.getChunkAtAsync(cx, cz).thenAccept(chunk -> {
-                    if (keep) chunk.addPluginChunkTicket(plugin);
-                }));
+        for (PastePlan.Box area : areas) {
+            for (int cx = area.min().x() >> 4; cx <= area.max().x() >> 4; cx++) {
+                for (int cz = area.min().z() >> 4; cz <= area.max().z() >> 4; cz++) {
+                    if (!seen.add(((long) cx << 32) ^ (cz & 0xffffffffL))) continue;
+                    chunks.add(world.getChunkAtAsync(cx, cz).thenAccept(chunk -> {
+                        if (keep) chunk.addPluginChunkTicket(plugin);
+                    }));
+                }
             }
         }
         return CompletableFuture.allOf(chunks.toArray(CompletableFuture[]::new));
@@ -605,8 +650,10 @@ public final class RunManager {
         File[] files = Worlds.dimensionsFolder().toFile().listFiles((dir, name) -> name.startsWith(WORLD_PREFIX));
         if (files == null) return;
         for (File file : files) {
-            if (WORLD_NAME.matcher(file.getName()).matches()) idle.add(file.getName());
-            else if (Bukkit.getWorld(file.getName()) == null) delete(file.toPath());
+            if (WORLD_NAME.matcher(file.getName()).matches()) {
+                idle.add(file.getName());
+                arenasUnknown.add(file.getName());
+            } else if (Bukkit.getWorld(file.getName()) == null) delete(file.toPath());
         }
         if (!idle.isEmpty()) log.info("Reusing dungeon worlds " + String.join(", ", idle));
     }
@@ -739,6 +786,29 @@ public final class RunManager {
             Player damager = playerBehind(event.getDamager());
             DungeonRun run = damager == null ? null : runOf(damager);
             if (run != null) run.damageDealt(damager.getUniqueId(), event.getFinalDamage());
+        }
+
+        /** Bonzo's wither skulls hit whoever they reach, and are gone (see {@link Bonzo#skullHit}). */
+        @EventHandler(priority = EventPriority.HIGH)
+        public void onSkullHit(ProjectileHitEvent event) {
+            if (Bonzo.skullHit(event.getEntity(), event.getHitEntity())) event.setCancelled(true);
+        }
+
+        /** ... and don't blow up. */
+        @EventHandler
+        public void onSkullPrime(ExplosionPrimeEvent event) {
+            if (Bonzo.isSkull(event.getEntity())) event.setCancelled(true);
+        }
+
+        /** The Blood Room's portal only leads to the boss room (DungeonRun takes them there): no trips to the Nether. */
+        @EventHandler
+        public void onPortal(PlayerPortalEvent event) {
+            if (runIn(event.getFrom().getWorld()) != null) event.setCancelled(true);
+        }
+
+        @EventHandler
+        public void onEntityPortal(EntityPortalEvent event) {
+            if (runIn(event.getFrom().getWorld()) != null) event.setCancelled(true);
         }
 
         /** Dungeon mobs drop nothing (their kills are counted by the mobs themselves). */

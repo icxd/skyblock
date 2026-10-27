@@ -107,6 +107,8 @@ final class RoomMobs {
     private static final double NAME_BELOW = 0.47;
     private static final double HAND_BELOW = 0.5;
     private static final double PICKUP_REACH = 1.5;
+    /** The Blood Room's blessings go by themselves this long after they appear (see {@link #dropBloodBlessings}). */
+    static final int BY_ITSELF = 202;
 
     /**
      * How close to a tomb or weak wall a Superboom TNT has to go off: UNKNOWN (every recorded one went off right
@@ -199,6 +201,8 @@ final class RoomMobs {
         final List<ArmorStand> stands;
         /** Told their inventory is full, while they stand on it. */
         final Set<UUID> told = new HashSet<>();
+        /** The tick it's picked up by itself if nobody has (the Blood Room's blessings); -1 for never. */
+        long byItself = -1;
 
         Loot(RoomLoot.Drop drop, Location at, List<ArmorStand> stands) {
             this.drop = drop;
@@ -736,6 +740,29 @@ final class RoomMobs {
         }
     }
 
+    /**
+     * The Blood Room's, once the Watcher's done (recorded three times: a Blessing of Power V and one of Life V, a block
+     * to either side of its middle, along x one time and z another): picked up as a room's loot is, or by themselves
+     * {@link #BY_ITSELF} ticks after they appear if nobody has (recorded twice, 10.1 and 10.3 s).
+     */
+    void dropBloodBlessings(Location middle) {
+        boolean alongX = random.nextBoolean();
+        List<String> kinds = List.of("Power", "Life");
+        for (int i = 0; i < kinds.size(); i++) {
+            double off = i == 0 ? -1 : 1;
+            Location spot = middle.clone().add(alongX ? off : 0, 0, alongX ? 0 : off);
+            RoomLoot.Drop drop = new RoomLoot.Drop(RoomLoot.Kind.BLESSING, kinds.get(i), null);
+            ArmorStand head = stand(spot.clone().subtract(0, HEAD_BELOW, 0));
+            head.getEquipment().setHelmet(head("Blessing"));
+            ArmorStand label = stand(spot.clone().subtract(0, NAME_BELOW, 0));
+            label.customName(Text.line(drop.name()));
+            label.setCustomNameVisible(true);
+            Loot l = new Loot(drop, spot, List.of(head, label));
+            l.byItself = ticks + BY_ITSELF;
+            loot.add(l);
+        }
+    }
+
     /** A head with the texture the data has for it (a plain head if it has none). */
     private static ItemStack head(String name) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
@@ -761,7 +788,19 @@ final class RoomMobs {
                 if (pickUp(l, player)) break;
             }
             l.told.retainAll(here);
+            if (l.byItself >= 0 && ticks >= l.byItself && loot.contains(l)) pickedUpByItself(l);
         }
+    }
+
+    /** "A Blessing of Power was picked up!" to everyone, and the team has it ("DUNGEON BUFF! A Blessing of Power V was found!"). */
+    private void pickedUpByItself(Loot l) {
+        loot.remove(l);
+        for (ArmorStand stand : l.stands) {
+            stand.remove();
+            STANDS.remove(stand.getUniqueId());
+        }
+        run.tell("&eA " + l.drop.name() + "&e was picked up!");
+        if (l.drop.kind() == RoomLoot.Kind.BLESSING) run.blessingFoundByItself(l.drop.blessing(), RoomLoot.BLESSING_LEVEL);
     }
 
     /**

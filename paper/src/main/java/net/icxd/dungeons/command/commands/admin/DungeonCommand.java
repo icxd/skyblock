@@ -50,7 +50,7 @@ import net.icxd.dungeons.common.Rank;
  * with WorldEdit where Hypixel has it, from -200,-200, in your world (the main world from the
  * console).
  *
- * <p>{@code /dungeon end}: ends the run you're in as if the boss was beaten (until there are bosses).
+ * <p>{@code /dungeon end}: ends the run you're in as if its boss was beaten (a boss who's up carries on until it closes).
  */
 @CommandParameters(aliases = "dungeon", permission = Rank.STAFF)
 public class DungeonCommand extends SCommand {

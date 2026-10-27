@@ -106,6 +106,8 @@ public final class DeathText {
         DungeonMobs.Mob dungeonMob = DungeonMobs.of(killer);
         if (dungeonMob instanceof Undead undead) return undead.type.displayName;
         if (dungeonMob instanceof Watcher) return "The Watcher";
+        if (dungeonMob instanceof Bonzo) return "Bonzo";
+        if (dungeonMob instanceof BonzoUndead) return "Undead";
         if (killer.customName() != null) return PlainTextComponentSerializer.plainText().serialize(killer.customName());
         return killer instanceof LivingEntity && !(killer instanceof Player) ? null : killer.getName();
     }
