@@ -35,6 +35,7 @@ import net.icxd.dungeons.dungeons.generation.DungeonLayout.Door;
 import net.icxd.dungeons.dungeons.generation.DungeonLayout.PlacedRoom;
 import net.icxd.dungeons.dungeons.generation.utils.Direction;
 import net.icxd.dungeons.dungeons.instance.puzzle.RunPuzzles;
+import net.icxd.dungeons.dungeons.paste.BossArena;
 import net.icxd.dungeons.dungeons.paste.PastePlan;
 import net.icxd.dungeons.leveling.SkyBlockLevels;
 import net.icxd.dungeons.leveling.SkyBlockXp;
@@ -67,8 +68,11 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
  *   <li>Running: Mort hands out the map, the door opens, the clock runs. Keys open the wither
  *       doors and the Blood Door ({@link RunDoors}), the map fills in as rooms are walked into
  *       ({@link RunMap}), and the Blood Door starts the Watcher's fight ({@link Watcher}).</li>
- *   <li>Ended, when the Watcher lets them pass (no bosses yet) or with {@code /dungeon end}: the
- *       score and a re-queue link, and 20 seconds later everyone goes to the Dungeon Hub.</li>
+ *   <li>On a floor with a boss room ({@link BossArena}), the Watcher letting them pass lights the Blood
+ *       Room's portal ({@link BloodPortal}), which takes them to the boss ({@link Bonzo} on Floor I).</li>
+ *   <li>Ended, when the boss is beaten (on the Entrance, and floors whose boss isn't here yet, when the
+ *       Watcher lets them pass) or with {@code /dungeon end}: the score and a re-queue link, and 20
+ *       seconds later everyone goes to the Dungeon Hub.</li>
  * </ol>
  *
  * <p>Main thread. {@link RunManager} ticks it every tick and every second.
@@ -96,6 +100,8 @@ public final class DungeonRun implements ScoreCounts {
     private static final int ARRIVAL_BACK = 4;
     private static final double ARRIVAL_Y = 76.5;
     private static final int MORT_FORWARD = 11;
+    /** "You may pass." to the portal lighting up (recorded: 4.5 s each time). */
+    private static final long PORTAL_OPENS = 90;
 
     /** Someone in the run, and what they've done in it. */
     static final class Member {
@@ -144,6 +150,11 @@ public final class DungeonRun implements ScoreCounts {
     private final DisplayCases cases;
     private final RunPuzzles puzzleRooms;
     private Watcher watcher;
+    /** The floor's boss room, if it has one here (pasted with the floor); null otherwise. */
+    private final BossArena arena;
+    /** Once the Watcher's done; and the boss, once someone's come through it. */
+    private BloodPortal portal;
+    private Bonzo boss;
     /** From the start ({@link #start}); the blessings once one is found. */
     private RunSecrets secrets;
     private RunBlessings blessings;
@@ -172,8 +183,9 @@ public final class DungeonRun implements ScoreCounts {
     private boolean closed;
 
     DungeonRun(RunManager manager, Plugin plugin, String id, DungeonFloor floor, List<UUID> members, World world,
-               PastePlan.Block center, Direction door, RunLayout layout, int rooms, int puzzles, MapView map) {
+               PastePlan.Block center, Direction door, RunLayout layout, int rooms, int puzzles, MapView map, BossArena arena) {
         this.manager = manager;
+        this.arena = arena;
         this.plugin = plugin;
         this.id = id;
         this.floor = floor;
@@ -316,6 +328,8 @@ public final class DungeonRun implements ScoreCounts {
         if (phase != Phase.RUNNING) {
             // The rooms' mobs are spawned while the party waits.
             roomMobs.tickWaiting();
+            // A beaten boss still has his last lines, and his undeads, after the end.
+            if (phase == Phase.ENDED && boss != null) boss.tick();
             return;
         }
         ticks++;
@@ -337,6 +351,10 @@ public final class DungeonRun implements ScoreCounts {
         }
         roomMobs.tick(here);
         if (watcher != null) watcher.tick();
+        if (portal != null) {
+            for (Player player : living) if (portal.touches(player)) enterBossRoom(player);
+        }
+        if (boss != null) boss.tick();
         ghosts.tick();
         classes.tick();
         if (fairies != null) fairies.tick();
@@ -397,6 +415,47 @@ public final class DungeonRun implements ScoreCounts {
      */
     void bloodRoomCleared() {
         watcherPassed = true;
+    }
+
+    /**
+     * After "You may pass.": with a boss room, 4.5 seconds later the Blood Room's portal lights up and two blessings
+     * appear in its middle (recorded each time: Power and Life); without one, that's the run done (Hypixel's 4.5 to 5.5
+     * seconds on the Entrance).
+     */
+    void watcherDone() {
+        if (arena == null) {
+            later(Watcher.END_AFTER, this::end);
+            return;
+        }
+        later(PORTAL_OPENS, () -> {
+            PlacedRoom blood = layout.bloodRoom();
+            if (blood == null) return;
+            portal = BloodPortal.open(world, layout, blood);
+            if (portal == null) {
+                plugin.getLogger().warning("Run " + id + ": its Blood Room has no portal frame, so it ends here");
+                end();
+                return;
+            }
+            roomMobs.dropBloodBlessings(layout.center(world, RunLayout.firstCell(blood)));
+        });
+    }
+
+    /**
+     * Through the portal: into the boss room, where they arrive facing its middle (recorded); the first one starts the
+     * fight, and whoever is a ghost then is brought back (the wiki's Ghosts: "Entering a boss fight (all teammates in the
+     * dungeon are revived beforehand)").
+     */
+    void enterBossRoom(Player player) {
+        double[] at = arena.arrive();
+        player.teleport(new Location(world, at[0], at[1], at[2], arena.arriveYaw(), 0));
+        player.setFallDistance(0);
+        if (boss != null) return;
+        for (Player other : players()) if (ghosts.isGhost(other.getUniqueId())) ghosts.revive(other, null);
+        boss = new Bonzo(this, arena);
+    }
+
+    Plugin plugin() {
+        return plugin;
     }
 
     // Room mobs (RoomMobs): clearing rooms, crypts, room loot
@@ -620,6 +679,20 @@ public final class DungeonRun implements ScoreCounts {
         if (secrets != null) secrets.blessingChest(player, chest, Blessing.random(ThreadLocalRandom.current()), level);
     }
 
+    /** A blessing nobody picked up went to the team by itself (the Blood Room's), with the run's time then. */
+    void blessingFoundByItself(String blessing, int level) {
+        Blessing kind = Blessing.named(blessing);
+        if (kind == null || phase != Phase.RUNNING) return;
+        if (blessings == null) blessings = new RunBlessings(floor);
+        blessings.add(kind, level);
+        String line = kind.foundByItself(level, Blessing.elapsed(System.currentTimeMillis() - startedAt));
+        List<String> granted = kind.granted(level, blessings.strength());
+        for (Player player : players()) {
+            player.sendMessage(Utils.color(line));
+            for (String g : granted) player.sendMessage(Utils.color(g));
+        }
+    }
+
     /** The tab list footer while the run's on: its Dungeon Buffs (recorded from the start); null before. */
     public List<String> tabFooter() {
         if (!isStarted()) return null;
@@ -783,6 +856,7 @@ public final class DungeonRun implements ScoreCounts {
         classes.dispose();
         if (fairies != null) fairies.dispose();
         if (watcher != null) watcher.dispose();
+        if (boss != null) boss.dispose();
         if (secrets != null) secrets.dispose();
         if (cases != null) cases.dispose();
         puzzleRooms.dispose();

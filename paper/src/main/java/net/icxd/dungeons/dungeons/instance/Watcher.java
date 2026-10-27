@@ -31,7 +31,8 @@ import net.icxd.dungeons.utils.Text;
  * speaks, then summons his undeads: four close together, a pause, then five more. For each he flies
  * to one of the {@link DisplayCases}, hovers a moment, and sends its head spinning to the middle of
  * the room, where the undead appears and drops to the floor. He can't be hurt; hitting him gets
- * you zapped. Once every undead is dead he lets you pass, and (with no bosses yet) the run ends.
+ * you zapped. Once every undead is dead he lets you pass: on to the boss room, or on a floor without
+ * one here (the Entrance), the run ends.
  *
  * <p>Times are in ticks after the Blood Door opened, from two recordings of Entrance runs.
  */
@@ -78,7 +79,7 @@ final class Watcher implements DungeonMobs.Mob {
     private static final int ENOUGH_AFTER = 14;
     private static final int PASS_AFTER = 20;
     /** "You may pass." to the end of the run (Hypixel's 4.5 to 5.5 seconds). */
-    private static final int END_AFTER = 100;
+    static final int END_AFTER = 100;
     /** Flying to the cases: speed, and how long he hovers at one before its head leaves. He stops a block in front of it. */
     private static final double FLY = 0.7;
     private static final int HOVER = 12;
@@ -324,8 +325,8 @@ final class Watcher implements DungeonMobs.Mob {
         say("You have proven yourself. You may pass.");
         bar.removeAll();
         run.bloodRoomCleared();
-        // With no bosses yet, that's the run done.
-        run.later(END_AFTER, run::end);
+        // On to the boss, or (with none) that's the run done.
+        run.watcherDone();
     }
 
     // Flying

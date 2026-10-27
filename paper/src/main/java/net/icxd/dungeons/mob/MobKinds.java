@@ -193,6 +193,26 @@ public final class MobKinds {
             .build();
 
     /**
+     * Floor I's boss, for what killing him gives (his fight is the boss room's, {@code dungeons.instance.Bonzo}): the
+     * wiki's (MCW Bonzo, 2026) Lv221 with 250,000 health in both phases (as recorded), 2,664 damage, 1,657 Combat XP,
+     * 552 coins and 663 orbs. Only his second death counts: the recordings show no Combat XP for the first. In his
+     * second skin, as his second death is.
+     */
+    public static final MobKind BONZO = MobKind.builder("BONZO", "Bonzo", EntityType.MANNEQUIN)
+            .types(UNDEAD, ARCANE).style(NameStyle.BOSS).skin("Bonzo (Phase 2)").notRoomScaled().behaviour(() -> Behaviours.avatar(false))
+            .variant(DungeonFloor.FLOOR_1, 221, 250_000, 2_664, 0, 1_657, 552).orbs(663)
+            .build();
+
+    /**
+     * Bonzo's summons (MCW Undead (Bonzo)): Lv99, 50,000 health (as recorded), 1,440 damage, 148 Combat XP (recorded:
+     * +183.5 with a Combat Wisdom that makes a Zombie Grunt's 87 a 107.9), 33 coins, 108 orbs and a 0.1% Premium Flesh.
+     */
+    public static final MobKind BONZO_UNDEAD = MobKind.builder("BONZO_UNDEAD", "Undead", EntityType.MANNEQUIN)
+            .types(UNDEAD).skin("Bonzo's Undead 1").speed(0.28).magicResistance(0.1).notRoomScaled().behaviour(() -> Behaviours.avatar(false))
+            .variant(DungeonFloor.FLOOR_1, 99, 50_000, 1_440, 0, 148, 33, drop("PREMIUM_FLESH", L, 0.1)).orbs(108)
+            .build();
+
+    /**
      * The Hub's test mobs keep the numbers they've had. Coins (20) are the wiki's Lv75 Crimson Isle Magma
      * Cube's (research coins.md); Combat XP (120) is the wiki page's.
      */
@@ -257,6 +277,8 @@ public final class MobKinds {
     static {
         for (MobKind kind : ENTRANCE_KINDS) BY_ID.put(kind.id(), kind);
         BY_ID.put(WATCHER_UNDEAD.id(), WATCHER_UNDEAD);
+        BY_ID.put(BONZO.id(), BONZO);
+        BY_ID.put(BONZO_UNDEAD.id(), BONZO_UNDEAD);
         BY_ID.put(SECRET_BAT.id(), SECRET_BAT);
         BY_ID.put(MAGMA_CUBE.id(), MAGMA_CUBE);
         BY_ID.put(BLADESOUL.id(), BLADESOUL);

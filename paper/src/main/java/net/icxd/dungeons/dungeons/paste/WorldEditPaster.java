@@ -105,6 +105,14 @@ public final class WorldEditPaster {
 
     /** Starts pasting; {@code done} runs on the main thread when it's finished or failed. */
     public void paste(Plugin plugin, PastePlan plan, Consumer<Result> done) {
+        paste(plugin, plan, null, done);
+    }
+
+    /**
+     * Starts pasting, and after the floor a boss room ({@link ArenaLibrary}'s clipboard, at its own coordinates;
+     * null for none), every block of its box, air too; {@code done} runs on the main thread when it's finished or failed.
+     */
+    public void paste(Plugin plugin, PastePlan plan, Clipboard arena, Consumer<Result> done) {
         long start = System.currentTimeMillis();
         Set<Path> files = new LinkedHashSet<>();
         for (RoomPaste room : plan.rooms()) files.add(room.capture().schematic());
@@ -118,14 +126,16 @@ public final class WorldEditPaster {
                 Bukkit.getScheduler().runTask(plugin, () -> done.accept(new Result(System.currentTimeMillis() - start, e)));
                 return;
             }
-            Bukkit.getScheduler().runTask(plugin, () -> pasteLoaded(plugin, plan, done, start));
+            Bukkit.getScheduler().runTask(plugin, () -> pasteLoaded(plugin, plan, arena, done, start));
         });
     }
 
-    private void pasteLoaded(Plugin plugin, PastePlan plan, Consumer<Result> done, long start) {
+    private void pasteLoaded(Plugin plugin, PastePlan plan, Clipboard arena, Consumer<Result> done, long start) {
         // Armor stands and the like from an earlier paste would otherwise be doubled.
         List<Box> areas = new ArrayList<>(List.of(plan.area()));
         if (clearFirst != null) areas.addAll(clearFirst);
+        Box arenaBox = arena == null ? null : box(arena);
+        if (arenaBox != null) areas.add(arenaBox);
         for (Box area : areas) {
             BoundingBox box = new BoundingBox(area.min().x(), area.min().y(), area.min().z(), area.max().x() + 1, area.max().y() + 1, area.max().z() + 1);
             for (Entity entity : world.getNearbyEntities(box)) {
@@ -152,6 +162,9 @@ public final class WorldEditPaster {
             for (Piece piece : door.pieces()) steps.add(session -> paste(session, load(piece.schematic()), piece));
         }
         for (Piece piece : plan.fillers()) steps.add(session -> paste(session, load(piece.schematic()), piece));
+        if (arenaBox != null) {
+            for (Box slice : slices(arenaBox)) steps.add(session -> pasteInPlace(session, arena, slice));
+        }
 
         new BukkitRunnable() {
             /**
@@ -232,6 +245,22 @@ public final class WorldEditPaster {
         copy.setCopyingBiomes(false);
         copy.setCopyingEntities(false);
         Operations.complete(copy);
+    }
+
+    /** Copies part of a clipboard where it was copied from (a boss room's), blocks only. */
+    private static void pasteInPlace(EditSession session, Clipboard clipboard, Box part) throws WorldEditException {
+        BlockVector3 min = vector(part.min());
+        ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, new CuboidRegion(min, vector(part.max())), min, new KeepStill(session), min);
+        copy.setCopyingBiomes(false);
+        copy.setCopyingEntities(false);
+        Operations.complete(copy);
+    }
+
+    /** A clipboard's box, in the coordinates it was copied at. */
+    private static Box box(Clipboard clipboard) {
+        BlockVector3 min = clipboard.getRegion().getMinimumPoint();
+        BlockVector3 max = clipboard.getRegion().getMaximumPoint();
+        return new Box(new Block(min.x(), min.y(), min.z()), new Block(max.x(), max.y(), max.z()));
     }
 
     /**
