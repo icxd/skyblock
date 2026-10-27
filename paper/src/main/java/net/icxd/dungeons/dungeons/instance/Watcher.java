@@ -52,11 +52,13 @@ final class Watcher implements DungeonMobs.Mob {
     private static final int FIRST_WAVE = 4;
     private static final int[] INTRO_AT = {4, 66, 128, 210, 292};
     /**
-     * When heads leave their cases. The first at 19.8 s, and the next three as soon as he's been to
-     * their cases; the fifth 13.7 s after the fourth (so their undeads are 11.7 s apart, as in both
-     * recordings); the rest 4.5 to 7 s apart, or 1 to 3 s once there's nobody left to fight.
+     * When heads leave their cases. The first 5.2 s after his welcome's last line (19.8 s on the Entrance;
+     * on Floor I, whose welcome is one line, 5.4 s, where the two recordings had 6 and 10.7), and the next
+     * three as soon as he's been to their cases; the fifth 13.7 s after the fourth (so their undeads are
+     * 11.7 s apart, as in both recordings); the rest 4.5 to 7 s apart, or 1 to 3 s once there's nobody left
+     * to fight.
      */
-    private static final int FIRST_RELEASE = 396;
+    static final int AFTER_INTRO = 104;
     private static final int WAVE_PAUSE = 274;
     private static final int LATER_GAP_MIN = 90;
     private static final int LATER_GAP_MAX = 140;
@@ -87,7 +89,7 @@ final class Watcher implements DungeonMobs.Mob {
     private static final int ZAP_LASTS = 20;
 
     private static final List<String> SUMMON_LINES = List.of("Go, fight!", "Go and live again!", "Let's see how you can handle this.",
-            "Hmmm... this one!", "You'll do.", "This one looks like a fighter.", "Oops. Wasn't meant to revive that one.");
+            "Hmmm... this one!", "You'll do.", "This guy looks like a fighter.", "Oops. Wasn't meant to revive that one.");
     private static final List<String> KILL_LINES = List.of("Not bad.", "I'm impressed.", "Very nice.", "That one was weak anyway.",
             "Aw, I liked that one.");
     private static final List<String> HIT_LINES = List.of("That tickles.", "I am not your enemy.", "Stop attacking me.",
@@ -116,7 +118,7 @@ final class Watcher implements DungeonMobs.Mob {
     private int killed;
     /** The case he's going to, the earliest tick its head may leave (-1: none planned), and until when he hovers there. */
     private DisplayCases.Case fetching;
-    private int nextRelease = FIRST_RELEASE;
+    private int nextRelease;
     private int hoverUntil = -1;
     private int lastWall = -1;
     private boolean won;
@@ -143,6 +145,7 @@ final class Watcher implements DungeonMobs.Mob {
         this.cases = cases;
         this.floor = run.floor;
         this.intro = intro(floor);
+        this.nextRelease = firstRelease(intro.size());
         Location center = layout.center(run.world, RunLayout.firstCell(room));
         this.home = center.add(0, ABOVE_FLOOR, 0);
         // As he is: no baby or chicken jockey from vanilla's spawn randomness.
@@ -165,14 +168,18 @@ final class Watcher implements DungeonMobs.Mob {
         DungeonMobs.add(body, this);
     }
 
-    /** His welcome for each floor (the wiki's quotes; the Entrance's as recorded). */
-    private static List<String> intro(DungeonFloor floor) {
+    /** When the first head leaves its case, after a welcome of this many lines. */
+    static int firstRelease(int introLines) {
+        return INTRO_AT[introLines - 1] + AFTER_INTRO;
+    }
+
+    /** His welcome for each floor (the wiki's quotes; the Entrance's and Floor I's as recorded, Floor I's in all three runs). */
+    static List<String> intro(DungeonFloor floor) {
         return switch (floor.getNumber()) {
             case 0 -> List.of("Congratulations, you made it through the Entrance.", "I have been watching you closely...",
                     "Unfortunately, for now, this is the end of the road.", "I sense many dead spirits eager to return to the living..",
                     "I will bring some of them back. Watch this.");
-            case 1 -> List.of("Ah, you've finally arrived.", "I have watching you closely since we last met.",
-                    "I don't know if you are ready for what's behind this door.", "So I will decide if you are strong enough.");
+            case 1 -> List.of("Ah, we meet again. As I foresaw...");
             case 2 -> List.of("Ah, we meet again...", "I have done some experiments to develop new abilities for my Skulls.",
                     "Let's see how you handle this!");
             case 3 -> List.of("So you made it this far... interesting.", "You are much stronger than I was expecting.",

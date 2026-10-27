@@ -298,8 +298,8 @@ final class RoomMobs {
 
     /**
      * Whether this kind (at this level; null for the floor's lowest) spawns on the run's floor. The mob
-     * kinds only have the Entrance's variants so far, so on other floors the rooms get no mobs (and clear
-     * when they open); the log says so once a kind.
+     * kinds have the Entrance's and Floor I's variants so far, so on later floors the rooms get no mobs (and
+     * clear when they open); the log says so once a kind.
      */
     private boolean spawnable(MobKind kind, Integer level) {
         if (kind.variant(floor, level) != null) return true;
@@ -327,10 +327,13 @@ final class RoomMobs {
         if (roomData != null && roomData.recorded()) {
             for (RoomSpawnData.Mob m : roomData.mobs()) {
                 MobKind kind = MobKinds.get(m.kind());
-                if (kind == null || !spawnable(kind, m.level())) continue;
+                if (kind == null) continue;
+                kind = FloorMobs.kind(kind, floor, random);
+                Integer level = FloorMobs.level(kind, floor, m.level());
+                if (!spawnable(kind, level)) continue;
                 double[] p = state.frame.point(m.x(), m.y(), m.z());
                 p[1] = FallbackSpawns.standY(worldBlocks(), (int) Math.floor(p[0]), p[1], (int) Math.floor(p[2]));
-                mine.add(new Planned(state, kind, options(kind, m.starred(), m.level()), at(p)));
+                mine.add(new Planned(state, kind, options(kind, m.starred(), level), at(p)));
             }
             skulls(state, roomData.skulls());
         } else {
@@ -459,12 +462,13 @@ final class RoomMobs {
             Location middle = layout.center(world, RunLayout.firstCell(state.room));
             FallbackSpawns.Spot spot = FallbackSpawns.nearest(anywhere, middle.getX(), middle.getY(), middle.getZ());
             MobKind kind = FallbackSpawns.miniboss(random);
-            if (spot != null && spawnable(kind, FallbackSpawns.MINIBOSS_LEVEL)) {
-                out.add(new Planned(state, kind, new SpawnOptions(true, null, 1, FallbackSpawns.MINIBOSS_LEVEL), spotLocation(spot)));
+            Integer level = FloorMobs.level(kind, floor, FallbackSpawns.MINIBOSS_LEVEL);
+            if (spot != null && spawnable(kind, level)) {
+                out.add(new Planned(state, kind, new SpawnOptions(true, null, 1, level), spotLocation(spot)));
             }
         } else {
             for (FallbackSpawns.Spot spot : FallbackSpawns.groups(floorSpots, FallbackSpawns.starredCount(squares, random), random)) {
-                MobKind kind = FallbackSpawns.kind(random);
+                MobKind kind = FloorMobs.kind(FallbackSpawns.kind(random), floor, random);
                 if (spawnable(kind, null)) out.add(new Planned(state, kind, options(kind, true, null), spotLocation(spot)));
             }
         }

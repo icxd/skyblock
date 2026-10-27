@@ -72,14 +72,13 @@ enum UndeadType {
     }
 
     /**
-     * Health for one summon. On the Entrance it's 12,000 to 20,000 in steps of 1,000, as recorded
-     * (the wiki says 14k); other floors use the same spread around the wiki's number until they're
-     * recorded.
+     * Health for one summon: the floor's plus 1,000 times -2 to 6 (a Hypixel staff member's
+     * {@code maxHealth + (1000 * rand(-2, 6))}, MCW Catacombs Mobs), so 12,000 to 20,000 on the Entrance and
+     * 15,000 to 23,000 on Floor I, both as recorded.
      */
     double rollHealth(DungeonFloor floor) {
         double base = floor.isMasterMode() ? MASTER_HEALTH[floor.getNumber()] : HEALTH[floor.getNumber()];
-        // 12/14 to 20/14 of the wiki's number, which on the Entrance is exactly 12k-20k.
-        double health = Math.round(base * (12 + ThreadLocalRandom.current().nextInt(9)) / 14 / 1_000) * 1_000.0;
+        double health = base + 1_000 * (ThreadLocalRandom.current().nextInt(9) - 2);
         if (perk == Perk.MORE_HEALTH && perksOn(floor)) health *= 1.25;
         return health;
     }

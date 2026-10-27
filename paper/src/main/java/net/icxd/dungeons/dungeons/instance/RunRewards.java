@@ -55,7 +55,7 @@ final class RunRewards {
                          DungeonClass own, Collection<DungeonClass> teammates) {
         double daily = runsToday < DAILY_RUNS ? DAILY_BONUS : 1;
         double catacombs = round(catacombsXp(floor, score, completionsBefore, secretPercent) * daily);
-        double classXp = classXp(floor, score, completionsBefore) * daily;
+        double classXp = classXp(floor, score, completionsBefore, secretPercent) * daily;
         Map<DungeonClass, Double> classes = new LinkedHashMap<>();
         classes.put(own, round(classXp));
         Set<DungeonClass> others = teammates.isEmpty() ? EnumSet.noneOf(DungeonClass.class) : EnumSet.copyOf(teammates);
@@ -75,16 +75,22 @@ final class RunRewards {
     static double catacombsXp(DungeonFloor floor, int score, int completionsBefore, double secretPercent) {
         int runs = Math.min(Math.max(0, completionsBefore), maxRuns(floor));
         double frequentFlier = 1.1 + 0.02 * (runs - 1) + (runs - 1) / 1000.0 - 0.05;
-        double overExploration = 1;
-        if (!floor.isMasterMode() && floor.getNumber() <= 6) {
-            overExploration += 0.005 * Math.max(0, secretPercent - Score.secretsNeeded(floor));
-        }
-        return baseXp(floor) * frequentFlier * scoreMultiplier(score, completionsBefore) * overExploration;
+        return baseXp(floor) * frequentFlier * scoreMultiplier(score, completionsBefore) * overExploration(floor, secretPercent);
     }
 
-    /** Class experience before the daily bonus; repeat completions don't change it (forum thread). */
-    static double classXp(DungeonFloor floor, int score, int completionsBefore) {
-        return baseXp(floor) * CLASS_BASE * scoreMultiplier(score, completionsBefore);
+    /**
+     * Class experience before the daily bonus; repeat completions don't change it (forum thread). Over-exploration
+     * counts for it as for Catacombs experience: the three recorded Floor I runs' Berserk experience (87.4 at 167
+     * score with no secrets, twice, and 193.1 at 301 with 75%) only fit with it, 1.225 for the 75% run.
+     */
+    static double classXp(DungeonFloor floor, int score, int completionsBefore, double secretPercent) {
+        return baseXp(floor) * CLASS_BASE * scoreMultiplier(score, completionsBefore) * overExploration(floor, secretPercent);
+    }
+
+    /** 0.5% more for every percent of secrets over the floor's requirement, up to Floor VI (changelog 2021-12-17). */
+    static double overExploration(DungeonFloor floor, double secretPercent) {
+        if (floor.isMasterMode() || floor.getNumber() > 6) return 1;
+        return 1 + 0.005 * Math.max(0, secretPercent - Score.secretsNeeded(floor));
     }
 
     /**
