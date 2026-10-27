@@ -66,6 +66,11 @@ public final class Exporter {
     this.runName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + "_" + floor;
   }
 
+  /** The floor the run is on, from the sidebar ("F7"), or "unknown". */
+  public String floor() {
+    return floor;
+  }
+
   public record Result(List<String> newRooms, List<String> knownRooms, List<String> problems) {
   }
 

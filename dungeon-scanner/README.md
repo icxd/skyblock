@@ -105,6 +105,11 @@ doors/<type>/<type>_<hash>.*           door structures (normal/wither/blood/entr
 runs/<time>_<floor>.json               the full layout of each run
 ```
 
+**Grid.** Only the floor's own cells are read, by the floor the sidebar shows when the scan
+starts: Entrance 4x4, F1 4x5, F2-F3 5x5, F4 6x5, F5-F7 6x6, Master Mode the same, and 6x6 if it
+can't tell. Older versions read 6x6 everywhere, and on F1 the stone around Bonzo's arena (cells
+4,5 and 5,5) came out as a doorless 1x2 room, `unknown_3142706`, with the run 6x6.
+
 **Frame.** Every room is saved in its own frame: the blue terracotta roof marker (Hypixel puts
 one in a corner of every room) is at the north-west corner. x is east and z is south. Straight
 rooms and 2x2s aren't searched for a marker: Hypixel only ever places them with it in one spot
