@@ -19,6 +19,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import net.icxd.dungeons.Dungeons;
@@ -29,14 +30,11 @@ import net.icxd.dungeons.utils.Text;
 import net.icxd.dungeons.utils.Utils;
 
 /**
- * Summoned pets in the world: a small invisible marker armor stand wearing the pet's head, and just over it another
- * with the name, "&8[&7Lv1&8] &aBee". Hypixel's (recorded 2026-10-25, a Bee summoned at 02:31.8) is a full-size stand
- * holding the head in its right hand, with the name 1.4375 over it; a small one wearing it looks nicer. The name can't
- * be the small stand's own: a marker's shows half a block over its feet, under the head, and one that isn't a marker
- * has a hitbox, which would take the hits and arrows meant for mobs. So it's on a marker stand as high over it as the
- * small stand is tall, where its own name would be. Others see "Bea's Bee" (recorded, Bea's pet in the Hub): a second
- * name stand, shown to them and not to its owner. Each viewer's Pets menu settings say which they see (see
- * {@link Pets.Visibility}, and the name tags' toggle).
+ * Summoned pets in the world, as recorded (2026-10-25, a Bee summoned at 02:31.8): an invisible marker armor stand
+ * with arms holding the pet's head in its right hand (the arm at -45°, -135°, 0°), and over it another with the name,
+ * "&8[&7Lv1&8] &aBee" (0.4 behind it, 0.06 to its left and 1.45 up: over the head). Others see "Bea's Bee" (recorded,
+ * Bea's pet in the Hub): a second name stand, shown to them and not to its owner. Each viewer's Pets menu settings say
+ * which they see (see {@link Pets.Visibility}, and the name tags' toggle).
  *
  * <p>Each tick the pet goes after its owner, faster the farther it is (recorded: about 0.47 x distance^0.575 blocks every
  * 3 ticks), stopping short of them, facing them, 0.75 over their feet; standing near them it bobs 0.55 up and down
@@ -45,13 +43,23 @@ import net.icxd.dungeons.utils.Utils;
  * gone), which also covers joins, profile switches and yoinks. None are saved with the world. Main thread.
  */
 public final class PetFollowers {
-    /** How far over the holder its name stand is: a small armor stand's height, where its own name would show. */
-    static final double NAME_UP = 0.9875;
     /**
-     * Where its head is, above the stand's feet, and how near a look has to pass it to be at it: the head's middle, and
-     * a bit more than half its width (UNKNOWN: Hypixel's stand can't be clicked either; see {@link #lookingAtOwn}).
+     * The name stand's place by the holder, turned as it faces: its left, back and up. Recorded: at the summon, 8.1
+     * 73.2805 -51.56 by a holder at 8.5 71.8305 -51.5 (sent facing +z, but the name was put as for one facing +x); then
+     * 0.37 to 0.43 back and 0.03 to 0.08 left at each of the 26 turns it made following.
      */
-    static final double HEAD_UP = 0.75;
+    static final double NAME_LEFT = 0.06;
+    static final double NAME_BACK = 0.4;
+    static final double NAME_UP = 1.45;
+    /**
+     * Where the head it holds shows, by the holder as the name is: its left, back and up, as vanilla's models draw a
+     * player head in a right hand posed so (a quarter block wide: held items are half size; 1.8's draw it at 0.14, 0.36
+     * and 1.16). How near a look has to pass it to be at it: more than that, as it's small and bobs (UNKNOWN: Hypixel's
+     * stand can't be clicked either; see {@link #lookingAtOwn}).
+     */
+    static final double HEAD_LEFT = 0.2;
+    static final double HEAD_BACK = 0.425;
+    static final double HEAD_UP = 1.03;
     static final double AIM = 0.45;
     /** Over the owner's feet, and how far it bobs (recorded: 71.17 to 72.30 over a player at 71). */
     static final double HEIGHT = 0.75;
@@ -73,7 +81,7 @@ public final class PetFollowers {
     private PetFollowers() {
     }
 
-    /** A summoned pet: whose, which (and as what level and rarity, for its name), its stands and where it bobs. */
+    /** A summoned pet: whose, which (and as what, for its head and name), its stands and where it bobs. */
     private static final class Follower {
         final UUID owner;
         String pet;
@@ -122,7 +130,8 @@ public final class PetFollowers {
             if (follower != null) despawn(player.getUniqueId());
             return;
         }
-        String shown = active.type() + ":" + Pets.tier(active, data) + ":" + Pets.level(active, data) + ":" + active.heldItem();
+        String shown = active.type() + ":" + Pets.tier(active, data) + ":" + Pets.level(active, data) + ":" + active.heldItem()
+                + ":" + active.skin();
         if (follower != null && (!follower.holder.isValid() || !follower.pet.equals(active.uuid()))) {
             despawn(player.getUniqueId());
             follower = null;
@@ -134,7 +143,7 @@ public final class PetFollowers {
         }
         if (!shown.equals(follower.shown)) {
             follower.shown = shown;
-            follower.holder.getEquipment().setHelmet(head(active, kind, data));
+            follower.holder.getEquipment().setItemInMainHand(head(active, kind, data));
             follower.ownName.customName(Text.line(PetText.floating(active, data, null)));
             follower.othersName.customName(Text.line(PetText.floating(active, data, player.getName())));
         }
@@ -163,8 +172,9 @@ public final class PetFollowers {
         ItemStack head = head(pet, kind, data);
         ArmorStand holder = at.getWorld().spawn(at, ArmorStand.class, stand -> {
             prop(stand);
-            stand.setSmall(true);
-            stand.getEquipment().setHelmet(head);
+            stand.setArms(true);
+            stand.setRightArmPose(new EulerAngle(Math.toRadians(-45), Math.toRadians(-135), 0));
+            stand.getEquipment().setItemInMainHand(head);
         });
         ArmorStand ownName = name(nameSpot(at), PetText.floating(pet, data, null));
         ArmorStand othersName = name(nameSpot(at), PetText.floating(pet, data, owner.getName()));
@@ -213,7 +223,7 @@ public final class PetFollowers {
         Follower follower = FOLLOWING.get(player.getUniqueId());
         if (follower == null || !follower.holder.isValid() || !follower.holder.getWorld().equals(player.getWorld())) return false;
         AttributeInstance range = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
-        return aimedAt(player.getEyeLocation(), follower.holder.getLocation().add(0, HEAD_UP, 0), range == null ? 3 : range.getValue());
+        return aimedAt(player.getEyeLocation(), headSpot(follower.holder.getLocation()), range == null ? 3 : range.getValue());
     }
 
     /** Whether a look from {@code eye} passes within {@link #AIM} of {@code head}, ahead of it and within {@code reach}. */
@@ -225,12 +235,25 @@ public final class PetFollowers {
         return to.subtract(look.multiply(along)).lengthSquared() <= AIM * AIM;
     }
 
-    /** Where its name stand is: right over the holder's head. */
+    /** Where its name stand is: behind the holder, a little to its left, up. */
     static Location nameSpot(Location holder) {
-        Location at = holder.clone().add(0, NAME_UP, 0);
+        Location at = by(holder, NAME_LEFT, NAME_BACK, NAME_UP);
         at.setYaw(0);
         at.setPitch(0);
         return at;
+    }
+
+    /** Where the head it holds shows: behind the holder, a little to its left, up. */
+    static Location headSpot(Location holder) {
+        return by(holder, HEAD_LEFT, HEAD_BACK, HEAD_UP);
+    }
+
+    /** A spot this far to the holder's left, back and up, turned as it faces (at yaw 0, facing +z: +x, -z). */
+    private static Location by(Location holder, double left, double back, double up) {
+        double yaw = Math.toRadians(holder.getYaw());
+        double leftX = Math.cos(yaw), leftZ = Math.sin(yaw);
+        double backX = Math.sin(yaw), backZ = -Math.cos(yaw);
+        return holder.clone().add(left * leftX + back * backX, up, left * leftZ + back * backZ);
     }
 
     /** How far it moves this tick towards an owner {@code distance} away: none once it's near. */
