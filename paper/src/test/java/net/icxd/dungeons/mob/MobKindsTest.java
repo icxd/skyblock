@@ -40,8 +40,8 @@ class MobKindsTest {
                 assertEquals(1, variant.coins(), kind.id());
                 for (MobDrop drop : variant.drops()) assertTrue(drop.chance() > 0 && drop.chance() <= 100, kind.id());
             }
-            // Nothing on the floors that aren't filled in yet.
-            assertNull(kind.variant(DungeonFloor.FLOOR_1, null), kind.id());
+            // Nothing on the floors that aren't filled in yet (Floor I is: FloorOneKindsTest).
+            assertNull(kind.variant(DungeonFloor.FLOOR_2, null), kind.id());
         }
     }
 
@@ -120,7 +120,7 @@ class MobKindsTest {
     void ids() {
         Set<String> ids = new HashSet<>();
         for (MobKind kind : MobKinds.all().values()) assertTrue(ids.add(kind.id()), kind.id());
-        assertEquals(19, ids.size());
+        assertEquals(21, ids.size());
         assertEquals(MobKinds.CRYPT_LURKER, MobKinds.get("crypt_lurker"));
         assertNull(MobKinds.get(null));
     }

@@ -31,8 +31,21 @@ class RunRewardsTest {
         assertEquals(482 / 300.0, RunRewards.scoreMultiplier(182, 4), 1e-12);
         assertEquals(109 / 300.0, RunRewards.scoreMultiplier(109, 5), 1e-12);
         // Class experience scales the same way; the recorded R1 and R2 fit it (research 4.3).
-        assertEquals(RunRewards.classXp(DungeonFloor.ENTRANCE, 109, 5) * 482 / 109,
-                RunRewards.classXp(DungeonFloor.ENTRANCE, 182, 3), 1e-9);
+        assertEquals(RunRewards.classXp(DungeonFloor.ENTRANCE, 109, 5, 0) * 482 / 109,
+                RunRewards.classXp(DungeonFloor.ENTRANCE, 182, 3, 0), 1e-9);
+    }
+
+    /**
+     * Over-exploration counts for class experience too: the recorded Floor I runs gave 87.4 Berserk experience at 167
+     * score with no secrets and 193.1 at 301 with 75% (30% needed), a ratio of 301/167 x 1.225.
+     */
+    @Test
+    void classOverExploration() {
+        assertEquals(1.225, RunRewards.overExploration(DungeonFloor.FLOOR_1, 75), 1e-12);
+        assertEquals(1, RunRewards.overExploration(DungeonFloor.FLOOR_1, 20), 1e-12);
+        assertEquals(1, RunRewards.overExploration(DungeonFloor.FLOOR_7, 100), 1e-12);
+        double ratio = RunRewards.classXp(DungeonFloor.FLOOR_1, 301, 10, 75) / RunRewards.classXp(DungeonFloor.FLOOR_1, 167, 10, 0);
+        assertEquals(193.1 / 87.4, ratio, 0.003);
     }
 
     @Test

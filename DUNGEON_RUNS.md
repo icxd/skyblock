@@ -187,9 +187,16 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   Angry Archaeologist near the middle of a champion room). Planned mobs only go where someone
   can walk to from the door the room is entered by (a block up, any way down, ladders, water;
   nothing opened on the way), so none is sealed in a hidden part where it would keep the room,
-  and its key, from ever clearing. Modifiers are rolled for each run. The mob kinds only have
-  the Entrance's variants so far: on other floors the rooms have no mobs and clear when they
-  open (the log says which kinds are missing, once each).
+  and its key, from ever clearing. Modifiers are rolled for each run. The mob kinds have the
+  Entrance's and Floor I's variants (MCW's Floor I numbers, which match the three Floor I
+  recordings' base health and Combat XP); on later floors the rooms have no mobs and clear when
+  they open (the log says which kinds are missing, once each).
+- Floor I (`FloorMobs`): the rooms' data is the Entrance's, and the three Floor I runs (887 room
+  mobs) have its kinds in the same shares but for the skeletons. Where the Entrance has Skeleton
+  Grunts and Scared Skeletons, Floor I has Skeleton Grunts, Skeleton Soldiers (leather, a bow),
+  Scared Skeletons and Snipers (standing still, the Sniper's head) 72 : 102 : 61 : 10, so each such
+  spot takes one of those that often (which spot gets which is unknown). A level the floor doesn't
+  have becomes its first (the Entrance's Lv80 Angry Archaeologist is a Lv90).
 - They wait at their base health, not moving, until their room opens (its door is opened, someone
   walks in, or someone hits one of them). Then they wake up with the room's multiplier on their
   health and damage: 1.05 for the first room, then 1 + 0.05 x (squares opened before, the
@@ -217,8 +224,8 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
 - He's an invisible zombie wearing his head, floating 4 blocks over the middle of the room, with
   "﴾ ✦ The Watcher ﴿" over him and each line he says for 2 seconds over that. His lines go to chat
   as "[BOSS] The Watcher: ...", at most one every 2 seconds.
-- His welcome: the Entrance's five lines as recorded, 3 to 4 seconds apart; other floors have the
-  wiki's.
+- His welcome: the Entrance's five lines as recorded, 3 to 4 seconds apart; Floor I's one line,
+  "Ah, we meet again. As I foresaw..." (all three runs); other floors have the wiki's.
 - The boss bar "The Watcher" (red) shows 2 seconds after the door opens, to whoever is in the
   Blood Room, and goes down a ninth per undead killed.
 - The display cases (`DisplayCases`): undead heads in niches 12 blocks out from the middle, in
@@ -228,11 +235,12 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   head and about a third of the corner ones do.
 - He summons 9 undeads, fetching each from a case: he flies there (14 blocks a second), hovers
   0.6 s, and its head flies straight at the middle of the room, turning 30 degrees a tick. The
-  first four heads leave from 19.8 s after the door opens, one after the other; they fly at 0.2
-  blocks a tick for 78 ticks. The next five fly at 0.3 a tick for 40 ticks; the fifth leaves
-  13.7 s after the fourth, the rest 4.5 to 7 s apart (1 to 3 s once nobody's left to fight). So
-  the undeads appear 23.7 s after the door opens, then 1 to 2.5 s apart, then 11.7 s later the
-  last five, as recorded.
+  first four heads leave from 5.2 s after his welcome's last line (19.8 s after the door opens on
+  the Entrance, 5.4 s on Floor I, where the runs had 6 and 10.7 s), one after the other; they fly
+  at 0.2 blocks a tick for 78 ticks. The next five fly at 0.3 a tick for 40 ticks; the fifth
+  leaves 13.7 s after the fourth, the rest 4.5 to 7 s apart (1 to 3 s once nobody's left to
+  fight). So on the Entrance the undeads appear 23.7 s after the door opens, then 1 to 2.5 s
+  apart, then 11.7 s later the last five, as recorded.
 - An undead appears where its head ends (1.78 higher, where the head sat on the stand) and drops
   to the floor. Each summon has a line ("Go, fight!", "Go and live again!", ...) just before, and
   each kill may get one ("Not bad.", ...). After the last summon, if any are still alive: "That
@@ -241,10 +249,10 @@ it's in the private data with the captures (`rooms/_mobs/<room>.json`, in each c
   random chainmail, iron or leather armour with a gold or iron axe, and "☠ Leech 20,000❤" over
   them (green, yellow under half). They run at the nearest player in the Blood Room and hit every
   second; with nobody in the room they go back to him.
-- Health: 12k to 20k on the Entrance (as recorded), and the same spread around the wiki's number on
-  other floors. Damage per floor from the wiki. Their perks (healing, teleporting behind you,
-  exploding, more health or damage, Parasite's silverfish, going for a class first) only from
-  Floor 2.
+- Health: the floor's base + 1,000 x (-2 to 6), Hypixel staff's formula: 12k to 20k on the
+  Entrance and 15k to 23k on Floor I, both as recorded. Damage per floor from the wiki. Their
+  perks (healing, teleporting behind you, exploding, more health or damage, Parasite's silverfish,
+  going for a class first) only from Floor 2.
 - He can't be hurt: hitting him zaps you with an elder guardian's beam, for as much as an undead
   hits.
 - When the last one dies: "You have proven yourself. You may pass.", and 5 seconds later the run
@@ -396,8 +404,9 @@ Experience (`RunRewards`) follows the chat's score: the floor's base at 300 (55 
 x score/300, with 300 more score for the first five completions of a floor and 40% more for the
 first five runs of the day. Repeat completions add Catacombs experience (up to 76 of them below
 Floor VI), and so do secrets over the floor's share (0.5% a percent, up to Floor VI). Class
-experience is the base x 1.1, and each member also gets a quarter of their class experience in
-each other class in the party.
+experience is the base x 1.1 with the same secrets bonus (the Floor I runs' class experience
+fits it), and each member also gets a quarter of their class experience in each other class in
+the party.
 Those multipliers are community reverse-engineering, unverified.
 
 ## Not yet
@@ -411,7 +420,8 @@ Those multipliers are community reverse-engineering, unverified.
   and go (their heads, here); the menu's layout for 1, 2 or 5+ rewards; whether teammates see your
   rewards; what happens to rewards not picked up when the instance closes (given then, here); the
   Class Milestone 2 a chest needs; Croesus; dyes, discs and shards; the stars and upgrades weapons
-  and armor can come with. Unstarred mobs in the hidden parts of
+  and armor can come with. Floor I's Lonely Spiders (no room's data places them) and Cellar
+  Spiders, and which of its skeleton spots holds which kind. Unstarred mobs in the hidden parts of
   rooms nobody recorded; crypts where no tomb is known; the Dungeon Sack. The Watcher's floor 3+ extras (reanimated bosses, Watchful Eyes), Mute's perk, and
   his real icons (placeholders for now).
 - The puzzles of later floors (Higher or Lower, Boulder, Ice Path, Quiz, Ice Fill) and the
